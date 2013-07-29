@@ -56,10 +56,10 @@
 #include "private/libc_logging.h"
 #include "private/ScopedPthreadMutexLocker.h"
 
-extern unsigned int malloc_sig_enabled;
-extern unsigned int min_allocation_report_limit;
-extern unsigned int max_allocation_limit;
-extern char* process_name;
+static unsigned int malloc_sig_enabled = 0;
+static unsigned int min_allocation_report_limit;
+static unsigned int max_allocation_limit;
+static const char* process_name;
 static size_t total_count = 0;
 static bool isDumped = false;
 static bool sigHandled = false;
@@ -73,6 +73,7 @@ static bool sigHandled = false;
 #define REAR_GUARD          0xbb
 #define REAR_GUARD_LEN      (1<<5)
 #define FRONT_GUARD_SS      0xab
+#define DEBUG_SIGNAL SIGWINCH
 
 static void malloc_sigaction(int signum, siginfo_t * sg, void * cxt);
 static struct sigaction default_sa;
@@ -245,20 +246,10 @@ static inline void add(hdr_t* hdr, size_t size) {
     init_rear_guard(hdr);
     ++g_allocated_block_count;
     add_locked(hdr, &tail, &head);
-    if (total_count >= max_allocation_limit && !isDumped && malloc_sig_enabled) {
+    if ((total_count >= max_allocation_limit) && !isDumped && malloc_sig_enabled) {
         isDumped = true;
-        log_message("Maximum limit of the %s process (%d Bytes) size has reached."\
-                "Maximum limit is set to:%d Bytes\n", process_name,
-                total_count, max_allocation_limit);
-        log_message("Start dumping allocations of the process %s", process_name);
-        log_message("+++ *** +++ *** +++ *** +++ *** +++ *** +++ *** +++ *** +++ ***\n");
-
-        // Print allocations of the process
-        snapshot_report_leaked_nodes();
-
-        log_message("*** +++ *** +++ *** +++ *** +++ *** +++ *** +++ *** +++ *** +++\n");
-        log_message("Completed dumping allocations of the process %s", process_name);
-
+        sigHandled = true; // Need to bypass the snapshot
+        kill(getpid(), DEBUG_SIGNAL);
     }
 }
 
@@ -696,8 +687,6 @@ static void ReportMemoryLeaks() {
 
 pthread_key_t g_debug_calls_disabled;
 
-#define DEBUG_SIGNAL SIGWINCH
-
 extern "C" bool malloc_debug_initialize(HashTable* hash_table, const MallocDebug* malloc_dispatch) {
   g_hash_table = hash_table;
   g_malloc_dispatch = malloc_dispatch;
@@ -717,12 +706,28 @@ extern "C" bool malloc_debug_initialize(HashTable* hash_table, const MallocDebug
     __libc_format_log(ANDROID_LOG_INFO, "libc", "not gathering backtrace information\n");
   }
 
+  if (__system_property_get("libc.debug.malloc", env)) {
+    if(atoi(env) == 40) malloc_sig_enabled = 1;
+  }
+
+  if (malloc_sig_enabled) {
+    char debug_proc_size[PROP_VALUE_MAX];
+    if (__system_property_get("libc.debug.malloc.maxprocsize", debug_proc_size))
+      max_allocation_limit = atoi(debug_proc_size);
+    else
+      max_allocation_limit = 30 * 1024 * 1024; // In Bytes [Default is 30 MB]
+    if (__system_property_get("libc.debug.malloc.minalloclim", debug_proc_size))
+      min_allocation_report_limit = atoi(debug_proc_size);
+    else
+      min_allocation_report_limit = 10 * 1024; // In Bytes [Default is 10 KB]
+    process_name = getprogname();
+  }
+
 /* Initializes malloc debugging framework.
  * See comments on MallocDebugInit in malloc_debug_common.h
  */
   if (malloc_sig_enabled) {
     struct sigaction sa; //local or static?
-    //struct sigaction sa_snapshot; //local or static?
     sa.sa_handler = NULL;
     sa.sa_sigaction = malloc_sigaction;
     sigemptyset(&sa.sa_mask);
@@ -784,8 +789,6 @@ static void malloc_sigaction(int signum, siginfo_t * info, void * context)
     return;
   }
 
-  ScopedPthreadMutexLocker locker(&lock);
-
   log_message("Process under observation:%s", process_name);
   log_message("Maximum process size limit:%d Bytes", max_allocation_limit);
   log_message("Won't print allocation below %d Bytes", min_allocation_report_limit);
@@ -806,7 +809,8 @@ static void malloc_sigaction(int signum, siginfo_t * info, void * context)
     log_message("+++ *** +++ *** +++ *** +++ *** +++ *** +++ *** +++ *** +++ ***\n");
 
     // Print allocations of the process
-    snapshot_report_leaked_nodes();
+    if (g_backtrace_enabled)
+        snapshot_report_leaked_nodes();
 
     log_message("*** +++ *** +++ *** +++ *** +++ *** +++ *** +++ *** +++ *** +++\n");
     log_message("Completed dumping allocations of the process %s", process_name);
