@@ -403,6 +403,60 @@ _have_ipv4() {
         return _test_connect(PF_INET, &addr.generic, sizeof(addr.in));
 }
 
+//Begin Moto IKJB42MAIN-11757 do DNS based on address config
+/*
+ * Use function below to determine whether we should do IPv4 or IPv6
+ * DNS query on secondary links.
+ * refer to comments above _have_ipv6()
+ */
+static int
+_have_ipv6_addr(const char *name) {
+       int scope = -1;
+       char ifname[64];  // Currently, IFNAMSIZ = 16.
+       int retval = 0;
+       FILE *f = fopen("/proc/net/if_inet6", "r");
+       if (!f) {
+               return 0; //Treat as no ipv6 address
+       }
+
+       // Format of /proc/net/if_inet6.
+       // All numeric fields are implicit hex,
+       // 1. IPv6 address
+       // 2. interface index
+       // 3. prefix length
+       // 4. scope, scope == 0 means GLOBAL address, refer to addrconf_core.c
+       // 5. flags
+       // 6. interface name
+       while (fscanf(f, "%*32s %*02x %*02x %02x %*02x %63s\n",
+                               &scope, ifname) == 2) {
+               if (strcmp(name, ifname)) continue;
+               if (scope == 0) {
+                       retval = 1;
+                       break;
+               }
+       }
+
+       fclose(f);
+       return retval;
+}
+
+static int
+_have_ipv4_addr(const char *name) {
+    int sk, retval;
+    struct ifreq ifr;
+    memset(&ifr, 0, sizeof(struct ifreq));
+    strncpy(ifr.ifr_name, name, IFNAMSIZ);
+    ifr.ifr_name[IFNAMSIZ - 1] = 0;
+
+    sk = socket(AF_INET, SOCK_DGRAM, 0);
+    retval = ioctl(sk, SIOCGIFADDR, &ifr);
+    close(sk);
+
+    if (retval<0) return 0;
+    return 1;
+}
+//End Moto IKJB42MAIN-11757 do DNS based on address config
+
 // Returns 0 on success, else returns on error.
 static int
 android_getaddrinfo_proxy(
@@ -1932,7 +1986,12 @@ _dns_getaddrinfo(void *rv, void	*cb_data, va_list ap)
 			if (_using_default_dns(iface)) {
 				query_ipv6 = _have_ipv6();
 				query_ipv4 = _have_ipv4();
+			//Begin Moto IKJB42MAIN-11757 do DNS based on address config
+			} else {
+				query_ipv6 = _have_ipv6_addr(iface);
+				query_ipv4 = _have_ipv4_addr(iface);
 			}
+			//End Moto IKJB42MAIN-11757
 		}
 		if (query_ipv6) {
 			q.qtype = T_AAAA;
