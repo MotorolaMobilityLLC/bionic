@@ -382,8 +382,6 @@ libc_common_src_files += \
 	upstream-freebsd/lib/libc/string/wmemcmp.c \
 	upstream-freebsd/lib/libc/string/wcslen.c \
 	upstream-freebsd/lib/libc/string/wcscat.c
-#	bionic/memmove.c.arm \
-#	string/bcopy.c \
 
 # These files need to be arm so that gdbserver
 # can set breakpoints in them without messing
