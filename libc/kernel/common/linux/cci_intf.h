@@ -42,4 +42,6 @@ struct msm_cci_intf_xfer {
 #define MSM_CCI_INTF_READ   _IOWR('X', BASE_VIDIOC_PRIVATE + 50, struct msm_cci_intf_xfer)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #define MSM_CCI_INTF_WRITE   _IOWR('X', BASE_VIDIOC_PRIVATE + 51, struct msm_cci_intf_xfer)
+#define MSM_CCI_INTF_READ32   _IOWR('X', BASE_VIDIOC_PRIVATE + 50, struct msm_cci_intf_xfer)
+#define MSM_CCI_INTF_WRITE32   _IOWR('X', BASE_VIDIOC_PRIVATE + 51, struct msm_cci_intf_xfer)
 #endif
