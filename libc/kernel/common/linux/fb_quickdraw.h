@@ -26,15 +26,19 @@
 #define FB_QUICKDRAW_LOCK_BUFFER _IOW(FB_QUICKDRAW_IOCTL_MAGIC, 4, int)
 #define FB_QUICKDRAW_UNLOCK_BUFFER _IOW(FB_QUICKDRAW_IOCTL_MAGIC, 5, int)
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
-struct fb_quickdraw_buffer_data {
- int buffer_id;
- int user_fd;
- int format;
-/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+struct fb_quickdraw_rect {
  int x;
  int y;
  int w;
- int h;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ int h;
 };
+struct fb_quickdraw_buffer_data {
+ int buffer_id;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ int user_fd;
+ int format;
+ struct fb_quickdraw_rect rect;
+};
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif
