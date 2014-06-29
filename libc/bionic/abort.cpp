@@ -30,7 +30,6 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include "atexit.h"
 
 __LIBC_HIDDEN__ void (*__cleanup)();
@@ -41,8 +40,6 @@ extern "C" __LIBC_HIDDEN__ void __libc_android_abort()
 void abort()
 #endif
 {
-  kill(getpid(), SIGQUIT);
-  sleep(4);
   // Don't block SIGABRT to give any signal handler a chance; we ignore
   // any errors -- X311J doesn't allow abort to return anyway.
   sigset_t mask;
