@@ -40,13 +40,14 @@ extern "C" void*  __mmap2(void*, size_t, int, int, int, size_t);
 static bool kernel_has_MADV_MERGEABLE = true;
 
 void* mmap64(void* addr, size_t size, int prot, int flags, int fd, off64_t offset) {
-  if (offset < 0 || (offset & ((1UL << MMAP2_SHIFT)-1)) != 0) {
+  if (offset & ((1UL << MMAP2_SHIFT)-1)) {
     errno = EINVAL;
     return MAP_FAILED;
   }
 
   bool is_private_anonymous = (flags & (MAP_PRIVATE | MAP_ANONYMOUS)) != 0;
-  void* result = __mmap2(addr, size, prot, flags, fd, offset >> MMAP2_SHIFT);
+  uint64_t unsigned_offset = static_cast<uint64_t>(offset); // To avoid sign extension.
+  void* result = __mmap2(addr, size, prot, flags, fd, unsigned_offset >> MMAP2_SHIFT);
 
   if (result != MAP_FAILED && kernel_has_MADV_MERGEABLE && is_private_anonymous) {
     ErrnoRestorer errno_restorer;
@@ -60,5 +61,5 @@ void* mmap64(void* addr, size_t size, int prot, int flags, int fd, off64_t offse
 }
 
 void* mmap(void* addr, size_t size, int prot, int flags, int fd, off_t offset) {
-  return mmap64(addr, size, prot, flags, fd, static_cast<off64_t>(offset));
+  return mmap64(addr, size, prot, flags, fd, static_cast<off64_t>(offset) & 0xffffffff);
 }
