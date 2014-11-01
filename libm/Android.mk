@@ -248,7 +248,6 @@ libm_ld_includes := $(LOCAL_PATH)/upstream-freebsd/lib/msun/ld128/
 
 ifeq ($(TARGET_USE_QCOM_BIONIC_OPTIMIZATION),true)
   libm_arm_src_files += \
-    arm/e_pow.S \
     arm/s_cos.S \
     arm/s_sin.S \
     arm/e_sqrtf.S \
