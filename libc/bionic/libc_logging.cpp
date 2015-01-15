@@ -495,7 +495,7 @@ static int __libc_write_log(int priority, const char* tag, const char* msg) {
     return __libc_write_stderr(tag, msg);
   }
 
-  iovec vec[6];
+  iovec vec[7];
   char log_id = (priority == ANDROID_LOG_FATAL) ? LOG_ID_CRASH : LOG_ID_MAIN;
   vec[0].iov_base = &log_id;
   vec[0].iov_len = sizeof(log_id);
@@ -509,13 +509,16 @@ static int __libc_write_log(int priority, const char* tag, const char* msg) {
   realtime_ts.tv_nsec = ts.tv_nsec;
   vec[2].iov_base = &realtime_ts;
   vec[2].iov_len = sizeof(realtime_ts);
+  uint8_t drops = 0; // We don't count these in here
+  vec[3].iov_base = &drops;
+  vec[3].iov_len = sizeof(drops);
 
-  vec[3].iov_base = &priority;
-  vec[3].iov_len = 1;
-  vec[4].iov_base = const_cast<char*>(tag);
-  vec[4].iov_len = strlen(tag) + 1;
-  vec[5].iov_base = const_cast<char*>(msg);
-  vec[5].iov_len = strlen(msg) + 1;
+  vec[4].iov_base = &priority;
+  vec[4].iov_len = 1;
+  vec[5].iov_base = const_cast<char*>(tag);
+  vec[5].iov_len = strlen(tag) + 1;
+  vec[6].iov_base = const_cast<char*>(msg);
+  vec[6].iov_len = strlen(msg) + 1;
 #else
   int main_log_fd = TEMP_FAILURE_RETRY(open("/dev/log/main", O_CLOEXEC | O_WRONLY));
   if (main_log_fd == -1) {
@@ -557,7 +560,7 @@ int __libc_format_log(int priority, const char* tag, const char* format, ...) {
 
 static int __libc_android_log_event(int32_t tag, char type, const void* payload, size_t len) {
 #ifdef TARGET_USES_LOGD
-  iovec vec[6];
+  iovec vec[7];
   char log_id = LOG_ID_EVENTS;
   vec[0].iov_base = &log_id;
   vec[0].iov_len = sizeof(log_id);
@@ -571,13 +574,16 @@ static int __libc_android_log_event(int32_t tag, char type, const void* payload,
   realtime_ts.tv_nsec = ts.tv_nsec;
   vec[2].iov_base = &realtime_ts;
   vec[2].iov_len = sizeof(realtime_ts);
+  uint8_t drops = 0; //  We don't count these in here
+  vec[3].iov_base = &drops;
+  vec[3].iov_len = sizeof(drops);
 
-  vec[3].iov_base = &tag;
-  vec[3].iov_len = sizeof(tag);
-  vec[4].iov_base = &type;
-  vec[4].iov_len = sizeof(type);
-  vec[5].iov_base = const_cast<void*>(payload);
-  vec[5].iov_len = len;
+  vec[4].iov_base = &tag;
+  vec[4].iov_len = sizeof(tag);
+  vec[5].iov_base = &type;
+  vec[5].iov_len = sizeof(type);
+  vec[6].iov_base = const_cast<void*>(payload);
+  vec[6].iov_len = len;
 
   int event_log_fd = __libc_open_log_socket();
 #else
