@@ -48,7 +48,11 @@ void _pthread_internal_remove_locked(pthread_internal_t* thread) {
   // The main thread is not heap-allocated. See __libc_init_tls for the declaration,
   // and __libc_init_common for the point where it's added to the thread list.
   if ((thread->attr.flags & PTHREAD_ATTR_FLAG_MAIN_THREAD) == 0) {
+    // BEGIN Motorola, a5111c, 03/16/2015, IKVPREL1L-9883
+    pthread_mutex_unlock(&g_thread_list_lock);
     free(thread);
+    pthread_mutex_lock(&g_thread_list_lock);
+    // END IKVPREL1L-9883
   }
 }
 
