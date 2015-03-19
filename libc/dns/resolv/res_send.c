@@ -597,8 +597,11 @@ res_nsend(res_state statp,
 
 			if (n < 0)
 				goto fail;
-			if (n == 0)
+			if (n == 0) { //IKSWL-2739 also print out dns server used
+                                getnameinfo(nsap, (socklen_t)nsaplen, abuf, sizeof(abuf),NULL, 0, niflags);
+                                __libc_format_log(ANDROID_LOG_DEBUG, "libc", "dns server used:%s\n", abuf);
 				goto next_ns;
+                        }
 			if (DBG) {
 				__libc_format_log(ANDROID_LOG_DEBUG, "libc", "time=%ld\n",
 						  time(NULL));
@@ -1040,7 +1043,7 @@ retry:
 
 	n = pselect(sock + 1, readset, writeset, NULL, &timeout, NULL);
 	if (n == 0) {
-		if (DBG) {
+		if (1) { // IKSWL-2739 always print out error log
 			__libc_format_log(ANDROID_LOG_DEBUG, " libc",
 				"  %d retrying_select timeout\n", sock);
 		}
@@ -1050,7 +1053,7 @@ retry:
 	if (n < 0) {
 		if (errno == EINTR)
 			goto retry;
-		if (DBG) {
+		if (1) { // IKSWL-2739 always print out error log
 			__libc_format_log(ANDROID_LOG_DEBUG, "libc",
 				"  %d retrying_select got error %d\n",sock, n);
 		}
