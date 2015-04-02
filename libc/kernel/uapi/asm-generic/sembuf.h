@@ -37,4 +37,13 @@ struct semid64_ds {
  unsigned long __unused4;
 /* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 };
+union semun64 {
+ int val;
+ struct semid64_ds __user *buf;
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ unsigned short __user *array;
+ struct seminfo __user *__buf;
+ void __user *__pad;
+};
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 #endif
