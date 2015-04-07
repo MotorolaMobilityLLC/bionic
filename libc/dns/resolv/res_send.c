@@ -168,6 +168,7 @@ typedef union {
     struct sockaddr_in6  sin6;
 } _sockaddr_union;
 
+#ifndef ANDROID_CHANGES // MOTO IKSWL-6852 align dns source port with qcom port range
 static int
 random_bind( int  s, int  family )
 {
@@ -214,6 +215,7 @@ random_bind( int  s, int  family )
 
     return bind( s, &u.sa, slen );
 }
+#endif
 /* BIONIC-END */
 
 static const int niflags = NI_NUMERICHOST | NI_NUMERICSERV;
@@ -831,6 +833,7 @@ send_vc(res_state statp,
 			}
 		}
 		errno = 0;
+#ifndef ANDROID_CHANGES // MOTO IKSWL-6852 align dns source port with qcom port range
 		if (random_bind(statp->_vcsock,nsap->sa_family) < 0) {
 			*terrno = errno;
 			Aerror(statp, stderr, "bind/vc", errno, nsap,
@@ -838,6 +841,7 @@ send_vc(res_state statp,
 			res_nclose(statp);
 			return (0);
 		}
+#endif
 		if (connect_with_timeout(statp->_vcsock, nsap, (socklen_t)nsaplen,
 				get_timeout(statp, ns)) < 0) {
 			*terrno = errno;
@@ -1145,12 +1149,14 @@ send_dg(res_state statp,
 		 * error message is received.  We can thus detect
 		 * the absence of a nameserver without timing out.
 		 */
+#ifndef ANDROID_CHANGES // MOTO IKSWL-6852 align dns source port with qcom port range
 		if (random_bind(EXT(statp).nssocks[ns], nsap->sa_family) < 0) {
 			Aerror(statp, stderr, "bind(dg)", errno, nsap,
 			    nsaplen);
 			res_nclose(statp);
 			return (0);
 		}
+#endif
 		if (__connect(EXT(statp).nssocks[ns], nsap, (socklen_t)nsaplen) < 0) {
 			Aerror(statp, stderr, "connect(dg)", errno, nsap,
 			    nsaplen);
