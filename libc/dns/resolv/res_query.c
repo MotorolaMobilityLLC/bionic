@@ -100,6 +100,7 @@ __RCSID("$NetBSD: res_query.c,v 1.7 2006/01/24 17:41:25 christos Exp $");
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include "private/libc_logging.h"
 
 #define DISABLE_HOST_ALIAS 1
 
@@ -178,6 +179,10 @@ again:
 			printf(";; res_query: send error\n");
 #endif
 		RES_SET_H_ERRNO(statp, TRY_AGAIN);
+                //BEGIN MOTO IKSWL-7327 more log for dns failure
+                __libc_format_log(ANDROID_LOG_DEBUG,
+                    "libc", "dns query(%s, %d, %d) failed", name, class, type);
+                //END MOTO IKSWL-7327
 		return (n);
 	}
 
@@ -207,6 +212,11 @@ again:
 			RES_SET_H_ERRNO(statp, NO_RECOVERY);
 			break;
 		}
+                //BEGIN MOTO IKSWL-7327 more log for dns failure
+                __libc_format_log(ANDROID_LOG_DEBUG, "libc",
+                    "dns query(%s, %d, %d) failed with error code %d",
+                    name, class, type, hp->rcode);
+                //END MOTO IKSWL-7327
 		return (-1);
 	}
 	return (n);
