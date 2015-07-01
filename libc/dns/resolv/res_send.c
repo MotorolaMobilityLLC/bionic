@@ -735,21 +735,43 @@ get_nsaddr(statp, n)
 	}
 }
 
+// BEGIN MOTO IKSWL-25609 rework dns retry mechanism
+/*
+ * return timeout value in milliseconds
+ * when RES_QUICKRETRY is set
+ *   if not last server, return 100 ms
+ *   if last server, return 5 seconds
+ *   if only one server provided, always use 5 seconds
+ * when RES_QUICKRETRY is not set
+ *   use AOSP mechanism
+ */
 static int get_timeout(const res_state statp, const int ns)
 {
-	int timeout = (statp->retrans << ns);
-	if (ns > 0) {
-		timeout /= statp->nscount;
+	int timeout;
+	if (statp->options & RES_QUICKRETRY) {
+		if (ns != (statp->nscount - 1)) {
+			timeout = RES_FALLBACK_TIMEOUT;
+		} else {
+			timeout = RES_TIMEOUT * 1000;
+		}
+	} else {
+		timeout = (statp->retrans << ns);
+		if (ns > 0) {
+			timeout /= statp->nscount;
+		}
+		if (timeout <= 0) {
+			timeout = 1;
+		}
+		timeout = timeout * 1000; // return in milliseconds
 	}
-	if (timeout <= 0) {
-		timeout = 1;
-	}
+
 	if (DBG) {
-		__libc_format_log(ANDROID_LOG_DEBUG, "libc", "using timeout of %d sec\n", timeout);
+		__libc_format_log(ANDROID_LOG_DEBUG, "libc", "using timeout of %d millisec\n", timeout);
 	}
 
 	return timeout;
 }
+// END MOTO
 
 static int
 send_vc(res_state statp,
@@ -1083,6 +1105,90 @@ retry:
 	return n;
 }
 
+// BEGIN MOTO IKSWL-25609 rework dns retry mechanism
+/*
+ * returns   0 on timeout
+ *         < 0 on internal error
+ *         s+1, where response is available at socket s
+ */
+static int
+retrying_select2(res_state statp, fd_set *readset, fd_set *writeset, const struct timespec *finish)
+{
+	struct timespec now, timeout;
+	int n, error;
+	socklen_t len;
+	int i, s, maxsock = -1;
+
+
+retry:
+	if (DBG) {
+		__libc_format_log(ANDROID_LOG_DEBUG, "libc", "in retrying_select2\n");
+	}
+
+	now = evNowTime();
+	if (readset) {
+		FD_ZERO(readset);
+	}
+	if (writeset) {
+		FD_ZERO(writeset);
+	}
+	for (i = 0; i < EXT(statp).nscount; i++) {
+		if (EXT(statp).nssocks[i] != -1) {
+			if (readset) {
+				FD_SET(EXT(statp).nssocks[i], readset);
+				if (EXT(statp).nssocks[i] > maxsock) maxsock = EXT(statp).nssocks[i];
+			}
+			if (writeset) {
+				FD_SET(EXT(statp).nssocks[i], writeset);
+				if (EXT(statp).nssocks[i] > maxsock) maxsock = EXT(statp).nssocks[i];
+			}
+		}
+	}
+	if (evCmpTime(*finish, now) > 0)
+		timeout = evSubTime(*finish, now);
+	else
+		timeout = evConsTime(0L, 0L);
+
+	n = pselect(maxsock + 1, readset, writeset, NULL, &timeout, NULL);
+	if (n == 0) {
+		__libc_format_log(ANDROID_LOG_DEBUG, "libc",
+				"retrying_select2 timeout\n");
+		errno = ETIMEDOUT;
+		return 0;
+	}
+	if (n < 0) {
+		if (errno == EINTR)
+			goto retry;
+		__libc_format_log(ANDROID_LOG_DEBUG, "libc",
+				"retrying_select2 got error %d\n", n);
+		return n;
+	}
+
+	for (i = 0; i < EXT(statp).nscount; i++) {
+		if (EXT(statp).nssocks[i] != -1)
+			s = EXT(statp).nssocks[i];
+		else
+			continue;
+		if ((readset && FD_ISSET(s, readset)) || (writeset && FD_ISSET(s, writeset))) {
+			len = sizeof(error);
+			if (getsockopt(s, SOL_SOCKET, SO_ERROR, &error, &len) < 0 || error) {
+				errno = error;
+				if (DBG) {
+					__libc_format_log(ANDROID_LOG_DEBUG, "libc",
+						"%d retrying_select2 dot error2 %d\n", s, errno);
+				}
+
+				return -1;
+			}
+			return s+1;
+		}
+	}
+
+	return -1;
+}
+// END MOTO
+
+
 static int
 send_dg(res_state statp,
 	const u_char *buf, int buflen, u_char *ans, int anssiz,
@@ -1100,7 +1206,8 @@ send_dg(res_state statp,
 	fd_set dsmask;
 	struct sockaddr_storage from;
 	socklen_t fromlen;
-	int resplen, seconds, n, s;
+	int resplen, seconds, n, s, sk; // IKSWL-25609 rework dns retry mechanism
+	long mseconds; // IKSWL-25609 rework dns retry mechanism
 
 	nsap = get_nsaddr(statp, (size_t)ns);
 	nsaplen = get_salen(nsap);
@@ -1183,12 +1290,19 @@ send_dg(res_state statp,
 	/*
 	 * Wait for reply.
 	 */
-	seconds = get_timeout(statp, ns);
+	// BEGIN MOTO IKSWL-25609 rework dns retry mechanism
+	mseconds = get_timeout(statp, ns);
+	seconds = mseconds / 1000;
+	mseconds = mseconds % 1000;
 	now = evNowTime();
-	timeout = evConsTime((long)seconds, 0L);
+	timeout = evConsTime((time_t)seconds, (long)mseconds * 1000000L);
 	finish = evAddTime(now, timeout);
 retry:
-	n = retrying_select(s, &dsmask, NULL, &finish);
+	if (statp->options & RES_QUICKRETRY) {
+		n = retrying_select2(statp, &dsmask, NULL, &finish);
+	} else {
+		n = retrying_select(s, &dsmask, NULL, &finish);
+	}
 
 	if (n == 0) {
 		*rcode = RCODE_TIMEOUT;
@@ -1203,8 +1317,14 @@ retry:
 	}
 	errno = 0;
 	fromlen = sizeof(from);
-	resplen = recvfrom(s, (char*)ans, (size_t)anssiz,0,
+	if (statp->options & RES_QUICKRETRY) {
+		sk = n - 1;
+	} else {
+		sk = s;
+	}
+	resplen = recvfrom(sk, (char*)ans, (size_t)anssiz,0,
 			   (struct sockaddr *)(void *)&from, &fromlen);
+	// END MOTO
 	if (resplen <= 0) {
 		Perror(statp, stderr, "recvfrom", errno);
 		res_nclose(statp);

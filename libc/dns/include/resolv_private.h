@@ -159,6 +159,10 @@ struct res_sym {
 #define	RES_DFLRETRY		2	/* Default #/tries. */
 #define	RES_MAXTIME		65535	/* Infinity, in milliseconds. */
 
+// BEGIN MOTO IKSWL-25609 rework dns retry mechanism
+#define RES_FALLBACK_TIMEOUT    100     /* time to wait before try next server, in ms */
+// END MOTO
+
 struct __res_state_ext;
 
 struct __res_state {
@@ -288,6 +292,9 @@ union res_sockaddr_union {
 /* #define RES_DEBUG2	0x00400000 */	/* nslookup internal */
 /* KAME extensions: use higher bit to avoid conflict with ISC use */
 #define RES_USE_DNAME	0x10000000	/* use DNAME */
+// BEGIN MOTO IKSWL-25609 rework dns retry mechanism
+#define RES_QUICKRETRY  0x20000000      /* used for wifi case, try next server in 100ms */
+// END MOTO IKSWL-25609
 #define RES_USE_EDNS0	0x40000000	/* use EDNS0 if configured */
 #define RES_NO_NIBBLE2	0x80000000	/* disable alternate nibble lookup */
 
