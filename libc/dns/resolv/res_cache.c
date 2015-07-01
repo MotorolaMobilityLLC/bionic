@@ -1236,6 +1236,7 @@ struct resolv_cache_info {
     struct addrinfo*            nsaddrinfo[MAXNS + 1];
     char                        defdname[256];
     int                         dnsrch_offset[MAXDNSRCH+1];  // offsets into defdname
+    int                         isWifi; // IKSWL-25609 rework dns retry mechanism
 };
 
 #define  HTABLE_VALID(x)  ((x) != NULL && (x) != HTABLE_DELETED)
@@ -1936,6 +1937,10 @@ _resolv_set_nameservers_for_net(unsigned netid, const char** servers, int numser
     char sbuf[NI_MAXSERV];
     register char *cp;
     int *offset;
+    // BEGIN MOTO IKSWL-25609 rework dns retry mechanism
+    const char * NAME = "net.wifi.netid";
+    char value[PROP_VALUE_MAX];
+    // END MOTO
 
     pthread_once(&_res_cache_once, _res_cache_init);
     pthread_mutex_lock(&_res_cache_list_lock);
@@ -1967,6 +1972,14 @@ _resolv_set_nameservers_for_net(unsigned netid, const char** servers, int numser
                 cache_info->nsaddrinfo[index] = NULL;
             }
         }
+        // BEGIN MOTO IKSWL-25609 rework dns retry mechanism
+        __system_property_get(NAME, value);
+        if (atoi(value) == (int)netid) {
+            cache_info->isWifi = 1;
+        } else {
+            cache_info->isWifi = 0;
+        }
+        // END MOTO
 
         // code moved from res_init.c, load_domain_search_list
         strlcpy(cache_info->defdname, domains, sizeof(cache_info->defdname));
@@ -2067,6 +2080,7 @@ _resolv_populate_res_for_net(res_state statp)
         int nserv;
         struct addrinfo* ai;
         XLOG("%s: %u\n", __FUNCTION__, statp->netid);
+        if (info->isWifi) statp->options |= RES_QUICKRETRY; // IKSWL-25609 rework dns retry mechanism
         for (nserv = 0; nserv < MAXNS; nserv++) {
             ai = info->nsaddrinfo[nserv];
             if (ai == NULL) {
