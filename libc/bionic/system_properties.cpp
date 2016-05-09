@@ -528,7 +528,7 @@ static int send_prop_msg(const prop_msg *msg)
         pollfd pollfds[1];
         pollfds[0].fd = fd;
         pollfds[0].events = 0;
-        const int poll_result = TEMP_FAILURE_RETRY(poll(pollfds, 1, 250 /* ms */));
+        const int poll_result = TEMP_FAILURE_RETRY(poll(pollfds, 1, 500 /* ms */));
         if (poll_result == 1 && (pollfds[0].revents & POLLHUP) != 0) {
             result = 0;
         } else {
