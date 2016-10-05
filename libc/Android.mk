@@ -1431,9 +1431,6 @@ LOCAL_LDFLAGS_x86_64 += -Wl,--version-script,$(LOCAL_PATH)/libc.x86_64.map
 # compatibility.
 LOCAL_LDFLAGS_64 := -Wl,--exclude-libs,libgcc.a
 
-# MMI_STOPSHIP: avoid multiple definitions in N build
-LOCAL_LDFLAGS_arm64  += -Wl,--allow-multiple-definition
-
 # Unfortunately --exclude-libs clobbers our version script, so we have to
 # prevent the build system from using this flag.
 LOCAL_NO_EXCLUDE_LIBS := true
