@@ -54,6 +54,12 @@ ifeq ($(TARGET_IS_64_BIT),true)
 LOCAL_CPPFLAGS += -DTARGET_IS_64_BIT
 endif
 
+#BEGIN Motorola, zhaohb5, 1/11/2016, IKSWN-9982, change the code of linker back to M on China sku to avoid PIE nonsupport crash
+ifeq ($(AvoidPIENonsupportCrash),yes)
+    LOCAL_CFLAGS += -DENABLE_AVOIDPIENONSUPPORTCRASH
+endif
+#IKSWN-9982 End
+
 # We need to access Bionic private headers in the linker.
 LOCAL_CFLAGS += -I$(LOCAL_PATH)/../libc/
 
