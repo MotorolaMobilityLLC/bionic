@@ -1967,6 +1967,16 @@ _resolv_set_nameservers_for_net(unsigned netid, const char** servers, unsigned n
     char value[PROP_VALUE_MAX];
     // END MOTO
 
+    // BEGIN MOTO IKSWN-8105 discard invalid dns server first
+    unsigned i, j=0;
+    for (i = 0; i < numservers; i++) {
+        if (strncmp(servers[i], "0.", 2) != 0) {
+            servers[j++] = servers[i];
+        }
+    }
+    numservers = j;
+    // END MOTO
+
     if (numservers > MAXNS) {
         XLOG("%s: numservers=%u, MAXNS=%u", __FUNCTION__, numservers, MAXNS);
         return E2BIG;
