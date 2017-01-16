@@ -37,6 +37,7 @@ LOCAL_SRC_FILES := \
   ../linker_utils.cpp
 
 # for __libc_fatal
-LOCAL_SRC_FILES += ../../libc/bionic/libc_logging.cpp
+LOCAL_SRC_FILES += ../../libc/bionic/libc_logging.cpp \
+    ../../libc/bionic/log_is_loggable.c \
 
 include $(BUILD_NATIVE_TEST)
