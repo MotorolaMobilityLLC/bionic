@@ -1246,6 +1246,7 @@ struct resolv_cache_info {
     struct __res_stats          nsstats[MAXNS];
     char                        defdname[MAXDNSRCHPATH];
     int                         dnsrch_offset[MAXDNSRCH+1];  // offsets into defdname
+    int                         isWifi; // IKSWL-25609 rework dns retry mechanism
 };
 
 #define  HTABLE_VALID(x)  ((x) != NULL && (x) != HTABLE_DELETED)
@@ -1961,6 +1962,20 @@ _resolv_set_nameservers_for_net(unsigned netid, const char** servers, unsigned n
     register char *cp;
     int *offset;
     struct addrinfo* nsaddrinfo[MAXNS];
+    // BEGIN MOTO IKSWL-25609 rework dns retry mechanism
+    const char * NAME = "net.wifi.netid";
+    char value[PROP_VALUE_MAX];
+    // END MOTO
+
+    // BEGIN MOTO IKSWN-8105 discard invalid dns server first
+    unsigned i, j=0;
+    for (i = 0; i < numservers; i++) {
+        if (strncmp(servers[i], "0.", 2) != 0) {
+            servers[j++] = servers[i];
+        }
+    }
+    numservers = j;
+    // END MOTO
 
     if (numservers > MAXNS) {
         XLOG("%s: numservers=%u, MAXNS=%u", __FUNCTION__, numservers, MAXNS);
@@ -2003,6 +2018,14 @@ _resolv_set_nameservers_for_net(unsigned netid, const char** servers, unsigned n
         } else {
             _resolv_set_default_params(&cache_info->params);
         }
+        // BEGIN MOTO IKSWL-25609 rework dns retry mechanism
+        __system_property_get(NAME, value);
+        if (atoi(value) == (int)netid) {
+            cache_info->isWifi = 1;
+        } else {
+            cache_info->isWifi = 0;
+        }
+        // END MOTO
 
         if (!_resolv_is_nameservers_equal_locked(cache_info, servers, numservers)) {
             // free current before adding new
@@ -2127,6 +2150,7 @@ _resolv_populate_res_for_net(res_state statp)
         int nserv;
         struct addrinfo* ai;
         XLOG("%s: %u\n", __FUNCTION__, statp->netid);
+        if (info->isWifi) statp->options |= RES_QUICKRETRY; // IKSWL-25609 rework dns retry mechanism
         for (nserv = 0; nserv < MAXNS; nserv++) {
             ai = info->nsaddrinfo[nserv];
             if (ai == NULL) {

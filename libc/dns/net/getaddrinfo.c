@@ -2027,9 +2027,11 @@ _dns_getaddrinfo(void *rv, void	*cb_data, va_list ap)
 		q.anslen = sizeof(buf->buf);
 		int query_ipv6 = 1, query_ipv4 = 1;
 		if (pai->ai_flags & AI_ADDRCONFIG) {
-			query_ipv6 = _have_ipv6(netcontext->app_mark, netcontext->uid);
-			query_ipv4 = _have_ipv4(netcontext->app_mark, netcontext->uid);
-            debug_log("default dns: query_ipv6=%d, query_ipv4=%d\n", query_ipv6, query_ipv4);
+			//BEGIN MOTO IKSWM-26773 use correct mark to determine route
+			query_ipv6 = _have_ipv6(netcontext->dns_mark, netcontext->uid);
+			query_ipv4 = _have_ipv4(netcontext->dns_mark, netcontext->uid);
+			//END MOTO IKSWM-26773
+	   		debug_log("default dns: query_ipv6=%d, query_ipv4=%d\n", query_ipv6, query_ipv4);
 		}
 		if (query_ipv6) {
 			q.qtype = T_AAAA;
@@ -2114,7 +2116,9 @@ _dns_getaddrinfo(void *rv, void	*cb_data, va_list ap)
 		}
 	}
 
-	_rfc6724_sort(&sentinel, netcontext->app_mark, netcontext->uid);
+	//BEGIN MOTO IKSWM-26773 use correct mark to determine route
+	_rfc6724_sort(&sentinel, netcontext->dns_mark, netcontext->uid);
+	//END MOTO IKSWM-26773
 
 	__res_put_state(res);
 

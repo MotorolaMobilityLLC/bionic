@@ -229,6 +229,7 @@ static bool is_greylisted(const char* name, const soinfo* needed_by) {
     "libui.so",
     "libutils.so",
     "libvorbisidec.so",
+    "libc++.so",
     nullptr
   };
 
@@ -4283,8 +4284,15 @@ static ElfW(Addr) __linker_init_post_relocation(KernelArgumentBlock& args, ElfW(
 
   ElfW(Ehdr)* elf_hdr = reinterpret_cast<ElfW(Ehdr)*>(si->base);
   if (elf_hdr->e_type != ET_DYN) {
+   //BEGIN Motorola, zhaohb5, 1/11/2016, IKSWN-9982, change the code of linker back to M on China sku to avoid PIE nonsupport crash
+#ifdef ENABLE_AVOIDPIENONSUPPORTCRASH
+    __libc_format_fd(2, "error: only position independent executables (PIE) are supported.\n");
+    kill(getpid(),SIGKILL);
+#else
     __libc_fatal("\"%s\": error: only position independent executables (PIE) are supported.",
                  args.argv[0]);
+#endif
+  //IKSWN-9982 End
   }
 
   // Use LD_LIBRARY_PATH and LD_PRELOAD (but only if we aren't setuid/setgid).
