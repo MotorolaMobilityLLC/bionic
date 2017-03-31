@@ -230,6 +230,9 @@ static bool is_greylisted(const char* name, const soinfo* needed_by) {
     "libutils.so",
     "libvorbisidec.so",
     "libc++.so",
+    "libfmjni.so",
+    "libfmcust.so",
+    "libnativeloader.so",
     nullptr
   };
 
