@@ -94,6 +94,9 @@ static const char* const kLdConfigVndkLiteFilePath = "/system/etc/ld.config.vndk
 static const char* const kSystemLibDir        = "/system/lib64";
 static const char* const kOdmLibDir           = "/odm/lib64";
 static const char* const kVendorLibDir        = "/vendor/lib64";
+// MOTO BEGIN: IKSWN-30801: Add oem libarary path in scan list
+static const char* const kOemLibDir           = "/oem/lib64";
+// MOTO END
 static const char* const kAsanSystemLibDir    = "/data/asan/system/lib64";
 static const char* const kAsanOdmLibDir       = "/data/asan/odm/lib64";
 static const char* const kAsanVendorLibDir    = "/data/asan/vendor/lib64";
@@ -102,6 +105,9 @@ static const char* const kRuntimeApexLibDir   = "/apex/com.android.runtime/lib64
 static const char* const kSystemLibDir        = "/system/lib";
 static const char* const kOdmLibDir           = "/odm/lib";
 static const char* const kVendorLibDir        = "/vendor/lib";
+// MOTO BEGIN: IKSWN-30801: Add oem libarary path in scan list
+static const char* const kOemLibDir           = "/oem/lib";
+// MOTO END
 static const char* const kAsanSystemLibDir    = "/data/asan/system/lib";
 static const char* const kAsanOdmLibDir       = "/data/asan/odm/lib";
 static const char* const kAsanVendorLibDir    = "/data/asan/vendor/lib";
@@ -111,6 +117,9 @@ static const char* const kRuntimeApexLibDir   = "/apex/com.android.runtime/lib";
 static const char* const kAsanLibDirPrefix = "/data/asan";
 
 static const char* const kDefaultLdPaths[] = {
+// MOTO BEGIN: IKSWN-30801: Add oem libarary path in scan list
+  kOemLibDir,
+// MOTO END
   kSystemLibDir,
   kOdmLibDir,
   kVendorLibDir,
@@ -118,6 +127,9 @@ static const char* const kDefaultLdPaths[] = {
 };
 
 static const char* const kAsanDefaultLdPaths[] = {
+// MOTO BEGIN: IKSWN-30801: Add oem libarary path in scan list
+  kOemLibDir,
+// MOTO END
   kAsanSystemLibDir,
   kSystemLibDir,
   kAsanOdmLibDir,
