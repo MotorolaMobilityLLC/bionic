@@ -195,6 +195,7 @@ cc_library_static {
         "-Wno-unused-parameter",
         "-include netbsd-compat.h",
         "-Wframe-larger-than=66000",
+        "-Wno-implicit-function-declaration",
     ],
 
     local_include_dirs: [
