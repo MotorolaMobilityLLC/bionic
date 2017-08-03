@@ -52,7 +52,9 @@
 #define D_l	x13
 #define D_h	x14
 
+#ifndef NO_USE_PREFETCH
 	prfm    pldl1strm, [src, #64]
+#endif
 	mov	dst, dstin
 	cmp	count, #64
 	b.ge	.Lcpy_not_short
@@ -167,7 +169,9 @@
 	ldp	C_l, C_h, [src, #48]
 	stp	D_l, D_h, [dst, #64]!
 	ldp	D_l, D_h, [src, #64]!
+#ifndef NO_USE_PREFETCH
 	prfm    pldl1strm, [src, #(4*64)]
+#endif
 	subs	count, count, #64
 	b.ge	1b
 	stp	A_l, A_h, [dst, #16]

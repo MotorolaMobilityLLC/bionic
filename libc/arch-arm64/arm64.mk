@@ -20,6 +20,9 @@ libc_bionic_src_files_arm64 += \
     arch-arm64/generic/bionic/strnlen.S \
     arch-arm64/generic/bionic/wmemmove.S \
 
+ifeq ($(TARGET_BOARD_PLATFORM),sdm660)
+libc_bionic_asflags_arm64 += -DNO_USE_PREFETCH
+endif
 endif
 
 libc_bionic_src_files_exclude_arm64 += \
