@@ -1668,6 +1668,9 @@ cc_library {
         platform_sdk_version: {
             asflags: ["-DPLATFORM_SDK_VERSION=%d"],
         },
+        debuggable: {
+            cflags: ["-DLOAD_IS_ENG_DEB"],
+        },
     },
     static: {
         srcs: [

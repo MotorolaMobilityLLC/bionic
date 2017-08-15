@@ -63,6 +63,11 @@
 #include <net/if.h>
 #include <time.h>
 
+#include "private/libc_logging.h"
+#define debug_log(format, ...)  \
+    __libc_format_log(ANDROID_LOG_DEBUG, "libc-netbsd", (format), ##__VA_ARGS__ )
+
+
 // Linux defines MAXHOSTNAMELEN as 64, while the domain name limit in
 // RFC 1034 and RFC 1035 is 255 octets.
 #ifdef MAXHOSTNAMELEN
@@ -101,6 +106,12 @@
 
 #define RES_SET_H_ERRNO(r,x) (h_errno = (r)->res_h_errno = (x))
 struct __res_state; /* forward */
+
+#ifdef LOAD_IS_ENG_DEB
+    #define LOAD_IS_USER 0
+#else
+    #define LOAD_IS_USER 1
+#endif
 
 /*
  * Resolver configuration file.
