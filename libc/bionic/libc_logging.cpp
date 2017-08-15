@@ -637,8 +637,37 @@ void __fortify_fatal(const char* fmt, ...) {
   abort();
 }
 
+#ifdef DUMP_ABORT_MSG_FOR_DIRECT_COREDUMP
+static void dump_abort_message_to_file(const char* msg) {
+  const prop_info* pi;
+  char buf[PROP_VALUE_MAX];
+
+  pi = __system_property_find("ro.build.type");
+  if (pi) {
+    if (__system_property_read(pi, NULL, buf) > 0) {
+      if (!strcmp(buf, "user"))  // user load no need
+        return;
+    }
+  }
+
+  char file[64];
+  FILE *fp;
+
+  snprintf(file, sizeof(file), "/data/misc/aee_interim/abort_msg_%d", getpid());
+  fp = fopen(file, "w+");
+  if (fp != NULL) {
+    fprintf(fp, "%s", msg);
+    fclose(fp);
+  }
+}
+#endif
+
 void android_set_abort_message(const char* msg) {
   ScopedPthreadMutexLocker locker(&g_abort_msg_lock);
+
+#ifdef DUMP_ABORT_MSG_FOR_DIRECT_COREDUMP
+  dump_abort_message_to_file(msg);
+#endif
 
   if (__abort_message_ptr == NULL) {
     // We must have crashed _very_ early.

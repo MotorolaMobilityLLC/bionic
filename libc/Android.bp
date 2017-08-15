@@ -1420,6 +1420,7 @@ cc_library_static {
     },
     cflags: [
         "-DMTK_LOGD_ENHANCE",
+        "-DDUMP_ABORT_MSG_FOR_DIRECT_COREDUMP",
     ],
     cppflags: ["-Wold-style-cast"],
     local_include_dirs: ["stdio"],
@@ -1768,9 +1769,10 @@ cc_library_static {
         "bionic/libc_logging.cpp",
         "bionic/log_is_loggable.c",
     ],
-    
+
     cflags: [
         "-DMTK_LOGD_ENHANCE",
+        "-DDUMP_ABORT_MSG_FOR_DIRECT_COREDUMP",
     ],
     name: "libc_logging",
 }
