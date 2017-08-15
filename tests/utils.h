@@ -32,6 +32,12 @@
 
 #include "private/ScopeGuard.h"
 
+#if defined(__LP64__)
+#define PATH_TO_SYSTEM_LIB "/system/lib64/"
+#else
+#define PATH_TO_SYSTEM_LIB "/system/lib/"
+#endif
+
 #if defined(__BIONIC__)
 #define KNOWN_FAILURE_ON_BIONIC(x) xfail_ ## x
 #else
@@ -136,11 +142,6 @@ static inline void AssertChildExited(int pid, int expected_exit_status) {
 
 // The absolute path to the executable
 const std::string& get_executable_path();
-
-// Get realpath
-bool get_realpath(const std::string& path, std::string* realpath);
-// Get dirname
-std::string get_dirname(const char* path);
 
 // Access to argc/argv/envp
 int get_argc();

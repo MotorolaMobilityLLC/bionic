@@ -71,6 +71,8 @@
 
 #include "private/bionic_fortify.h"
 
+struct __bionic_zero_size_is_okay_t __bionic_zero_size_is_okay;
+
 //
 // For more details see:
 //   http://gcc.gnu.org/onlinedocs/gcc/Object-Size-Checking.html
@@ -220,6 +222,13 @@ ssize_t __recvfrom_chk(int socket, void* buf, size_t len, size_t buf_size,
                        int flags, sockaddr* src_addr, socklen_t* addrlen) {
   __check_buffer_access("recvfrom", "write into", len, buf_size);
   return recvfrom(socket, buf, len, flags, src_addr, addrlen);
+}
+
+ssize_t __sendto_chk(int socket, const void* buf, size_t len, size_t buflen,
+                     int flags, const struct sockaddr* dest_addr,
+                     socklen_t addrlen) {
+  __check_buffer_access("sendto", "read from", len, buflen);
+  return sendto(socket, buf, len, flags, dest_addr, addrlen);
 }
 
 // Runtime implementation of __builtin____stpcpy_chk (used directly by compiler, not in headers)..

@@ -17,45 +17,26 @@
 #include <sys/ptrace.h>
 
 #include <elf.h>
+#include <fcntl.h>
 #include <sched.h>
 #include <sys/prctl.h>
+#include <sys/ptrace.h>
 #include <sys/uio.h>
 #include <sys/user.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include <gtest/gtest.h>
+
+#include <android-base/macros.h>
+#include <android-base/unique_fd.h>
+
+using android::base::unique_fd;
 
 // Host libc does not define this.
 #ifndef TRAP_HWBKPT
 #define TRAP_HWBKPT 4
 #endif
-
-template <typename T>
-static void __attribute__((noreturn)) watchpoint_fork_child(unsigned cpu, T& data) {
-  // Extra precaution: make sure we go away if anything happens to our parent.
-  if (prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0) == -1) {
-    perror("prctl(PR_SET_PDEATHSIG)");
-    _exit(1);
-  }
-
-  cpu_set_t cpus;
-  CPU_ZERO(&cpus);
-  CPU_SET(cpu, &cpus);
-  if (sched_setaffinity(0, sizeof cpus, &cpus) == -1) {
-    perror("sched_setaffinity");
-    _exit(2);
-  }
-  if (ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) == -1) {
-    perror("ptrace(PTRACE_TRACEME)");
-    _exit(3);
-  }
-
-  raise(SIGSTOP); // Synchronize with the tracer, let it set the watchpoint.
-
-  data = 1; // Now trigger the watchpoint.
-
-  _exit(0);
-}
 
 class ChildGuard {
  public:
@@ -102,18 +83,19 @@ static bool is_hw_feature_supported(pid_t child, HwFeature feature) {
   return (dreg_state.dbg_info & 0xff) > 0;
 #elif defined(__i386__) || defined(__x86_64__)
   // We assume watchpoints and breakpoints are always supported on x86.
-  (void) child;
-  (void)feature;
+  UNUSED(child);
+  UNUSED(feature);
   return true;
 #else
   // TODO: mips support.
-  (void) child;
-  (void)feature;
+  UNUSED(child);
+  UNUSED(feature);
   return false;
 #endif
 }
 
-static void set_watchpoint(pid_t child, const void *address, size_t size) {
+static void set_watchpoint(pid_t child, uintptr_t address, size_t size) {
+  ASSERT_EQ(0u, address & 0x7) << "address: " << address;
 #if defined(__arm__) || defined(__aarch64__)
   const unsigned byte_mask = (1 << size) - 1;
   const unsigned type = 2; // Write.
@@ -126,7 +108,7 @@ static void set_watchpoint(pid_t child, const void *address, size_t size) {
 #else // aarch64
   user_hwdebug_state dreg_state;
   memset(&dreg_state, 0, sizeof dreg_state);
-  dreg_state.dbg_regs[0].addr = reinterpret_cast<uintptr_t>(address);
+  dreg_state.dbg_regs[0].addr = address;
   dreg_state.dbg_regs[0].ctrl = control;
 
   iovec iov;
@@ -151,19 +133,33 @@ static void set_watchpoint(pid_t child, const void *address, size_t size) {
   data |= value;
   ASSERT_EQ(0, ptrace(PTRACE_POKEUSER, child, offsetof(user, u_debugreg[7]), data)) << strerror(errno);
 #else
-  (void) child;
-  (void) address;
-  (void) size;
+  UNUSED(child);
+  UNUSED(address);
+  UNUSED(size);
 #endif
 }
 
-template<typename T>
-static void run_watchpoint_test_impl(unsigned cpu) {
-  alignas(8) T data = 0;
+template <typename T>
+static void run_watchpoint_test(std::function<void(T&)> child_func, size_t offset, size_t size) {
+  alignas(16) T data{};
 
   pid_t child = fork();
   ASSERT_NE(-1, child) << strerror(errno);
-  if (child == 0) watchpoint_fork_child(cpu, data);
+  if (child == 0) {
+    // Extra precaution: make sure we go away if anything happens to our parent.
+    if (prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0) == -1) {
+      perror("prctl(PR_SET_PDEATHSIG)");
+      _exit(1);
+    }
+
+    if (ptrace(PTRACE_TRACEME, 0, nullptr, nullptr) == -1) {
+      perror("ptrace(PTRACE_TRACEME)");
+      _exit(2);
+    }
+
+    child_func(data);
+    _exit(0);
+  }
 
   ChildGuard guard(child);
 
@@ -177,7 +173,7 @@ static void run_watchpoint_test_impl(unsigned cpu) {
     return;
   }
 
-  set_watchpoint(child, &data, sizeof data);
+  set_watchpoint(child, uintptr_t(&data) + offset, size);
 
   ASSERT_EQ(0, ptrace(PTRACE_CONT, child, nullptr, nullptr)) << strerror(errno);
   ASSERT_EQ(child, waitpid(child, &status, __WALL)) << strerror(errno);
@@ -188,17 +184,29 @@ static void run_watchpoint_test_impl(unsigned cpu) {
   ASSERT_EQ(0, ptrace(PTRACE_GETSIGINFO, child, nullptr, &siginfo)) << strerror(errno);
   ASSERT_EQ(TRAP_HWBKPT, siginfo.si_code);
 #if defined(__arm__) || defined(__aarch64__)
-  ASSERT_EQ(&data, siginfo.si_addr);
+  ASSERT_LE(&data, siginfo.si_addr);
+  ASSERT_GT((&data) + 1, siginfo.si_addr);
 #endif
 }
 
-static void run_watchpoint_test(unsigned cpu) {
-  run_watchpoint_test_impl<uint8_t>(cpu);
-  run_watchpoint_test_impl<uint16_t>(cpu);
-  run_watchpoint_test_impl<uint32_t>(cpu);
-#if defined(__LP64__)
-  run_watchpoint_test_impl<uint64_t>(cpu);
-#endif
+template <typename T>
+static void watchpoint_stress_child(unsigned cpu, T& data) {
+  cpu_set_t cpus;
+  CPU_ZERO(&cpus);
+  CPU_SET(cpu, &cpus);
+  if (sched_setaffinity(0, sizeof cpus, &cpus) == -1) {
+    perror("sched_setaffinity");
+    _exit(3);
+  }
+  raise(SIGSTOP);  // Synchronize with the tracer, let it set the watchpoint.
+
+  data = 1;  // Now trigger the watchpoint.
+}
+
+template <typename T>
+static void run_watchpoint_stress(size_t cpu) {
+  run_watchpoint_test<T>(std::bind(watchpoint_stress_child<T>, cpu, std::placeholders::_1), 0,
+                         sizeof(T));
 }
 
 // Test watchpoint API. The test is considered successful if our watchpoints get hit OR the
@@ -210,8 +218,51 @@ TEST(sys_ptrace, watchpoint_stress) {
 
   for (size_t cpu = 0; cpu < CPU_SETSIZE; ++cpu) {
     if (!CPU_ISSET(cpu, &available_cpus)) continue;
-    run_watchpoint_test(cpu);
+
+    run_watchpoint_stress<uint8_t>(cpu);
+    run_watchpoint_stress<uint16_t>(cpu);
+    run_watchpoint_stress<uint32_t>(cpu);
+#if defined(__LP64__)
+    run_watchpoint_stress<uint64_t>(cpu);
+#endif
   }
+}
+
+struct Uint128_t {
+  uint64_t data[2];
+};
+static void watchpoint_imprecise_child(Uint128_t& data) {
+  raise(SIGSTOP);  // Synchronize with the tracer, let it set the watchpoint.
+
+#if defined(__i386__) || defined(__x86_64__)
+  asm volatile("movdqa %%xmm0, %0" : : "m"(data));
+#elif defined(__arm__)
+  asm volatile("stm %0, { r0, r1, r2, r3 }" : : "r"(&data));
+#elif defined(__aarch64__)
+  asm volatile("stp x0, x1, %0" : : "m"(data));
+#elif defined(__mips__)
+// TODO
+  UNUSED(data);
+#endif
+}
+
+// Test that the kernel is able to handle the case when the instruction writes
+// to a larger block of memory than the one we are watching. If you see this
+// test fail on arm64, you will likely need to cherry-pick fdfeff0f into your
+// kernel.
+TEST(sys_ptrace, watchpoint_imprecise) {
+  // Make sure we get interrupted in case a buggy kernel does not report the
+  // watchpoint hit correctly.
+  struct sigaction action, oldaction;
+  action.sa_handler = [](int) {};
+  sigemptyset(&action.sa_mask);
+  action.sa_flags = 0;
+  ASSERT_EQ(0, sigaction(SIGALRM, &action, &oldaction)) << strerror(errno);
+  alarm(5);
+
+  run_watchpoint_test<Uint128_t>(watchpoint_imprecise_child, 8, 8);
+
+  ASSERT_EQ(0, sigaction(SIGALRM, &oldaction, nullptr)) << strerror(errno);
 }
 
 static void __attribute__((noinline)) breakpoint_func() {
@@ -278,8 +329,8 @@ static void set_breakpoint(pid_t child) {
   ASSERT_EQ(0, ptrace(PTRACE_POKEUSER, child, offsetof(user, u_debugreg[7]), data))
       << strerror(errno);
 #else
-  (void)child;
-  (void)address;
+  UNUSED(child);
+  UNUSED(address);
 #endif
 }
 
@@ -312,4 +363,95 @@ TEST(sys_ptrace, hardware_breakpoint) {
   siginfo_t siginfo;
   ASSERT_EQ(0, ptrace(PTRACE_GETSIGINFO, child, nullptr, &siginfo)) << strerror(errno);
   ASSERT_EQ(TRAP_HWBKPT, siginfo.si_code);
+}
+
+class PtraceResumptionTest : public ::testing::Test {
+ public:
+  pid_t worker = -1;
+  PtraceResumptionTest() {
+  }
+
+  ~PtraceResumptionTest() {
+  }
+
+  void AssertDeath(int signo);
+  void Start(std::function<void()> f) {
+    unique_fd worker_pipe_read, worker_pipe_write;
+    int pipefd[2];
+    ASSERT_EQ(0, pipe2(pipefd, O_CLOEXEC));
+    worker_pipe_read.reset(pipefd[0]);
+    worker_pipe_write.reset(pipefd[1]);
+
+    worker = fork();
+    ASSERT_NE(-1, worker);
+    if (worker == 0) {
+      char buf;
+      worker_pipe_write.reset();
+      TEMP_FAILURE_RETRY(read(worker_pipe_read.get(), &buf, sizeof(buf)));
+      exit(0);
+    }
+
+    pid_t tracer = fork();
+    ASSERT_NE(-1, tracer);
+    if (tracer == 0) {
+      f();
+      if (HasFatalFailure()) {
+        exit(1);
+      }
+      exit(0);
+    }
+
+    int result;
+    pid_t rc = waitpid(tracer, &result, 0);
+    ASSERT_EQ(tracer, rc);
+    EXPECT_TRUE(WIFEXITED(result) || WIFSIGNALED(result));
+    if (WIFEXITED(result)) {
+      if (WEXITSTATUS(result) != 0) {
+        FAIL() << "tracer failed";
+      }
+    }
+
+    rc = waitpid(worker, &result, WNOHANG);
+    ASSERT_EQ(0, rc);
+
+    worker_pipe_write.reset();
+
+    rc = waitpid(worker, &result, 0);
+    ASSERT_EQ(worker, rc);
+    EXPECT_TRUE(WIFEXITED(result));
+    EXPECT_EQ(WEXITSTATUS(result), 0);
+  }
+};
+
+static void wait_for_ptrace_stop(pid_t pid) {
+  while (true) {
+    int status;
+    pid_t rc = TEMP_FAILURE_RETRY(waitpid(pid, &status, __WALL));
+    if (rc != pid) {
+      abort();
+    }
+    if (WIFSTOPPED(status)) {
+      return;
+    }
+  }
+}
+
+TEST_F(PtraceResumptionTest, seize) {
+  Start([this]() { ASSERT_EQ(0, ptrace(PTRACE_SEIZE, worker, 0, 0)) << strerror(errno); });
+}
+
+TEST_F(PtraceResumptionTest, seize_interrupt) {
+  Start([this]() {
+    ASSERT_EQ(0, ptrace(PTRACE_SEIZE, worker, 0, 0)) << strerror(errno);
+    ASSERT_EQ(0, ptrace(PTRACE_INTERRUPT, worker, 0, 0)) << strerror(errno);
+  });
+}
+
+TEST_F(PtraceResumptionTest, seize_interrupt_cont) {
+  Start([this]() {
+    ASSERT_EQ(0, ptrace(PTRACE_SEIZE, worker, 0, 0)) << strerror(errno);
+    ASSERT_EQ(0, ptrace(PTRACE_INTERRUPT, worker, 0, 0)) << strerror(errno);
+    wait_for_ptrace_stop(worker);
+    ASSERT_EQ(0, ptrace(PTRACE_CONT, worker, 0, 0)) << strerror(errno);
+  });
 }

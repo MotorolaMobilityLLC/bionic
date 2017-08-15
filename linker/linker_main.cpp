@@ -356,9 +356,17 @@ static ElfW(Addr) __linker_init_post_relocation(KernelArgumentBlock& args, ElfW(
   size_t needed_libraries_count = needed_library_name_list.size();
 
   if (needed_libraries_count > 0 &&
-      !find_libraries(&g_default_namespace, si, needed_library_names, needed_libraries_count,
-                      nullptr, &g_ld_preloads, ld_preloads_count, RTLD_GLOBAL, nullptr,
-                      /* add_as_children */ true)) {
+      !find_libraries(&g_default_namespace,
+                      si,
+                      needed_library_names,
+                      needed_libraries_count,
+                      nullptr,
+                      &g_ld_preloads,
+                      ld_preloads_count,
+                      RTLD_GLOBAL,
+                      nullptr,
+                      true /* add_as_children */,
+                      true /* search_linked_namespaces */)) {
     __libc_fatal("CANNOT LINK EXECUTABLE \"%s\": %s", g_argv[0], linker_get_error_buffer());
   } else if (needed_libraries_count == 0) {
     if (!si->link_image(g_empty_list, soinfo_list_t::make_list(si), nullptr)) {
@@ -488,7 +496,7 @@ extern "C" ElfW(Addr) __linker_init(void* raw_args) {
   // see also https://code.google.com/p/android/issues/detail?id=63174
   if (reinterpret_cast<ElfW(Addr)>(&_start) == entry_point) {
     __libc_format_fd(STDOUT_FILENO,
-                     "This is %s, the helper program for shared library executables.\n",
+                     "This is %s, the helper program for dynamic executables.\n",
                      args.argv[0]);
     exit(0);
   }

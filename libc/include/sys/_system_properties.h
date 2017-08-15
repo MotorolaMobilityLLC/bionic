@@ -30,6 +30,7 @@
 #define _INCLUDE_SYS__SYSTEM_PROPERTIES_H
 
 #include <sys/cdefs.h>
+#include <stdint.h>
 
 #ifndef _REALLY_INCLUDE_SYS__SYSTEM_PROPERTIES_H_
 #error you should #include <sys/system_properties.h> instead
@@ -91,7 +92,7 @@ int __system_property_area_init();
 **
 ** Returns the serial number on success, -1 on error.
 */
-unsigned int __system_property_area_serial();
+uint32_t __system_property_area_serial();
 
 /* Add a new system property.  Can only be done by a single
 ** process that has write access to the property area, and
@@ -118,12 +119,7 @@ int __system_property_update(prop_info *pi, const char *value, unsigned int len)
 **
 ** Returns the serial number on success, -1 on error.
 */
-unsigned int __system_property_serial(const prop_info *pi);
-
-/* Wait for any system property to be updated.  Caller must pass
-** in 0 the first time, and the previous return value on each
-** successive call. */
-unsigned int __system_property_wait_any(unsigned int serial);
+uint32_t __system_property_serial(const prop_info* pi);
 
 /* Initialize the system properties area in read only mode.
  * Should be done by all processes that need to read system
@@ -132,6 +128,9 @@ unsigned int __system_property_wait_any(unsigned int serial);
  * Returns 0 on success, -1 otherwise.
  */
 int __system_properties_init();
+
+/* Deprecated: use __system_property_wait instead. */
+uint32_t __system_property_wait_any(uint32_t old_serial);
 
 __END_DECLS
 

@@ -916,11 +916,6 @@ TEST(dlfcn, dlopen_executable_by_absolute_path) {
 #endif
 }
 
-#if defined(__LP64__)
-#define PATH_TO_SYSTEM_LIB "/system/lib64/"
-#else
-#define PATH_TO_SYSTEM_LIB "/system/lib/"
-#endif
 #if defined (__aarch64__)
 #define ALTERNATE_PATH_TO_SYSTEM_LIB "/system/lib/arm64/"
 #elif defined (__arm__)
@@ -1134,6 +1129,34 @@ TEST(dlfcn, dlopen_dlopen_from_ctor) {
 #else
   GTEST_LOG_(INFO) << "This test is disabled for glibc (glibc segfaults if you try to call dlopen from a constructor).\n";
 #endif
+}
+
+static std::string g_fini_call_order_str;
+
+static void register_fini_call(const char* s) {
+  g_fini_call_order_str += s;
+}
+
+static void test_init_fini_call_order_for(const char* libname) {
+  g_fini_call_order_str.clear();
+  void* handle = dlopen(libname, RTLD_NOW);
+  ASSERT_TRUE(handle != nullptr) << dlerror();
+  typedef int (*get_init_order_number_t)();
+  get_init_order_number_t get_init_order_number =
+          reinterpret_cast<get_init_order_number_t>(dlsym(handle, "get_init_order_number"));
+  ASSERT_EQ(321, get_init_order_number());
+
+  typedef void (*set_fini_callback_t)(void (*f)(const char*));
+  set_fini_callback_t set_fini_callback =
+          reinterpret_cast<set_fini_callback_t>(dlsym(handle, "set_fini_callback"));
+  set_fini_callback(register_fini_call);
+  dlclose(handle);
+  ASSERT_EQ("(root)(child)(grandchild)", g_fini_call_order_str);
+}
+
+TEST(dlfcn, init_fini_call_order) {
+  test_init_fini_call_order_for("libtest_init_fini_order_root.so");
+  test_init_fini_call_order_for("libtest_init_fini_order_root2.so");
 }
 
 TEST(dlfcn, symbol_versioning_use_v1) {

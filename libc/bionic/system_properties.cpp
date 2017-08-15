@@ -34,7 +34,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -47,6 +46,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/uio.h>
 #include <sys/un.h>
 #include <sys/xattr.h>
 
@@ -209,7 +209,6 @@ struct find_nth_cookie {
 };
 
 // This is public because it was exposed in the NDK. As of 2017-01, ~60 apps reference this symbol.
-// It's also used in a libnativehelper test.
 prop_area* __system_property_area__ = nullptr;
 
 static char property_filename[PROP_FILENAME_MAX] = PROP_FILENAME;
@@ -487,8 +486,8 @@ const prop_info* prop_area::find_property(prop_bt* const trie, const char* name,
 class PropertyServiceConnection {
  public:
   PropertyServiceConnection() : last_error_(0) {
-    fd_ = socket(AF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
-    if (fd_ == -1) {
+    socket_ = ::socket(AF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    if (socket_ == -1) {
       last_error_ = errno;
       return;
     }
@@ -500,54 +499,33 @@ class PropertyServiceConnection {
     addr.sun_family = AF_LOCAL;
     socklen_t alen = namelen + offsetof(sockaddr_un, sun_path) + 1;
 
-    if (TEMP_FAILURE_RETRY(connect(fd_, reinterpret_cast<sockaddr*>(&addr), alen)) == -1) {
-      close(fd_);
-      fd_ = -1;
+    if (TEMP_FAILURE_RETRY(connect(socket_, reinterpret_cast<sockaddr*>(&addr), alen)) == -1) {
+      close(socket_);
+      socket_ = -1;
       last_error_ = errno;
     }
   }
 
   bool IsValid() {
-    return fd_ != -1;
+    return socket_ != -1;
   }
 
   int GetLastError() {
     return last_error_;
   }
 
-  bool SendUint32(uint32_t value) {
-    int result = TEMP_FAILURE_RETRY(send(fd_, &value, sizeof(value), 0));
-    return CheckSendRecvResult(result, sizeof(value));
-  }
-
-  bool SendString(const char* value) {
-    uint32_t valuelen = strlen(value);
-    if (!SendUint32(valuelen)) {
-      return false;
-    }
-
-    // Trying to send even 0 bytes to closed socket may lead to
-    // broken pipe (http://b/34670529).
-    if (valuelen == 0) {
-      return true;
-    }
-
-    int result = TEMP_FAILURE_RETRY(send(fd_, value, valuelen, 0));
-    return CheckSendRecvResult(result, valuelen);
-  }
-
   bool RecvInt32(int32_t* value) {
-    int result = TEMP_FAILURE_RETRY(recv(fd_, value, sizeof(*value), MSG_WAITALL));
+    int result = TEMP_FAILURE_RETRY(recv(socket_, value, sizeof(*value), MSG_WAITALL));
     return CheckSendRecvResult(result, sizeof(*value));
   }
 
-  int GetFd() {
-    return fd_;
+  int socket() {
+    return socket_;
   }
 
   ~PropertyServiceConnection() {
-    if (fd_ != -1) {
-      close(fd_);
+    if (socket_ != -1) {
+      close(socket_);
     }
   }
 
@@ -564,8 +542,69 @@ class PropertyServiceConnection {
     return last_error_ == 0;
   }
 
-  int fd_;
+  int socket_;
   int last_error_;
+
+  friend class SocketWriter;
+};
+
+class SocketWriter {
+ public:
+  explicit SocketWriter(PropertyServiceConnection* connection)
+      : connection_(connection), iov_index_(0), uint_buf_index_(0)
+  {}
+
+  SocketWriter& WriteUint32(uint32_t value) {
+    CHECK(uint_buf_index_ < kUintBufSize);
+    CHECK(iov_index_ < kIovSize);
+    uint32_t* ptr = uint_buf_ + uint_buf_index_;
+    uint_buf_[uint_buf_index_++] = value;
+    iov_[iov_index_].iov_base = ptr;
+    iov_[iov_index_].iov_len = sizeof(*ptr);
+    ++iov_index_;
+    return *this;
+  }
+
+  SocketWriter& WriteString(const char* value) {
+    uint32_t valuelen = strlen(value);
+    WriteUint32(valuelen);
+    if (valuelen == 0) {
+      return *this;
+    }
+
+    CHECK(iov_index_ < kIovSize);
+    iov_[iov_index_].iov_base = const_cast<char*>(value);
+    iov_[iov_index_].iov_len = valuelen;
+    ++iov_index_;
+
+    return *this;
+  }
+
+  bool Send() {
+    if (!connection_->IsValid()) {
+      return false;
+    }
+
+    if (writev(connection_->socket(), iov_, iov_index_) == -1) {
+      connection_->last_error_ = errno;
+      return false;
+    }
+
+    iov_index_ = uint_buf_index_ = 0;
+    return true;
+  }
+
+ private:
+  static constexpr size_t kUintBufSize = 8;
+  static constexpr size_t kIovSize = 8;
+
+  PropertyServiceConnection* connection_;
+  iovec iov_[kIovSize];
+  size_t iov_index_;
+  uint32_t uint_buf_[kUintBufSize];
+  size_t uint_buf_index_;
+
+  DISALLOW_IMPLICIT_CONSTRUCTORS(SocketWriter);
 };
 
 struct prop_msg {
@@ -581,9 +620,9 @@ static int send_prop_msg(const prop_msg* msg) {
   }
 
   int result = -1;
-  int fd = connection.GetFd();
+  int s = connection.socket();
 
-  const int num_bytes = TEMP_FAILURE_RETRY(send(fd, msg, sizeof(prop_msg), 0));
+  const int num_bytes = TEMP_FAILURE_RETRY(send(s, msg, sizeof(prop_msg), 0));
   if (num_bytes == sizeof(prop_msg)) {
     // We successfully wrote to the property server but now we
     // wait for the property server to finish its work.  It
@@ -593,7 +632,7 @@ static int send_prop_msg(const prop_msg* msg) {
     // once the socket closes.  Out of paranoia we cap our poll
     // at 250 ms.
     pollfd pollfds[1];
-    pollfds[0].fd = fd;
+    pollfds[0].fd = s;
     pollfds[0].events = 0;
     const int poll_result = TEMP_FAILURE_RETRY(poll(pollfds, 1, 250 /* ms */));
     if (poll_result == 1 && (pollfds[0].revents & POLLHUP) != 0) {
@@ -1019,14 +1058,22 @@ static bool initialize_properties() {
     return true;
   }
 
-  // TODO: Change path to /system/property_contexts after b/27805372
-  if (!initialize_properties_from_file("/plat_property_contexts")) {
-    return false;
+  // Use property_contexts from /system & /vendor, fall back to those from /
+  if (access("/system/etc/selinux/plat_property_contexts", R_OK) != -1) {
+    if (!initialize_properties_from_file("/system/etc/selinux/plat_property_contexts")) {
+      return false;
+    }
+    if (!initialize_properties_from_file("/vendor/etc/selinux/nonplat_property_contexts")) {
+      return false;
+    }
+  } else {
+    if (!initialize_properties_from_file("/plat_property_contexts")) {
+      return false;
+    }
+    if (!initialize_properties_from_file("/nonplat_property_contexts")) {
+      return false;
+    }
   }
-
-  // TODO: Change path to /vendor/property_contexts after b/27805372
-  // device-specific property context is optional, so load if it exists.
-  initialize_properties_from_file("/nonplat_property_contexts");
 
   return true;
 }
@@ -1102,7 +1149,7 @@ int __system_property_area_init() {
   return fsetxattr_failed ? -2 : 0;
 }
 
-unsigned int __system_property_area_serial() {
+uint32_t __system_property_area_serial() {
   prop_area* pa = __system_property_area__;
   if (!pa) {
     return -1;
@@ -1163,8 +1210,10 @@ int __system_property_read(const prop_info* pi, char* name, char* value) {
 }
 
 void __system_property_read_callback(const prop_info* pi,
-                                     void (*callback)(void* cookie, const char* name,
-                                                      const char* value),
+                                     void (*callback)(void* cookie,
+                                                      const char* name,
+                                                      const char* value,
+                                                      uint32_t serial),
                                      void* cookie) {
   while (true) {
     uint32_t serial = __system_property_serial(pi);  // acquire semantics
@@ -1177,7 +1226,7 @@ void __system_property_read_callback(const prop_info* pi,
     // TODO: see todo in __system_property_read function
     atomic_thread_fence(memory_order_acquire);
     if (serial == load_const_atomic(&(pi->serial), memory_order_relaxed)) {
-      callback(cookie, pi->name, value_buf);
+      callback(cookie, pi->name, value_buf, serial);
       return;
     }
   }
@@ -1228,7 +1277,6 @@ int __system_property_set(const char* key, const char* value) {
     detect_protocol_version();
   }
 
-  int result = -1;
   if (g_propservice_protocol_version == kProtocolVersion1) {
     // Old protocol does not support long names
     if (strlen(key) >= PROP_NAME_MAX) return -1;
@@ -1239,27 +1287,60 @@ int __system_property_set(const char* key, const char* value) {
     strlcpy(msg.name, key, sizeof msg.name);
     strlcpy(msg.value, value, sizeof msg.value);
 
-    result = send_prop_msg(&msg);
+    return send_prop_msg(&msg);
   } else {
     // Use proper protocol
     PropertyServiceConnection connection;
-    if (connection.IsValid() && connection.SendUint32(PROP_MSG_SETPROP2) &&
-        connection.SendString(key) && connection.SendString(value) &&
-        connection.RecvInt32(&result)) {
-      if (result != PROP_SUCCESS) {
-        __libc_format_log(ANDROID_LOG_WARN, "libc",
-                          "Unable to set property \"%s\" to \"%s\": error code: 0x%x", key, value,
-                          result);
-      }
-    } else {
-      result = connection.GetLastError();
-      __libc_format_log(ANDROID_LOG_WARN, "libc",
-                        "Unable to set property \"%s\" to \"%s\": error code: 0x%x (%s)", key,
-                        value, result, strerror(result));
+    if (!connection.IsValid()) {
+      errno = connection.GetLastError();
+      __libc_format_log(ANDROID_LOG_WARN,
+                        "libc",
+                        "Unable to set property \"%s\" to \"%s\": connection failed; errno=%d (%s)",
+                        key,
+                        value,
+                        errno,
+                        strerror(errno));
+      return -1;
     }
-  }
 
-  return result != 0 ? -1 : 0;
+    SocketWriter writer(&connection);
+    if (!writer.WriteUint32(PROP_MSG_SETPROP2).WriteString(key).WriteString(value).Send()) {
+      errno = connection.GetLastError();
+      __libc_format_log(ANDROID_LOG_WARN,
+                        "libc",
+                        "Unable to set property \"%s\" to \"%s\": write failed; errno=%d (%s)",
+                        key,
+                        value,
+                        errno,
+                        strerror(errno));
+      return -1;
+    }
+
+    int result = -1;
+    if (!connection.RecvInt32(&result)) {
+      errno = connection.GetLastError();
+      __libc_format_log(ANDROID_LOG_WARN,
+                        "libc",
+                        "Unable to set property \"%s\" to \"%s\": recv failed; errno=%d (%s)",
+                        key,
+                        value,
+                        errno,
+                        strerror(errno));
+      return -1;
+    }
+
+    if (result != PROP_SUCCESS) {
+      __libc_format_log(ANDROID_LOG_WARN,
+                        "libc",
+                        "Unable to set property \"%s\" to \"%s\": error code: 0x%x",
+                        key,
+                        value,
+                        result);
+      return -1;
+    }
+
+    return 0;
+  }
 }
 
 int __system_property_update(prop_info* pi, const char* value, unsigned int len) {
@@ -1329,30 +1410,45 @@ int __system_property_add(const char* name, unsigned int namelen, const char* va
 }
 
 // Wait for non-locked serial, and retrieve it with acquire semantics.
-unsigned int __system_property_serial(const prop_info* pi) {
+uint32_t __system_property_serial(const prop_info* pi) {
   uint32_t serial = load_const_atomic(&pi->serial, memory_order_acquire);
   while (SERIAL_DIRTY(serial)) {
-    __futex_wait(const_cast<volatile void*>(reinterpret_cast<const void*>(&pi->serial)), serial,
-                 nullptr);
+    __futex_wait(const_cast<_Atomic(uint_least32_t)*>(&pi->serial), serial, nullptr);
     serial = load_const_atomic(&pi->serial, memory_order_acquire);
   }
   return serial;
 }
 
-unsigned int __system_property_wait_any(unsigned int serial) {
-  prop_area* pa = __system_property_area__;
-  uint32_t my_serial;
+uint32_t __system_property_wait_any(uint32_t old_serial) {
+  uint32_t new_serial;
+  __system_property_wait(nullptr, old_serial, &new_serial, nullptr);
+  return new_serial;
+}
 
-  if (!pa) {
-    return 0;
+bool __system_property_wait(const prop_info* pi,
+                            uint32_t old_serial,
+                            uint32_t* new_serial_ptr,
+                            const timespec* relative_timeout) {
+  // Are we waiting on the global serial or a specific serial?
+  atomic_uint_least32_t* serial_ptr;
+  if (pi == nullptr) {
+    if (__system_property_area__ == nullptr) return -1;
+    serial_ptr = __system_property_area__->serial();
+  } else {
+    serial_ptr = const_cast<atomic_uint_least32_t*>(&pi->serial);
   }
 
+  uint32_t new_serial;
   do {
-    __futex_wait(pa->serial(), serial, nullptr);
-    my_serial = atomic_load_explicit(pa->serial(), memory_order_acquire);
-  } while (my_serial == serial);
+    int rc;
+    if ((rc = __futex_wait(serial_ptr, old_serial, relative_timeout)) != 0 && rc == -ETIMEDOUT) {
+      return false;
+    }
+    new_serial = load_const_atomic(serial_ptr, memory_order_acquire);
+  } while (new_serial == old_serial);
 
-  return my_serial;
+  *new_serial_ptr = new_serial;
+  return true;
 }
 
 const prop_info* __system_property_find_nth(unsigned n) {
