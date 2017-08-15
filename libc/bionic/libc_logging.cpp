@@ -538,6 +538,8 @@ struct log_time { // Wire format
 };
 
 int __libc_write_log(int priority, const char* tag, const char* msg) {
+  if (!__android_log_is_loggable(priority, tag, ANDROID_LOG_VERBOSE))
+    return 0;
   int main_log_fd = __libc_open_log_socket();
   if (main_log_fd == -1) {
     // Try stderr instead.
