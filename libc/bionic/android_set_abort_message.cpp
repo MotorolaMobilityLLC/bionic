@@ -30,9 +30,11 @@
 
 #include <pthread.h>
 #include <sys/mman.h>
-#include <sys/system_properties.h>
+
+#ifdef DUMP_ABORT_MSG_FOR_DIRECT_COREDUMP
 #include <stdio.h>
 #include <unistd.h>
+#endif
 
 #include "private/ScopedPthreadMutexLocker.h"
 
@@ -47,17 +49,6 @@ abort_msg_t** __abort_message_ptr; // Accessible to __libc_init_common.
 
 #ifdef DUMP_ABORT_MSG_FOR_DIRECT_COREDUMP
 static void dump_abort_message_to_file(const char* msg) {
-  const prop_info* pi;
-  char buf[PROP_VALUE_MAX];
-
-  pi = __system_property_find("ro.build.type");
-  if (pi) {
-    if (__system_property_read(pi, NULL, buf) > 0) {
-      if (!strcmp(buf, "user"))  // user load no need
-        return;
-    }
-  }
-
   char file[64];
   FILE *fp;
 

@@ -1225,9 +1225,14 @@ cc_library_static {
         },
     },
 
-    cppflags: ["-Wold-style-cast",
-               "-DDUMP_ABORT_MSG_FOR_DIRECT_COREDUMP",
-    ],
+    cppflags: ["-Wold-style-cast"],
+
+    product_variables: {
+        debuggable: {
+            cflags: ["-DDUMP_ABORT_MSG_FOR_DIRECT_COREDUMP"],
+        },
+    },
+
     include_dirs: ["bionic/libstdc++/include"],
     name: "libc_bionic",
 }
