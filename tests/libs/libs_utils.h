@@ -17,13 +17,11 @@
 #ifndef LIBS_UTILS_H
 #define LIBS_UTILS_H
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CHECK(x)                                                            \
-  do {                                                                      \
-    fprintf(stderr, "CHECK(" #x ") failed at %s:%d\n", __FILE__, __LINE__); \
-    if (!(x)) abort();                                                      \
-  } while (0)
+#define CHECK(e) \
+    ((e) ? static_cast<void>(0) : __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, #e))
 
 #endif  // LIBS_UTILS_H

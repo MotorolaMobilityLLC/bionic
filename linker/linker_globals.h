@@ -34,11 +34,12 @@
 
 #include <unordered_map>
 
+#include "private/libc_logging.h"
+
 #define DL_ERR(fmt, x...) \
     do { \
       __libc_format_buffer(linker_get_error_buffer(), linker_get_error_buffer_size(), fmt, ##x); \
       /* If LD_DEBUG is set high enough, log every dlerror(3) message. */ \
-      LD_LOG(kLogErrors, "%s\n", linker_get_error_buffer()); \
     } while (false)
 
 #define DL_WARN(fmt, x...) \
