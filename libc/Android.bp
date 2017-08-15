@@ -1418,7 +1418,9 @@ cc_library_static {
             srcs: ["bionic/mmap.cpp"],
         },
     },
-
+    cflags: [
+        "-DMTK_LOGD_ENHANCE",
+    ],
     cppflags: ["-Wold-style-cast"],
     local_include_dirs: ["stdio"],
     include_dirs: ["bionic/libstdc++/include"],
@@ -1766,7 +1768,10 @@ cc_library_static {
         "bionic/libc_logging.cpp",
         "bionic/log_is_loggable.c",
     ],
-
+    
+    cflags: [
+        "-DMTK_LOGD_ENHANCE",
+    ],
     name: "libc_logging",
 }
 

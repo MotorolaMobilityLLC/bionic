@@ -249,7 +249,7 @@ static int __android_log_level(const char *tag, int default_prio)
 
 
 
-int __android_log_is_loggable(int prio, const char *tag, int def)
+int __android_log_is_loggable_en(int prio, const char *tag, int def)
 {
     int logLevel = __android_log_level(tag, def);
     return logLevel >= 0 && prio >= logLevel;
