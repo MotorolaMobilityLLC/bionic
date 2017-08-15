@@ -30,6 +30,9 @@
 
 #include <pthread.h>
 #include <sys/mman.h>
+#include <sys/system_properties.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #include "private/ScopedPthreadMutexLocker.h"
 
