@@ -226,15 +226,21 @@ ENTRY(memcmp)
         cmp         r2, #0
         moveq       r0, #0
         bxeq        lr
+
+        /* Preserve lr for backtrace */
+        push        {lr}
+        .cfi_def_cfa_offset 4
+        .cfi_rel_offset lr, 0
+
         mov         r3, r0
 11:
         ldrb        r0, [r3], #1
         ldrb        ip, [r1], #1
         subs        r0, ip
-        bxne        lr
+        popne       {pc}
         subs        r2, r2, #1
         bne         11b
-        bx          lr
+        pop         {pc}
 
 5:      /*************** non-congruent case ***************/
         and         r0, r1, #3
