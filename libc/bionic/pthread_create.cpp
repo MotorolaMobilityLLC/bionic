@@ -128,15 +128,11 @@ int __init_thread(pthread_internal_t* thread) {
   return error;
 }
 
-#ifndef PROT_MALLOCFROMBIONIC
-#define PROT_MALLOCFROMBIONIC 0x20
-#endif
-
 static void* __create_thread_mapped_space(size_t mmap_size, size_t stack_guard_size) {
   // Create a new private anonymous map.
   int prot = PROT_READ | PROT_WRITE;
   int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE;
-  void* space = mmap(NULL, mmap_size, prot|PROT_MALLOCFROMBIONIC, flags, -1, 0);
+  void* space = mmap(NULL, mmap_size, prot, flags, -1, 0);
   if (space == MAP_FAILED) {
     __libc_format_log(ANDROID_LOG_WARN,
                       "libc",
