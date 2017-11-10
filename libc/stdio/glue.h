@@ -32,6 +32,10 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
+
 /*
  * The first few FILEs are statically allocated; others are dynamically
  * allocated and linked in via this glue structure.
@@ -42,4 +46,7 @@ struct glue {
 	FILE	*iobs;
 };
 
-extern struct glue __sglue;
+/* This was referenced by a couple of different pieces of middleware and the Crystax NDK. */
+__LIBC32_LEGACY_PUBLIC__ extern struct glue __sglue;
+
+__END_DECLS

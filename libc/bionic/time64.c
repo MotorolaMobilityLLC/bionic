@@ -28,6 +28,10 @@ THE SOFTWARE.
 
 /* See http://code.google.com/p/y2038 for this code's origin */
 
+#if defined(__LP64__)
+#error This cruft should be LP32 only!
+#endif
+
 /*
 
 Programmers who have available to them 64-bit time values as a 'long
@@ -131,17 +135,6 @@ static const int safe_years_low[SOLAR_CYCLE_LENGTH] = {
     1984, 1985, 1986, 1987,
     1988, 1989, 1990, 1991,
     1992, 1993, 1994, 1995,
-};
-
-/* This isn't used, but it's handy to look at */
-static const int dow_year_start[SOLAR_CYCLE_LENGTH] = {
-    5, 0, 1, 2,     /* 0       2016 - 2019 */
-    3, 5, 6, 0,     /* 4  */
-    1, 3, 4, 5,     /* 8       1996 - 1998, 1971*/
-    6, 1, 2, 3,     /* 12      1972 - 1975 */
-    4, 6, 0, 1,     /* 16 */
-    2, 4, 5, 6,     /* 20      2036, 2037, 2010, 2011 */
-    0, 2, 3, 4      /* 24      2012, 2013, 2014, 2015 */
 };
 
 /* Let's assume people are going to be looking for dates in the future.
@@ -248,6 +241,7 @@ Time64_T timegm64(const struct TM *date) {
 }
 
 
+#if !defined(NDEBUG)
 static int check_tm(struct TM *tm)
 {
     /* Don't forget leap seconds */
@@ -268,7 +262,7 @@ static int check_tm(struct TM *tm)
 
     assert(tm->tm_wday >= 0);
     assert(tm->tm_wday <= 6);
-   
+
     assert(tm->tm_yday >= 0);
     assert(tm->tm_yday <= length_of_year[IS_LEAP(tm->tm_year)]);
 
@@ -279,6 +273,7 @@ static int check_tm(struct TM *tm)
 
     return 1;
 }
+#endif
 
 
 /* The exceptional centuries without leap years cause the cycle to
@@ -753,10 +748,24 @@ static int valid_tm_mon( const struct TM* date ) {
 char *asctime64_r( const struct TM* date, char *result ) {
     /* I figure everything else can be displayed, even hour 25, but if
        these are out of range we walk off the name arrays */
-    if( !valid_tm_wday(date) || !valid_tm_mon(date) )
+    if (!valid_tm_wday(date) || !valid_tm_mon(date)) {
         return NULL;
+    }
 
-    sprintf(result, "%.3s %.3s%3d %.2d:%.2d:%.2d %d\n",
+    /* Docs state this function does not support years beyond 9999. */
+    if (1900 + date->tm_year > 9999) {
+        return NULL;
+    }
+
+    /*
+     * The IBM docs for this function state that the result buffer can be
+     * assumed to be at least 26 bytes wide. The docs also state that this is
+     * only valid for years <= 9999, so we know this format string will not
+     * print more than that many characters.
+     *
+     * http://www-01.ibm.com/support/knowledgecenter/SSLTBW_2.1.0/com.ibm.zos.v2r1.bpxbd00/asctimer.htm
+     */
+    snprintf(result, 26, "%.3s %.3s%3d %.2d:%.2d:%.2d %d\n",
         wday_name[date->tm_wday],
         mon_name[date->tm_mon],
         date->tm_mday, date->tm_hour,

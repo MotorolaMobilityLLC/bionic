@@ -11,7 +11,7 @@
 
 /*
  * from: @(#)fdlibm.h 5.1 93/09/24
- * $FreeBSD$
+ * $FreeBSD: head/lib/msun/src/math_private.h 276176 2014-12-24 10:13:53Z ed $
  */
 
 #ifndef _MATH_PRIVATE_H_
@@ -39,7 +39,7 @@
  */
 
 #ifdef __arm__
-#if defined(__VFP_FP__)
+#if defined(__VFP_FP__) || defined(__ARM_EABI__)
 #define	IEEE_WORD_ORDER	BYTE_ORDER
 #else
 #define	IEEE_WORD_ORDER	BIG_ENDIAN
@@ -454,9 +454,15 @@ typedef union {
  * (0.0+I)*(y+0.0*I) and laboriously computing the full complex product.
  * In particular, I*Inf is corrupted to NaN+I*Inf, and I*-0 is corrupted
  * to -0.0+I*0.0.
+ *
+ * The C11 standard introduced the macros CMPLX(), CMPLXF() and CMPLXL()
+ * to construct complex values.  Compilers that conform to the C99
+ * standard require the following functions to avoid the above issues.
  */
+
+#ifndef CMPLXF
 static __inline float complex
-cpackf(float x, float y)
+CMPLXF(float x, float y)
 {
 	float_complex z;
 
@@ -464,9 +470,11 @@ cpackf(float x, float y)
 	IMAGPART(z) = y;
 	return (z.f);
 }
+#endif
 
+#ifndef CMPLX
 static __inline double complex
-cpack(double x, double y)
+CMPLX(double x, double y)
 {
 	double_complex z;
 
@@ -474,9 +482,11 @@ cpack(double x, double y)
 	IMAGPART(z) = y;
 	return (z.f);
 }
+#endif
 
+#ifndef CMPLXL
 static __inline long double complex
-cpackl(long double x, long double y)
+CMPLXL(long double x, long double y)
 {
 	long_double_complex z;
 
@@ -484,6 +494,8 @@ cpackl(long double x, long double y)
 	IMAGPART(z) = y;
 	return (z.f);
 }
+#endif
+
 #endif /* _COMPLEX_H */
  
 #ifdef __GNUCLIKE_ASM
@@ -723,16 +735,6 @@ irintl(long double x)
 #define	__ieee754_remainderf remainderf
 #define	__ieee754_scalbf scalbf
 
-#if defined(KRAIT_NEON_OPTIMIZATION)
-int	__kernel_rem_pio2(double*,double*,int,int,int) __attribute__((pcs("aapcs-vfp")));
-double	__full_ieee754_pow(double,double);
-#ifndef INLINE_REM_PIO2
-int	__ieee754_rem_pio2(double,double*) __attribute__((pcs("aapcs-vfp")));
-#endif
-double	__kernel_sin(double,double,int) __attribute__((pcs("aapcs-vfp")));
-double	__kernel_cos(double,double) __attribute__((pcs("aapcs-vfp")));
-double	__kernel_tan(double,double,int) __attribute__((pcs("aapcs-vfp")));
-#else
 /* fdlibm kernel function */
 int	__kernel_rem_pio2(double*,double*,int,int,int);
 
@@ -743,8 +745,6 @@ int	__ieee754_rem_pio2(double,double*);
 double	__kernel_sin(double,double,int);
 double	__kernel_cos(double,double);
 double	__kernel_tan(double,double,int);
-#endif
-
 double	__ldexp_exp(double,int);
 #ifdef _COMPLEX_H
 double complex __ldexp_cexp(double complex,int);

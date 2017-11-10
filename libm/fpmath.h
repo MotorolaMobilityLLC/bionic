@@ -24,61 +24,73 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/lib/libc/include/fpmath.h,v 1.3 2005/02/06 03:23:31 das Exp $
+ * $FreeBSD$
  */
+
+// ANDROID changed:
+// - keep only little endian variants as they're the only one supported.
+// - add long double structures here instead of _fpmath.h.
+// - android uses 128 bits long doubles for LP64, so the structure and macros
+//   were reworked for the quad precision ieee representation.
+
+#ifndef _FPMATH_
+#define _FPMATH_
 
 #include <endian.h>
-#include "_fpmath.h"
 
 union IEEEf2bits {
-	float	f;
-	struct {
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-		unsigned int	man	:23;
-		unsigned int	exp	:8;
-		unsigned int	sign	:1;
-#else /* _BIG_ENDIAN */
-		unsigned int	sign	:1;
-		unsigned int	exp	:8;
-		unsigned int	man	:23;
-#endif
-	} bits;
+  float f;
+  struct {
+    unsigned int man   :23;
+    unsigned int exp   :8;
+    unsigned int sign  :1;
+  } bits;
 };
 
-#define	DBL_MANH_SIZE	20
-#define	DBL_MANL_SIZE	32
+#define DBL_MANH_SIZE  20
+#define DBL_MANL_SIZE  32
 
 union IEEEd2bits {
-	double	d;
-	struct {
-/* #ifdef __ARMEB__ */
-#if (__BYTE_ORDER == __BIG_ENDIAN) || (defined(__arm__) && !defined(__VFP_FP__))
-		unsigned int	manh	:20;
-		unsigned int	exp	:11;
-		unsigned int	sign	:1;
-		unsigned int	manl	:32;
-#elif  __BYTE_ORDER == __LITTLE_ENDIAN
-		unsigned int	manl	:32;
-		unsigned int	manh	:20;
-		unsigned int	exp	:11;
-		unsigned int	sign	:1;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-		unsigned int	sign	:1;
-		unsigned int	exp	:11;
-		unsigned int	manh	:20;
-		unsigned int	manl	:32;
-#endif
-	} bits;
+  double  d;
+  struct {
+    unsigned int manl  :32;
+    unsigned int manh  :20;
+    unsigned int exp   :11;
+    unsigned int sign  :1;
+  } bits;
 };
 
-/*
- * The BSD "long double" functions are broken when sizeof(long double) == sizeof(double).
- * Android works around those cases by replacing the broken functions with our own trivial stubs
- * that call the regular "double" function.
- */
-#define __fpclassifyl __broken__fpclassify
-#define __isfinitel __broken__isfinitel
-#define __isinfl __broken__isinfl
-#define __isnanl __broken__isnanl
-#define __isnormall __broken__isnormall
-#define __signbitl __broken_signbitl
+#ifdef __LP64__
+
+union IEEEl2bits {
+  long double e;
+  struct {
+    unsigned long manl  :64;
+    unsigned long manh  :48;
+    unsigned int  exp   :15;
+    unsigned int  sign  :1;
+  } bits;
+  struct {
+    unsigned long manl     :64;
+    unsigned long manh     :48;
+    unsigned int  expsign  :16;
+  } xbits;
+};
+
+#define LDBL_NBIT  0
+#define LDBL_IMPLICIT_NBIT
+#define mask_nbit_l(u)  ((void)0)
+
+#define LDBL_MANH_SIZE  48
+#define LDBL_MANL_SIZE  64
+
+#define LDBL_TO_ARRAY32(u, a) do {           \
+  (a)[0] = (uint32_t)(u).bits.manl;          \
+  (a)[1] = (uint32_t)((u).bits.manl >> 32);  \
+  (a)[2] = (uint32_t)(u).bits.manh;          \
+  (a)[3] = (uint32_t)((u).bits.manh >> 32);  \
+} while(0)
+
+#endif // __LP64__
+
+#endif // _FPMATH_

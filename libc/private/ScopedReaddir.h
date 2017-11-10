@@ -19,10 +19,15 @@
 
 #include <dirent.h>
 
+#include "private/bionic_macros.h"
+
 class ScopedReaddir {
  public:
-  ScopedReaddir(const char* path) {
-    dir_ = opendir(path);
+  ScopedReaddir(const char* path) : ScopedReaddir(opendir(path)) {
+  }
+
+  ScopedReaddir(DIR* dir) {
+    dir_ = dir;
   }
 
   ~ScopedReaddir() {
@@ -42,9 +47,7 @@ class ScopedReaddir {
  private:
   DIR* dir_;
 
-  // Disallow copy and assignment.
-  ScopedReaddir(const ScopedReaddir&);
-  void operator=(const ScopedReaddir&);
+  DISALLOW_COPY_AND_ASSIGN(ScopedReaddir);
 };
 
 #endif // SCOPED_READDIR_H

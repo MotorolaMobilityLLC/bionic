@@ -1,4 +1,9 @@
 /*
+* Copyright (C) 2014 MediaTek Inc.
+* Modification based on code covered by the mentioned copyright
+* and/or permission notice(s).
+*/
+/*
   This is a version (aka dlmalloc) of malloc/free/realloc written by
   Doug Lea and released to the public domain, as explained at
   http://creativecommons.org/publicdomain/zero/1.0/ Send questions,
@@ -3526,7 +3531,9 @@ static struct mallinfo internal_mallinfo(mstate m) {
       nm.arena    = sum;
       nm.ordblks  = nfree;
       nm.hblkhd   = m->footprint - sum;
-      nm.usmblks  = m->max_footprint;
+      /* BEGIN android-changed: usmblks set to footprint from max_footprint */
+      nm.usmblks  = m->footprint;
+      /* END android-changed */
       nm.uordblks = m->footprint - mfree;
       nm.fordblks = mfree;
       nm.keepcost = m->topsize;
@@ -5233,7 +5240,6 @@ void* dlrealloc(void* oldmem, size_t bytes) {
       mchunkptr newp = try_realloc_chunk(m, oldp, nb, 1);
       POSTACTION(m);
       if (newp != 0) {
-        check_inuse_chunk(m, newp);
         mem = chunk2mem(newp);
       }
       else {
@@ -5271,7 +5277,6 @@ void* dlrealloc_in_place(void* oldmem, size_t bytes) {
         mchunkptr newp = try_realloc_chunk(m, oldp, nb, 0);
         POSTACTION(m);
         if (newp == oldp) {
-          check_inuse_chunk(m, newp);
           mem = oldmem;
         }
       }
@@ -5317,12 +5322,19 @@ void* dlvalloc(size_t bytes) {
   return dlmemalign(pagesz, bytes);
 }
 
+/* BEGIN android-changed: added overflow check */
 void* dlpvalloc(size_t bytes) {
   size_t pagesz;
+  size_t size;
   ensure_initialization();
   pagesz = mparams.page_size;
-  return dlmemalign(pagesz, (bytes + pagesz - SIZE_T_ONE) & ~(pagesz - SIZE_T_ONE));
+  size = (bytes + pagesz - SIZE_T_ONE) & ~(pagesz - SIZE_T_ONE);
+  if (size < bytes) {
+    return NULL;
+  }
+  return dlmemalign(pagesz, size);
 }
+/* END android-change */
 
 void** dlindependent_calloc(size_t n_elements, size_t elem_size,
                             void* chunks[]) {
@@ -5785,7 +5797,6 @@ void* mspace_realloc(mspace msp, void* oldmem, size_t bytes) {
       mchunkptr newp = try_realloc_chunk(m, oldp, nb, 1);
       POSTACTION(m);
       if (newp != 0) {
-        check_inuse_chunk(m, newp);
         mem = chunk2mem(newp);
       }
       else {
@@ -5824,7 +5835,6 @@ void* mspace_realloc_in_place(mspace msp, void* oldmem, size_t bytes) {
         mchunkptr newp = try_realloc_chunk(m, oldp, nb, 0);
         POSTACTION(m);
         if (newp == oldp) {
-          check_inuse_chunk(m, newp);
           mem = oldmem;
         }
       }

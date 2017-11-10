@@ -17,26 +17,19 @@
 #ifndef LIBC_INCLUDE_MALLOC_H_
 #define LIBC_INCLUDE_MALLOC_H_
 
-/*
- * Declaration of malloc routines. Bionic uses dlmalloc (see
- * upstream-dlmalloc) but doesn't directly include it here to keep the
- * defined malloc.h interface small.
- */
 #include <sys/cdefs.h>
 #include <stddef.h>
+#include <stdio.h>
 
 __BEGIN_DECLS
 
-extern void* malloc(size_t byte_count) __mallocfunc __wur;
-extern void* calloc(size_t item_count, size_t item_size) __mallocfunc __wur;
-extern void* realloc(void* p, size_t byte_count) __wur;
+extern void* malloc(size_t byte_count) __mallocfunc __wur __attribute__((alloc_size(1)));
+extern void* calloc(size_t item_count, size_t item_size) __mallocfunc __wur __attribute__((alloc_size(1,2)));
+extern void* realloc(void* p, size_t byte_count) __wur __attribute__((alloc_size(2)));
 extern void free(void* p);
 
-extern void* memalign(size_t alignment, size_t byte_count) __mallocfunc __wur;
+extern void* memalign(size_t alignment, size_t byte_count) __mallocfunc __wur __attribute__((alloc_size(2)));
 extern size_t malloc_usable_size(const void* p);
-
-extern void* valloc(size_t byte_count) __mallocfunc __wur;
-extern void* pvalloc(size_t byte_count) __mallocfunc __wur;
 
 #ifndef STRUCT_MALLINFO_DECLARED
 #define STRUCT_MALLINFO_DECLARED 1
@@ -55,6 +48,27 @@ struct mallinfo {
 #endif  /* STRUCT_MALLINFO_DECLARED */
 
 extern struct mallinfo mallinfo(void);
+
+/*
+ * XML structure for malloc_info(3) is in the following format:
+ *
+ * <malloc version="jemalloc-1">
+ *   <heap nr="INT">
+ *     <allocated-large>INT</allocated-large>
+ *     <allocated-huge>INT</allocated-huge>
+ *     <allocated-bins>INT</allocated-bins>
+ *     <bins-total>INT</bins-total>
+ *     <bin nr="INT">
+ *       <allocated>INT</allocated>
+ *       <nmalloc>INT</nmalloc>
+ *       <ndalloc>INT</ndalloc>
+ *     </bin>
+ *     <!-- more bins -->
+ *   </heap>
+ *   <!-- more heaps -->
+ * </malloc>
+ */
+extern int malloc_info(int, FILE *);
 
 __END_DECLS
 

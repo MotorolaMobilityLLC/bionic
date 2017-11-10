@@ -30,9 +30,6 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "atexit.h"
-
-__LIBC_HIDDEN__ void (*__cleanup)();
 
 #ifdef __arm__
 extern "C" __LIBC_HIDDEN__ void __libc_android_abort()
@@ -46,11 +43,6 @@ void abort()
   sigfillset(&mask);
   sigdelset(&mask, SIGABRT);
   sigprocmask(SIG_SETMASK, &mask, NULL);
-
-  // POSIX requires we flush stdio buffers on abort.
-  if (__cleanup) {
-    (*__cleanup)();
-  }
 
   raise(SIGABRT);
 

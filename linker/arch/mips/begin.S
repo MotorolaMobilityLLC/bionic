@@ -32,7 +32,9 @@
 
     .ent    __start
     .globl    __start
+    .globl    _start
 __start:
+_start:
     .set    noreorder
     bal    1f
     nop
@@ -100,8 +102,3 @@ __start:
     addu    $sp, 4*4        /* restore sp */
     j    $t9
     .end    __start
-
-    .section .ctors, "wa"
-    .globl __CTOR_LIST__
-__CTOR_LIST__:
-    .long -1

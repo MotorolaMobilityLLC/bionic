@@ -35,24 +35,50 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "private/android_filesystem_config.h"
+#include "private/bionic_macros.h"
 #include "private/ErrnoRestorer.h"
 #include "private/libc_logging.h"
+#include "private/ThreadLocalBuffer.h"
 
-// Thread-specific state for the non-reentrant functions.
-static pthread_once_t stubs_once = PTHREAD_ONCE_INIT;
-static pthread_key_t stubs_key;
-struct stubs_state_t {
-  passwd passwd_;
+// POSIX seems to envisage an implementation where the <pwd.h> functions are
+// implemented by brute-force searching with getpwent(3), and the <grp.h>
+// functions are implemented similarly with getgrent(3). This means that it's
+// okay for all the <grp.h> functions to share state, and all the <passwd.h>
+// functions to share state, but <grp.h> functions can't clobber <passwd.h>
+// functions' state and vice versa.
+
+struct group_state_t {
   group group_;
   char* group_members_[2];
-  char app_name_buffer_[32];
   char group_name_buffer_[32];
+};
+
+struct passwd_state_t {
+  passwd passwd_;
+  char name_buffer_[32];
   char dir_buffer_[32];
   char sh_buffer_[32];
 };
+
+static ThreadLocalBuffer<group_state_t> g_group_tls_buffer;
+static ThreadLocalBuffer<passwd_state_t> g_passwd_tls_buffer;
+
+static void init_group_state(group_state_t* state) {
+  memset(state, 0, sizeof(group_state_t));
+  state->group_.gr_mem = state->group_members_;
+}
+
+static group_state_t* __group_state() {
+  group_state_t* result = g_group_tls_buffer.get();
+  if (result != nullptr) {
+    init_group_state(result);
+  }
+  return result;
+}
 
 static int do_getpw_r(int by_name, const char* name, uid_t uid,
                       passwd* dst, char* buf, size_t byte_count,
@@ -89,9 +115,12 @@ static int do_getpw_r(int by_name, const char* name, uid_t uid,
   // Copy the strings.
   snprintf(buf, byte_count, "%s%c%s%c%s", src->pw_name, 0, src->pw_dir, 0, src->pw_shell);
 
-  // pw_passwd is non-POSIX and unused (always NULL) in bionic.
-  // pw_gecos is non-POSIX and missing in bionic.
+  // pw_passwd and pw_gecos are non-POSIX and unused (always NULL) in bionic.
+  // Note: On LP32, we define pw_gecos to pw_passwd since they're both NULL.
   dst->pw_passwd = NULL;
+#if defined(__LP64__)
+  dst->pw_gecos = NULL;
+#endif
 
   // Copy the integral fields.
   dst->pw_gid = src->pw_gid;
@@ -111,48 +140,14 @@ int getpwuid_r(uid_t uid, passwd* pwd,
   return do_getpw_r(0, NULL, uid, pwd, buf, byte_count, result);
 }
 
-static stubs_state_t* stubs_state_alloc() {
-  stubs_state_t*  s = static_cast<stubs_state_t*>(calloc(1, sizeof(*s)));
-  if (s != NULL) {
-    s->group_.gr_mem = s->group_members_;
-  }
-  return s;
-}
-
-static void stubs_state_free(void* ptr) {
-  stubs_state_t* state = static_cast<stubs_state_t*>(ptr);
-  free(state);
-}
-
-static void __stubs_key_init() {
-  pthread_key_create(&stubs_key, stubs_state_free);
-}
-
-static stubs_state_t* __stubs_state() {
-  pthread_once(&stubs_once, __stubs_key_init);
-  stubs_state_t* s = static_cast<stubs_state_t*>(pthread_getspecific(stubs_key));
-  if (s == NULL) {
-    s = stubs_state_alloc();
-    if (s == NULL) {
-      errno = ENOMEM;  // Just in case.
-    } else {
-      if (pthread_setspecific(stubs_key, s) != 0) {
-        stubs_state_free(s);
-        errno = ENOMEM;
-        s = NULL;
-      }
-    }
-  }
-  return s;
-}
-
-static passwd* android_iinfo_to_passwd(stubs_state_t* state,
+static passwd* android_iinfo_to_passwd(passwd_state_t* state,
                                        const android_id_info* iinfo) {
+  snprintf(state->name_buffer_, sizeof(state->name_buffer_), "%s", iinfo->name);
   snprintf(state->dir_buffer_, sizeof(state->dir_buffer_), "/");
   snprintf(state->sh_buffer_, sizeof(state->sh_buffer_), "/system/bin/sh");
 
   passwd* pw = &state->passwd_;
-  pw->pw_name  = (char*) iinfo->name;
+  pw->pw_name  = state->name_buffer_;
   pw->pw_uid   = iinfo->aid;
   pw->pw_gid   = iinfo->aid;
   pw->pw_dir   = state->dir_buffer_;
@@ -160,16 +155,18 @@ static passwd* android_iinfo_to_passwd(stubs_state_t* state,
   return pw;
 }
 
-static group* android_iinfo_to_group(group* gr,
+static group* android_iinfo_to_group(group_state_t* state,
                                      const android_id_info* iinfo) {
-  gr->gr_name   = (char*) iinfo->name;
+  snprintf(state->group_name_buffer_, sizeof(state->group_name_buffer_), "%s", iinfo->name);
+
+  group* gr = &state->group_;
+  gr->gr_name   = state->group_name_buffer_;
   gr->gr_gid    = iinfo->aid;
   gr->gr_mem[0] = gr->gr_name;
-  gr->gr_mem[1] = NULL;
   return gr;
 }
 
-static passwd* android_id_to_passwd(stubs_state_t* state, unsigned id) {
+static passwd* android_id_to_passwd(passwd_state_t* state, unsigned id) {
   for (size_t n = 0; n < android_id_count; ++n) {
     if (android_ids[n].aid == id) {
       return android_iinfo_to_passwd(state, android_ids + n);
@@ -178,7 +175,7 @@ static passwd* android_id_to_passwd(stubs_state_t* state, unsigned id) {
   return NULL;
 }
 
-static passwd* android_name_to_passwd(stubs_state_t* state, const char* name) {
+static passwd* android_name_to_passwd(passwd_state_t* state, const char* name) {
   for (size_t n = 0; n < android_id_count; ++n) {
     if (!strcmp(android_ids[n].name, name)) {
       return android_iinfo_to_passwd(state, android_ids + n);
@@ -187,37 +184,46 @@ static passwd* android_name_to_passwd(stubs_state_t* state, const char* name) {
   return NULL;
 }
 
-static group* android_id_to_group(group* gr, unsigned id) {
+static group* android_id_to_group(group_state_t* state, unsigned id) {
   for (size_t n = 0; n < android_id_count; ++n) {
     if (android_ids[n].aid == id) {
-      return android_iinfo_to_group(gr, android_ids + n);
+      return android_iinfo_to_group(state, android_ids + n);
     }
   }
   return NULL;
 }
 
-static group* android_name_to_group(group* gr, const char* name) {
+static group* android_name_to_group(group_state_t* state, const char* name) {
   for (size_t n = 0; n < android_id_count; ++n) {
     if (!strcmp(android_ids[n].name, name)) {
-      return android_iinfo_to_group(gr, android_ids + n);
+      return android_iinfo_to_group(state, android_ids + n);
     }
   }
   return NULL;
 }
 
 // Translate a user/group name to the corresponding user/group id.
+// all_a1234 -> 0 * AID_USER + AID_SHARED_GID_START + 1234 (group name only)
 // u0_a1234 -> 0 * AID_USER + AID_APP + 1234
 // u2_i1000 -> 2 * AID_USER + AID_ISOLATED_START + 1000
 // u1_system -> 1 * AID_USER + android_ids['system']
-// returns 0 and sets errno to ENOENT in case of error
-static unsigned app_id_from_name(const char* name) {
-  if (name[0] != 'u' || !isdigit(name[1])) {
+// returns 0 and sets errno to ENOENT in case of error.
+static id_t app_id_from_name(const char* name, bool is_group) {
+  char* end;
+  unsigned long userid;
+  bool is_shared_gid = false;
+
+  if (is_group && name[0] == 'a' && name[1] == 'l' && name[2] == 'l') {
+    end = const_cast<char*>(name+3);
+    userid = 0;
+    is_shared_gid = true;
+  } else if (name[0] == 'u' && isdigit(name[1])) {
+    userid = strtoul(name+1, &end, 10);
+  } else {
     errno = ENOENT;
     return 0;
   }
 
-  char* end;
-  unsigned long userid = strtoul(name+1, &end, 10);
   if (end[0] != '_' || end[1] == 0) {
     errno = ENOENT;
     return 0;
@@ -225,8 +231,17 @@ static unsigned app_id_from_name(const char* name) {
 
   unsigned long appid = 0;
   if (end[1] == 'a' && isdigit(end[2])) {
-    // end will point to \0 if the strtoul below succeeds.
-    appid = strtoul(end+2, &end, 10) + AID_APP;
+    if (is_shared_gid) {
+      // end will point to \0 if the strtoul below succeeds.
+      appid = strtoul(end+2, &end, 10) + AID_SHARED_GID_START;
+      if (appid > AID_SHARED_GID_END) {
+        errno = ENOENT;
+        return 0;
+      }
+    } else {
+      // end will point to \0 if the strtoul below succeeds.
+      appid = strtoul(end+2, &end, 10) + AID_APP;
+    }
   } else if (end[1] == 'i' && isdigit(end[2])) {
     // end will point to \0 if the strtoul below succeeds.
     appid = strtoul(end+2, &end, 10) + AID_ISOLATED_START;
@@ -236,6 +251,7 @@ static unsigned app_id_from_name(const char* name) {
         appid = android_ids[n].aid;
         // Move the end pointer to the null terminator.
         end += strlen(android_ids[n].name) + 1;
+        break;
       }
     }
   }
@@ -258,14 +274,32 @@ static unsigned app_id_from_name(const char* name) {
     return 0;
   }
 
-  return (unsigned)(appid + userid*AID_USER);
+  return (appid + userid*AID_USER);
 }
 
-static void print_app_name_from_appid_userid(const uid_t appid,
-    const uid_t userid, char* buffer, const int bufferlen) {
+static void print_app_name_from_uid(const uid_t uid, char* buffer, const int bufferlen) {
+  const uid_t appid = uid % AID_USER;
+  const uid_t userid = uid / AID_USER;
   if (appid >= AID_ISOLATED_START) {
     snprintf(buffer, bufferlen, "u%u_i%u", userid, appid - AID_ISOLATED_START);
-  } else if (userid == 0 && appid >= AID_SHARED_GID_START) {
+  } else if (appid < AID_APP) {
+    for (size_t n = 0; n < android_id_count; n++) {
+      if (android_ids[n].aid == appid) {
+        snprintf(buffer, bufferlen, "u%u_%s", userid, android_ids[n].name);
+        return;
+      }
+    }
+  } else {
+    snprintf(buffer, bufferlen, "u%u_a%u", userid, appid - AID_APP);
+  }
+}
+
+static void print_app_name_from_gid(const gid_t gid, char* buffer, const int bufferlen) {
+  const uid_t appid = gid % AID_USER;
+  const uid_t userid = gid / AID_USER;
+  if (appid >= AID_ISOLATED_START) {
+    snprintf(buffer, bufferlen, "u%u_i%u", userid, appid - AID_ISOLATED_START);
+  } else if (userid == 0 && appid >= AID_SHARED_GID_START && appid <= AID_SHARED_GID_END) {
     snprintf(buffer, bufferlen, "all_a%u", appid - AID_SHARED_GID_START);
   } else if (appid < AID_APP) {
     for (size_t n = 0; n < android_id_count; n++) {
@@ -279,10 +313,52 @@ static void print_app_name_from_appid_userid(const uid_t appid,
   }
 }
 
-static void print_app_name_from_uid(const uid_t uid, char* buffer, const int bufferlen) {
-  const uid_t appid = uid % AID_USER;
-  const uid_t userid = uid / AID_USER;
-  return print_app_name_from_appid_userid(appid, userid, buffer, bufferlen);
+// Translate an OEM name to the corresponding user/group id.
+// oem_XXX -> AID_OEM_RESERVED_2_START + XXX, iff XXX is within range.
+static id_t oem_id_from_name(const char* name) {
+  unsigned int id;
+  if (sscanf(name, "oem_%u", &id) != 1) {
+    return 0;
+  }
+  // Check OEM id is within range.
+  if (id > (AID_OEM_RESERVED_2_END - AID_OEM_RESERVED_2_START)) {
+    return 0;
+  }
+  return AID_OEM_RESERVED_2_START + static_cast<id_t>(id);
+}
+
+static passwd* oem_id_to_passwd(uid_t uid, passwd_state_t* state) {
+  if (uid < AID_OEM_RESERVED_2_START || uid > AID_OEM_RESERVED_2_END) {
+    return NULL;
+  }
+
+  snprintf(state->name_buffer_, sizeof(state->name_buffer_), "oem_%u",
+           uid - AID_OEM_RESERVED_2_START);
+  snprintf(state->dir_buffer_, sizeof(state->dir_buffer_), "/");
+  snprintf(state->sh_buffer_, sizeof(state->sh_buffer_), "/system/bin/sh");
+
+  passwd* pw = &state->passwd_;
+  pw->pw_name  = state->name_buffer_;
+  pw->pw_dir   = state->dir_buffer_;
+  pw->pw_shell = state->sh_buffer_;
+  pw->pw_uid   = uid;
+  pw->pw_gid   = uid;
+  return pw;
+}
+
+static group* oem_id_to_group(gid_t gid, group_state_t* state) {
+  if (gid < AID_OEM_RESERVED_2_START || gid > AID_OEM_RESERVED_2_END) {
+    return NULL;
+  }
+
+  snprintf(state->group_name_buffer_, sizeof(state->group_name_buffer_),
+           "oem_%u", gid - AID_OEM_RESERVED_2_START);
+
+  group* gr = &state->group_;
+  gr->gr_name   = state->group_name_buffer_;
+  gr->gr_gid    = gid;
+  gr->gr_mem[0] = gr->gr_name;
+  return gr;
 }
 
 // Translate a uid into the corresponding name.
@@ -291,20 +367,15 @@ static void print_app_name_from_uid(const uid_t uid, char* buffer, const int buf
 // AID_ISOLATED_START to AID_USER-1 -> u0_i1234
 // AID_USER+                        -> u1_radio, u1_a1234, u2_i1234, etc.
 // returns a passwd structure (sets errno to ENOENT on failure).
-static passwd* app_id_to_passwd(uid_t uid, stubs_state_t* state) {
-  passwd* pw = &state->passwd_;
-
+static passwd* app_id_to_passwd(uid_t uid, passwd_state_t* state) {
   if (uid < AID_APP) {
     errno = ENOENT;
     return NULL;
   }
 
+  print_app_name_from_uid(uid, state->name_buffer_, sizeof(state->name_buffer_));
+
   const uid_t appid = uid % AID_USER;
-  const uid_t userid = uid / AID_USER;
-
-  print_app_name_from_appid_userid(appid, userid, state->app_name_buffer_,
-                                   sizeof(state->app_name_buffer_));
-
   if (appid < AID_APP) {
       snprintf(state->dir_buffer_, sizeof(state->dir_buffer_), "/");
   } else {
@@ -313,37 +384,34 @@ static passwd* app_id_to_passwd(uid_t uid, stubs_state_t* state) {
 
   snprintf(state->sh_buffer_, sizeof(state->sh_buffer_), "/system/bin/sh");
 
-  pw->pw_name  = state->app_name_buffer_;
+  passwd* pw = &state->passwd_;
+  pw->pw_name  = state->name_buffer_;
   pw->pw_dir   = state->dir_buffer_;
   pw->pw_shell = state->sh_buffer_;
   pw->pw_uid   = uid;
   pw->pw_gid   = uid;
-
   return pw;
 }
 
 // Translate a gid into the corresponding app_<gid>
 // group structure (sets errno to ENOENT on failure).
-static group* app_id_to_group(gid_t gid, stubs_state_t* state) {
+static group* app_id_to_group(gid_t gid, group_state_t* state) {
   if (gid < AID_APP) {
     errno = ENOENT;
     return NULL;
   }
 
-  print_app_name_from_uid(gid, state->group_name_buffer_,
-                          sizeof(state->group_name_buffer_));
+  print_app_name_from_gid(gid, state->group_name_buffer_, sizeof(state->group_name_buffer_));
 
   group* gr = &state->group_;
   gr->gr_name   = state->group_name_buffer_;
   gr->gr_gid    = gid;
   gr->gr_mem[0] = gr->gr_name;
-  gr->gr_mem[1] = NULL;
   return gr;
 }
 
-
 passwd* getpwuid(uid_t uid) { // NOLINT: implementing bad function.
-  stubs_state_t* state = __stubs_state();
+  passwd_state_t* state = g_passwd_tls_buffer.get();
   if (state == NULL) {
     return NULL;
   }
@@ -352,11 +420,16 @@ passwd* getpwuid(uid_t uid) { // NOLINT: implementing bad function.
   if (pw != NULL) {
     return pw;
   }
+  // Handle OEM range.
+  pw = oem_id_to_passwd(uid, state);
+  if (pw != NULL) {
+    return pw;
+  }
   return app_id_to_passwd(uid, state);
 }
 
 passwd* getpwnam(const char* login) { // NOLINT: implementing bad function.
-  stubs_state_t* state = __stubs_state();
+  passwd_state_t* state = g_passwd_tls_buffer.get();
   if (state == NULL) {
     return NULL;
   }
@@ -365,17 +438,22 @@ passwd* getpwnam(const char* login) { // NOLINT: implementing bad function.
   if (pw != NULL) {
     return pw;
   }
-  return app_id_to_passwd(app_id_from_name(login), state);
+  // Handle OEM range.
+  pw = oem_id_to_passwd(oem_id_from_name(login), state);
+  if (pw != NULL) {
+    return pw;
+  }
+  return app_id_to_passwd(app_id_from_name(login, false), state);
 }
 
 // All users are in just one group, the one passed in.
 int getgrouplist(const char* /*user*/, gid_t group, gid_t* groups, int* ngroups) {
-    if (*ngroups < 1) {
-        *ngroups = 1;
-        return -1;
-    }
-    groups[0] = group;
-    return (*ngroups = 1);
+  if (*ngroups < 1) {
+    *ngroups = 1;
+    return -1;
+  }
+  groups[0] = group;
+  return (*ngroups = 1);
 }
 
 char* getlogin() { // NOLINT: implementing bad function.
@@ -383,31 +461,75 @@ char* getlogin() { // NOLINT: implementing bad function.
   return (pw != NULL) ? pw->pw_name : NULL;
 }
 
-group* getgrgid(gid_t gid) { // NOLINT: implementing bad function.
-  stubs_state_t* state = __stubs_state();
-  if (state == NULL) {
-    return NULL;
+static group* getgrgid_internal(gid_t gid, group_state_t* state) {
+  group* grp = android_id_to_group(state, gid);
+  if (grp != NULL) {
+    return grp;
   }
-
-  group* gr = android_id_to_group(&state->group_, gid);
-  if (gr != NULL) {
-    return gr;
+  // Handle OEM range.
+  grp = oem_id_to_group(gid, state);
+  if (grp != NULL) {
+    return grp;
   }
-
   return app_id_to_group(gid, state);
 }
 
-group* getgrnam(const char* name) { // NOLINT: implementing bad function.
-  stubs_state_t* state = __stubs_state();
+group* getgrgid(gid_t gid) { // NOLINT: implementing bad function.
+  group_state_t* state = __group_state();
   if (state == NULL) {
     return NULL;
   }
+  return getgrgid_internal(gid, state);
+}
 
-  if (android_name_to_group(&state->group_, name) != 0) {
-    return &state->group_;
+static group* getgrnam_internal(const char* name, group_state_t* state) {
+  group* grp = android_name_to_group(state, name);
+  if (grp != NULL) {
+    return grp;
   }
+  // Handle OEM range.
+  grp = oem_id_to_group(oem_id_from_name(name), state);
+  if (grp != NULL) {
+    return grp;
+  }
+  return app_id_to_group(app_id_from_name(name, true), state);
+}
 
-  return app_id_to_group(app_id_from_name(name), state);
+group* getgrnam(const char* name) { // NOLINT: implementing bad function.
+  group_state_t* state = __group_state();
+  if (state == NULL) {
+    return NULL;
+  }
+  return getgrnam_internal(name, state);
+}
+
+static int getgroup_r(bool by_name, const char* name, gid_t gid, struct group* grp, char* buf,
+                      size_t buflen, struct group** result) {
+  ErrnoRestorer errno_restorer;
+  *result = NULL;
+  char* p = reinterpret_cast<char*>(
+      BIONIC_ALIGN(reinterpret_cast<uintptr_t>(buf), sizeof(uintptr_t)));
+  if (p + sizeof(group_state_t) > buf + buflen) {
+    return ERANGE;
+  }
+  group_state_t* state = reinterpret_cast<group_state_t*>(p);
+  init_group_state(state);
+  group* retval = (by_name ? getgrnam_internal(name, state) : getgrgid_internal(gid, state));
+  if (retval != NULL) {
+    *grp = *retval;
+    *result = grp;
+    return 0;
+  }
+  return errno;
+}
+
+int getgrgid_r(gid_t gid, struct group* grp, char* buf, size_t buflen, struct group** result) {
+  return getgroup_r(false, NULL, gid, grp, buf, buflen, result);
+}
+
+int getgrnam_r(const char* name, struct group* grp, char* buf, size_t buflen,
+               struct group **result) {
+  return getgroup_r(true, name, 0, grp, buf, buflen, result);
 }
 
 // We don't have an /etc/networks, so all inputs return NULL.
@@ -430,42 +552,8 @@ protoent* getprotobynumber(int /*proto*/) {
   return NULL;
 }
 
-static void unimplemented_stub(const char* function) {
-  const char* fmt = "%s(3) is not implemented on Android\n";
-  __libc_format_log(ANDROID_LOG_WARN, "libc", fmt, function);
-  fprintf(stderr, fmt, function);
-}
-
-#define UNIMPLEMENTED unimplemented_stub(__PRETTY_FUNCTION__)
-
-void endpwent() {
-  UNIMPLEMENTED;
-}
-
-mntent* getmntent(FILE* /*f*/) {
-  UNIMPLEMENTED;
-  return NULL;
-}
-
-char* ttyname(int /*fd*/) { // NOLINT: implementing bad function.
-  UNIMPLEMENTED;
-  return NULL;
-}
-
-int ttyname_r(int /*fd*/, char* /*buf*/, size_t /*buflen*/) {
-  UNIMPLEMENTED;
-  return -ERANGE;
-}
-
-char* getusershell() {
-  UNIMPLEMENTED;
-  return NULL;
-}
-
-void setusershell() {
-  UNIMPLEMENTED;
-}
-
-void endusershell() {
-  UNIMPLEMENTED;
+// Portable code should use sysconf(_SC_PAGE_SIZE) directly instead.
+int getpagesize() {
+  // We dont use sysconf(3) here because that drags in stdio, which makes static binaries fat.
+  return PAGE_SIZE;
 }

@@ -36,87 +36,103 @@
  */
 
 #include "linker.h"
+#include "linker_mapped_file_fragment.h"
 
 class ElfReader {
  public:
-  ElfReader(const char* name, int fd);
-  ~ElfReader();
+  ElfReader();
 
-  bool Load();
+  bool Read(const char* name, int fd, off64_t file_offset, off64_t file_size);
+  bool Load(const android_dlextinfo* extinfo);
 
-  size_t phdr_count() { return phdr_num_; }
-  Elf32_Addr load_start() { return reinterpret_cast<Elf32_Addr>(load_start_); }
-  Elf32_Addr load_size() { return load_size_; }
-  Elf32_Addr load_bias() { return load_bias_; }
-  const Elf32_Phdr* loaded_phdr() { return loaded_phdr_; }
+  const char* name() const { return name_.c_str(); }
+  size_t phdr_count() const { return phdr_num_; }
+  ElfW(Addr) load_start() const { return reinterpret_cast<ElfW(Addr)>(load_start_); }
+  size_t load_size() const { return load_size_; }
+  ElfW(Addr) load_bias() const { return load_bias_; }
+  const ElfW(Phdr)* loaded_phdr() const { return loaded_phdr_; }
+  const ElfW(Dyn)* dynamic() const { return dynamic_; }
+  const char* get_string(ElfW(Word) index) const;
+  bool is_mapped_by_caller() const { return mapped_by_caller_; }
 
  private:
   bool ReadElfHeader();
   bool VerifyElfHeader();
-  bool ReadProgramHeader();
-  bool ReserveAddressSpace();
+  bool ReadProgramHeaders();
+  bool ReadSectionHeaders();
+  bool ReadDynamicSection();
+  bool ReserveAddressSpace(const android_dlextinfo* extinfo);
   bool LoadSegments();
   bool FindPhdr();
-  bool CheckPhdr(Elf32_Addr);
+  bool CheckPhdr(ElfW(Addr));
+  bool CheckFileRange(ElfW(Addr) offset, size_t size);
 
-  const char* name_;
+  bool did_read_;
+  bool did_load_;
+  std::string name_;
   int fd_;
+  off64_t file_offset_;
+  off64_t file_size_;
 
-  Elf32_Ehdr header_;
+  ElfW(Ehdr) header_;
   size_t phdr_num_;
 
-  void* phdr_mmap_;
-  Elf32_Phdr* phdr_table_;
-  Elf32_Addr phdr_size_;
+  MappedFileFragment phdr_fragment_;
+  const ElfW(Phdr)* phdr_table_;
+
+  MappedFileFragment shdr_fragment_;
+  const ElfW(Shdr)* shdr_table_;
+  size_t shdr_num_;
+
+  MappedFileFragment dynamic_fragment_;
+  const ElfW(Dyn)* dynamic_;
+
+  MappedFileFragment strtab_fragment_;
+  const char* strtab_;
+  size_t strtab_size_;
 
   // First page of reserved address space.
   void* load_start_;
   // Size in bytes of reserved address space.
-  Elf32_Addr load_size_;
+  size_t load_size_;
   // Load bias.
-  Elf32_Addr load_bias_;
+  ElfW(Addr) load_bias_;
 
   // Loaded phdr.
-  const Elf32_Phdr* loaded_phdr_;
+  const ElfW(Phdr)* loaded_phdr_;
+
+  // Is map owned by the caller
+  bool mapped_by_caller_;
 };
 
-size_t
-phdr_table_get_load_size(const Elf32_Phdr* phdr_table,
-                         size_t phdr_count,
-                         Elf32_Addr* min_vaddr = NULL,
-                         Elf32_Addr* max_vaddr = NULL);
+size_t phdr_table_get_load_size(const ElfW(Phdr)* phdr_table, size_t phdr_count,
+                                ElfW(Addr)* min_vaddr = nullptr, ElfW(Addr)* max_vaddr = nullptr);
 
-int
-phdr_table_protect_segments(const Elf32_Phdr* phdr_table,
-                            int               phdr_count,
-                            Elf32_Addr        load_bias);
+int phdr_table_protect_segments(const ElfW(Phdr)* phdr_table,
+                                size_t phdr_count, ElfW(Addr) load_bias);
 
-int
-phdr_table_unprotect_segments(const Elf32_Phdr* phdr_table,
-                              int               phdr_count,
-                              Elf32_Addr        load_bias);
+int phdr_table_unprotect_segments(const ElfW(Phdr)* phdr_table, size_t phdr_count,
+                                  ElfW(Addr) load_bias);
 
-int
-phdr_table_protect_gnu_relro(const Elf32_Phdr* phdr_table,
-                             int               phdr_count,
-                             Elf32_Addr        load_bias);
+int phdr_table_protect_gnu_relro(const ElfW(Phdr)* phdr_table, size_t phdr_count,
+                                 ElfW(Addr) load_bias);
 
+int phdr_table_serialize_gnu_relro(const ElfW(Phdr)* phdr_table, size_t phdr_count,
+                                   ElfW(Addr) load_bias, int fd);
 
-#ifdef ANDROID_ARM_LINKER
-int
-phdr_table_get_arm_exidx(const Elf32_Phdr* phdr_table,
-                         int               phdr_count,
-                         Elf32_Addr        load_bias,
-                         Elf32_Addr**      arm_exidx,
-                         unsigned*         arm_exidix_count);
+int phdr_table_map_gnu_relro(const ElfW(Phdr)* phdr_table, size_t phdr_count,
+                             ElfW(Addr) load_bias, int fd);
+
+#if defined(__arm__)
+int phdr_table_get_arm_exidx(const ElfW(Phdr)* phdr_table, size_t phdr_count, ElfW(Addr) load_bias,
+                             ElfW(Addr)** arm_exidx, size_t* arm_exidix_count);
 #endif
 
-void
-phdr_table_get_dynamic_section(const Elf32_Phdr* phdr_table,
-                               int               phdr_count,
-                               Elf32_Addr        load_bias,
-                               Elf32_Dyn**       dynamic,
-                               size_t*           dynamic_count,
-                               Elf32_Word*       dynamic_flags);
+void phdr_table_get_dynamic_section(const ElfW(Phdr)* phdr_table, size_t phdr_count,
+                                    ElfW(Addr) load_bias, ElfW(Dyn)** dynamic,
+                                    ElfW(Word)* dynamic_flags);
+
+const char* phdr_table_get_interpreter_name(const ElfW(Phdr) * phdr_table, size_t phdr_count,
+                                            ElfW(Addr) load_bias);
 
 #endif /* LINKER_PHDR_H */

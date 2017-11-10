@@ -32,9 +32,7 @@
  * cache line.
  */
 
-ENTRY(MEMCPY_BASE)
-        .cfi_startproc
-        .save       {r0, lr}
+ENTRY_PRIVATE(MEMCPY_BASE)
         .cfi_def_cfa_offset 8
         .cfi_rel_offset r0, 0
         .cfi_rel_offset lr, 4
@@ -46,7 +44,7 @@ ENTRY(MEMCPY_BASE)
         /* check if buffers are aligned. If so, run arm-only version */
         eor         r3, r0, r1
         ands        r3, r3, #0x3
-        beq         __memcpy_base_aligned
+        beq         MEMCPY_BASE_ALIGNED
 
         /* Check the upper size limit for Neon unaligned memory access in memcpy */
         cmp         r2, #224
@@ -135,23 +133,16 @@ ENTRY(MEMCPY_BASE)
         strbcs      ip, [r0], #1
         strbcs      lr, [r0], #1
 
-        ldmfd       sp!, {r0, lr}
-        bx          lr
-
-        .cfi_endproc
+        ldmfd       sp!, {r0, pc}
 END(MEMCPY_BASE)
 
-ENTRY(MEMCPY_BASE_ALIGNED)
-        .cfi_startproc
-
-        .save       {r0, lr}
+ENTRY_PRIVATE(MEMCPY_BASE_ALIGNED)
         .cfi_def_cfa_offset 8
         .cfi_rel_offset r0, 0
         .cfi_rel_offset lr, 4
 
         /* Simple arm-only copy loop to handle aligned copy operations */
         stmfd       sp!, {r4-r8}
-        .save       {r4-r8}
         .cfi_adjust_cfa_offset 20
         .cfi_rel_offset r4, 0
         .cfi_rel_offset r5, 4
@@ -228,6 +219,4 @@ ENTRY(MEMCPY_BASE_ALIGNED)
 6:
         ldmfd       sp!, {r4-r8}
         ldmfd       sp!, {r0, pc}
-
-        .cfi_endproc
 END(MEMCPY_BASE_ALIGNED)

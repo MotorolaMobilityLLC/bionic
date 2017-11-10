@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2010 The Android Open Source Project
+ * Copyright (C) 2008 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,8 +29,6 @@
 #ifndef _LINKER_DEBUG_H_
 #define _LINKER_DEBUG_H_
 
-#include <stdio.h>
-
 // You can increase the verbosity of debug traces by defining the LD_DEBUG
 // environment variable to a numeric value from 0 to 2 (corresponding to
 // INFO, TRACE, and DEBUG calls in the source). This will only
@@ -44,6 +42,7 @@
 #define TRACE_DEBUG          1
 #define DO_TRACE_LOOKUP      1
 #define DO_TRACE_RELO        1
+#define DO_TRACE_IFUNC       1
 #define TIMING               0
 #define STATS                0
 #define COUNT_PAGES          0
@@ -55,22 +54,27 @@
  * To enable/disable specific debug options, change the defines above
  *********************************************************************/
 
-
-/*********************************************************************/
-
 #include "private/libc_logging.h"
+#include <unistd.h>
 
-__LIBC_HIDDEN__ extern int gLdDebugVerbosity;
+__LIBC_HIDDEN__ extern int g_ld_debug_verbosity;
+
+#define CHECK(predicate) { \
+    if (!(predicate)) { \
+      __libc_fatal("%s:%d: %s CHECK '" #predicate "' failed", \
+          __FILE__, __LINE__, __FUNCTION__); \
+    } \
+  }
 
 #if LINKER_DEBUG_TO_LOG
-#define _PRINTVF(v,x...) \
+#define _PRINTVF(v, x...) \
     do { \
-      if (gLdDebugVerbosity > (v)) __libc_format_log(5-(v),"linker",x); \
+      if (g_ld_debug_verbosity > (v)) __libc_format_log(5-(v), "linker", x); \
     } while (0)
 #else /* !LINKER_DEBUG_TO_LOG */
-#define _PRINTVF(v,x...) \
+#define _PRINTVF(v, x...) \
     do { \
-      if (gLdDebugVerbosity > (v)) { __libc_format_fd(1, x); write(1, "\n", 1); } \
+      if (g_ld_debug_verbosity > (v)) { __libc_format_fd(1, x); write(1, "\n", 1); } \
     } while (0)
 #endif /* !LINKER_DEBUG_TO_LOG */
 
@@ -84,6 +88,25 @@ __LIBC_HIDDEN__ extern int gLdDebugVerbosity;
 #define DEBUG(x...)          do {} while (0)
 #endif /* TRACE_DEBUG */
 
-#define TRACE_TYPE(t,x...)   do { if (DO_TRACE_##t) { TRACE(x); } } while (0)
+#define TRACE_TYPE(t, x...)   do { if (DO_TRACE_##t) { TRACE(x); } } while (0)
+
+#if COUNT_PAGES
+extern uint32_t bitmask[];
+#if defined(__LP64__)
+#define MARK(offset) \
+    do { \
+      if ((((offset) >> 12) >> 5) < 4096) \
+          bitmask[((offset) >> 12) >> 5] |= (1 << (((offset) >> 12) & 31)); \
+    } while (0)
+#else
+#define MARK(offset) \
+    do { \
+      bitmask[((offset) >> 12) >> 3] |= (1 << (((offset) >> 12) & 7)); \
+    } while (0)
+#endif
+#else
+#define MARK(x) do {} while (0)
+
+#endif
 
 #endif /* _LINKER_DEBUG_H_ */

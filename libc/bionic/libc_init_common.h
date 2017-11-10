@@ -43,14 +43,21 @@ extern int main(int argc, char** argv, char** env);
 __noreturn void __libc_init(void* raw_args,
                             void (*onexit)(void),
                             int (*slingshot)(int, char**, char**),
-                            structors_array_t const * const structors);
-void __libc_fini(void* finit_array);
+                            structors_array_t const* const structors);
+__LIBC_HIDDEN__ void __libc_fini(void* finit_array);
 
 __END_DECLS
 
 #if defined(__cplusplus)
-struct KernelArgumentBlock;
-void __LIBC_HIDDEN__ __libc_init_common(KernelArgumentBlock& args);
+
+class KernelArgumentBlock;
+
+__LIBC_HIDDEN__ void __libc_init_globals(KernelArgumentBlock& args);
+
+__LIBC_HIDDEN__ void __libc_init_common(KernelArgumentBlock& args);
+
+__LIBC_HIDDEN__ void __libc_init_AT_SECURE(KernelArgumentBlock& args);
+
 #endif
 
 #endif

@@ -30,10 +30,12 @@
  */
 
 #include <machine/cpu-features.h>
-#include <machine/asm.h>
+#include <private/bionic_asm.h>
+
+.syntax unified
 
 ENTRY(strcpy)
-	PLD(r1, #0)
+	pld	[r1, #0]
 	eor	r2, r0, r1
 	mov	ip, r0
 	tst	r2, #3
@@ -62,7 +64,7 @@ ENTRY(strcpy)
 	  load stalls.  */
 	.p2align 2
 2:
-	PLD(r1, #8)
+	pld	[r1, #8]
 	ldr	r4, [r1], #4
 	sub	r2, r3, r5
 	bics	r2, r2, r3
@@ -108,15 +110,15 @@ ENTRY(strcpy)
 #ifdef __ARMEB__
 	tst	r2, #0xff00
 	iteet	ne
-	strneh	r2, [ip], #2
+	strhne	r2, [ip], #2
 	lsreq	r2, r2, #8
-	streqb	r2, [ip]
+	strbeq	r2, [ip]
 	tstne	r2, #0xff
 #else
 	tst	r2, #0xff
 	itet	ne
-	strneh	r2, [ip], #2
-	streqb	r2, [ip]
+	strhne	r2, [ip], #2
+	strbeq	r2, [ip]
 	tstne	r2, #0xff00
 #endif
 	bne	5b

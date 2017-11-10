@@ -1,3 +1,8 @@
+/*
+* Copyright (C) 2014 MediaTek Inc.
+* Modification based on code covered by the mentioned copyright
+* and/or permission notice(s).
+*/
 /*-
  * Copyright (c) 1980, 1983, 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -72,9 +77,6 @@
 #define	_PATH_NETWORKS	"/system/etc/networks"
 #define	_PATH_PROTOCOLS	"/system/etc/protocols"
 #define	_PATH_SERVICES	"/system/etc/services"
-
-#define  MAXHOSTNAMELEN  256
-
 
 /*
  * Structures returned by network data base library.  All addresses are
@@ -196,6 +198,8 @@ struct addrinfo {
 #define	SCOPE_DELIMITER	'%'
 
 __BEGIN_DECLS
+#pragma GCC visibility push(default)
+
 /* BIONIC-BEGIN */
 #define  h_errno   (*__get_h_errno())
 int*  __get_h_errno(void);
@@ -207,13 +211,11 @@ void endprotoent(void);
 void endservent(void);
 void freehostent(struct hostent *);
 struct hostent	*gethostbyaddr(const void *, socklen_t, int);
-struct hostent	*android_gethostbyaddrforiface(const void *, socklen_t, int, const char*, int);
-int gethostbyaddr_r(const void *, int, int, struct hostent *, char *, size_t, struct hostent **, int *);
+int gethostbyaddr_r(const void *, socklen_t, int, struct hostent *, char *, size_t, struct hostent **, int *);
 struct hostent	*gethostbyname(const char *);
 int gethostbyname_r(const char *, struct hostent *, char *, size_t, struct hostent **, int *);
 struct hostent	*gethostbyname2(const char *, int);
 int gethostbyname2_r(const char *, int, struct hostent *, char *, size_t, struct hostent **, int *);
-struct hostent	*android_gethostbynameforiface(const char *, int, const char *, int);
 struct hostent	*gethostent(void);
 int gethostent_r(struct hostent *, char *, size_t, struct hostent **, int *);
 struct hostent	*getipnodebyaddr(const void *, size_t, int, int *);
@@ -240,15 +242,17 @@ int innetgr(const char *, const char *, const char *, const char *);
 void sethostent(int);
 void setnetent(int);
 void setprotoent(int);
+/*mtk_net pcscf*/
+int naptr_srv_query(const char *ifname, const char *name, int numeric, int af);
+/*mtk_net pcscf end*/
 int getaddrinfo(const char *, const char *, const struct addrinfo *, struct addrinfo **);
-int android_getaddrinfoforiface(const char *, const char *, const struct addrinfo *, const char *, int, struct addrinfo **);
 int getnameinfo(const struct sockaddr *, socklen_t, char *, size_t, char *, size_t, int);
-int android_getnameinfoforiface(const struct sockaddr *, socklen_t, char *, size_t, char *, size_t, int, const char *, int);
 void freeaddrinfo(struct addrinfo *);
 const char	*gai_strerror(int);
 void setnetgrent(const char *);
 void setservent(int);
 
+#pragma GCC visibility pop
 __END_DECLS
 
 #endif /* !_NETDB_H_ */
