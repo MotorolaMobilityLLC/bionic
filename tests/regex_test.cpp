@@ -28,11 +28,32 @@ TEST(regex, smoke) {
 
   char buf[80];
   regerror(REG_NOMATCH, &re, buf, sizeof(buf));
-#if __BIONIC__
+#if defined(__BIONIC__)
   ASSERT_STREQ("regexec() failed to match", buf);
 #else
   ASSERT_STREQ("No match", buf);
 #endif
 
   regfree(&re);
+}
+
+TEST(regex, match_offsets) {
+  regex_t re;
+  regmatch_t matches[1];
+  ASSERT_EQ(0, regcomp(&re, "b", 0));
+  ASSERT_EQ(0, regexec(&re, "abc", 1, matches, 0));
+  ASSERT_EQ(1, matches[0].rm_so);
+  ASSERT_EQ(2, matches[0].rm_eo);
+  regfree(&re);
+}
+
+TEST(regex, regerror_NULL_0) {
+  regex_t re;
+  int error = regcomp(&re, "*", REG_EXTENDED);
+  ASSERT_NE(0, error);
+
+  // Passing a null pointer and a size of 0 is a legitimate way to ask
+  // how large a buffer we would need for the error message.
+  int error_length = regerror(error, &re, nullptr, 0);
+  ASSERT_GT(error_length, 0);
 }

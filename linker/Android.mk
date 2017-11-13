@@ -1,83 +1,111 @@
-LOCAL_PATH:= $(call my-dir)
+LOCAL_PATH := $(call my-dir)
+
 include $(CLEAR_VARS)
 
-ifeq ($(TARGET_ARCH),x86)
-    linker_begin_extension := c
-else
-    linker_begin_extension := S
-endif
+LOCAL_CLANG := true
 
-LOCAL_SRC_FILES:= \
-    arch/$(TARGET_ARCH)/begin.$(linker_begin_extension) \
+LOCAL_SRC_FILES := \
     debugger.cpp \
     dlfcn.cpp \
     linker.cpp \
-    linker_environ.cpp \
+    linker_allocator.cpp \
+    linker_block_allocator.cpp \
+    linker_dlwarning.cpp \
+    linker_gdb_support.cpp \
+    linker_libc_support.c \
+    linker_mapped_file_fragment.cpp \
+    linker_memory.cpp \
     linker_phdr.cpp \
-    rt.cpp
+    linker_sdk_versions.cpp \
+    linker_utils.cpp \
+    rt.cpp \
 
-LOCAL_LDFLAGS := -shared -Wl,--exclude-libs,ALL
+LOCAL_SRC_FILES_arm     := arch/arm/begin.S
+LOCAL_SRC_FILES_arm64   := arch/arm64/begin.S
+LOCAL_SRC_FILES_x86     := arch/x86/begin.c
+LOCAL_SRC_FILES_x86_64  := arch/x86_64/begin.S
+LOCAL_SRC_FILES_mips    := arch/mips/begin.S linker_mips.cpp
+LOCAL_SRC_FILES_mips64  := arch/mips64/begin.S linker_mips.cpp
 
-LOCAL_CFLAGS += -fno-stack-protector \
-        -Wstrict-overflow=5 \
-        -fvisibility=hidden \
-        -Wall -Wextra -Werror
+# -shared is used to overwrite the -Bstatic and -static
+# flags triggered by LOCAL_FORCE_STATIC_EXECUTABLE.
+# This dynamic linker is actually a shared object linked with static libraries.
+LOCAL_LDFLAGS := \
+    -shared \
+    -Wl,-Bsymbolic \
+    -Wl,--exclude-libs,ALL \
+
+LOCAL_CFLAGS += \
+    -fno-stack-protector \
+    -Wstrict-overflow=5 \
+    -fvisibility=hidden \
+    -Wall -Wextra -Wunused -Werror \
+
+LOCAL_CFLAGS_arm += -D__work_around_b_24465209__
+LOCAL_CFLAGS_x86 += -D__work_around_b_24465209__
+
+LOCAL_CONLYFLAGS += \
+    -std=gnu99 \
+
+LOCAL_CPPFLAGS += \
+    -Wold-style-cast \
+
+ifeq ($(TARGET_IS_64_BIT),true)
+LOCAL_CPPFLAGS += -DTARGET_IS_64_BIT
+endif
+
+ifeq ($(strip $(MTK_CIP_SUPPORT)),yes)
+LOCAL_CPPFLAGS += -DMTK_CIP_SUPPORT
+endif
 
 # We need to access Bionic private headers in the linker.
 LOCAL_CFLAGS += -I$(LOCAL_PATH)/../libc/
 
-ifeq ($(TARGET_ARCH),arm)
-    LOCAL_CFLAGS += -DANDROID_ARM_LINKER
-endif
-
-ifeq ($(TARGET_ARCH),x86)
-    LOCAL_CFLAGS += -DANDROID_X86_LINKER
-endif
-
-ifeq ($(TARGET_ARCH),mips)
-    LOCAL_CFLAGS += -DANDROID_MIPS_LINKER
-endif
-
-LOCAL_MODULE:= linker
-LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
-
-LOCAL_STATIC_LIBRARIES := libc_nomalloc
-
-#LOCAL_FORCE_STATIC_EXECUTABLE := true # not necessary when not including BUILD_EXECUTABLE
-
-#
-# include $(BUILD_EXECUTABLE)
-#
-# Instead of including $(BUILD_EXECUTABLE), we execute the steps to create an executable by
-# hand, as we want to insert an extra step that is not supported by the build system, and
-# is probably specific the linker only, so there's no need to modify the build system for
-# the purpose.
-
-LOCAL_MODULE_CLASS := EXECUTABLES
-LOCAL_MODULE_SUFFIX := $(TARGET_EXECUTABLE_SUFFIX)
-
 # we don't want crtbegin.o (because we have begin.o), so unset it
 # just for this module
 LOCAL_NO_CRT := true
-
 # TODO: split out the asflags.
 LOCAL_ASFLAGS := $(LOCAL_CFLAGS)
 
-include $(BUILD_SYSTEM)/dynamic_binary.mk
+LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
 
-# See build/core/executable.mk
-$(linked_module): PRIVATE_TARGET_GLOBAL_LD_DIRS := $(TARGET_GLOBAL_LD_DIRS)
-$(linked_module): PRIVATE_TARGET_GLOBAL_LDFLAGS := $(TARGET_GLOBAL_LDFLAGS)
-$(linked_module): PRIVATE_TARGET_FDO_LIB := $(TARGET_FDO_LIB)
-$(linked_module): PRIVATE_TARGET_LIBGCC := $(TARGET_LIBGCC)
-$(linked_module): PRIVATE_TARGET_CRTBEGIN_DYNAMIC_O := $(TARGET_CRTBEGIN_DYNAMIC_O)
-$(linked_module): PRIVATE_TARGET_CRTBEGIN_STATIC_O := $(TARGET_CRTBEGIN_STATIC_O)
-$(linked_module): PRIVATE_TARGET_CRTEND_O := $(TARGET_CRTEND_O)
-$(linked_module): $(TARGET_CRTBEGIN_STATIC_O) $(all_objects) $(all_libraries) $(TARGET_CRTEND_O)
-	$(transform-o-to-static-executable)
-	@echo "target PrefixSymbols: $(PRIVATE_MODULE) ($@)"
-	$(hide) $(TARGET_OBJCOPY) --prefix-symbols=__dl_ $@
+LOCAL_STATIC_LIBRARIES := libc_nomalloc libziparchive libutils libbase libz liblog
 
+LOCAL_FORCE_STATIC_EXECUTABLE := true
+
+LOCAL_MODULE := linker
+LOCAL_MODULE_STEM_32 := linker
+LOCAL_MODULE_STEM_64 := linker64
+LOCAL_MULTILIB := both
+
+# Leave the symbols in the shared library so that stack unwinders can produce
+# meaningful name resolution.
+LOCAL_STRIP_MODULE := keep_symbols
+
+# Insert an extra objcopy step to add prefix to symbols. This is needed to prevent gdb
+# looking up symbols in the linker by mistake.
 #
-# end of BUILD_EXECUTABLE hack
-#
+# Note we are using "=" instead of ":=" to defer the evaluation,
+# because LOCAL_2ND_ARCH_VAR_PREFIX or linked_module isn't set properly yet at this point.
+LOCAL_POST_LINK_CMD = $(hide) $($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_OBJCOPY) \
+  --prefix-symbols=__dl_ $(linked_module)
+
+include $(BUILD_EXECUTABLE)
+
+
+define add-linker-symlink
+$(eval _from := $(TARGET_OUT)/bin/$(1))
+$(eval _to:=$(2))
+$(_from): $(LOCAL_MODULE_MAKEFILE)
+	@echo "Symlink: $$@ -> $(_to)"
+	@mkdir -p $$(dir $$@)
+	@rm -rf $$@
+	$(hide) ln -sf $(_to) $$@
+endef
+
+$(eval $(call add-linker-symlink,linker_asan,linker))
+ifeq ($(TARGET_IS_64_BIT),true)
+$(eval $(call add-linker-symlink,linker_asan64,linker64))
+endif
+
+include $(call first-makefiles-under,$(LOCAL_PATH))

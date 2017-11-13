@@ -20,17 +20,100 @@
 
 #include <gtest/gtest.h>
 
-#if defined(i386) // Only our x86 unwinding is good enough. Switch to libunwind?
+#include <dlfcn.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <unwind.h>
 
-extern "C" {
-  void do_test();
-}
+#include "ScopedSignalHandler.h"
 
-// We have to say "DeathTest" here so gtest knows to run this test (which exits)
-// in its own process.
-TEST(stack_unwinding_DeathTest, unwinding_through_signal_frame) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-  ASSERT_EXIT(do_test(), ::testing::ExitedWithCode(42), "");
-}
+#define noinline __attribute__((__noinline__))
+#define __unused __attribute__((__unused__))
 
+_Unwind_Reason_Code FrameCounter(_Unwind_Context* ctx __unused, void* arg) {
+  int* count_ptr = reinterpret_cast<int*>(arg);
+
+#if SHOW_FRAME_LOCATIONS
+  void* ip = reinterpret_cast<void*>(_Unwind_GetIP(ctx));
+
+  const char* symbol = "<unknown>";
+  int offset = 0;
+
+  Dl_info info;
+  memset(&info, 0, sizeof(info));
+  if (dladdr(ip, &info) != 0) {
+    symbol = info.dli_sname;
+    if (info.dli_saddr != nullptr) {
+      offset = static_cast<int>(reinterpret_cast<char*>(ip) - reinterpret_cast<char*>(info.dli_saddr));
+    }
+  }
+
+  fprintf(stderr, " #%02d %p %s%+d (%s)\n", *count_ptr, ip, symbol, offset, info.dli_fname ? info.dli_fname : "??");
+  fflush(stderr);
 #endif
+
+  ++*count_ptr;
+  return _URC_NO_REASON;
+}
+
+static int noinline unwind_one_frame_deeper() {
+  int count = 0;
+  _Unwind_Backtrace(FrameCounter, &count);
+  return count;
+}
+
+TEST(stack_unwinding, easy) {
+  int count = 0;
+  _Unwind_Backtrace(FrameCounter, &count);
+  int deeper_count = unwind_one_frame_deeper();
+  ASSERT_EQ(count + 1, deeper_count);
+}
+
+struct UnwindData {
+  volatile bool signal_handler_complete = false;
+  int expected_frame_count = 0;
+  int handler_frame_count = 0;
+  int handler_one_deeper_frame_count = 0;
+};
+
+static UnwindData g_unwind_data;
+
+static void noinline UnwindSignalHandler(int) {
+  _Unwind_Backtrace(FrameCounter, &g_unwind_data.handler_frame_count);
+
+  g_unwind_data.handler_one_deeper_frame_count = unwind_one_frame_deeper();
+  g_unwind_data.signal_handler_complete = true;
+}
+
+static void verify_unwind_data(const UnwindData& unwind_data) {
+  EXPECT_GT(unwind_data.handler_frame_count, unwind_data.expected_frame_count);
+  EXPECT_EQ(unwind_data.handler_frame_count + 1, unwind_data.handler_one_deeper_frame_count);
+}
+
+TEST(stack_unwinding, unwind_through_signal_frame) {
+  g_unwind_data = {};
+  ScopedSignalHandler ssh(SIGUSR1, UnwindSignalHandler);
+
+  _Unwind_Backtrace(FrameCounter, &g_unwind_data.expected_frame_count);
+
+  ASSERT_EQ(0, kill(getpid(), SIGUSR1));
+  while (!g_unwind_data.signal_handler_complete) {}
+
+  verify_unwind_data(g_unwind_data);
+}
+
+// On LP32, the SA_SIGINFO flag gets you __restore_rt instead of __restore.
+TEST(stack_unwinding, unwind_through_signal_frame_SA_SIGINFO) {
+  g_unwind_data = {};
+  ScopedSignalHandler ssh(SIGUSR1, UnwindSignalHandler, SA_SIGINFO);
+
+  _Unwind_Backtrace(FrameCounter, &g_unwind_data.expected_frame_count);
+  ASSERT_EQ(0, kill(getpid(), SIGUSR1));
+  while (!g_unwind_data.signal_handler_complete) {}
+
+  verify_unwind_data(g_unwind_data);
+}

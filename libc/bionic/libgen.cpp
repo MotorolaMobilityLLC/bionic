@@ -34,24 +34,12 @@
 #include <sys/cdefs.h>
 #include <sys/param.h>
 
-#include "ThreadLocalBuffer.h"
+#include "private/ThreadLocalBuffer.h"
 
-GLOBAL_INIT_THREAD_LOCAL_BUFFER(basename);
-GLOBAL_INIT_THREAD_LOCAL_BUFFER(dirname);
+static ThreadLocalBuffer<char, MAXPATHLEN> g_basename_tls_buffer;
+static ThreadLocalBuffer<char, MAXPATHLEN> g_dirname_tls_buffer;
 
-char* basename(const char* path) {
-  LOCAL_INIT_THREAD_LOCAL_BUFFER(char*, basename, MAXPATHLEN);
-  int rc = basename_r(path, basename_tls_buffer, basename_tls_buffer_size);
-  return (rc < 0) ? NULL : basename_tls_buffer;
-}
-
-char* dirname(const char* path) {
-  LOCAL_INIT_THREAD_LOCAL_BUFFER(char*, dirname, MAXPATHLEN);
-  int rc = dirname_r(path, dirname_tls_buffer, dirname_tls_buffer_size);
-  return (rc < 0) ? NULL : dirname_tls_buffer;
-}
-
-int basename_r(const char* path, char* buffer, size_t buffer_size) {
+static int __basename_r(const char* path, char* buffer, size_t buffer_size) {
   const char* startp = NULL;
   const char* endp = NULL;
   int len;
@@ -103,7 +91,12 @@ int basename_r(const char* path, char* buffer, size_t buffer_size) {
   return result;
 }
 
-int dirname_r(const char* path, char* buffer, size_t buffer_size) {
+// Since this is a non-standard symbol, it might be hijacked by a basename_r in the executable.
+__LIBC32_LEGACY_PUBLIC__ int basename_r(const char* path, char* buffer, size_t buffer_size) {
+  return __basename_r(path, buffer, buffer_size);
+}
+
+static int __dirname_r(const char* path, char* buffer, size_t buffer_size) {
   const char* endp = NULL;
   int len;
   int result;
@@ -160,4 +153,21 @@ int dirname_r(const char* path, char* buffer, size_t buffer_size) {
     buffer[len] = 0;
   }
   return result;
+}
+
+// Since this is a non-standard symbol, it might be hijacked by a basename_r in the executable.
+__LIBC32_LEGACY_PUBLIC__ int dirname_r(const char* path, char* buffer, size_t buffer_size) {
+  return __dirname_r(path, buffer, buffer_size);
+}
+
+char* basename(const char* path) {
+  char* buf = g_basename_tls_buffer.get();
+  int rc = __basename_r(path, buf, g_basename_tls_buffer.size());
+  return (rc < 0) ? NULL : buf;
+}
+
+char* dirname(const char* path) {
+  char* buf = g_dirname_tls_buffer.get();
+  int rc = __dirname_r(path, buf, g_dirname_tls_buffer.size());
+  return (rc < 0) ? NULL : buf;
 }

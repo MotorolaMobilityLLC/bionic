@@ -38,25 +38,48 @@
 #define	_SYS_CDEFS_H_
 
 /*
+ * Testing against Clang-specific extensions.
+ */
+
+#ifndef __has_extension
+#define __has_extension         __has_feature
+#endif
+#ifndef __has_feature
+#define __has_feature(x)        0
+#endif
+#ifndef __has_include
+#define __has_include(x)        0
+#endif
+#ifndef __has_builtin
+#define __has_builtin(x)        0
+#endif
+#ifndef __has_attribute
+#define __has_attribute(x)      0
+#endif
+
+
+/*
  * Macro to test if we're using a GNU C compiler of a specific vintage
  * or later, for e.g. features that appeared in a particular version
  * of GNU C.  Usage:
  *
- *	#if __GNUC_PREREQ__(major, minor)
+ *	#if __GNUC_PREREQ(major, minor)
  *	...cool feature...
  *	#else
  *	...delete feature...
  *	#endif
  */
 #ifdef __GNUC__
-#define	__GNUC_PREREQ__(x, y)						\
+#define	__GNUC_PREREQ(x, y)						\
 	((__GNUC__ == (x) && __GNUC_MINOR__ >= (y)) ||			\
 	 (__GNUC__ > (x)))
 #else
-#define	__GNUC_PREREQ__(x, y)	0
+#define	__GNUC_PREREQ(x, y)	0
 #endif
 
-#include <sys/cdefs_elf.h>
+#define __strong_alias(alias, sym) \
+    __asm__(".global " #alias "\n" \
+            #alias " = " #sym);
 
 #if defined(__cplusplus)
 #define	__BEGIN_DECLS		extern "C" {
@@ -107,28 +130,7 @@
 #define	__volatile
 #endif	/* !__GNUC__ */
 
-/*
- * In non-ANSI C environments, new programs will want ANSI-only C keywords
- * deleted from the program and old programs will want them left alone.
- * Programs using the ANSI C keywords const, inline etc. as normal
- * identifiers should define -DNO_ANSI_KEYWORDS.
- */
-#ifndef	NO_ANSI_KEYWORDS
-#define	const		__const		/* convert ANSI C keywords */
-#define	inline		__inline
-#define	signed		__signed
-#define	volatile	__volatile
-#endif /* !NO_ANSI_KEYWORDS */
 #endif	/* !(__STDC__ || __cplusplus) */
-
-/*
- * Used for internal auditing of the NetBSD source tree.
- */
-#ifdef __AUDIT__
-#define	__aconst	__const
-#else
-#define	__aconst
-#endif
 
 /*
  * The following macro is used to remove const cast-away warnings
@@ -141,75 +143,19 @@
  */
 #define __UNCONST(a)	((void *)(unsigned long)(const void *)(a))
 
-/*
- * GCC2 provides __extension__ to suppress warnings for various GNU C
- * language extensions under "-ansi -pedantic".
- */
-#if !__GNUC_PREREQ__(2, 0)
-#define	__extension__		/* delete __extension__ if non-gcc or gcc1 */
-#endif
-
-/*
- * GCC1 and some versions of GCC2 declare dead (non-returning) and
- * pure (no side effects) functions using "volatile" and "const";
- * unfortunately, these then cause warnings under "-ansi -pedantic".
- * GCC2 uses a new, peculiar __attribute__((attrs)) style.  All of
- * these work for GNU C++ (modulo a slight glitch in the C++ grammar
- * in the distribution version of 2.5.5).
- */
-#if !__GNUC_PREREQ__(2, 5)
-#define	__attribute__(x)	/* delete __attribute__ if non-gcc or gcc1 */
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#define	__dead		__volatile
-#define	__pure		__const
-#endif
-#endif
-
-/* Delete pseudo-keywords wherever they are not available or needed. */
-#ifndef __dead
-#define	__dead
-#define	__pure
-#endif
-
-#if __GNUC_PREREQ__(2, 7)
-#define	__unused	__attribute__((__unused__))
-#else
-#define	__unused	/* delete */
-#endif
-
+#define __dead __attribute__((__noreturn__))
+#define __pure __attribute__((__const__))
 #define __pure2 __attribute__((__const__)) /* Android-added: used by FreeBSD libm */
 
-#if __GNUC_PREREQ__(3, 1)
-#define	__used		__attribute__((__used__))
-#else
-#define	__used		/* delete */
-#endif
+#define	__unused	__attribute__((__unused__))
 
-#if __GNUC_PREREQ__(2, 7)
+#define	__used		__attribute__((__used__))
+
 #define	__packed	__attribute__((__packed__))
 #define	__aligned(x)	__attribute__((__aligned__(x)))
 #define	__section(x)	__attribute__((__section__(x)))
-#elif defined(__lint__)
-#define	__packed	/* delete */
-#define	__aligned(x)	/* delete */
-#define	__section(x)	/* delete */
-#else
-#define	__packed	error: no __packed for this compiler
-#define	__aligned(x)	error: no __aligned for this compiler
-#define	__section(x)	error: no __section for this compiler
-#endif
 
-#if !__GNUC_PREREQ__(2, 8)
-#define	__extension__
-#endif
-
-#if __GNUC_PREREQ__(2, 8)
 #define __statement(x)	__extension__(x)
-#elif defined(lint)
-#define __statement(x)	(0)
-#else
-#define __statement(x)	(x)
-#endif
 
 #define __nonnull(args) __attribute__((__nonnull__ args))
 
@@ -217,62 +163,18 @@
 #define __scanflike(x, y) __attribute__((__format__(scanf, x, y))) __nonnull((x))
 
 /*
- * C99 defines the restrict type qualifier keyword, which was made available
- * in GCC 2.92.
+ * C99 defines the restrict type qualifier keyword.
  */
 #if defined(__STDC__VERSION__) && __STDC_VERSION__ >= 199901L
 #define	__restrict	restrict
-#else
-#if !__GNUC_PREREQ__(2, 92)
-#define	__restrict	/* delete __restrict when not supported */
-#endif
 #endif
 
 /*
- * C99 defines __func__ predefined identifier, which was made available
- * in GCC 2.95.
+ * C99 defines __func__ predefined identifier.
  */
 #if !defined(__STDC_VERSION__) || !(__STDC_VERSION__ >= 199901L)
-#if __GNUC_PREREQ__(2, 6)
 #define	__func__	__PRETTY_FUNCTION__
-#elif __GNUC_PREREQ__(2, 4)
-#define	__func__	__FUNCTION__
-#else
-#define	__func__	""
-#endif
 #endif /* !(__STDC_VERSION__ >= 199901L) */
-
-#if defined(_KERNEL)
-#if defined(NO_KERNEL_RCSIDS)
-#undef __KERNEL_RCSID
-#define	__KERNEL_RCSID(_n, _s)		/* nothing */
-#endif /* NO_KERNEL_RCSIDS */
-#endif /* _KERNEL */
-
-#if !defined(_STANDALONE) && !defined(_KERNEL)
-#ifdef __GNUC__
-#define	__RENAME(x)	___RENAME(x)
-#else
-#ifdef __lint__
-#define	__RENAME(x)	__symbolrename(x)
-#else
-#error "No function renaming possible"
-#endif /* __lint__ */
-#endif /* __GNUC__ */
-#else /* _STANDALONE || _KERNEL */
-#define	__RENAME(x)	no renaming in kernel or standalone environment
-#endif
-
-/*
- * A barrier to stop the optimizer from moving code or assume live
- * register values. This is gcc specific, the version is more or less
- * arbitrary, might work with older compilers.
- */
-#if __GNUC_PREREQ__(2, 95)
-#define	__insn_barrier()	__asm __volatile("":::"memory")
-#else
-#define	__insn_barrier()	/* */
-#endif
 
 /*
  * GNU C version 2.96 adds explicit branch prediction so that
@@ -302,101 +204,68 @@
  *	  basic block reordering that this affects can often generate
  *	  larger code.
  */
-#if __GNUC_PREREQ__(2, 96)
 #define	__predict_true(exp)	__builtin_expect((exp) != 0, 1)
 #define	__predict_false(exp)	__builtin_expect((exp) != 0, 0)
-#else
-#define	__predict_true(exp)	(exp)
-#define	__predict_false(exp)	(exp)
-#endif
 
-#if __GNUC_PREREQ__(2, 96)
 #define __noreturn    __attribute__((__noreturn__))
 #define __mallocfunc  __attribute__((malloc))
 #define __purefunc    __attribute__((pure))
-#else
-#define __noreturn
-#define __mallocfunc
-#define __purefunc
-#endif
 
-#if __GNUC_PREREQ__(3, 1)
 #define __always_inline __attribute__((__always_inline__))
-#else
-#define __always_inline
-#endif
 
-#if __GNUC_PREREQ__(3, 4)
 #define __wur __attribute__((__warn_unused_result__))
-#else
-#define __wur
+
+#define __errorattr(msg) __attribute__((__error__(msg)))
+#define __warnattr(msg) __attribute__((__warning__(msg)))
+
+#define __errordecl(name, msg) extern void name(void) __errorattr(msg)
+
+/*
+ * Some BSD source needs these macros.
+ * Originally they embedded the rcs versions of each source file
+ * in the generated binary. We strip strings during build anyway,.
+ */
+#define __IDSTRING(_prefix,_s) /* nothing */
+#define __COPYRIGHT(_s) /* nothing */
+#define __FBSDID(_s) /* nothing */
+#define __RCSID(_s) /* nothing */
+#define __SCCSID(_s) /* nothing */
+
+/*
+ * _BSD_SOURCE and _GNU_SOURCE are expected to be defined by callers before
+ * any standard header file is included. In those header files we test
+ * against __USE_BSD and __USE_GNU. glibc does this in <features.h> but we
+ * do it in <sys/cdefs.h> instead because that's where our existing
+ * _POSIX_C_SOURCE tests were, and we're already confident that <sys/cdefs.h>
+ * is included everywhere it should be.
+ *
+ * The _GNU_SOURCE test needs to come before any _BSD_SOURCE or _POSIX* tests
+ * because _GNU_SOURCE implies everything else.
+ */
+#if defined(_GNU_SOURCE)
+# define __USE_GNU 1
+# undef _POSIX_SOURCE
+# define _POSIX_SOURCE 1
+# undef _POSIX_C_SOURCE
+# define _POSIX_C_SOURCE 200809L
+# undef _BSD_SOURCE
+# define _BSD_SOURCE 1
 #endif
 
-#if __GNUC_PREREQ__(4, 3)
-#define __errordecl(name, msg) extern void name(void) __attribute__((__error__(msg)))
-#else
-#define __errordecl(name, msg) extern void name(void)
+#if defined(_BSD_SOURCE)
+# define __USE_BSD 1
 #endif
 
 /*
- * Macros for manipulating "link sets".  Link sets are arrays of pointers
- * to objects, which are gathered up by the linker.
- *
- * Object format-specific code has provided us with the following macros:
- *
- *	__link_set_add_text(set, sym)
- *		Add a reference to the .text symbol `sym' to `set'.
- *
- *	__link_set_add_rodata(set, sym)
- *		Add a reference to the .rodata symbol `sym' to `set'.
- *
- *	__link_set_add_data(set, sym)
- *		Add a reference to the .data symbol `sym' to `set'.
- *
- *	__link_set_add_bss(set, sym)
- *		Add a reference to the .bss symbol `sym' to `set'.
- *
- *	__link_set_decl(set, ptype)
- *		Provide an extern declaration of the set `set', which
- *		contains an array of the pointer type `ptype'.  This
- *		macro must be used by any code which wishes to reference
- *		the elements of a link set.
- *
- *	__link_set_start(set)
- *		This points to the first slot in the link set.
- *
- *	__link_set_end(set)
- *		This points to the (non-existent) slot after the last
- *		entry in the link set.
- *
- *	__link_set_count(set)
- *		Count the number of entries in link set `set'.
- *
- * In addition, we provide the following macros for accessing link sets:
- *
- *	__link_set_foreach(pvar, set)
- *		Iterate over the link set `set'.  Because a link set is
- *		an array of pointers, pvar must be declared as "type **pvar",
- *		and the actual entry accessed as "*pvar".
- *
- *	__link_set_entry(set, idx)
- *		Access the link set entry at index `idx' from set `set'.
+ * _FILE_OFFSET_BITS 64 support.
  */
-#define	__link_set_foreach(pvar, set)					\
-	for (pvar = __link_set_start(set); pvar < __link_set_end(set); pvar++)
-
-#define	__link_set_entry(set, idx)	(__link_set_begin(set)[idx])
-
-/*
- * Some of the FreeBSD sources used in Bionic need this.
- * Originally, this is used to embed the rcs versions of each source file
- * in the generated binary. We certainly don't want this in Bionic.
- */
-#define __FBSDID(s) /* nothing */
+#if !defined(__LP64__) && defined(_FILE_OFFSET_BITS)
+#if _FILE_OFFSET_BITS == 64
+#define __USE_FILE_OFFSET64 1
+#endif
+#endif
 
 /*-
- * The following definitions are an extension of the behavior originally
- * implemented in <sys/_posix.h>, but with a different level of granularity.
  * POSIX.1 requires that the macros we test be defined before any standard
  * header file is included.
  *
@@ -526,26 +395,79 @@
 #define  __BIONIC__   1
 #include <android/api-level.h>
 
-#if defined(_FORTIFY_SOURCE) && _FORTIFY_SOURCE > 0 && defined(__OPTIMIZE__) && __OPTIMIZE__ > 0
-#define __BIONIC_FORTIFY 1
-#if _FORTIFY_SOURCE == 2
-#define __bos(s) __builtin_object_size((s), 1)
+/* glibc compatibility. */
+#if __POSIX_VISIBLE >= 200809
+#define __USE_ISOC99 1
+#define __USE_XOPEN2K 1
+#define __USE_XOPEN2K8 1
+#endif
+#if __LP64__
+#define __WORDSIZE 64
 #else
-#define __bos(s) __builtin_object_size((s), 0)
+#define __WORDSIZE 32
 #endif
 
-#define __BIONIC_FORTIFY_INLINE \
-    extern inline \
-    __attribute__ ((always_inline)) \
-    __attribute__ ((gnu_inline))
+/*
+ * When _FORTIFY_SOURCE is defined, automatic bounds checking is
+ * added to commonly used libc functions. If a buffer overrun is
+ * detected, the program is safely aborted.
+ *
+ * See
+ * http://gcc.gnu.org/onlinedocs/gcc/Object-Size-Checking.html for details.
+ */
+#if defined(_FORTIFY_SOURCE) && _FORTIFY_SOURCE > 0 && defined(__OPTIMIZE__) && __OPTIMIZE__ > 0
+#  define __BIONIC_FORTIFY 1
+#  if _FORTIFY_SOURCE == 2
+#    define __bos(s) __builtin_object_size((s), 1)
+#  else
+#    define __bos(s) __builtin_object_size((s), 0)
+#  endif
+#  define __bos0(s) __builtin_object_size((s), 0)
+#  define __BIONIC_FORTIFY_INLINE extern __inline__ __always_inline __attribute__((gnu_inline)) __attribute__((__artificial__))
 #endif
 #define __BIONIC_FORTIFY_UNKNOWN_SIZE ((size_t) -1)
 
-/* Android-added: for FreeBSD's libm. */
-#define __weak_reference(sym,alias) \
-    __asm__(".weak " #alias); \
-    __asm__(".equ "  #alias ", " #sym)
-#define __strong_reference(sym,aliassym) \
-    extern __typeof (sym) aliassym __attribute__ ((__alias__ (#sym)))
+/* Used to tag non-static symbols that are private and never exposed by the shared library. */
+#define __LIBC_HIDDEN__ __attribute__((visibility("hidden")))
+
+/* Like __LIBC_HIDDEN__, but preserves binary compatibility for LP32. */
+#ifdef __LP64__
+#define __LIBC32_LEGACY_PUBLIC__ __LIBC_HIDDEN__
+#else
+#define __LIBC32_LEGACY_PUBLIC__ __LIBC_ABI_PUBLIC__
+#endif
+
+/* Used to tag non-static symbols that are public and exposed by the shared library. */
+#define __LIBC_ABI_PUBLIC__ __attribute__((visibility ("default")))
+
+/* Used to rename functions so that the compiler emits a call to 'x' rather than the function this was applied to. */
+#define __RENAME(x) __asm__(#x)
+
+#ifdef __clang__
+#define __AVAILABILITY(...) __attribute__((availability(android,__VA_ARGS__)))
+#define __INTRODUCED_IN(api_level) __AVAILABILITY(introduced=api_level)
+#define __DEPRECATED_IN(api_level) __AVAILABILITY(deprecated=api_level)
+#define __REMOVED_IN(api_level) __AVAILABILITY(obsoleted=api_level)
+#else
+#define __AVAILABILITY(...)
+#define __INTRODUCED_IN(api_level)
+#define __DEPRECATED_IN(api_level)
+#define __REMOVED_IN(api_level)
+#endif // __clang__
+
+#if __has_builtin(__builtin_umul_overflow) || __GNUC__ >= 5
+#if __LP64__
+#define __size_mul_overflow(a, b, result) __builtin_umull_overflow(a, b, result)
+#else
+#define __size_mul_overflow(a, b, result) __builtin_umul_overflow(a, b, result)
+#endif
+#else
+extern __inline__ __always_inline __attribute__((gnu_inline))
+int __size_mul_overflow(__SIZE_TYPE__ a, __SIZE_TYPE__ b, __SIZE_TYPE__ *result) {
+    *result = a * b;
+    static const __SIZE_TYPE__ mul_no_overflow = 1UL << (sizeof(__SIZE_TYPE__) * 4);
+    return (a >= mul_no_overflow || b >= mul_no_overflow) && a > 0 && (__SIZE_TYPE__)-1 / a < b;
+}
+#endif
 
 #endif /* !_SYS_CDEFS_H_ */

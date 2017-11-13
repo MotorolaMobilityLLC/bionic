@@ -1,4 +1,4 @@
-/*	$OpenBSD: fread.c,v 1.6 2005/08/08 08:05:36 espie Exp $ */
+/*	$OpenBSD: fread.c,v 1.12 2014/05/01 16:40:36 deraadt Exp $ */
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -33,143 +33,107 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 #include <errno.h>
+#include <sys/param.h>
 #include "local.h"
 
-static int
-lflush(FILE *fp)
-{
-    if ((fp->_flags & (__SLBF|__SWR)) == (__SLBF|__SWR))
-        return (__sflush_locked(fp));
-    return (0);
-}
+#define MUL_NO_OVERFLOW	(1UL << (sizeof(size_t) * 4))
 
 size_t
 fread(void *buf, size_t size, size_t count, FILE *fp)
 {
-    size_t resid;
-    char *p;
-    int r;
-    size_t total;
+	/*
+	 * Extension:  Catch integer overflow.
+	 */
+	if ((size >= MUL_NO_OVERFLOW || count >= MUL_NO_OVERFLOW) &&
+	    size > 0 && SIZE_MAX / size < count) {
+		errno = EOVERFLOW;
+		fp->_flags |= __SERR;
+		return (0);
+	}
 
-    /*
-     * The ANSI standard requires a return value of 0 for a count
-     * or a size of 0.  Peculiarily, it imposes no such requirements
-     * on fwrite; it only requires fread to be broken.
-     */
-    if ((resid = count * size) == 0)
-        return (0);
-    FLOCKFILE(fp);
-    if (fp->_r < 0)
-        fp->_r = 0;
-    total = resid;
-    p = buf;
+	const size_t desired_total = count * size;
+	size_t total = desired_total;
 
-#if 1  /* BIONIC: optimize unbuffered reads */
-    if (fp->_flags & __SNBF && fp->_ur == 0)
-    {
-        /* the following comes mainly from __srefill(), with slight
-         * modifications
-         */
+	/*
+	 * ANSI and SUSv2 require a return value of 0 if size or count are 0.
+	 */
+	if (total == 0) {
+		return (0);
+	}
 
-        /* make sure stdio is set up */
-        if (!__sdidinit)
-            __sinit();
+	FLOCKFILE(fp);
+	_SET_ORIENTATION(fp, -1);
 
-        fp->_r = 0;     /* largely a convenience for callers */
+	// TODO: how can this ever happen?!
+	if (fp->_r < 0)
+		fp->_r = 0;
 
-        /* SysV does not make this test; take it out for compatibility */
-        if (fp->_flags & __SEOF) {
-            FUNLOCKFILE(fp);
-            return (EOF);
-        }
+	/*
+	 * Ensure _bf._size is valid.
+	 */
+	if (fp->_bf._base == NULL) {
+		__smakebuf(fp);
+	}
 
-        /* if not already reading, have to be reading and writing */
-        if ((fp->_flags & __SRD) == 0) {
-            if ((fp->_flags & __SRW) == 0) {
-                fp->_flags |= __SERR;
-                FUNLOCKFILE(fp);
-                errno = EBADF;
-                return (EOF);
-            }
-            /* switch to reading */
-            if (fp->_flags & __SWR) {
-                if (__sflush(fp)) {
-                    FUNLOCKFILE(fp);
-                    return (EOF);
-                }
-                fp->_flags &= ~__SWR;
-                fp->_w = 0;
-                fp->_lbfsize = 0;
-            }
-            fp->_flags |= __SRD;
-        } else {
-            /*
-             * We were reading.  If there is an ungetc buffer,
-             * we must have been reading from that.  Drop it,
-             * restoring the previous buffer (if any).  If there
-             * is anything in that buffer, return.
-             */
-            if (HASUB(fp)) {
-                FREEUB(fp);
-            }
-        }
+	char* dst = buf;
 
-        /*
-         * Before reading from a line buffered or unbuffered file,
-         * flush all line buffered output files, per the ANSI C
-         * standard.
-         */
+	while (total > 0) {
+		/*
+		 * Copy data out of the buffer.
+		 */
+		size_t buffered_bytes = MIN((size_t) fp->_r, total);
+		memcpy(dst, fp->_p, buffered_bytes);
+		fp->_p += buffered_bytes;
+		fp->_r -= buffered_bytes;
+		dst += buffered_bytes;
+		total -= buffered_bytes;
 
-        if (fp->_flags & (__SLBF|__SNBF)) {
-            /* Ignore this file in _fwalk to deadlock. */
-            fp->_flags |= __SIGN;
-            (void) _fwalk(lflush);
-            fp->_flags &= ~__SIGN;
+		/*
+		 * Are we done?
+		 */
+		if (total == 0) {
+			goto out;
+		}
 
-            /* Now flush this file without locking it. */
-            if ((fp->_flags & (__SLBF|__SWR)) == (__SLBF|__SWR))
-                __sflush(fp);
-        }
+		/*
+		 * Do we have so much more to read that we should
+		 * avoid copying it through the buffer?
+		 */
+		if (total > (size_t) fp->_bf._size) {
+			/*
+			 * Make sure that fseek doesn't think it can
+			 * reuse the buffer since we are going to read
+			 * directly from the file descriptor.
+			 */
+			fp->_flags |= __SMOD;
+			break;
+		}
 
-        while (resid > 0) {
-            int   len = (*fp->_read)(fp->_cookie, p, resid );
-            fp->_flags &= ~__SMOD;
-            if (len <= 0) {
-                if (len == 0)
-                    fp->_flags |= __SEOF;
-                else {
-                    fp->_flags |= __SERR;
-                }
-                FUNLOCKFILE(fp);
-                return ((total - resid) / size);
-            }
-            p     += len;
-            resid -= len;
-        }
-        FUNLOCKFILE(fp);
-        return (count);
-    }
-    else
-#endif
-    {
-        while (resid > (size_t)(r = fp->_r)) {
-            (void)memcpy((void *)p, (void *)fp->_p, (size_t)r);
-            fp->_p += r;
-            /* fp->_r = 0 ... done in __srefill */
-            p += r;
-            resid -= r;
-            if (__srefill(fp)) {
-                /* no more input: return partial result */
-                FUNLOCKFILE(fp);
-                return ((total - resid) / size);
-            }
-        }
-    }
+		/*
+		 * Less than a buffer to go, so refill the buffer and
+		 * go around the loop again.
+		 */
+		if (__srefill(fp)) {
+			goto out;
+		}
+	}
 
-    (void)memcpy((void *)p, (void *)fp->_p, resid);
-    fp->_r -= resid;
-    fp->_p += resid;
-    FUNLOCKFILE(fp);
-    return (count);
+	/*
+	 * Read directly into the caller's buffer.
+	 */
+	while (total > 0) {
+		ssize_t bytes_read = (*fp->_read)(fp->_cookie, dst, total);
+		if (bytes_read <= 0) {
+			fp->_flags |= (bytes_read == 0) ? __SEOF : __SERR;
+			break;
+		}
+		dst += bytes_read;
+		total -= bytes_read;
+	}
+
+out:
+	FUNLOCKFILE(fp);
+	return ((desired_total - total) / size);
 }

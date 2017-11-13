@@ -1,4 +1,4 @@
-/*	$NetBSD: nsswitch.h,v 1.18 2005/11/29 03:12:58 christos Exp $	*/
+/*	$NetBSD: nsswitch.h,v 1.21 2011/07/17 20:54:34 joerg Exp $	*/
 
 /*-
  * Copyright (c) 1997, 1998, 1999, 2004 The NetBSD Foundation, Inc.
@@ -15,13 +15,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *        This product includes software developed by the NetBSD
- *        Foundation, Inc. and its contributors.
- * 4. Neither the name of The NetBSD Foundation nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
@@ -54,7 +47,7 @@
 /*
  * Layout of:
  *	uint32_t ns_src.flags
- */ 
+ */
 	/* nsswitch.conf status codes and nsdispatch(3) return values */
 #define	NS_SUCCESS	(1<<0)		/* entry was found */
 #define	NS_UNAVAIL	(1<<1)		/* source not responding, or corrupt */
@@ -125,7 +118,7 @@ typedef struct {
  */
 #define NS_FILES_CB(F,C)	{ NSSRC_FILES,	F,	__UNCONST(C) },
 #define NS_COMPAT_CB(F,C)	{ NSSRC_COMPAT,	F,	__UNCONST(C) },
- 
+
 #ifdef HESIOD
 #   define NS_DNS_CB(F,C)	{ NSSRC_DNS,	F,	__UNCONST(C) },
 #else
@@ -137,6 +130,7 @@ typedef struct {
 #else
 #   define NS_NIS_CB(F,C)
 #endif
+#define	NS_NULL_CB		{ .src = NULL },
 
 /*
  * ns_src - `nsswitch source'
@@ -221,7 +215,7 @@ typedef struct {
 
 __BEGIN_DECLS
 int	nsdispatch(void *, const ns_dtab [], const char *,
-			const char *, const ns_src [], ...);
+			const char *, const ns_src [], ...) __LIBC_ABI_PUBLIC__;
 
 #ifdef _NS_PRIVATE
 int		 _nsdbtaddsrc(ns_dbt *, const ns_src *);

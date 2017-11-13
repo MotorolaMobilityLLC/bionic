@@ -18,8 +18,11 @@
 #define KERNEL_ARGUMENT_BLOCK_H
 
 #include <elf.h>
+#include <link.h>
 #include <stdint.h>
 #include <sys/auxv.h>
+
+#include "private/bionic_macros.h"
 
 struct abort_msg_t;
 
@@ -30,36 +33,29 @@ struct abort_msg_t;
 class KernelArgumentBlock {
  public:
   KernelArgumentBlock(void* raw_args) {
-    uint32_t* args = reinterpret_cast<uint32_t*>(raw_args);
+    uintptr_t* args = reinterpret_cast<uintptr_t*>(raw_args);
     argc = static_cast<int>(*args);
     argv = reinterpret_cast<char**>(args + 1);
     envp = argv + argc + 1;
 
-    // Skip over all environment variable definitions to find aux vector.
-    // The end of the environment block is marked by two NULL pointers.
+    // Skip over all environment variable definitions to find the aux vector.
+    // The end of the environment block is marked by a NULL pointer.
     char** p = envp;
     while (*p != NULL) {
       ++p;
     }
-    ++p; // Skip second NULL;
+    ++p; // Skip the NULL itself.
 
-    auxv = reinterpret_cast<Elf32_auxv_t*>(p);
+    auxv = reinterpret_cast<ElfW(auxv_t)*>(p);
   }
 
   // Similar to ::getauxval but doesn't require the libc global variables to be set up,
-  // so it's safe to call this really early on. This function also lets you distinguish
-  // between the inability to find the given type and its value just happening to be 0.
-  unsigned long getauxval(unsigned long type, bool* found_match = NULL) {
-    for (Elf32_auxv_t* v = auxv; v->a_type != AT_NULL; ++v) {
+  // so it's safe to call this really early on.
+  unsigned long getauxval(unsigned long type) {
+    for (ElfW(auxv_t)* v = auxv; v->a_type != AT_NULL; ++v) {
       if (v->a_type == type) {
-        if (found_match != NULL) {
-            *found_match = true;
-        }
         return v->a_un.a_val;
       }
-    }
-    if (found_match != NULL) {
-      *found_match = false;
     }
     return 0;
   }
@@ -67,14 +63,12 @@ class KernelArgumentBlock {
   int argc;
   char** argv;
   char** envp;
-  Elf32_auxv_t* auxv;
+  ElfW(auxv_t)* auxv;
 
   abort_msg_t** abort_message_ptr;
 
  private:
-  // Disallow copy and assignment.
-  KernelArgumentBlock(const KernelArgumentBlock&);
-  void operator=(const KernelArgumentBlock&);
+  DISALLOW_COPY_AND_ASSIGN(KernelArgumentBlock);
 };
 
 #endif // KERNEL_ARGUMENT_BLOCK_H

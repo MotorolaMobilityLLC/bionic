@@ -27,8 +27,8 @@
  */
 
 #include <machine/cpu-features.h>
-#include <machine/asm.h>
-#include "libc_events.h"
+#include <private/bionic_asm.h>
+#include <private/libc_events.h>
 
 /*
  * This code assumes it is running on a processor that supports all arm v7
@@ -37,14 +37,13 @@
  */
 
     .fpu    neon
+    .syntax unified
 
 ENTRY(__memset_chk)
-        .cfi_startproc
         cmp         r2, r3
         bls         .L_done
 
         // Preserve lr for backtrace.
-        .save       {lr}
         push        {lr}
         .cfi_def_cfa_offset 4
         .cfi_rel_offset lr, 0
@@ -58,28 +57,19 @@ error_code:
         .word       BIONIC_EVENT_MEMSET_BUFFER_OVERFLOW
 error_message:
         .word       error_string-(1b+8)
-
-        .cfi_endproc
 END(__memset_chk)
 
 ENTRY(bzero)
-        .cfi_startproc
         mov     r2, r1
         mov     r1, #0
 
 .L_done:
         // Fall through to memset...
-        .cfi_endproc
 END(bzero)
 
 /* memset() returns its first argument.  */
 ENTRY(memset)
-        .cfi_startproc
-        .save       {r0}
-        stmfd       sp!, {r0}
-        .cfi_def_cfa_offset 4
-        .cfi_rel_offset r0, 0
-
+        mov         r3, r0
         vdup.8      q0, r1
 
         /* make sure we have at least 32 bytes to write */
@@ -89,7 +79,7 @@ ENTRY(memset)
 
 1:      /* The main loop writes 32 bytes at a time */
         subs        r2, r2, #32
-        vst1.8      {d0 - d3}, [r0]!
+        vst1.8      {d0 - d3}, [r3]!
         bhs         1b
 
 2:      /* less than 32 left */
@@ -98,22 +88,20 @@ ENTRY(memset)
         beq         3f
 
         // writes 16 bytes, 128-bits aligned
-        vst1.8      {d0, d1}, [r0]!
+        vst1.8      {d0, d1}, [r3]!
 3:      /* write up to 15-bytes (count in r2) */
         movs        ip, r2, lsl #29
         bcc         1f
-        vst1.8      {d0}, [r0]!
+        vst1.8      {d0}, [r3]!
 1:      bge         2f
-        vst1.32     {d0[0]}, [r0]!
+        vst1.32     {d0[0]}, [r3]!
 2:      movs        ip, r2, lsl #31
-        strmib      r1, [r0], #1
-        strcsb      r1, [r0], #1
-        strcsb      r1, [r0], #1
-        ldmfd       sp!, {r0}
+        strbmi      r1, [r3], #1
+        strbcs      r1, [r3], #1
+        strbcs      r1, [r3], #1
         bx          lr
-        .cfi_endproc
 END(memset)
 
         .data
 error_string:
-        .string     "memset buffer overflow"
+        .string     "memset: prevented write past end of buffer"

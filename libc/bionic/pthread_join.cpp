@@ -28,35 +28,43 @@
 
 #include <errno.h>
 
-#include "pthread_accessor.h"
+#include "private/bionic_futex.h"
+#include "pthread_internal.h"
 
-int pthread_join(pthread_t t, void** ret_val) {
+int pthread_join(pthread_t t, void** return_value) {
   if (t == pthread_self()) {
     return EDEADLK;
   }
 
-  pthread_accessor thread(t);
-  if (thread.get() == NULL) {
-      return ESRCH;
+  pthread_internal_t* thread = __pthread_internal_find(t);
+  if (thread == NULL) {
+    return ESRCH;
   }
 
-  if (thread->attr.flags & PTHREAD_ATTR_FLAG_DETACHED) {
+  ThreadJoinState old_state = THREAD_NOT_JOINED;
+  while ((old_state == THREAD_NOT_JOINED || old_state == THREAD_EXITED_NOT_JOINED) &&
+         !atomic_compare_exchange_weak(&thread->join_state, &old_state, THREAD_JOINED)) {
+  }
+
+  if (old_state == THREAD_DETACHED || old_state == THREAD_JOINED) {
     return EINVAL;
   }
 
-  if (thread->attr.flags & PTHREAD_ATTR_FLAG_JOINED) {
-    return EINVAL;
+  pid_t tid = thread->tid;
+  volatile int* tid_ptr = &thread->tid;
+
+  // We set thread->join_state to THREAD_JOINED with atomic operation,
+  // so no one is going to remove this thread except us.
+
+  // Wait for the thread to actually exit, if it hasn't already.
+  while (*tid_ptr != 0) {
+    __futex_wait(tid_ptr, tid, NULL);
   }
 
-  // Signal our intention to join, and wait for the thread to exit.
-  thread->attr.flags |= PTHREAD_ATTR_FLAG_JOINED;
-  while ((thread->attr.flags & PTHREAD_ATTR_FLAG_ZOMBIE) == 0) {
-    pthread_cond_wait(&thread->join_cond, &gThreadListLock);
-  }
-  if (ret_val) {
-    *ret_val = thread->return_value;
+  if (return_value) {
+    *return_value = thread->return_value;
   }
 
-  _pthread_internal_remove_locked(thread.get());
+  __pthread_internal_remove_and_free(thread);
   return 0;
 }

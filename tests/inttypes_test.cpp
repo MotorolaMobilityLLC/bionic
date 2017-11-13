@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
-
-#define __STDC_FORMAT_MACROS // Otherwise not available in C++.
-
-#include <stdio.h>
 #include <inttypes.h>
 
-#if defined(__BIONIC__) // Doesn't work on glibc because we use -m32.
+#include <errno.h>
+#include <gtest/gtest.h>
+#include <stdio.h>
+
 TEST(inttypes, misc) {
   char buf[512];
 
@@ -41,4 +39,59 @@ TEST(inttypes, misc) {
   sscanf(buf, "%08" SCNuPTR, &u);
   sscanf(buf, "%08" SCNxPTR, &u);
 }
-#endif
+
+TEST(inttypes, wcstoimax) {
+  ASSERT_EQ(123, wcstoimax(L"123", NULL, 10));
+}
+
+TEST(inttypes, wcstoumax) {
+  ASSERT_EQ(123U, wcstoumax(L"123", NULL, 10));
+}
+
+TEST(inttypes, strtoimax_EINVAL) {
+  errno = 0;
+  strtoimax("123", NULL, -1);
+  ASSERT_EQ(EINVAL, errno);
+  errno = 0;
+  strtoimax("123", NULL, 1);
+  ASSERT_EQ(EINVAL, errno);
+  errno = 0;
+  strtoimax("123", NULL, 37);
+  ASSERT_EQ(EINVAL, errno);
+}
+
+TEST(inttypes, strtoumax_EINVAL) {
+  errno = 0;
+  strtoumax("123", NULL, -1);
+  ASSERT_EQ(EINVAL, errno);
+  errno = 0;
+  strtoumax("123", NULL, 1);
+  ASSERT_EQ(EINVAL, errno);
+  errno = 0;
+  strtoumax("123", NULL, 37);
+  ASSERT_EQ(EINVAL, errno);
+}
+
+TEST(inttypes, wcstoimax_EINVAL) {
+  errno = 0;
+  wcstoimax(L"123", NULL, -1);
+  ASSERT_EQ(EINVAL, errno);
+  errno = 0;
+  wcstoimax(L"123", NULL, 1);
+  ASSERT_EQ(EINVAL, errno);
+  errno = 0;
+  wcstoimax(L"123", NULL, 37);
+  ASSERT_EQ(EINVAL, errno);
+}
+
+TEST(inttypes, wcstoumax_EINVAL) {
+  errno = 0;
+  wcstoumax(L"123", NULL, -1);
+  ASSERT_EQ(EINVAL, errno);
+  errno = 0;
+  wcstoumax(L"123", NULL, 1);
+  ASSERT_EQ(EINVAL, errno);
+  errno = 0;
+  wcstoumax(L"123", NULL, 37);
+  ASSERT_EQ(EINVAL, errno);
+}

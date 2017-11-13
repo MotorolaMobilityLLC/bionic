@@ -52,19 +52,34 @@ enum {
   ANDROID_LOG_SILENT,     /* only for SetMinPriority(); must be last */
 };
 
+enum {
+  LOG_ID_MIN = 0,
+
+  LOG_ID_MAIN = 0,
+  LOG_ID_RADIO = 1,
+  LOG_ID_EVENTS = 2,
+  LOG_ID_SYSTEM = 3,
+  LOG_ID_CRASH = 4,
+
+  LOG_ID_MAX
+};
+
 struct abort_msg_t {
   size_t size;
   char msg[0];
 };
 
-__LIBC_HIDDEN__ void __libc_set_abort_message(const char* msg);
+/*
+ * Use the per-tag properties "log.tag.<tagname>" to generate a runtime
+ * result of non-zero to expose a log.
+ */
+int __android_log_is_loggable(int prio, const char *tag, int def);
 
 //
 // Formats a message to the log (priority 'fatal'), then aborts.
 //
 
-__LIBC_HIDDEN__ __noreturn void __libc_fatal(const char* format, ...)
-    __printflike(1, 2);
+__LIBC_HIDDEN__ __noreturn void __libc_fatal(const char* format, ...) __printflike(1, 2);
 
 //
 // Formats a message to the log (priority 'fatal'), but doesn't abort.
@@ -77,7 +92,7 @@ __LIBC_HIDDEN__ void __libc_fatal_no_abort(const char* format, ...)
 
 //
 // Formatting routines for the C library's internal debugging.
-// Unlike the usual alternatives, these don't allocate.
+// Unlike the usual alternatives, these don't allocate, and they don't drag in all of stdio.
 //
 
 __LIBC_HIDDEN__ int __libc_format_buffer(char* buffer, size_t buffer_size, const char* format, ...)
@@ -91,6 +106,8 @@ __LIBC_HIDDEN__ int __libc_format_log(int priority, const char* tag, const char*
 
 __LIBC_HIDDEN__ int __libc_format_log_va_list(int priority, const char* tag, const char* format,
                                               va_list ap);
+
+__LIBC_HIDDEN__ int __libc_write_log(int priority, const char* tag, const char* msg);
 
 //
 // Event logging.

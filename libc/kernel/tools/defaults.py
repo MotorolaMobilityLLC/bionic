@@ -6,21 +6,11 @@ import time, os, sys
 from utils import *
 
 # the list of supported architectures
-#
-kernel_archs = [ 'arm', 'x86', 'mips' ]
+kernel_archs = [ 'arm', 'arm64', 'mips', 'x86' ]
 
 # the list of include directories that belong to the kernel
 # tree. used when looking for sources...
-#
 kernel_dirs = [ "linux", "asm", "asm-generic", "mtd" ]
-
-# path to the directory containing the original kernel headers
-#
-kernel_original_path = os.path.normpath( find_program_dir() + '/../../../../external/kernel-headers/original' )
-
-# path to the default location of the cleaned-up headers
-#
-kernel_cleaned_path = os.path.normpath( find_program_dir() + '/..' )
 
 # a special value that is used to indicate that a given macro is known to be
 # undefined during optimization
@@ -33,6 +23,9 @@ kernel_known_macros = {
     "__KERNEL_STRICT_NAMES":"1",
     "__CHECKER__": kCppUndefinedMacro,
     "__CHECK_ENDIAN__": kCppUndefinedMacro,
+    "CONFIG_64BIT": "__LP64__",
+    "CONFIG_X86_32": "__i386__",
+    "__EXPORTED_HEADERS__": "1",
     }
 
 # define to true if you want to remove all defined(CONFIG_FOO) tests
@@ -43,33 +36,49 @@ kernel_remove_config_macros = True
 # maps an architecture to a set of default macros that would be provided by
 # toolchain preprocessor
 kernel_default_arch_macros = {
-    "arm": {},
-    "x86": {"__i386__": "1", "CONFIG_X86_32": "1"},
-    "mips": {"CONFIG_32BIT":"1"},
+    "arm": {"__ARMEB__": kCppUndefinedMacro, "__ARM_EABI__": "1"},
+    "arm64": {},
+    "mips": {"__MIPSEB__": kCppUndefinedMacro,
+             "__MIPSEL__": "1",
+             "CONFIG_32BIT": "_ABIO32",
+             "CONFIG_CPU_LITTLE_ENDIAN": "1",
+             "__SANE_USERSPACE_TYPES__": "1",},
+    "x86": {},
     }
 
 kernel_arch_token_replacements = {
     "arm": {},
-    "x86": {},
+    "arm64": {},
     "mips": {"off_t":"__kernel_off_t"},
+    "x86": {},
     }
+
 # Replace tokens in the output according to this mapping
 kernel_token_replacements = {
     "asm": "__asm__",
-    "__unused": "__linux_unused", # The kernel usage of __unused conflicts with the macro defined in sys/cdefs.h
+    # The kernel usage of __unused for unused struct fields conflicts with the macro defined in <sys/cdefs.h>.
+    "__unused": "__linux_unused",
+    # The kernel's _NSIG/NSIG are one less than the userspace value, so we need to move them aside.
+    "_NSIG": "_KERNEL__NSIG",
+    "NSIG": "_KERNEL_NSIG",
+    # The kernel's SIGRTMIN/SIGRTMAX are absolute limits; userspace steals a few.
+    "SIGRTMIN": "__SIGRTMIN",
+    "SIGRTMAX": "__SIGRTMAX",
+    # We want to support both BSD and Linux member names in struct udphdr.
+    "udphdr": "__kernel_udphdr",
     }
 
 # this is the set of known static inline functions that we want to keep
 # in the final ARM headers. this is only used to keep optimized byteswapping
 # static functions and stuff like that.
+# TODO: this isn't working!
 kernel_known_arm_statics = set(
-       [ "___arch__swab32",    # asm-arm/byteorder.h
-       ]
+        [ "___arch__swab32",    # asm-arm/byteorder.h
+        ]
     )
 
-kernel_known_x86_statics = set(
-        [ "___arch__swab32",  # asm-x86/byteorder.h
-          "___arch__swab64",  # asm-x86/byteorder.h
+kernel_known_arm64_statics = set(
+        [
         ]
     )
 
@@ -78,12 +87,16 @@ kernel_known_mips_statics = set(
         ]
     )
 
+kernel_known_x86_statics = set(
+        [ "___arch__swab32",  # asm-x86/byteorder.h
+          "___arch__swab64",  # asm-x86/byteorder.h
+        ]
+    )
+
 kernel_known_generic_statics = set(
-        [ "__invalid_size_argument_for_IOC",  # asm-generic/ioctl.h
-          "__cmsg_nxthdr",                    # linux/socket.h
-          "cmsg_nxthdr",                      # linux/socket.h
-          "ipt_get_target",
-          "ip6t_get_target",
+        [
+          "ipt_get_target",  # uapi/linux/netfilter_ipv4/ip_tables.h
+          "ip6t_get_target", # uapi/linux/netfilter_ipv6/ip6_tables.h
         ]
     )
 
@@ -92,18 +105,17 @@ kernel_known_generic_statics = set(
 #
 kernel_known_statics = {
         "arm" : kernel_known_arm_statics,
+        "arm64" : kernel_known_arm64_statics,
+        "mips" : kernel_known_mips_statics,
         "x86" : kernel_known_x86_statics,
-        "mips" : kernel_known_mips_statics
     }
 
 # this is a list of macros which we want to specifically exclude from
 # the generated files.
 #
 kernel_ignored_macros = set(
-        [ "MAXHOSTNAMELEN",  # for some reason, Linux defines it to 64
-                             # while most of the BSD code expects this to be 256
-                             # so ignore the kernel-provided definition and
-                             # define it in the Bionic headers instead
+        [
+
         ]
     )
 

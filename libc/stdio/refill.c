@@ -1,4 +1,4 @@
-/*	$OpenBSD: refill.c,v 1.8 2005/08/08 08:05:36 espie Exp $ */
+/*	$OpenBSD: refill.c,v 1.11 2009/11/09 00:18:27 kurt Exp $ */
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -40,7 +40,7 @@ static int
 lflush(FILE *fp)
 {
 	if ((fp->_flags & (__SLBF|__SWR)) == (__SLBF|__SWR))
-		return (__sflush_locked(fp)); /* ignored... */
+		return (__sflush_locked(fp));	/* ignored... */
 	return (0);
 }
 
@@ -51,16 +51,13 @@ lflush(FILE *fp)
 int
 __srefill(FILE *fp)
 {
-
-	/* make sure stdio is set up */
-	if (!__sdidinit)
-		__sinit();
-
 	fp->_r = 0;		/* largely a convenience for callers */
 
+#if !defined(__ANDROID__)
 	/* SysV does not make this test; take it out for compatibility */
 	if (fp->_flags & __SEOF)
 		return (EOF);
+#endif
 
 	/* if not already reading, have to be reading and writing */
 	if ((fp->_flags & __SRD) == 0) {
@@ -110,7 +107,7 @@ __srefill(FILE *fp)
 
 		/* Now flush this file without locking it. */
 		if ((fp->_flags & (__SLBF|__SWR)) == (__SLBF|__SWR))
-		    __sflush(fp);
+			__sflush(fp);
 	}
 	fp->_p = fp->_bf._base;
 	fp->_r = (*fp->_read)(fp->_cookie, (char *)fp->_p, fp->_bf._size);

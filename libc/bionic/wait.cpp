@@ -35,20 +35,11 @@ pid_t wait(int* status) {
   return wait4(-1, status, 0, NULL);
 }
 
-pid_t wait3(int* status, int options, struct rusage* rusage) {
-  return wait4(-1, status, options, rusage);
-}
-
 pid_t waitpid(pid_t pid, int* status, int options) {
   return wait4(pid, status, options, NULL);
 }
 
 int waitid(idtype_t which, id_t id, siginfo_t* info, int options) {
-  /* the system call takes an option struct rusage that we don't need */
+  // The system call takes an optional struct rusage that we don't need.
   return __waitid(which, id, info, options, NULL);
-}
-
-// TODO: remove this backward compatibility hack (for jb-mr1 strace binaries).
-extern "C" pid_t __wait4(pid_t pid, int* status, int options, struct rusage* rusage) {
-  return wait4(pid, status, options, rusage);
 }

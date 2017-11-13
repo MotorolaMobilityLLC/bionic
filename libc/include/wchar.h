@@ -34,21 +34,21 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <time.h>
-#include <malloc.h>
+#include <xlocale.h>
 
-/* IMPORTANT: Any code that relies on wide character support is essentially
- *            non-portable and/or broken. the only reason this header exist
- *            is because I'm really a nice guy. However, I'm not nice enough
- *            to provide you with a real implementation. instead wchar_t == char
- *            and all wc functions are stubs to their "normal" equivalent...
- */
+#include <bits/wchar_limits.h>
 
 __BEGIN_DECLS
 
-typedef __WINT_TYPE__           wint_t;
-typedef struct { int  dummy; }  mbstate_t;
+typedef __WINT_TYPE__  wint_t;
+typedef struct {
+  uint8_t __seq[4];
+#ifdef __LP64__
+  char __reserved[4];
+#endif
+} mbstate_t;
 
-typedef enum {
+enum {
     WC_TYPE_INVALID = 0,
     WC_TYPE_ALNUM,
     WC_TYPE_ALPHA,
@@ -63,12 +63,9 @@ typedef enum {
     WC_TYPE_UPPER,
     WC_TYPE_XDIGIT,
     WC_TYPE_MAX
-} wctype_t;
+};
 
-#ifndef WCHAR_MAX
-#define  WCHAR_MAX   INT_MAX
-#define  WCHAR_MIN   INT_MIN
-#endif
+typedef long wctype_t;
 
 #define  WEOF        ((wint_t)(-1))
 
@@ -77,6 +74,7 @@ extern int               fwprintf(FILE *, const wchar_t *, ...);
 extern int               fwscanf(FILE *, const wchar_t *, ...);
 extern int               iswalnum(wint_t);
 extern int               iswalpha(wint_t);
+extern int               iswblank(wint_t);
 extern int               iswcntrl(wint_t);
 extern int               iswdigit(wint_t);
 extern int               iswgraph(wint_t);
@@ -97,7 +95,8 @@ extern wint_t            getwchar(void);
 extern int               mbsinit(const mbstate_t *);
 extern size_t            mbrlen(const char *, size_t, mbstate_t *);
 extern size_t            mbrtowc(wchar_t *, const char *, size_t, mbstate_t *);
-extern size_t            mbsrtowcs(wchar_t *, const char **, size_t, mbstate_t *);
+extern size_t mbsrtowcs(wchar_t*, const char**, size_t, mbstate_t*);
+extern size_t mbsnrtowcs(wchar_t*, const char**, size_t, size_t, mbstate_t*);
 extern size_t            mbstowcs(wchar_t *, const char *, size_t);
 extern wint_t            putwc(wchar_t, FILE *);
 extern wint_t            putwchar(wchar_t);
@@ -106,34 +105,44 @@ extern int               swscanf(const wchar_t *, const wchar_t *, ...);
 extern wint_t            towlower(wint_t);
 extern wint_t            towupper(wint_t);
 extern wint_t            ungetwc(wint_t, FILE *);
-extern int               vfwprintf(FILE *, const wchar_t *, va_list);
-extern int               vwprintf(const wchar_t *, va_list);
-extern int               vswprintf(wchar_t *, size_t, const wchar_t *, va_list);
+extern int vfwprintf(FILE*, const wchar_t*, va_list);
+extern int vfwscanf(FILE*, const wchar_t*, va_list);
+extern int vswprintf(wchar_t*, size_t, const wchar_t*, va_list);
+extern int vswscanf(const wchar_t*, const wchar_t*, va_list);
+extern int vwprintf(const wchar_t*, va_list);
+extern int vwscanf(const wchar_t*, va_list);
+extern wchar_t* wcpcpy (wchar_t*, const wchar_t *);
+extern wchar_t* wcpncpy (wchar_t*, const wchar_t *, size_t);
 extern size_t            wcrtomb(char *, wchar_t, mbstate_t *);
 extern int               wcscasecmp(const wchar_t *, const wchar_t *);
+extern int               wcscasecmp_l(const wchar_t *, const wchar_t *, locale_t);
 extern wchar_t          *wcscat(wchar_t *, const wchar_t *);
 extern wchar_t          *wcschr(const wchar_t *, wchar_t);
 extern int               wcscmp(const wchar_t *, const wchar_t *);
 extern int               wcscoll(const wchar_t *, const wchar_t *);
 extern wchar_t          *wcscpy(wchar_t *, const wchar_t *);
 extern size_t            wcscspn(const wchar_t *, const wchar_t *);
-extern size_t            wcsftime(wchar_t *, size_t, const wchar_t *, const struct tm *);
+extern size_t            wcsftime(wchar_t *, size_t, const wchar_t *, const struct tm *) __LIBC_ABI_PUBLIC__;
 extern size_t            wcslen(const wchar_t *);
 extern int               wcsncasecmp(const wchar_t *, const wchar_t *, size_t);
+extern int               wcsncasecmp_l(const wchar_t *, const wchar_t *, size_t, locale_t);
 extern wchar_t          *wcsncat(wchar_t *, const wchar_t *, size_t);
 extern int               wcsncmp(const wchar_t *, const wchar_t *, size_t);
 extern wchar_t          *wcsncpy(wchar_t *, const wchar_t *, size_t);
+extern size_t wcsnrtombs(char*, const wchar_t**, size_t, size_t, mbstate_t*);
 extern wchar_t          *wcspbrk(const wchar_t *, const wchar_t *);
 extern wchar_t          *wcsrchr(const wchar_t *, wchar_t);
-extern size_t            wcsrtombs(char *, const wchar_t **, size_t, mbstate_t *);
+extern size_t wcsrtombs(char*, const wchar_t**, size_t, mbstate_t*);
 extern size_t            wcsspn(const wchar_t *, const wchar_t *);
 extern wchar_t          *wcsstr(const wchar_t *, const wchar_t *);
-extern double            wcstod(const wchar_t *, wchar_t **);
-extern wchar_t          *wcstok(wchar_t *, const wchar_t *, wchar_t **);
-extern long int          wcstol(const wchar_t *, wchar_t **, int);
-extern size_t            wcstombs(char *, const wchar_t *, size_t);
-extern unsigned long int wcstoul(const wchar_t *, wchar_t **, int);
-extern wchar_t          *wcswcs(const wchar_t *, const wchar_t *);
+extern double wcstod(const wchar_t*, wchar_t**);
+extern float wcstof(const wchar_t*, wchar_t**);
+extern wchar_t* wcstok(wchar_t*, const wchar_t*, wchar_t**);
+extern long wcstol(const wchar_t*, wchar_t**, int);
+extern long long wcstoll(const wchar_t*, wchar_t**, int);
+extern long double wcstold(const wchar_t*, wchar_t**);
+extern unsigned long wcstoul(const wchar_t*, wchar_t**, int);
+extern unsigned long long wcstoull(const wchar_t*, wchar_t**, int);
 extern int               wcswidth(const wchar_t *, size_t);
 extern size_t            wcsxfrm(wchar_t *, const wchar_t *, size_t);
 extern int               wctob(wint_t);
@@ -142,17 +151,30 @@ extern int               wcwidth(wchar_t);
 extern wchar_t          *wmemchr(const wchar_t *, wchar_t, size_t);
 extern int               wmemcmp(const wchar_t *, const wchar_t *, size_t);
 extern wchar_t          *wmemcpy(wchar_t *, const wchar_t *, size_t);
+#if defined(__USE_GNU)
+extern wchar_t          *wmempcpy(wchar_t *, const wchar_t *, size_t);
+#endif
 extern wchar_t          *wmemmove(wchar_t *, const wchar_t *, size_t);
 extern wchar_t          *wmemset(wchar_t *, wchar_t, size_t);
 extern int               wprintf(const wchar_t *, ...);
 extern int               wscanf(const wchar_t *, ...);
 
-/* No really supported.  These are just for making libstdc++-v3 happy.  */
-typedef void *wctrans_t;
-extern wint_t		 towctrans(wint_t, wctrans_t);
-extern wctrans_t	 wctrans (const char *);
+extern long long          wcstoll_l(const wchar_t *, wchar_t **, int, locale_t);
+extern unsigned long long wcstoull_l(const wchar_t *, wchar_t **, int, locale_t);
+extern long double        wcstold_l(const wchar_t *, wchar_t **, locale_t );
 
-#if _XOPEN_SOURCE >= 700 || _POSIX_C_SOURCE >= 200809L
+extern int    wcscoll_l(const wchar_t *, const wchar_t *, locale_t);
+extern size_t wcsxfrm_l(wchar_t *, const wchar_t *, size_t, locale_t);
+
+extern size_t wcslcat(wchar_t*, const wchar_t*, size_t);
+extern size_t wcslcpy(wchar_t*, const wchar_t*, size_t);
+
+typedef void *wctrans_t;
+extern wint_t towctrans(wint_t, wctrans_t);
+extern wctrans_t wctrans(const char*);
+
+#if __POSIX_VISIBLE >= 200809
+FILE* open_wmemstream(wchar_t**, size_t*);
 wchar_t* wcsdup(const wchar_t*);
 size_t wcsnlen(const wchar_t*, size_t);
 #endif

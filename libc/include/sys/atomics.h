@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,60 +25,21 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#ifndef _SYS_ATOMICS_H
-#define _SYS_ATOMICS_H
 
-#include <sys/cdefs.h>
-#include <sys/time.h>
+#ifndef _SYS_ATOMICS_H_
+#define _SYS_ATOMICS_H_
 
-__BEGIN_DECLS
-
-/* Note: atomic operations that were exported by the C library didn't
- *       provide any memory barriers, which created potential issues on
- *       multi-core devices. We now define them as inlined calls to
- *       GCC sync builtins, which always provide a full barrier.
+/*
+ * These got proper out of line definitions in L. Putting the inline definitions
+ * back for old targets brings us closer to being able to use one set of headers
+ * for all API levels.
  *
- *       NOTE: The C library still exports atomic functions by the same
- *              name to ensure ABI stability for existing NDK machine code.
- *
- *       If you are an NDK developer, we encourage you to rebuild your
- *       unmodified sources against this header as soon as possible.
+ * The other inlines we put back went in to their appropriate headers, but the
+ * sys/atomics.h header was removed, so we'll just add these somewhere we can be
+ * sure they will be included.
  */
-#define __ATOMIC_INLINE__ static __inline__ __attribute__((always_inline))
+#if __ANDROID_API__ < 21
+#include <android/legacy_sys_atomics_inlines.h>
+#endif
 
-__ATOMIC_INLINE__ int
-__atomic_cmpxchg(int old_value, int new_value, volatile int* ptr)
-{
-    /* We must return 0 on success */
-    return __sync_val_compare_and_swap(ptr, old_value, new_value) != old_value;
-}
-
-__ATOMIC_INLINE__ int
-__atomic_swap(int new_value, volatile int *ptr)
-{
-    int old_value;
-    do {
-        old_value = *ptr;
-    } while (__sync_val_compare_and_swap(ptr, old_value, new_value) != old_value);
-    return old_value;
-}
-
-__ATOMIC_INLINE__ int
-__atomic_dec(volatile int *ptr)
-{
-  return __sync_fetch_and_sub (ptr, 1);
-}
-
-__ATOMIC_INLINE__ int
-__atomic_inc(volatile int *ptr)
-{
-  return __sync_fetch_and_add (ptr, 1);
-}
-
-
-int __futex_wait(volatile void *ftx, int val, const struct timespec *timeout);
-int __futex_wake(volatile void *ftx, int count);
-
-__END_DECLS
-
-#endif /* _SYS_ATOMICS_H */
+#endif /* _SYS_ATOMICS_H_ */

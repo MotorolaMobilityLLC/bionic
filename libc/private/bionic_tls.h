@@ -25,10 +25,14 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#ifndef _SYS_TLS_H
-#define _SYS_TLS_H
+
+#ifndef __BIONIC_PRIVATE_BIONIC_TLS_H_
+#define __BIONIC_PRIVATE_BIONIC_TLS_H_
 
 #include <sys/cdefs.h>
+
+#include "bionic_macros.h"
+#include "__get_tls.h"
 
 __BEGIN_DECLS
 
@@ -43,78 +47,77 @@ __BEGIN_DECLS
  ** pre-allocated slot directly for performance reason).
  **/
 
-/* Well-known TLS slots. What data goes in which slot is arbitrary unless otherwise noted. */
+// Well-known TLS slots. What data goes in which slot is arbitrary unless otherwise noted.
 enum {
-  TLS_SLOT_SELF = 0, /* The kernel requires this specific slot for x86. */
+  TLS_SLOT_SELF = 0, // The kernel requires this specific slot for x86.
   TLS_SLOT_THREAD_ID,
   TLS_SLOT_ERRNO,
 
-  /* These two aren't used by bionic itself, but allow the graphics code to
-   * access TLS directly rather than using the pthread API. */
+  // These two aren't used by bionic itself, but allow the graphics code to
+  // access TLS directly rather than using the pthread API.
   TLS_SLOT_OPENGL_API = 3,
   TLS_SLOT_OPENGL = 4,
 
-  /* This slot is only used to pass information from the dynamic linker to
-   * libc.so when the C library is loaded in to memory. The C runtime init
-   * function will then clear it. Since its use is extremely temporary,
-   * we reuse an existing location that isn't needed during libc startup. */
+  // This slot is only used to pass information from the dynamic linker to
+  // libc.so when the C library is loaded in to memory. The C runtime init
+  // function will then clear it. Since its use is extremely temporary,
+  // we reuse an existing location that isn't needed during libc startup.
   TLS_SLOT_BIONIC_PREINIT = TLS_SLOT_OPENGL_API,
 
-  TLS_SLOT_STACK_GUARD = 5, /* GCC requires this specific slot for x86. */
+  TLS_SLOT_STACK_GUARD = 5, // GCC requires this specific slot for x86.
   TLS_SLOT_DLERROR,
 
-  TLS_SLOT_FIRST_USER_SLOT /* Must come last! */
+  // Fast storage for Thread::Current() in ART.
+  TLS_SLOT_ART_THREAD_SELF,
+
+  // Lets TSAN avoid using pthread_getspecific for finding the current thread
+  // state.
+  TLS_SLOT_TSAN,
+
+  BIONIC_TLS_SLOTS // Must come last!
 };
 
 /*
- * Maximum number of elements in the TLS array.
- * POSIX says this must be at least 128, but Android has traditionally had only 64, minus those
- * ones used internally by bionic itself.
- * There are two kinds of slot used internally by bionic --- there are the well-known slots
- * enumerated above, and then there are those that are allocated during startup by calls to
- * pthread_key_create; grep for GLOBAL_INIT_THREAD_LOCAL_BUFFER to find those. We need to manually
- * maintain that second number, but pthread_test will fail if we forget.
+ * Bionic uses some pthread keys internally. All pthread keys used internally
+ * should be created in constructors, except for keys that may be used in or
+ * before constructors.
+ *
+ * We need to manually maintain the count of pthread keys used internally, but
+ * pthread_test should fail if we forget.
+ *
+ * These are the pthread keys currently used internally by libc:
+ *
+ *  basename               libc (ThreadLocalBuffer)
+ *  dirname                libc (ThreadLocalBuffer)
+ *  uselocale              libc (can be used in constructors)
+ *  getmntent_mntent       libc (ThreadLocalBuffer)
+ *  getmntent_strings      libc (ThreadLocalBuffer)
+ *  ptsname                libc (ThreadLocalBuffer)
+ *  ttyname                libc (ThreadLocalBuffer)
+ *  strerror               libc (ThreadLocalBuffer)
+ *  strsignal              libc (ThreadLocalBuffer)
+ *  passwd                 libc (ThreadLocalBuffer)
+ *  group                  libc (ThreadLocalBuffer)
+ *  _res_key               libc (constructor in BSD code)
  */
-#define GLOBAL_INIT_THREAD_LOCAL_BUFFER_COUNT 4
+
+#define LIBC_PTHREAD_KEY_RESERVED_COUNT 12
+
+/* Internally, jemalloc uses a single key for per thread data. */
+#define JEMALLOC_PTHREAD_KEY_RESERVED_COUNT 1
+#define BIONIC_PTHREAD_KEY_RESERVED_COUNT (LIBC_PTHREAD_KEY_RESERVED_COUNT + JEMALLOC_PTHREAD_KEY_RESERVED_COUNT)
+
 /*
- * This is PTHREAD_KEYS_MAX + TLS_SLOT_FIRST_USER_SLOT + GLOBAL_INIT_THREAD_LOCAL_BUFFER_COUNT
- * rounded up to maintain stack alignment.
+ * Maximum number of pthread keys allocated.
+ * This includes pthread keys used internally and externally.
  */
-#define BIONIC_ALIGN(x, a) (((x) + (a - 1)) & ~(a - 1))
-#define BIONIC_TLS_SLOTS BIONIC_ALIGN(128 + TLS_SLOT_FIRST_USER_SLOT + GLOBAL_INIT_THREAD_LOCAL_BUFFER_COUNT, 4)
-
-/* syscall only, do not call directly */
-extern int __set_tls(void* ptr);
-
-/* get the TLS */
-#if defined(__arm__)
-# define __get_tls() \
-    ({ register unsigned int __val; \
-       asm ("mrc p15, 0, %0, c13, c0, 3" : "=r"(__val)); \
-       (volatile void*) __val; })
-#elif defined(__mips__)
-# define __get_tls() \
-    /* On mips32r1, this goes via a kernel illegal instruction trap that's optimized for v1. */ \
-    ({ register unsigned int __val asm("v1"); \
-       asm ("   .set    push\n" \
-            "   .set    mips32r2\n" \
-            "   rdhwr   %0,$29\n" \
-            "   .set    pop\n" : "=r"(__val)); \
-       (volatile void*) __val; })
-#elif defined(__i386__)
-# define __get_tls() \
-    ({ register void* __val; \
-       asm ("movl %%gs:0, %0" : "=r"(__val)); \
-       (volatile void*) __val; })
-#else
-#error unsupported architecture
-#endif
+#define BIONIC_PTHREAD_KEY_COUNT (BIONIC_PTHREAD_KEY_RESERVED_COUNT + PTHREAD_KEYS_MAX)
 
 __END_DECLS
 
 #if defined(__cplusplus)
-struct KernelArgumentBlock;
-extern __LIBC_HIDDEN__ void __libc_init_tls(KernelArgumentBlock& args);
+class KernelArgumentBlock;
+extern void __libc_init_main_thread(KernelArgumentBlock&);
 #endif
 
-#endif /* _SYS_TLS_H */
+#endif /* __BIONIC_PRIVATE_BIONIC_TLS_H_ */

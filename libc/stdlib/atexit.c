@@ -1,4 +1,4 @@
-/*	$OpenBSD: atexit.c,v 1.14 2007/09/05 20:47:47 chl Exp $ */
+/*	$OpenBSD: atexit.c,v 1.20 2014/07/11 09:51:37 kettenis Exp $ */
 /*
  * Copyright (c) 2002 Daniel Hartmeier
  * All rights reserved.
@@ -35,17 +35,35 @@
 #include <string.h>
 #include <unistd.h>
 #include "atexit.h"
-#include "thread_private.h"
+#include "private/thread_private.h"
 
-int __atexit_invalid = 1;
-struct atexit *__atexit;
+/* BEGIN android-changed */
+#include "private/bionic_prctl.h"
+/* END android-changed */
+
+struct atexit {
+	struct atexit *next;		/* next in list */
+	int ind;			/* next index in this table */
+	int max;			/* max entries >= ATEXIT_SIZE */
+	struct atexit_fn {
+		void (*fn_ptr)(void *);
+		void *fn_arg;		/* argument for CXA callback */
+		void *fn_dso;		/* shared module handle */
+	} fns[1];			/* the table itself */
+};
+
+static struct atexit *__atexit;
+static int restartloop;
+
+/* BEGIN android-changed: __unregister_atfork is used by __cxa_finalize */
+extern void __unregister_atfork(void* dso);
+/* END android-changed */
 
 /*
  * Function pointers are stored in a linked list of pages. The list
  * is initially empty, and pages are allocated on demand. The first
  * function pointer in the first allocated page (the last one in
- * the linked list) was reserved for the cleanup function.
- * TODO: switch to the regular FreeBSD/NetBSD atexit implementation.
+ * the linked list) is reserved for the cleanup function.
  *
  * Outside the following functions, all pages are mprotect()'ed
  * to prevent unintentional/malicious corruption.
@@ -63,10 +81,10 @@ __cxa_atexit(void (*func)(void *), void *arg, void *dso)
 {
 	struct atexit *p = __atexit;
 	struct atexit_fn *fnp;
-	int pgsize = getpagesize();
+	size_t pgsize = getpagesize();
 	int ret = -1;
 
-	if (pgsize < (int)sizeof(*p))
+	if (pgsize < sizeof(*p))
 		return (-1);
 	_ATEXIT_LOCK();
 	p = __atexit;
@@ -81,6 +99,10 @@ __cxa_atexit(void (*func)(void *), void *arg, void *dso)
 		    MAP_ANON | MAP_PRIVATE, -1, 0);
 		if (p == MAP_FAILED)
 			goto unlock;
+/* BEGIN android-changed */
+		prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, p, pgsize,
+		    "atexit handlers");
+/* END android-changed */
 		if (__atexit == NULL) {
 			memset(&p->fns[0], 0, sizeof(p->fns[0]));
 			p->ind = 1;
@@ -90,15 +112,14 @@ __cxa_atexit(void (*func)(void *), void *arg, void *dso)
 		    sizeof(p->fns[0]);
 		p->next = __atexit;
 		__atexit = p;
-		if (__atexit_invalid)
-			__atexit_invalid = 0;
 	}
 	fnp = &p->fns[p->ind++];
-	fnp->fn_ptr.cxa_func = func;
+	fnp->fn_ptr = func;
 	fnp->fn_arg = arg;
 	fnp->fn_dso = dso;
 	if (mprotect(p, pgsize, PROT_READ))
 		goto unlock;
+	restartloop = 1;
 	ret = 0;
 unlock:
 	_ATEXIT_UNLOCK();
@@ -118,15 +139,14 @@ __cxa_finalize(void *dso)
 	int n, pgsize = getpagesize();
 	static int call_depth;
 
-	if (__atexit_invalid)
-		return;
-
 	_ATEXIT_LOCK();
 	call_depth++;
 
+restart:
+	restartloop = 0;
 	for (p = __atexit; p != NULL; p = p->next) {
 		for (n = p->ind; --n >= 0;) {
-			if (p->fns[n].fn_ptr.cxa_func == NULL)
+			if (p->fns[n].fn_ptr == NULL)
 				continue;	/* already called */
 			if (dso != NULL && dso != p->fns[n].fn_dso)
 				continue;	/* wrong DSO */
@@ -137,33 +157,25 @@ __cxa_finalize(void *dso)
 			 */
 			fn = p->fns[n];
 			if (mprotect(p, pgsize, PROT_READ | PROT_WRITE) == 0) {
-				p->fns[n].fn_ptr.cxa_func = NULL;
+				p->fns[n].fn_ptr = NULL;
 				mprotect(p, pgsize, PROT_READ);
 			}
 			_ATEXIT_UNLOCK();
-#if ANDROID
-                        /* it looks like we should always call the function
-                         * with an argument, even if dso is not NULL. Otherwise
-                         * static destructors will not be called properly on
-                         * the ARM.
-                         */
-                        (*fn.fn_ptr.cxa_func)(fn.fn_arg);
-#else /* !ANDROID */
-			if (dso != NULL)
-				(*fn.fn_ptr.cxa_func)(fn.fn_arg);
-			else
-				(*fn.fn_ptr.std_func)();
-#endif /* !ANDROID */
+			(*fn.fn_ptr)(fn.fn_arg);
 			_ATEXIT_LOCK();
+			if (restartloop)
+				goto restart;
 		}
 	}
+
+	call_depth--;
 
 	/*
 	 * If called via exit(), unmap the pages since we have now run
 	 * all the handlers.  We defer this until calldepth == 0 so that
 	 * we don't unmap things prematurely if called recursively.
 	 */
-	if (dso == NULL && --call_depth == 0) {
+	if (dso == NULL && call_depth == 0) {
 		for (p = __atexit; p != NULL; ) {
 			q = p;
 			p = p->next;
@@ -172,4 +184,13 @@ __cxa_finalize(void *dso)
 		__atexit = NULL;
 	}
 	_ATEXIT_UNLOCK();
+
+  extern void __libc_stdio_cleanup(void);
+  __libc_stdio_cleanup();
+
+  /* BEGIN android-changed: call __unregister_atfork if dso is not null */
+  if (dso != NULL) {
+    __unregister_atfork(dso);
+  }
+  /* END android-changed */
 }

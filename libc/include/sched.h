@@ -28,207 +28,123 @@
 #ifndef _SCHED_H_
 #define _SCHED_H_
 
+#include <bits/timespec.h>
+#include <linux/sched.h>
 #include <sys/cdefs.h>
-#include <sys/time.h>
 
 __BEGIN_DECLS
 
-#define SCHED_NORMAL            0
-#define SCHED_OTHER             0
-#define SCHED_FIFO              1
-#define SCHED_RR                2
+/* This name is used by glibc, but not by the kernel. */
+#define SCHED_OTHER SCHED_NORMAL
 
 struct sched_param {
-    int sched_priority;
+  int sched_priority;
 };
 
-extern int sched_setscheduler(pid_t, int, const struct sched_param *);
+extern int sched_setscheduler(pid_t, int, const struct sched_param*);
 extern int sched_getscheduler(pid_t);
 extern int sched_yield(void);
-extern int sched_get_priority_max(int policy);
-extern int sched_get_priority_min(int policy);
-extern int sched_setparam(pid_t, const struct sched_param *);
-extern int sched_getparam(pid_t, struct sched_param *);
-extern int sched_rr_get_interval(pid_t pid, struct timespec *tp);
+extern int sched_get_priority_max(int);
+extern int sched_get_priority_min(int);
+extern int sched_setparam(pid_t, const struct sched_param*);
+extern int sched_getparam(pid_t, struct sched_param*);
+extern int sched_rr_get_interval(pid_t, struct timespec*);
 
-#define CLONE_VM             0x00000100
-#define CLONE_FS             0x00000200
-#define CLONE_FILES          0x00000400
-#define CLONE_SIGHAND        0x00000800
-#define CLONE_PTRACE         0x00002000
-#define CLONE_VFORK          0x00004000
-#define CLONE_PARENT         0x00008000
-#define CLONE_THREAD         0x00010000
-#define CLONE_NEWNS          0x00020000
-#define CLONE_SYSVSEM        0x00040000
-#define CLONE_SETTLS         0x00080000
-#define CLONE_PARENT_SETTID  0x00100000
-#define CLONE_CHILD_CLEARTID 0x00200000
-#define CLONE_DETACHED       0x00400000
-#define CLONE_UNTRACED       0x00800000
-#define CLONE_CHILD_SETTID   0x01000000
-#define CLONE_STOPPED        0x02000000
+#if defined(__USE_GNU)
 
-#ifdef _GNU_SOURCE
-extern int clone(int (*fn)(void *), void *child_stack, int flags, void*  arg, ...);
+extern int clone(int (*)(void*), void*, int, void*, ...);
 extern int unshare(int);
+extern int sched_getcpu(void);
+extern int setns(int, int);
+
+#ifdef __LP64__
+#define CPU_SETSIZE 1024
+#else
+#define CPU_SETSIZE 32
 #endif
 
-/* Support for cpu thread affinity */
-#ifdef _GNU_SOURCE
-
-extern int sched_getcpu(void);
-
-
-/* Our implementation supports up to 32 independent CPUs, which is also
- * the maximum supported by the kernel at the moment. GLibc uses 1024 by
- * default.
- *
- * If you want to use more than that, you should use CPU_ALLOC() / CPU_FREE()
- * and the CPU_XXX_S() macro variants.
- */
-#define CPU_SETSIZE   32
-
-#define __CPU_BITTYPE    unsigned long int  /* mandated by the kernel  */
-#define __CPU_BITSHIFT   5                  /* should be log2(BITTYPE) */
-#define __CPU_BITS       (1 << __CPU_BITSHIFT)
-#define __CPU_ELT(x)     ((x) >> __CPU_BITSHIFT)
-#define __CPU_MASK(x)    ((__CPU_BITTYPE)1 << ((x) & (__CPU_BITS-1)))
+#define __CPU_BITTYPE  unsigned long int  /* mandated by the kernel  */
+#define __CPU_BITS     (8 * sizeof(__CPU_BITTYPE))
+#define __CPU_ELT(x)   ((x) / __CPU_BITS)
+#define __CPU_MASK(x)  ((__CPU_BITTYPE)1 << ((x) & (__CPU_BITS - 1)))
 
 typedef struct {
-    __CPU_BITTYPE  __bits[ CPU_SETSIZE / __CPU_BITS ];
+  __CPU_BITTYPE  __bits[ CPU_SETSIZE / __CPU_BITS ];
 } cpu_set_t;
 
 extern int sched_setaffinity(pid_t pid, size_t setsize, const cpu_set_t* set);
 
 extern int sched_getaffinity(pid_t pid, size_t setsize, cpu_set_t* set);
 
-/* Provide optimized implementation for 32-bit cpu_set_t */
-#if CPU_SETSIZE == __CPU_BITS
+#define CPU_ZERO(set)          CPU_ZERO_S(sizeof(cpu_set_t), set)
+#define CPU_SET(cpu, set)      CPU_SET_S(cpu, sizeof(cpu_set_t), set)
+#define CPU_CLR(cpu, set)      CPU_CLR_S(cpu, sizeof(cpu_set_t), set)
+#define CPU_ISSET(cpu, set)    CPU_ISSET_S(cpu, sizeof(cpu_set_t), set)
+#define CPU_COUNT(set)         CPU_COUNT_S(sizeof(cpu_set_t), set)
+#define CPU_EQUAL(set1, set2)  CPU_EQUAL_S(sizeof(cpu_set_t), set1, set2)
 
-#  define CPU_ZERO(set_)   \
-    do{ \
-        (set_)->__bits[0] = 0; \
-    }while(0)
+#define CPU_AND(dst, set1, set2)  __CPU_OP(dst, set1, set2, &)
+#define CPU_OR(dst, set1, set2)   __CPU_OP(dst, set1, set2, |)
+#define CPU_XOR(dst, set1, set2)  __CPU_OP(dst, set1, set2, ^)
 
-#  define CPU_SET(cpu_,set_) \
-    do {\
-        size_t __cpu = (cpu_); \
-        if (__cpu < CPU_SETSIZE) \
-            (set_)->__bits[0] |= __CPU_MASK(__cpu); \
-    }while (0)
-
-#  define CPU_CLR(cpu_,set_) \
-    do {\
-        size_t __cpu = (cpu_); \
-        if (__cpu < CPU_SETSIZE) \
-            (set_)->__bits[0] &= ~__CPU_MASK(__cpu); \
-    }while (0)
-
-#  define CPU_ISSET(cpu_, set_) \
-    (__extension__({\
-        size_t  __cpu = (cpu_); \
-        (cpu_ < CPU_SETSIZE) \
-            ? ((set_)->__bits[0] & __CPU_MASK(__cpu)) != 0 \
-            : 0; \
-    }))
-
-#  define CPU_EQUAL(set1_, set2_) \
-    ((set1_)->__bits[0] == (set2_)->__bits[0])
-
-#  define __CPU_OP(dst_, set1_, set2_, op_) \
-    do { \
-        (dst_)->__bits[0] = (set1_)->__bits[0] op_ (set2_)->__bits[0]; \
-    } while (0)
-
-#  define CPU_COUNT(set_)  __builtin_popcountl((set_)->__bits[0])
-
-#else /* CPU_SETSIZE != __CPU_BITS */
-
-#  define CPU_ZERO(set_)          CPU_ZERO_S(sizeof(cpu_set_t), set_)
-#  define CPU_SET(cpu_,set_)      CPU_SET_S(cpu_,sizeof(cpu_set_t),set_)
-#  define CPU_CLR(cpu_,set_)      CPU_CLR_S(cpu_,sizeof(cpu_set_t),set_)
-#  define CPU_ISSET(cpu_,set_)    CPU_ISSET_S(cpu_,sizeof(cpu_set_t),set_)
-#  define CPU_COUNT(set_)         CPU_COUNT_S(sizeof(cpu_set_t),set_)
-#  define CPU_EQUAL(set1_,set2_)  CPU_EQUAL_S(sizeof(cpu_set_t),set1_,set2_)
-
-#  define __CPU_OP(dst_,set1_,set2_,op_)  __CPU_OP_S(sizeof(cpu_set_t),dst_,set1_,set2_,op_)
-
-#endif /* CPU_SETSIZE != __CPU_BITS */
-
-#define CPU_AND(set1_,set2_)   __CPU_OP(set1_,set2_,&)
-#define CPU_OR(set1_,set2_)    __CPU_OP(set1_,set2_,|)
-#define CPU_XOR(set1_,set2_)   __CPU_OP(set1_,set2_,^)
+#define __CPU_OP(dst, set1, set2, op)  __CPU_OP_S(sizeof(cpu_set_t), dst, set1, set2, op)
 
 /* Support for dynamically-allocated cpu_set_t */
 
 #define CPU_ALLOC_SIZE(count) \
-    __CPU_ELT((count) + (__CPU_BITS-1))*sizeof(__CPU_BITTYPE)
+  __CPU_ELT((count) + (__CPU_BITS - 1)) * sizeof(__CPU_BITTYPE)
 
-#define CPU_ALLOC(count)   __sched_cpualloc((count));
-#define CPU_FREE(set)      __sched_cpufree((set))
+#define CPU_ALLOC(count)  __sched_cpualloc((count))
+#define CPU_FREE(set)     __sched_cpufree((set))
 
 extern cpu_set_t* __sched_cpualloc(size_t count);
 extern void       __sched_cpufree(cpu_set_t* set);
 
-#define CPU_ZERO_S(setsize_,set_)  \
-    do { \
-        size_t __nn = 0; \
-        size_t __nn_max = (setsize_)/sizeof(__CPU_BITTYPE); \
-        for (; __nn < __nn_max; __nn++) \
-            (set_)->__bits[__nn] = 0; \
-    } while (0)
+#define CPU_ZERO_S(setsize, set)  __builtin_memset(set, 0, setsize)
 
-#define CPU_SET_S(cpu_,setsize_,set_) \
-    do { \
-        size_t __cpu = (cpu_); \
-        if (__cpu < 8*(setsize_)) \
-            (set_)->__bits[__CPU_ELT(__cpu)] |= __CPU_MASK(__cpu); \
-    } while (0)
+#define CPU_SET_S(cpu, setsize, set) \
+  do { \
+    size_t __cpu = (cpu); \
+    if (__cpu < 8 * (setsize)) \
+      (set)->__bits[__CPU_ELT(__cpu)] |= __CPU_MASK(__cpu); \
+  } while (0)
 
-#define CPU_CLR_S(cpu_,setsize_,set_) \
-    do { \
-        size_t __cpu = (cpu_); \
-        if (__cpu < 8*(setsize_)) \
-            (set_)->__bits[__CPU_ELT(__cpu)] &= ~__CPU_MASK(__cpu); \
-    } while (0)
+#define CPU_CLR_S(cpu, setsize, set) \
+  do { \
+    size_t __cpu = (cpu); \
+    if (__cpu < 8 * (setsize)) \
+      (set)->__bits[__CPU_ELT(__cpu)] &= ~__CPU_MASK(__cpu); \
+  } while (0)
 
-#define CPU_ISSET_S(cpu_, setsize_, set_) \
-    (__extension__ ({ \
-        size_t __cpu = (cpu_); \
-        (__cpu < 8*(setsize_)) \
-          ? ((set_)->__bits[__CPU_ELT(__cpu)] & __CPU_MASK(__cpu)) != 0 \
-          : 0; \
-    }))
+#define CPU_ISSET_S(cpu, setsize, set) \
+  (__extension__ ({ \
+    size_t __cpu = (cpu); \
+    (__cpu < 8 * (setsize)) \
+      ? ((set)->__bits[__CPU_ELT(__cpu)] & __CPU_MASK(__cpu)) != 0 \
+      : 0; \
+  }))
 
-#define CPU_EQUAL_S(setsize_, set1_, set2_) \
-    (__extension__ ({ \
-        __const __CPU_BITTYPE* __src1 = (set1_)->__bits; \
-        __const __CPU_BITTYPE* __src2 = (set2_)->__bits; \
-        size_t __nn = 0, __nn_max = (setsize_)/sizeof(__CPU_BITTYPE); \
-        for (; __nn < __nn_max; __nn++) { \
-            if (__src1[__nn] != __src2[__nn]) \
-                break; \
-        } \
-        __nn == __nn_max; \
-    }))
+#define CPU_EQUAL_S(setsize, set1, set2)  (__builtin_memcmp(set1, set2, setsize) == 0)
 
-#define __CPU_OP_S(setsize_, dstset_, srcset1_, srcset2_, op) \
-    do { \
-        cpu_set_t* __dst = (dstset); \
-        const __CPU_BITTYPE* __src1 = (srcset1)->__bits; \
-        const __CPU_BITTYPE* __src2 = (srcset2)->__bits; \
-        size_t __nn = 0, __nn_max = (setsize_)/sizeof(__CPU_BITTYPE); \
-        for (; __nn < __nn_max; __nn++) \
-            (__dst)->__bits[__nn] = __src1[__nn] op __src2[__nn]; \
-    } while (0)
+#define CPU_AND_S(setsize, dst, set1, set2)  __CPU_OP_S(setsize, dst, set1, set2, &)
+#define CPU_OR_S(setsize, dst, set1, set2)   __CPU_OP_S(setsize, dst, set1, set2, |)
+#define CPU_XOR_S(setsize, dst, set1, set2)  __CPU_OP_S(setsize, dst, set1, set2, ^)
 
-#define CPU_COUNT_S(setsize_, set_) \
-    __sched_cpucount((setsize_), (set_))
+#define __CPU_OP_S(setsize, dstset, srcset1, srcset2, op) \
+  do { \
+    cpu_set_t* __dst = (dstset); \
+    const __CPU_BITTYPE* __src1 = (srcset1)->__bits; \
+    const __CPU_BITTYPE* __src2 = (srcset2)->__bits; \
+    size_t __nn = 0, __nn_max = (setsize)/sizeof(__CPU_BITTYPE); \
+    for (; __nn < __nn_max; __nn++) \
+      (__dst)->__bits[__nn] = __src1[__nn] op __src2[__nn]; \
+  } while (0)
+
+#define CPU_COUNT_S(setsize, set)  __sched_cpucount((setsize), (set))
 
 extern int __sched_cpucount(size_t setsize, cpu_set_t* set);
 
-#endif /* _GNU_SOURCE */
+#endif /* __USE_GNU */
 
 __END_DECLS
 

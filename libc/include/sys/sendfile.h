@@ -25,6 +25,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
 #ifndef _SYS_SENDFILE_H_
 #define _SYS_SENDFILE_H_
 
@@ -33,7 +34,12 @@
 
 __BEGIN_DECLS
 
-extern ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
+#if defined(__USE_FILE_OFFSET64)
+extern ssize_t sendfile(int out_fd, int in_fd, off_t* offset, size_t count) __RENAME(sendfile64);
+#else
+extern ssize_t sendfile(int out_fd, int in_fd, off_t* offset, size_t count);
+#endif
+extern ssize_t sendfile64(int out_fd, int in_fd, off64_t* offset, size_t count);
 
 __END_DECLS
 

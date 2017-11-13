@@ -28,34 +28,49 @@
 #ifndef _BIONIC_FUTEX_H
 #define _BIONIC_FUTEX_H
 
+#include <errno.h>
 #include <linux/futex.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <sys/cdefs.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
 __BEGIN_DECLS
 
-extern int __futex_wait(volatile void *ftx, int val, const struct timespec *timeout);
-extern int __futex_wake(volatile void *ftx, int count);
+struct timespec;
 
-extern int __futex_syscall3(volatile void *ftx, int op, int val);
-extern int __futex_syscall4(volatile void *ftx, int op, int val, const struct timespec *timeout);
+static inline __always_inline int __futex(volatile void* ftx, int op, int value,
+                                          const struct timespec* timeout,
+                                          int bitset) {
+  // Our generated syscall assembler sets errno, but our callers (pthread functions) don't want to.
+  int saved_errno = errno;
+  int result = syscall(__NR_futex, ftx, op, value, timeout, NULL, bitset);
+  if (__predict_false(result == -1)) {
+    result = -errno;
+    errno = saved_errno;
+  }
+  return result;
+}
 
-#ifndef FUTEX_PRIVATE_FLAG
-#define FUTEX_PRIVATE_FLAG  128
-#endif
+static inline int __futex_wake(volatile void* ftx, int count) {
+  return __futex(ftx, FUTEX_WAKE, count, NULL, 0);
+}
 
-#ifndef FUTEX_WAIT_PRIVATE
-#define FUTEX_WAIT_PRIVATE  (FUTEX_WAIT|FUTEX_PRIVATE_FLAG)
-#endif
+static inline int __futex_wake_ex(volatile void* ftx, bool shared, int count) {
+  return __futex(ftx, shared ? FUTEX_WAKE : FUTEX_WAKE_PRIVATE, count, NULL, 0);
+}
 
-#ifndef FUTEX_WAKE_PRIVATE
-#define FUTEX_WAKE_PRIVATE  (FUTEX_WAKE|FUTEX_PRIVATE_FLAG)
-#endif
+static inline int __futex_wait(volatile void* ftx, int value, const struct timespec* timeout) {
+  return __futex(ftx, FUTEX_WAIT, value, timeout, 0);
+}
 
-/* Like __futex_wait/wake, but take an additionnal 'pshared' argument.
- * when non-0, this will use normal futexes. Otherwise, private futexes.
- */
-extern int  __futex_wake_ex(volatile void *ftx, int pshared, int val);
-extern int  __futex_wait_ex(volatile void *ftx, int pshared, int val, const struct timespec *timeout);
+static inline int __futex_wait_ex(volatile void* ftx, bool shared, int value,
+                                  bool use_realtime_clock, const struct timespec* abs_timeout) {
+  return __futex(ftx, (shared ? FUTEX_WAIT_BITSET : FUTEX_WAIT_BITSET_PRIVATE) |
+                 (use_realtime_clock ? FUTEX_CLOCK_REALTIME : 0), value, abs_timeout,
+                 FUTEX_BITSET_MATCH_ANY);
+}
 
 __END_DECLS
 
