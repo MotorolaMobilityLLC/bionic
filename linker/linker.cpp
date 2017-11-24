@@ -85,11 +85,17 @@ static const char* const kLdConfigFilePath = "/system/etc/ld.config.txt";
 #if defined(__LP64__)
 static const char* const kSystemLibDir     = "/system/lib64";
 static const char* const kVendorLibDir     = "/vendor/lib64";
+// MOTO BEGIN: IKSWN-30801: Add oem libarary path in scan list
+static const char* const kOemLibDir        = "/oem/lib64";
+// MOTO END
 static const char* const kAsanSystemLibDir = "/data/asan/system/lib64";
 static const char* const kAsanVendorLibDir = "/data/asan/vendor/lib64";
 #else
 static const char* const kSystemLibDir     = "/system/lib";
 static const char* const kVendorLibDir     = "/vendor/lib";
+// MOTO BEGIN: IKSWN-30801: Add oem libarary path in scan list
+static const char* const kOemLibDir        = "/oem/lib";
+// MOTO END
 static const char* const kAsanSystemLibDir = "/data/asan/system/lib";
 static const char* const kAsanVendorLibDir = "/data/asan/vendor/lib";
 #endif
@@ -97,12 +103,18 @@ static const char* const kAsanVendorLibDir = "/data/asan/vendor/lib";
 static const char* const kAsanLibDirPrefix = "/data/asan";
 
 static const char* const kDefaultLdPaths[] = {
+// MOTO BEGIN: IKSWN-30801: Add oem libarary path in scan list
+  kOemLibDir,
+// MOTO END
   kSystemLibDir,
   kVendorLibDir,
   nullptr
 };
 
 static const char* const kAsanDefaultLdPaths[] = {
+// MOTO BEGIN: IKSWN-30801: Add oem libarary path in scan list
+  kOemLibDir,
+// MOTO END
   kAsanSystemLibDir,
   kSystemLibDir,
   kAsanVendorLibDir,
