@@ -187,7 +187,7 @@ void TrackData::DumpLeaks(DebugData& debug) {
     return;
   }
 
-  if (!(debug.config().options & BACKTRACE)) {
+  if (!(debug.config().options() & BACKTRACE)) {
     return;
   }
 
@@ -267,7 +267,7 @@ static void* PrintLeaks(void *arg) {
 }
 
 static void PrintLeaksSignal(int, siginfo_t*, void*) {
-  if (!(g_debug->config().options & BACKTRACE) || !(g_debug->config().options & LEAK_TRACK)) {
+  if (!(g_debug->config().options() & BACKTRACE) || !(g_debug->config().options() & LEAK_TRACK)) {
     error_log("PrintLeaksSignal::%s:%d backtrace hasn't been enabled.", getprogname(), getpid());
     return;
   }
