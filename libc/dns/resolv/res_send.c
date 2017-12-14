@@ -1194,7 +1194,7 @@ retry:
 	if (n == 0) {
 		// BEGIN MOTO IKSWN-8105 print out dns server and transaction id
 		getnameinfo(nsap, (socklen_t)nsaplen, abuf, sizeof(abuf),NULL, 0, niflags);
-		__libc_format_log(ANDROID_LOG_DEBUG, "libc",
+		async_safe_format_log(ANDROID_LOG_DEBUG, "libc",
 			"dns request timeout: netid(%d), id(0x%x), server(%s)\n", statp->netid, hp->id, abuf);
 		// END MOTO
 		*rcode = RCODE_TIMEOUT;
@@ -1205,7 +1205,7 @@ retry:
 	if (n < 0) {
 		// BEGIN MOTO IKSWN-8105 print out dns server and transaction id
 		getnameinfo(nsap, (socklen_t)nsaplen, abuf, sizeof(abuf),NULL, 0, niflags);
-		__libc_format_log(ANDROID_LOG_DEBUG, "libc",
+	        async_safe_format_log(ANDROID_LOG_DEBUG, "libc",
 			"Internal error: netid(%d), id(0x%x), server(%s)\n", statp->netid, hp->id, abuf);
 		// END MOTO
 		Perror(statp, stderr, "select", errno);
