@@ -37,7 +37,7 @@
 #include <stdint.h>
 
 /** An integral type representing an IPv4 address. */
-typedef uint32_t in_addr_t;
+#include <inaddr.h>
 
 /** A structure representing an IPv4 address. */
 struct in_addr {
