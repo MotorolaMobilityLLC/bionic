@@ -43,3 +43,12 @@ long double roundl(long double a1) { return round(a1); }
 // FreeBSD doesn't have ld128 implementations of powl or tgammal, so both LP32 and LP64 need these.
 long double powl(long double x, long double y) { return pow(x, y); }
 long double tgammal(long double x) { return tgamma(x); }
+
+// external/arm-optimized-routines does not provide the long double
+// wrappers for the routines it implements.
+#if (LDBL_MANT_DIG == 53)
+long double expl(long double x) { return exp(x); }
+long double exp2l(long double x) { return exp2(x); }
+long double logl(long double x) { return log(x); }
+long double log2l(long double x) { return log2(x); }
+#endif
