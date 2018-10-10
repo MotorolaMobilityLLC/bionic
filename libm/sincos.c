@@ -40,11 +40,6 @@ void sincos(double x, double* p_sin, double* p_cos) {
   *p_cos = cos(x);
 }
 
-void sincosf(float x, float* p_sinf, float* p_cosf) {
-  *p_sinf = sinf(x);
-  *p_cosf = cosf(x);
-}
-
 void sincosl(long double x, long double* p_sinl, long double* p_cosl) {
   *p_sinl = sinl(x);
   *p_cosl = cosl(x);
