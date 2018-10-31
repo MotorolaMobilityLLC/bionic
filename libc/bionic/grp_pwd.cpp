@@ -46,8 +46,14 @@
 #include "generated_android_ids.h"
 #include "grp_pwd_file.h"
 
-static PasswdFile vendor_passwd("/vendor/etc/passwd", "vendor_");
-static GroupFile vendor_group("/vendor/etc/group", "vendor_");
+#ifndef MOTO_SUPPORT_LEGACY_AID_NAMES
+#define VENDOR_PREFIX "vendor_"
+#else
+#define VENDOR_PREFIX nullptr
+#endif
+
+static PasswdFile vendor_passwd("/vendor/etc/passwd", VENDOR_PREFIX);
+static GroupFile vendor_group("/vendor/etc/group", VENDOR_PREFIX);
 
 // POSIX seems to envisage an implementation where the <pwd.h> functions are
 // implemented by brute-force searching with getpwent(3), and the <grp.h>
