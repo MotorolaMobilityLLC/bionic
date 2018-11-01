@@ -406,11 +406,29 @@ static void print_app_name_from_gid(const gid_t gid, char* buffer, const int buf
 //  Supported ranges:
 //   AID_OEM_RESERVED_START to AID_OEM_RESERVED_END (2900-2999)
 //   AID_OEM_RESERVED_2_START to AID_OEM_RESERVED_2_END (5000-5999)
+//   AID_OEM_RESERVED_9_START to AID_OEM_RESERVED_9_END (9000-9030) for moto legacy aid numbers
 // Check OEM id is within range.
 static bool is_oem_id(id_t id) {
+#ifdef MOTO_SUPPORT_LEGACY_AID_NUMBERS
+  return (((id >= AID_OEM_RESERVED_START) && (id <= AID_OEM_RESERVED_END)) ||
+      ((id >= AID_OEM_RESERVED_2_START) && (id <= AID_OEM_RESERVED_2_END)) ||
+      ((id >= AID_OEM_RESERVED_9_START) && (id <= AID_OEM_RESERVED_9_END)));
+#else
   return (((id >= AID_OEM_RESERVED_START) && (id <= AID_OEM_RESERVED_END)) ||
       ((id >= AID_OEM_RESERVED_2_START) && (id <= AID_OEM_RESERVED_2_END)));
+#endif
 }
+
+#ifdef MOTO_SUPPORT_LEGACY_AID_NUMBERS
+static bool is_android_builtin_id(unsigned int id) {
+  for (unsigned int i=0; i < static_cast<unsigned int>(android_id_count); i++) {
+      if (id == android_ids[i].aid) {
+          return true;
+      }
+  }
+  return false;
+}
+#endif
 
 // Translate an OEM name to the corresponding user/group id.
 static id_t oem_id_from_name(const char* name) {
@@ -623,6 +641,24 @@ passwd* getpwent() {
         state->getpwent_idx++ - start + AID_OEM_RESERVED_2_START, state);
   }
 
+  // AID_OEM_RESERVED_9_START to AID_OEM_RESERVED_9_END is for moto legacy aid numbers
+  #ifdef MOTO_SUPPORT_LEGACY_AID_NUMBERS
+  start = end;
+  end += AID_OEM_RESERVED_9_END - AID_OEM_RESERVED_9_START + 1;
+
+  // TODO: currently we may have aid defined as the builtin aid, for those aids we skip
+  // check the oem ids to avoid duplicated, the check can be removed once we move get all
+  // the aid moved from the built in aids to /vendor/etc/passwd.
+  while (state->getpwent_idx < end) {
+      unsigned int id = (state->getpwent_idx++ - start + AID_OEM_RESERVED_9_START);
+      if (is_android_builtin_id(id)) {
+          continue;
+      } else {
+          return oem_id_to_passwd(id, state);
+      }
+  }
+  #endif
+
   state->getpwent_idx = get_next_app_id(state->getpwent_idx);
 
   if (state->getpwent_idx != -1) {
@@ -755,6 +791,25 @@ group* getgrent() {
     return oem_id_to_group(
         state->getgrent_idx++ - start + AID_OEM_RESERVED_2_START, state);
   }
+
+  // AID_OEM_RESERVED_9_START to AID_OEM_RESERVED_9_END is for moto legacy aid numbers
+  #ifdef MOTO_SUPPORT_LEGACY_AID_NUMBERS
+  start = end;
+  end += AID_OEM_RESERVED_9_END - AID_OEM_RESERVED_9_START + 1;
+
+  // TODO: currently we may have aid defined as the builtin aid, for those aids we skip
+  // check the oem ids to avoid duplicated, the check can be removed once we move get all
+  // the aid moved from the built in aids to /vendor/etc/group.
+  while (state->getgrent_idx < end) {
+      unsigned int id = (state->getgrent_idx++ - start + AID_OEM_RESERVED_9_START);
+      if (is_android_builtin_id(id)) {
+          continue;
+      } else {
+          init_group_state(state);
+          return oem_id_to_group(id, state);
+      }
+  }
+  #endif
 
   start = end;
   end += AID_USER_OFFSET - AID_APP_START; // Do not expose higher groups
