@@ -27,8 +27,8 @@
 
 # syscalls needed to boot android
 int	pivot_root:pivot_root(const char *new_root, const char *put_old)	arm64,x86_64,mips64
-int	ioprio_get:ioprio_get(int which, int who)	arm64,x86_64,mips64
-int	ioprio_set:ioprio_set(int which, int who, int ioprio)	arm64,x86_64,mips64
+int	ioprio_get:ioprio_get(int which, int who)	arm,arm64,x86_64,mips64
+int	ioprio_set:ioprio_set(int which, int who, int ioprio)	arm,arm64,x86_64,mips64
 pid_t	gettid:gettid()	all
 int	futex:futex(int *uaddr, int futex_op, int val, const struct timespec *timeout, int *uaddr2, int val3)	all
 int	clone:clone(int (*fn)(void *), void *child_stack, int flags, void *arg, ..) all

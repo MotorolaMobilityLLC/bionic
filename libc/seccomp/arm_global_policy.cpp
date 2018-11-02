@@ -108,9 +108,9 @@ BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 311, 3, 0),
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 309, 1, 0),
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 298, 27, 26), //recvfrom|shutdown|setsockopt|getsockopt|sendmsg|recvmsg
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 310, 26, 25), //add_key
-BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 316, 1, 0),
+BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 314, 1, 0),
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 312, 24, 23), //keyctl
-BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 319, 23, 22), //inotify_init|inotify_add_watch|inotify_rm_watch
+BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 319, 23, 22), //ioprio_set|ioprio_get|inotify_init|inotify_add_watch|inotify_rm_watch
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 340, 3, 0),
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 327, 1, 0),
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 326, 20, 19), //openat|mkdirat|mknodat|fchownat

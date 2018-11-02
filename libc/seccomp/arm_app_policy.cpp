@@ -104,12 +104,12 @@ BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 285, 33, 32), //waitid|socket|bind|connect|liste
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 289, 32, 31), //getsockname|getpeername|socketpair
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 350, 15, 0),
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 327, 7, 0),
-BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 316, 3, 0),
+BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 314, 3, 0),
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 292, 1, 0),
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 291, 27, 26), //sendto
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 298, 26, 25), //recvfrom|shutdown|setsockopt|getsockopt|sendmsg|recvmsg
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 322, 1, 0),
-BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 319, 24, 23), //inotify_init|inotify_add_watch|inotify_rm_watch
+BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 319, 24, 23), //ioprio_set|ioprio_get|inotify_init|inotify_add_watch|inotify_rm_watch
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 326, 23, 22), //openat|mkdirat|mknodat|fchownat
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 345, 3, 0),
 BPF_JUMP(BPF_JMP|BPF_JGE|BPF_K, 340, 1, 0),
