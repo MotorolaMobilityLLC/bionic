@@ -120,7 +120,7 @@ cc_library_static {
         },
     },
 
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults", "mtk_malloc_debug_defaults"],
     cflags: ["-fno-stack-protector"],
     name: "libc_stack_protector",
 }
@@ -132,14 +132,14 @@ cc_library_static {
 
 cc_library_static {
     name: "libc_init_static",
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults", "mtk_malloc_debug_defaults"],
     srcs: ["bionic/libc_init_static.cpp"],
     cflags: ["-fno-stack-protector"],
 }
 
 cc_library_static {
     name: "libc_init_dynamic",
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults", "mtk_malloc_debug_defaults"],
     srcs: ["bionic/libc_init_dynamic.cpp"],
     cflags: ["-fno-stack-protector"],
 }
@@ -150,7 +150,7 @@ cc_library_static {
 
 cc_library_static {
 
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: [
         "tzcode/**/*.c",
         "tzcode/bionic.cpp",
@@ -189,7 +189,7 @@ cc_library_static {
 
 cc_library_static {
 
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: [
         "dns/**/*.c",
 
@@ -223,7 +223,7 @@ cc_library_static {
 // automatically included.
 
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: [
         "upstream-freebsd/lib/libc/gen/ldexp.c",
         "upstream-freebsd/lib/libc/gen/sleep.c",
@@ -296,7 +296,7 @@ cc_library_static {
 }
 
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: [
         "upstream-freebsd/lib/libc/gen/glob.c",
         "upstream-freebsd/lib/libc/stdlib/realpath.c",
@@ -324,7 +324,7 @@ cc_library_static {
 
 cc_library_static {
 
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: [
         "upstream-netbsd/common/lib/libc/stdlib/random.c",
         "upstream-netbsd/lib/libc/gen/nice.c",
@@ -382,7 +382,7 @@ cc_library_static {
 
 cc_library_static {
     name: "libc_openbsd_ndk",
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: [
         "upstream-openbsd/lib/libc/gen/alarm.c",
         "upstream-openbsd/lib/libc/gen/ctype_.c",
@@ -507,7 +507,7 @@ cc_library_static {
 
 cc_library_static {
     name: "libc_openbsd_large_stack",
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: [
         "stdio/vfprintf.cpp",
         "stdio/vfwprintf.cpp",
@@ -533,7 +533,7 @@ cc_library_static {
 // These files are built with the openbsd-compat.h header file
 // automatically included.
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: [
         // These two depend on getentropy, which isn't in libc_ndk.a.
         "upstream-openbsd/lib/libc/crypt/arc4random.c",
@@ -634,7 +634,7 @@ cc_library_static {
 // automatically included.
 
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: [
         "upstream-openbsd/android/gdtoa_support.cpp",
         "upstream-openbsd/lib/libc/gdtoa/dmisc.c",
@@ -680,7 +680,7 @@ cc_library_static {
 // implementation details
 // ========================================================
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: ["bionic/fortify.cpp"],
 
     name: "libc_fortify",
@@ -735,7 +735,7 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: [
         // The data that backs getauxval is initialized in the libc init
         // functions which are invoked by the linker. If this file is included
@@ -1007,7 +1007,7 @@ genrule {
 // or constructors).
 // ========================================================
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: [
         "bionic/NetdClientDispatch.cpp",
         "bionic/__bionic_get_shell_path.cpp",
@@ -1206,7 +1206,7 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: [
         "bionic/bionic_elf_tls.cpp",
         "bionic/pthread_atfork.cpp",
@@ -1250,7 +1250,7 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: ["bionic/__set_errno.cpp"],
     arch: {
         arm: {
@@ -1283,7 +1283,7 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     arch: {
         arm: {
             srcs: ["arch-arm/bionic/__aeabi.c"],
@@ -1307,7 +1307,7 @@ cc_library_static {
 
 cc_library_static {
     name: "libc_ndk",
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: libc_common_src_files + [
         "bionic/malloc_common.cpp",
     ],
@@ -1356,7 +1356,7 @@ cc_library_static {
 // libc_nopthread.a
 // ========================================================
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: libc_common_src_files,
     multilib: {
         lib32: {
@@ -1396,7 +1396,7 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     name: "libc_common",
 
     whole_static_libs: [
@@ -1469,7 +1469,7 @@ cc_library_static {
 cc_library_static {
     name: "libc_nomalloc",
 
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
 
     arch: {
         arm: {
@@ -1489,7 +1489,7 @@ cc_library_static {
 // libc_malloc.a: the _prefixed_ malloc functions (like dlcalloc).
 // ========================================================
 cc_library_static {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     srcs: ["bionic/jemalloc_wrapper.cpp"],
     cflags: ["-fvisibility=hidden"],
 
@@ -1535,7 +1535,7 @@ filegroup {
 // libc.a + libc.so
 // ========================================================
 cc_library {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     name: "libc",
     static_ndk_lib: true,
     export_include_dirs: ["include"],
@@ -1719,7 +1719,7 @@ cc_library_headers {
 // ========================================================
 
 cc_library {
-    defaults: ["libc_defaults"],
+    defaults: ["libc_defaults","mtk_malloc_debug_defaults"],
     include_dirs: ["bionic/libstdc++/include"],
     srcs: [
         "bionic/__cxa_guard.cpp",

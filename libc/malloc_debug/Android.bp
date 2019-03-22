@@ -17,6 +17,7 @@ cc_library_static {
         "libbase",
         "libasync_safe",
         "libdemangle",
+        "libc_unwind",
     ],
 
     include_dirs: ["bionic/libc"],
@@ -34,6 +35,11 @@ cc_library_static {
         "-Werror",
         "-Wno-error=format-zero-length",
     ],
+    product_variables: {
+        debuggable: {
+            cflags: ["-DMTK_MALLOC_DEBUG_ENHANCE"],
+        },
+    },
 }
 
 // ==============================================================
@@ -98,6 +104,11 @@ cc_library {
         "-Wno-error=format-zero-length",
         "-Wthread-safety",
     ],
+    product_variables: {
+        debuggable: {
+            cflags: ["-DMTK_MALLOC_DEBUG_ENHANCE"],
+        },
+    },
 }
 
 // ==============================================================

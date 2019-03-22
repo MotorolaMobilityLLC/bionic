@@ -294,7 +294,7 @@ bool FinishInstallHooks(libc_globals* globals, const char* options, const char* 
   // avoid any initialization order problems.
   atomic_store(&globals->current_dispatch_table, &globals->malloc_dispatch_table);
 
-  info_log("%s: malloc %s enabled", getprogname(), prefix);
+  //info_log("%s: malloc %s enabled", getprogname(), prefix);
 
   // Use atexit to trigger the cleanup function. This avoids a problem
   // where another atexit function is used to cleanup allocated memory,

@@ -35,12 +35,19 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <unwind.h>
+#ifdef MTK_MALLOC_DEBUG_ENHANCE
+#include <sys/system_properties.h>
+#endif
 
 #include <demangle.h>
 
 #include "MapData.h"
 #include "backtrace.h"
 #include "debug_log.h"
+#ifdef MTK_MALLOC_DEBUG_ENHANCE
+#include "fp_unwind.h"
+#include "libc_unwind/libudf-unwind/backtrace.h"
+#endif
 
 #if defined(__LP64__)
 #define PAD_PTR "016" PRIxPTR
@@ -54,6 +61,10 @@ extern "C" char* __cxa_demangle(const char*, char*, size_t*, int*);
 
 static MapData g_map_data;
 static const MapEntry* g_current_code_map = nullptr;
+#ifdef MTK_MALLOC_DEBUG_ENHANCE
+static bool get_progname = false;
+static bool use_fp_unwind = false;
+#endif
 
 static _Unwind_Reason_Code find_current_map(__unwind_context* context, void*) {
   uintptr_t ip = _Unwind_GetIP(context);
@@ -80,6 +91,7 @@ struct stack_crawl_state_t {
       : frames(frames), frame_count(frame_count) {}
 };
 
+#ifndef MTK_MALLOC_DEBUG_ENHANCE
 static _Unwind_Reason_Code trace_function(__unwind_context* context, void* arg) {
   stack_crawl_state_t* state = static_cast<stack_crawl_state_t*>(arg);
 
@@ -125,11 +137,34 @@ static _Unwind_Reason_Code trace_function(__unwind_context* context, void* arg) 
   state->frames[state->cur_frame++] = ip;
   return (state->cur_frame >= state->frame_count) ? _URC_END_OF_STACK : _URC_NO_REASON;
 }
+#endif
 
 size_t backtrace_get(uintptr_t* frames, size_t frame_count) {
+#ifdef MTK_MALLOC_DEBUG_ENHANCE
+  if (!get_progname) {
+    const char *progname = getprogname();
+    if (strstr(progname, "app_process") || strstr(progname, "camera")) {
+      use_fp_unwind = true;
+    } else {
+      use_fp_unwind = false;
+    }
+    get_progname = true;
+  }
+  // choose correct unwind method
+  if (use_fp_unwind) {
+    return get_backtrace_fp(__builtin_frame_address(0), (intptr_t*)frames, frame_count);
+  } else {
+#if !defined(__LP64__)
+    return libudf_unwind_backtrace((uintptr_t *)frames, 3, frame_count);
+#else
+    return get_backtrace_fp(__builtin_frame_address(0), (intptr_t*)frames, frame_count);
+#endif
+  }
+#else
   stack_crawl_state_t state(frames, frame_count);
   _Unwind_Backtrace(trace_function, &state);
   return state.cur_frame;
+#endif
 }
 
 std::string backtrace_string(const uintptr_t* frames, size_t frame_count) {
