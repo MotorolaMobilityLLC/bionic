@@ -67,7 +67,7 @@ constexpr auto kLibSize = 1024 * 1024; // how much address space to reserve for 
 
 class DlExtTest : public ::testing::Test {
 protected:
-  virtual void SetUp() {
+  void SetUp() override {
     handle_ = nullptr;
     // verify that we don't have the library loaded already
     void* h = dlopen(kLibName, RTLD_NOW | RTLD_NOLOAD);
@@ -78,7 +78,7 @@ protected:
     ASSERT_EQ(std::string("dlopen failed: library \"") + kLibNameNoRelro + "\" wasn't loaded and RTLD_NOLOAD prevented it", dlerror());
   }
 
-  virtual void TearDown() {
+  void TearDown() override {
     if (handle_ != nullptr) {
       ASSERT_DL_ZERO(dlclose(handle_));
     }
@@ -372,12 +372,12 @@ TEST_F(DlExtTest, ReservedRecursive) {
 }
 
 TEST_F(DlExtTest, ReservedRecursiveTooSmall) {
-  void* start = mmap(nullptr, kLibSize/2, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  void* start = mmap(nullptr, PAGE_SIZE, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   ASSERT_TRUE(start != MAP_FAILED);
   android_dlextinfo extinfo;
   extinfo.flags = ANDROID_DLEXT_RESERVED_ADDRESS | ANDROID_DLEXT_RESERVED_ADDRESS_RECURSIVE;
   extinfo.reserved_addr = start;
-  extinfo.reserved_size = kLibSize/2;
+  extinfo.reserved_size = PAGE_SIZE;
   handle_ = android_dlopen_ext(kLibNameRecursive, RTLD_NOW, &extinfo);
   EXPECT_EQ(nullptr, handle_);
 }
@@ -418,7 +418,7 @@ TEST_F(DlExtTest, ReservedHintTooSmall) {
 
 class DlExtRelroSharingTest : public DlExtTest {
 protected:
-  virtual void SetUp() {
+  void SetUp() override {
     DlExtTest::SetUp();
     void* start = mmap(nullptr, kLibSize, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     ASSERT_TRUE(start != MAP_FAILED);
@@ -428,7 +428,7 @@ protected:
     extinfo_.relro_fd = -1;
   }
 
-  virtual void TearDown() {
+  void TearDown() override {
     DlExtTest::TearDown();
   }
 
@@ -540,10 +540,7 @@ TEST_F(DlExtRelroSharingTest, RelroFileEmpty) {
 }
 
 TEST_F(DlExtRelroSharingTest, VerifyMemorySaving) {
-  if (geteuid() != 0) {
-    GTEST_LOG_(INFO) << "This test must be run as root.\n";
-    return;
-  }
+  if (geteuid() != 0) GTEST_SKIP() << "This test must be run as root";
 
   TemporaryFile tf; // Use tf to get an unique filename.
   ASSERT_NOERROR(close(tf.fd));
