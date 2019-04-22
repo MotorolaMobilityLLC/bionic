@@ -46,6 +46,7 @@
 //   write_malloc_leak_info: Writes the leak info data to a file.
 
 #include <dlfcn.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdatomic.h>
@@ -53,6 +54,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#include <android/dlext.h>
 
 #include <private/bionic_config.h>
 #include <private/bionic_defs.h>
@@ -70,6 +73,8 @@
 // Global variables instantations.
 // =============================================================================
 pthread_mutex_t gGlobalsMutateLock = PTHREAD_MUTEX_INITIALIZER;
+
+bool gZygoteChild = false;
 
 _Atomic bool gGlobalsMutating = false;
 // =============================================================================
@@ -110,7 +115,7 @@ static constexpr char kDebugPropertyProgram[] = "libc.debug.malloc.program";
 static constexpr char kDebugEnvOptions[] = "LIBC_DEBUG_MALLOC_OPTIONS";
 
 typedef void (*finalize_func_t)();
-typedef bool (*init_func_t)(const MallocDispatch*, int*, const char*);
+typedef bool (*init_func_t)(const MallocDispatch*, bool*, const char*);
 typedef void (*get_malloc_leak_info_func_t)(uint8_t**, size_t*, size_t*, size_t*, size_t*);
 typedef void (*free_malloc_leak_info_func_t)(uint8_t*);
 typedef bool (*write_malloc_leak_info_func_t)(FILE*);
@@ -277,8 +282,41 @@ bool InitSharedLibrary(void* impl_handle, const char* shared_lib, const char* pr
   return true;
 }
 
+// Note about USE_SCUDO. This file is compiled into libc.so and libc_scudo.so.
+// When compiled into libc_scudo.so, the libc_malloc_* libraries don't need
+// to be loaded from the runtime namespace since libc_scudo.so is not from
+// the runtime APEX, but is copied to any APEX that needs it.
+#ifndef USE_SCUDO
+extern "C" struct android_namespace_t* android_get_exported_namespace(const char* name);
+#endif
+
 void* LoadSharedLibrary(const char* shared_lib, const char* prefix, MallocDispatch* dispatch_table) {
-  void* impl_handle = dlopen(shared_lib, RTLD_NOW | RTLD_LOCAL);
+  void* impl_handle = nullptr;
+#ifndef USE_SCUDO
+  // Try to load the libc_malloc_* libs from the "runtime" namespace and then
+  // fall back to dlopen() to load them from the default namespace.
+  //
+  // The libraries are packaged in the runtime APEX together with libc.so.
+  // However, since the libc.so is searched via the symlink in the system
+  // partition (/system/lib/libc.so -> /apex/com.android.runtime/bionic.libc.so)
+  // libc.so is loaded into the default namespace. If we just dlopen() here, the
+  // linker will load the libs found in /system/lib which might be incompatible
+  // with libc.so in the runtime APEX. Use android_dlopen_ext to explicitly load
+  // the ones in the runtime APEX.
+  struct android_namespace_t* runtime_ns = android_get_exported_namespace("runtime");
+  if (runtime_ns != nullptr) {
+    const android_dlextinfo dlextinfo = {
+      .flags = ANDROID_DLEXT_USE_NAMESPACE,
+      .library_namespace = runtime_ns,
+    };
+    impl_handle = android_dlopen_ext(shared_lib, RTLD_NOW | RTLD_LOCAL, &dlextinfo);
+  }
+#endif
+
+  if (impl_handle == nullptr) {
+    impl_handle = dlopen(shared_lib, RTLD_NOW | RTLD_LOCAL);
+  }
+
   if (impl_handle == nullptr) {
     error_log("%s: Unable to open shared library %s: %s", getprogname(), shared_lib, dlerror());
     return nullptr;
@@ -294,7 +332,7 @@ void* LoadSharedLibrary(const char* shared_lib, const char* prefix, MallocDispat
 
 bool FinishInstallHooks(libc_globals* globals, const char* options, const char* prefix) {
   init_func_t init_func = reinterpret_cast<init_func_t>(gFunctions[FUNC_INITIALIZE]);
-  if (!init_func(&__libc_malloc_default_dispatch, &gMallocLeakZygoteChild, options)) {
+  if (!init_func(&__libc_malloc_default_dispatch, &gZygoteChild, options)) {
     error_log("%s: failed to enable malloc %s", getprogname(), prefix);
     ClearGlobalFunctions();
     return false;
@@ -436,6 +474,14 @@ extern "C" ssize_t malloc_backtrace(void* pointer, uintptr_t* frames, size_t fra
 // Platform-internal mallopt variant.
 // =============================================================================
 extern "C" bool android_mallopt(int opcode, void* arg, size_t arg_size) {
+  if (opcode == M_SET_ZYGOTE_CHILD) {
+    if (arg != nullptr || arg_size != 0) {
+      errno = EINVAL;
+      return false;
+    }
+    gZygoteChild = true;
+    return true;
+  }
   if (opcode == M_SET_ALLOCATION_LIMIT_BYTES) {
     return LimitEnable(arg, arg_size);
   }
