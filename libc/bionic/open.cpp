@@ -52,6 +52,17 @@ int creat(const char* pathname, mode_t mode) {
 }
 __strong_alias(creat64, creat);
 
+/*
+static int
+strcmp(const char *s1, const char *s2)
+{
+	while (*s1 == *s2++)
+		if (*s1++ == 0)
+			return (0);
+	return -1;
+}
+*/
+
 int open(const char* pathname, int flags, ...) {
   mode_t mode = 0;
 
@@ -62,6 +73,14 @@ int open(const char* pathname, int flags, ...) {
     va_end(args);
   }
 
+/*
+  if(strcmp(pathname,"/sys/class/net/wlan0/address") == 0) {
+      async_safe_format_log(ANDROID_LOG_FATAL, "libc", "open %s %d",pathname,mode);
+      if(getpid() > 4000 && getpid() < 5000) {
+         async_safe_fatal("test crash");
+      }
+  }
+*/
   return __openat(AT_FDCWD, pathname, force_O_LARGEFILE(flags), mode);
 }
 __strong_alias(open64, open);
