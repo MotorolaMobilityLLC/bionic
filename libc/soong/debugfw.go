@@ -15,7 +15,7 @@ func mtkDebugFWDefaults(ctx android.LoadHookContext) {
 	}
 	p := &props{}
 	vars := ctx.Config().VendorConfig("mtkPlugin")
-	if vars.Bool("MTK_USER_SPACE_DEBUG_FW") && (vars.String("TARGET_BUILD_VARIANT") == "eng") {
+	if vars.Bool("MSSI_MTK_USER_SPACE_DEBUG_FW") && (vars.String("TARGET_BUILD_VARIANT") == "eng") {
 		p.Target.Android_arm.Cflags = append(p.Target.Android_arm.Cflags, "-marm")
 		p.Target.Android_arm.Cflags = append(p.Target.Android_arm.Cflags, "-fno-omit-frame-pointer")
 	}
