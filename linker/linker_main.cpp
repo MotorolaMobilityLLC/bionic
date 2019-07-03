@@ -470,6 +470,10 @@ static ElfW(Addr) __linker_init_post_relocation(KernelArgumentBlock& args) {
   fflush(stdout);
 #endif
 
+  // We are about to hand control over to the executable loaded.  We don't want
+  // to leave dirty pages behind unnecessarily.
+  purge_unused_memory();
+
   ElfW(Addr) entry = args.getauxval(AT_ENTRY);
   TRACE("[ Ready to execute \"%s\" @ %p ]", si->get_realpath(), reinterpret_cast<void*>(entry));
   return entry;
