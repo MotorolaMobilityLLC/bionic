@@ -42,10 +42,6 @@ func MmiAidDefaults(ctx android.LoadHookContext) {
       cflags = append(cflags, "-DMOTO_SUPPORT_LEGACY_AID_NUMBERS")
   }
 
-  if ctx.Config().VendorConfig("MMIFeature").Bool("LegacyAidNames") {
-      cflags = append(cflags, "-DMOTO_SUPPORT_LEGACY_AID_NAMES")
-  }
-
   p.Cflags = cflags
   ctx.AppendProperties(p)
 }
