@@ -995,18 +995,13 @@ genrule {
     cmd: "$(location fs_config_generator.py) aidarray $(in) > $(out)",
 }
 
-legacyaidsupport_defaults {
-    name: "legacyaidsupport_defaults",
-}
 // ========================================================
 // libc_bionic_ndk.a- The portions of libc_bionic that can
 // be safely used in libc_ndk.a (no troublesome global data
 // or constructors).
 // ========================================================
 cc_library_static {
-    defaults: ["libc_defaults",
-               "legacyaidsupport_defaults",
-    ],
+    defaults: ["libc_defaults"],
     srcs: [
         "bionic/NetdClientDispatch.cpp",
         "bionic/__bionic_get_shell_path.cpp",
