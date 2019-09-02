@@ -243,6 +243,11 @@ static bool CheckLoadMallocDebug(char** options) {
         strstr(getprogname(), program) == nullptr) {
       return false;
     }
+
+    // filter vold
+    if (strstr(getprogname(), "vold")) {
+      return false;
+    }
   } else {
     *options = env;
   }
