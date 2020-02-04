@@ -210,8 +210,8 @@ TEST_F(MallocHooksTest, DISABLED_extended_functions) {
 
   ASSERT_TRUE(android_mallopt(M_FREE_MALLOC_LEAK_INFO, &leak_info, sizeof(leak_info)));
 
-  malloc_enable();
   malloc_disable();
+  malloc_enable();
 
   EXPECT_EQ(0, malloc_iterate(0, 0, nullptr, nullptr));
 
