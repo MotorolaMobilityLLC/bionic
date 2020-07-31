@@ -1828,6 +1828,7 @@ cc_library_headers {
         "//system/unwinding/libunwindstack:__subpackages__",
         "//system/librustutils:__subpackages__",
         "//tools/security/sanitizer-status:__subpackages__",
+        "//vendor:__subpackages__",
     ],
     vendor_available: true,
     product_available: true,
