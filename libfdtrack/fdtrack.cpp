@@ -37,6 +37,7 @@
 #include <bionic/fdtrack.h>
 
 #include <android-base/no_destructor.h>
+#include <android-base/properties.h>
 #include <android-base/thread_annotations.h>
 #include <async_safe/log.h>
 #include <bionic/reserved_signals.h>
@@ -57,7 +58,9 @@ static void fd_hook(android_fdtrack_event* event);
 
 // Backtraces for the first 4k file descriptors ought to be enough to diagnose an fd leak.
 static constexpr size_t kFdTableSize = 4096;
-static constexpr size_t kStackDepth = 10;
+// BEGIN Motorola, guowq2, 2021-03-01, IKSWR-52224
+static size_t kStackDepth = (android::base::GetBoolProperty("ro.debuggable", false)) ? 20 : 10;
+// END IKSWR-52224
 
 static bool installed = false;
 static std::array<FdEntry, kFdTableSize> stack_traces [[clang::no_destroy]];
