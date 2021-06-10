@@ -893,6 +893,17 @@ cc_library_static {
                 "bionic/strnlen.c",
                 "bionic/strrchr.cpp",
             ],
+            kryo785: {
+                srcs: [
+                    "arch-arm64/kryo785/bionic/__memcpy.S",
+                    "arch-arm64/kryo785/bionic/memcpy.S",
+                    "arch-arm64/kryo785/bionic/memmove.S",
+                ],
+                exclude_srcs: [
+                    "arch-arm64/generic/bionic/memcpy.S",
+                    "arch-arm64/generic/bionic/memmove.S",
+                ],
+            },
         },
 
         x86: {
