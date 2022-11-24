@@ -32,6 +32,8 @@
 #include "File.h"
 #include "Utils.h"
 
+namespace memory_trace {
+
 size_t TraceInfo::GetIndex(std::stack<size_t>& free_indices) {
   if (free_indices.empty()) {
     return num_ptrs_++;
@@ -218,3 +220,5 @@ uint64_t TraceInfo::RunSingleThread() {
 
   return total_ns;
 }
+
+}  // namespace memory_trace

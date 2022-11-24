@@ -54,7 +54,7 @@ static void BenchmarkTrace(benchmark::State& state, const char* filename,
 #endif
   std::string full_filename(android::base::GetExecutableDirectory() + "/traces/" + filename);
 
-  static TraceInfo trace;
+  static memory_trace::TraceInfo trace;
   if (full_filename != trace.filename()) {
     trace.Clear();
     trace.Init(full_filename);

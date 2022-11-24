@@ -54,4 +54,6 @@ std::string CreateStringFromEntry(const Entry& entry);
 // Guaranteed not to allocate.
 bool WriteEntryToFd(int fd, const Entry& entry);
 
+const char* TypeToName(const TypeEnum type);
+
 }  // namespace memory_trace

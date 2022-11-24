@@ -143,7 +143,7 @@ bool FillInEntryFromString(const std::string& line, Entry& entry, std::string& e
   return true;
 }
 
-static const char* TypeToName(const TypeEnum type) {
+const char* TypeToName(const TypeEnum type) {
   switch (type) {
     case CALLOC:
       return "calloc";

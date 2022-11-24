@@ -21,10 +21,10 @@
 #include <stack>
 #include <string>
 
-// Forward Declaration
 namespace memory_trace {
+
+// Forward Declaration
 struct Entry;
-}
 
 class TraceInfo {
  public:
@@ -39,12 +39,17 @@ class TraceInfo {
 
   const std::string& filename() { return filename_; }
 
+  Entry* entries() { return entries_; }
+  size_t num_entries() { return num_entries_; }
+
  private:
   size_t GetIndex(std::stack<size_t>& free_indices);
 
   std::string filename_;
-  memory_trace::Entry* entries_ = nullptr;
+  Entry* entries_ = nullptr;
   size_t num_entries_ = 0;
   void** ptrs_ = nullptr;
   size_t num_ptrs_ = 0;
 };
+
+}  // namespace memory_trace
