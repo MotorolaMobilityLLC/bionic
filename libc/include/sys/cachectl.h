@@ -28,6 +28,27 @@
 
 #pragma once
 
+/*
+ * @file sys/cachectl.h
+ * @brief Architecture-specific cache control.
+ */
+
 #include <sys/cdefs.h>
 
-/* This header file is obsolete. */
+__BEGIN_DECLS
+
+/**
+ * Flag for __riscv_flush_icache() to indicate that only the current
+ * thread's instruction cache needs to be flushed (rather than the
+ * default of all threads).
+ */
+#define SYS_RISCV_FLUSH_ICACHE_LOCAL 1UL
+
+/**
+ * __riscv_flush_icache(2) flushes the instruction cache for the given range of addresses.
+ *
+ * Returns 0 on success, and returns -1 and sets `errno` on failure.
+ */
+int __riscv_flush_icache(void* __start, void* __end, unsigned long __flags);
+
+__END_DECLS
