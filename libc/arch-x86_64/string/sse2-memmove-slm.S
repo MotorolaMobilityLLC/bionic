@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #ifndef MEMMOVE
-# define MEMMOVE		memmove
+# define MEMMOVE		memmove_generic
 #endif
 
 #ifndef L
@@ -99,11 +99,11 @@ name:		\
 #define RETURN		RETURN_END;
 
 	.section .text.sse2,"ax",@progbits
-ENTRY (__memcpy_chk)
+ENTRY (__memcpy_chk_generic)
 	cmp	%rcx, %rdx
 	ja	__memcpy_chk_fail
 /* Fall through to memcpy/memmove. */
-END (__memcpy_chk)
+END (__memcpy_chk_generic)
 ENTRY (MEMMOVE)
 	ENTRANCE
 	mov	%rdi, %rax
@@ -541,4 +541,7 @@ L(mm_large_page_loop_backward):
 
 END (MEMMOVE)
 
+#ifdef BIONIC_RUST_BAREMETAL
 ALIAS_SYMBOL(memcpy, MEMMOVE)
+#endif
+
