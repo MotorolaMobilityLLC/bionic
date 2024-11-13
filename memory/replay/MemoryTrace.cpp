@@ -48,6 +48,11 @@ bool FillInEntryFromString(const std::string& line, Entry& entry, std::string& e
     return false;
   }
 
+  entry.u.old_ptr = 0;
+  entry.present_bytes = -1;
+  entry.start_ns = 0;
+  entry.end_ns = 0;
+
   // Handle each individual type of entry type.
   std::string type(name);
   if (type == "thread_done") {
@@ -68,61 +73,72 @@ bool FillInEntryFromString(const std::string& line, Entry& entry, std::string& e
     return true;
   }
 
+  bool read_present_bytes = false;
   int args_offset = 0;
-  const char* args_beg = &line[op_prefix_pos];
+  const char* args = &line[op_prefix_pos];
   if (type == "malloc") {
     // Format:
     //   TID: malloc POINTER SIZE_OF_ALLOCATION [START_TIME_NS END_TIME_NS]
-    if (sscanf(args_beg, "%zu%n", &entry.size, &args_offset) != 1) {
+    if (sscanf(args, "%zu%n", &entry.size, &args_offset) != 1) {
       error = "Failed to read malloc data: " + line;
       return false;
     }
     entry.type = MALLOC;
   } else if (type == "free") {
     // Format:
-    //   TID: free POINTER [START_TIME_NS END_TIME_NS]
+    //   TID: free POINTER [START_TIME_NS END_TIME_NS] [PRESENT_BYTES]
     entry.type = FREE;
+    read_present_bytes = true;
   } else if (type == "calloc") {
     // Format:
     //   TID: calloc POINTER ITEM_COUNT ITEM_SIZE [START_TIME_NS END_TIME_NS]
-    if (sscanf(args_beg, "%" SCNd64 " %zu%n", &entry.u.n_elements, &entry.size, &args_offset) !=
-        2) {
+    if (sscanf(args, "%" SCNd64 " %zu%n", &entry.u.n_elements, &entry.size, &args_offset) != 2) {
       error = "Failed to read calloc data: " + line;
       return false;
     }
     entry.type = CALLOC;
   } else if (type == "realloc") {
     // Format:
-    //   TID: realloc POINTER OLD_POINTER NEW_SIZE [START_TIME_NS END_TIME_NS]
-    if (sscanf(args_beg, "%" SCNx64 " %zu%n", &entry.u.old_ptr, &entry.size, &args_offset) != 2) {
+    //   TID: realloc POINTER OLD_POINTER NEW_SIZE [START_TIME_NS END_TIME_NS] [PRESENT_BYTES]
+    if (sscanf(args, "%" SCNx64 " %zu%n", &entry.u.old_ptr, &entry.size, &args_offset) != 2) {
       error = "Failed to read realloc data: " + line;
       return false;
     }
+    read_present_bytes = true;
     entry.type = REALLOC;
   } else if (type == "memalign") {
     // Format:
     //   TID: memalign POINTER ALIGNMENT SIZE [START_TIME_NS END_TIME_NS]
-    if (sscanf(args_beg, "%" SCNd64 " %zu%n", &entry.u.align, &entry.size, &args_offset) != 2) {
+    if (sscanf(args, "%" SCNd64 " %zu%n", &entry.u.align, &entry.size, &args_offset) != 2) {
       error = "Failed to read memalign data: " + line;
       return false;
     }
     entry.type = MEMALIGN;
   } else {
-    printf("Unknown type %s: %s\n", type.c_str(), line.c_str());
     error = "Unknown type " + type + ": " + line;
     return false;
   }
 
-  const char* timestamps_beg = &args_beg[args_offset];
-
   // Get the optional timestamps if they exist.
-  int n_match = sscanf(timestamps_beg, "%" SCNd64 " %" SCNd64, &entry.start_ns, &entry.end_ns);
+  args = &args[args_offset];
+  int n_match =
+      sscanf(args, "%" SCNd64 " %" SCNd64 "%n", &entry.start_ns, &entry.end_ns, &args_offset);
   if (n_match == EOF) {
-    entry.start_ns = 0;
-    entry.end_ns = 0;
-  } else if (n_match != 2) {
+    return true;
+  }
+
+  if (n_match != 2) {
     error = "Failed to read timestamps: " + line;
     return false;
+  }
+
+  // Get the optional present bytes if it exists.
+  if (read_present_bytes) {
+    n_match = sscanf(&args[args_offset], "%" SCNd64, &entry.present_bytes);
+    if (n_match != EOF && n_match != 1) {
+      error = "Failed to read present bytes: " + line;
+      return false;
+    }
   }
   return true;
 }
@@ -153,9 +169,13 @@ static size_t FormatEntry(const Entry& entry, char* buffer, size_t buffer_len) {
     return 0;
   }
   size_t cur_len = len;
+  bool output_present_bytes = false;
   switch (entry.type) {
     case FREE:
       len = 0;
+      if (entry.present_bytes != -1) {
+        output_present_bytes = true;
+      }
       break;
     case CALLOC:
       len = snprintf(&buffer[cur_len], buffer_len - cur_len, " %" PRIu64 " %zu", entry.u.n_elements,
@@ -171,6 +191,9 @@ static size_t FormatEntry(const Entry& entry, char* buffer, size_t buffer_len) {
     case REALLOC:
       len = snprintf(&buffer[cur_len], buffer_len - cur_len, " 0x%" PRIx64 " %zu", entry.u.old_ptr,
                      entry.size);
+      if (entry.present_bytes != -1) {
+        output_present_bytes = true;
+      }
       break;
     case THREAD_DONE:
       // Thread done only has a single optional timestamp, end_ns.
@@ -190,12 +213,22 @@ static size_t FormatEntry(const Entry& entry, char* buffer, size_t buffer_len) {
   }
 
   cur_len += len;
-  if (entry.start_ns == 0) {
+  if (entry.start_ns == 0 && !output_present_bytes) {
     return cur_len;
   }
 
   len = snprintf(&buffer[cur_len], buffer_len - cur_len, " %" PRIu64 " %" PRIu64, entry.start_ns,
                  entry.end_ns);
+  if (len < 0) {
+    return 0;
+  }
+
+  cur_len += len;
+  if (!output_present_bytes) {
+    return cur_len;
+  }
+
+  len = snprintf(&buffer[cur_len], buffer_len - cur_len, " %" PRId64, entry.present_bytes);
   if (len < 0) {
     return 0;
   }

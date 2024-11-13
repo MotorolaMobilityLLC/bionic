@@ -111,3 +111,136 @@ TEST(FileTest, get_unwind_info_bad_file) {
   size_t num_entries;
   EXPECT_DEATH(GetUnwindInfo("/does/not/exist", &entries, &num_entries), "");
 }
+
+TEST(FileTest, present_bytes_updated) {
+  TemporaryFile tf;
+  ASSERT_NE(-1, tf.fd);
+  // Entry 0
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::MALLOC, .ptr = 0x100, .size = 100}));
+  // Entry 1
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::MALLOC, .ptr = 0x200, .size = 10}));
+  // Entry 2
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{
+                 .type = memory_trace::MEMALIGN, .ptr = 0x300, .size = 300, .u.align = 16}));
+  // Entry 3
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{
+                 .type = memory_trace::CALLOC, .ptr = 0x400, .size = 400, .u.n_elements = 100}));
+  // Entry 4
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::FREE, .ptr = 0x400, .present_bytes = 400}));
+  // Entry 5
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::FREE, .ptr = 0x100, .present_bytes = 100}));
+  // Entry 6
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::MALLOC, .ptr = 0x100, .size = 101}));
+  // Entry 7
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::FREE, .ptr = 0x300, .present_bytes = 300}));
+  // Entry 8
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::FREE, .ptr = 0x100, .present_bytes = 101}));
+  // Entry 9
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::MALLOC, .ptr = 0x700, .size = 1000}));
+  // Enrty 10
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(tf.fd, memory_trace::Entry{.type = memory_trace::REALLOC,
+                                                                      .ptr = 0x800,
+                                                                      .size = 800,
+                                                                      .u.old_ptr = 0x700,
+                                                                      .present_bytes = 700}));
+  // Entry 11
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::FREE, .ptr = 0x800, .present_bytes = 800}));
+  close(tf.fd);
+  tf.fd = -1;
+
+  memory_trace::Entry* entries;
+  size_t num_entries;
+  GetUnwindInfo(tf.path, &entries, &num_entries);
+  EXPECT_EQ(12U, num_entries);
+
+  // Only verify the present bytes values.
+  EXPECT_EQ(100, entries[0].present_bytes);
+  // No free for this allocation.
+  EXPECT_EQ(-1, entries[1].present_bytes);
+  EXPECT_EQ(300, entries[2].present_bytes);
+  EXPECT_EQ(400, entries[3].present_bytes);
+  EXPECT_EQ(400, entries[4].present_bytes);
+  EXPECT_EQ(100, entries[5].present_bytes);
+  EXPECT_EQ(101, entries[6].present_bytes);
+  EXPECT_EQ(300, entries[7].present_bytes);
+  EXPECT_EQ(101, entries[8].present_bytes);
+  EXPECT_EQ(700, entries[9].present_bytes);
+  EXPECT_EQ(800, entries[10].present_bytes);
+  EXPECT_EQ(800, entries[11].present_bytes);
+
+  FreeEntries(entries, num_entries);
+}
+
+TEST(FileTest, present_bytes_reset_realloc) {
+  TemporaryFile tf;
+  ASSERT_NE(-1, tf.fd);
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::MALLOC, .ptr = 0x100, .size = 200}));
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(tf.fd, memory_trace::Entry{.type = memory_trace::REALLOC,
+                                                                      .ptr = 0x200,
+                                                                      .size = 400,
+                                                                      .u.old_ptr = 0x100,
+                                                                      .present_bytes = 200}));
+
+  memory_trace::Entry* entries;
+  size_t num_entries;
+  GetUnwindInfo(tf.path, &entries, &num_entries);
+  EXPECT_EQ(2U, num_entries);
+
+  // Verify that the present bytes is -1 for the actual realloc since it was
+  // never freed.
+  EXPECT_EQ(200, entries[0].present_bytes);
+  EXPECT_EQ(-1, entries[1].present_bytes);
+
+  FreeEntries(entries, num_entries);
+}
+
+TEST(FileTest, present_bytes_adjusted) {
+  TemporaryFile tf;
+  ASSERT_NE(-1, tf.fd);
+  // Entry 0
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::MALLOC, .ptr = 0x100, .size = 10}));
+  // Entry 1
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::FREE, .ptr = 0x100, .present_bytes = 30}));
+  // Entry 2
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::MALLOC, .ptr = 0x200, .size = 100}));
+  // Entry 3
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(tf.fd, memory_trace::Entry{.type = memory_trace::REALLOC,
+                                                                      .ptr = 0x300,
+                                                                      .size = 700,
+                                                                      .u.old_ptr = 0x200,
+                                                                      .present_bytes = 200}));
+  // Entry 4
+  ASSERT_TRUE(memory_trace::WriteEntryToFd(
+      tf.fd, memory_trace::Entry{.type = memory_trace::FREE, .ptr = 0x300, .present_bytes = 1000}));
+  close(tf.fd);
+  tf.fd = -1;
+
+  memory_trace::Entry* entries;
+  size_t num_entries;
+  GetUnwindInfo(tf.path, &entries, &num_entries);
+  EXPECT_EQ(5U, num_entries);
+
+  // Only verify the present bytes values.
+  EXPECT_EQ(10, entries[0].present_bytes);
+  EXPECT_EQ(30, entries[1].present_bytes);
+  EXPECT_EQ(100, entries[2].present_bytes);
+  EXPECT_EQ(700, entries[3].present_bytes);
+  EXPECT_EQ(1000, entries[4].present_bytes);
+
+  FreeEntries(entries, num_entries);
+}

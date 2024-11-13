@@ -34,6 +34,7 @@ TEST(MemoryTraceReadTest, malloc_valid) {
   EXPECT_EQ(0xabd0000U, entry.ptr);
   EXPECT_EQ(20U, entry.size);
   EXPECT_EQ(0U, entry.u.align);
+  EXPECT_EQ(-1, entry.present_bytes);
   EXPECT_EQ(0U, entry.start_ns);
   EXPECT_EQ(0U, entry.end_ns);
 
@@ -44,6 +45,7 @@ TEST(MemoryTraceReadTest, malloc_valid) {
   EXPECT_EQ(0xabd0000U, entry.ptr);
   EXPECT_EQ(20U, entry.size);
   EXPECT_EQ(0U, entry.u.align);
+  EXPECT_EQ(-1, entry.present_bytes);
   EXPECT_EQ(1000U, entry.start_ns);
   EXPECT_EQ(1020U, entry.end_ns);
 }
@@ -77,6 +79,7 @@ TEST(MemoryTraceReadTest, free_valid) {
   EXPECT_EQ(0x5000U, entry.ptr);
   EXPECT_EQ(0U, entry.size);
   EXPECT_EQ(0U, entry.u.align);
+  EXPECT_EQ(-1, entry.present_bytes);
   EXPECT_EQ(0U, entry.start_ns);
   EXPECT_EQ(0U, entry.end_ns);
 
@@ -87,6 +90,17 @@ TEST(MemoryTraceReadTest, free_valid) {
   EXPECT_EQ(0x5000U, entry.ptr);
   EXPECT_EQ(0U, entry.size);
   EXPECT_EQ(0U, entry.u.align);
+  EXPECT_EQ(-1, entry.present_bytes);
+  EXPECT_EQ(540U, entry.start_ns);
+  EXPECT_EQ(2000U, entry.end_ns);
+
+  line += " 234";
+  ASSERT_TRUE(memory_trace::FillInEntryFromString(line, entry, error)) << error;
+  EXPECT_EQ(memory_trace::FREE, entry.type);
+  EXPECT_EQ(1235, entry.tid);
+  EXPECT_EQ(0x5000U, entry.ptr);
+  EXPECT_EQ(0U, entry.size);
+  EXPECT_EQ(234, entry.present_bytes);
   EXPECT_EQ(540U, entry.start_ns);
   EXPECT_EQ(2000U, entry.end_ns);
 }
@@ -115,6 +129,7 @@ TEST(MemoryTraceReadTest, calloc_valid) {
   EXPECT_EQ(0x8000U, entry.ptr);
   EXPECT_EQ(30U, entry.size);
   EXPECT_EQ(50U, entry.u.n_elements);
+  EXPECT_EQ(-1, entry.present_bytes);
   EXPECT_EQ(0U, entry.start_ns);
   EXPECT_EQ(0U, entry.end_ns);
 
@@ -125,6 +140,7 @@ TEST(MemoryTraceReadTest, calloc_valid) {
   EXPECT_EQ(0x8000U, entry.ptr);
   EXPECT_EQ(30U, entry.size);
   EXPECT_EQ(50U, entry.u.n_elements);
+  EXPECT_EQ(-1, entry.present_bytes);
   EXPECT_EQ(700U, entry.start_ns);
   EXPECT_EQ(1000U, entry.end_ns);
 }
@@ -163,6 +179,7 @@ TEST(MemoryTraceReadTest, realloc_valid) {
   EXPECT_EQ(0x9000U, entry.ptr);
   EXPECT_EQ(80U, entry.size);
   EXPECT_EQ(0x4000U, entry.u.old_ptr);
+  EXPECT_EQ(-1, entry.present_bytes);
   EXPECT_EQ(0U, entry.start_ns);
   EXPECT_EQ(0U, entry.end_ns);
 
@@ -173,6 +190,18 @@ TEST(MemoryTraceReadTest, realloc_valid) {
   EXPECT_EQ(0x9000U, entry.ptr);
   EXPECT_EQ(80U, entry.size);
   EXPECT_EQ(0x4000U, entry.u.old_ptr);
+  EXPECT_EQ(-1, entry.present_bytes);
+  EXPECT_EQ(3999U, entry.start_ns);
+  EXPECT_EQ(10020U, entry.end_ns);
+
+  line += " 50";
+  ASSERT_TRUE(memory_trace::FillInEntryFromString(line, entry, error)) << error;
+  EXPECT_EQ(memory_trace::REALLOC, entry.type);
+  EXPECT_EQ(1237, entry.tid);
+  EXPECT_EQ(0x9000U, entry.ptr);
+  EXPECT_EQ(80U, entry.size);
+  EXPECT_EQ(0x4000U, entry.u.old_ptr);
+  EXPECT_EQ(50, entry.present_bytes);
   EXPECT_EQ(3999U, entry.start_ns);
   EXPECT_EQ(10020U, entry.end_ns);
 }
@@ -211,6 +240,7 @@ TEST(MemoryTraceReadTest, memalign_valid) {
   EXPECT_EQ(0xa000U, entry.ptr);
   EXPECT_EQ(89U, entry.size);
   EXPECT_EQ(16U, entry.u.align);
+  EXPECT_EQ(-1, entry.present_bytes);
   EXPECT_EQ(0U, entry.start_ns);
   EXPECT_EQ(0U, entry.end_ns);
 
@@ -221,6 +251,7 @@ TEST(MemoryTraceReadTest, memalign_valid) {
   EXPECT_EQ(0xa000U, entry.ptr);
   EXPECT_EQ(89U, entry.size);
   EXPECT_EQ(16U, entry.u.align);
+  EXPECT_EQ(-1, entry.present_bytes);
   EXPECT_EQ(900U, entry.start_ns);
   EXPECT_EQ(1000U, entry.end_ns);
 }
@@ -259,6 +290,7 @@ TEST(MemoryTraceReadTest, thread_done_valid) {
   EXPECT_EQ(0U, entry.ptr);
   EXPECT_EQ(0U, entry.size);
   EXPECT_EQ(0U, entry.u.old_ptr);
+  EXPECT_EQ(-1, entry.present_bytes);
   EXPECT_EQ(0U, entry.start_ns);
   EXPECT_EQ(0U, entry.end_ns);
 
@@ -269,6 +301,7 @@ TEST(MemoryTraceReadTest, thread_done_valid) {
   EXPECT_EQ(0U, entry.ptr);
   EXPECT_EQ(0U, entry.size);
   EXPECT_EQ(0U, entry.u.old_ptr);
+  EXPECT_EQ(-1, entry.present_bytes);
   EXPECT_EQ(0U, entry.start_ns);
   EXPECT_EQ(290U, entry.end_ns);
 }
@@ -294,6 +327,7 @@ class MemoryTraceOutputTest : public ::testing::Test {
   void WriteAndReadString(const memory_trace::Entry& entry, std::string& str) {
     EXPECT_EQ(lseek(tmp_file_->fd, 0, SEEK_SET), 0);
     EXPECT_TRUE(memory_trace::WriteEntryToFd(tmp_file_->fd, entry));
+    EXPECT_NE(-1, ftruncate(tmp_file_->fd, lseek(tmp_file_->fd, 0, SEEK_CUR)));
     EXPECT_EQ(lseek(tmp_file_->fd, 0, SEEK_SET), 0);
     EXPECT_TRUE(android::base::ReadFdToString(tmp_file_->fd, &str));
   }
@@ -359,6 +393,15 @@ TEST_F(MemoryTraceOutputTest, free_output) {
   entry.start_ns = 60;
   entry.end_ns = 2000;
   VerifyEntry(entry, "123: free 0x123 60 2000");
+
+  entry.present_bytes = 456;
+  VerifyEntry(entry, "123: free 0x123 60 2000 456");
+
+  // Verify if present bytes is set, the timestamps are in the output.
+  entry.start_ns = 0;
+  entry.end_ns = 0;
+  entry.present_bytes = 456;
+  VerifyEntry(entry, "123: free 0x123 0 0 456");
 }
 
 TEST_F(MemoryTraceOutputTest, thread_done_output) {

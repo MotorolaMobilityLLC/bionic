@@ -46,7 +46,7 @@ static uint64_t MallocExecute(const memory_trace::Entry& entry, Pointers* pointe
   int pagesize = getpagesize();
   uint64_t time_nsecs = Nanotime();
   void* memory = malloc(entry.size);
-  MakeAllocationResident(memory, entry.size, pagesize);
+  MakeAllocationResident(memory, entry.size, entry.present_bytes, pagesize);
   time_nsecs = Nanotime() - time_nsecs;
 
   pointers->Add(entry.ptr, memory);
@@ -58,7 +58,7 @@ static uint64_t CallocExecute(const memory_trace::Entry& entry, Pointers* pointe
   int pagesize = getpagesize();
   uint64_t time_nsecs = Nanotime();
   void* memory = calloc(entry.u.n_elements, entry.size);
-  MakeAllocationResident(memory, entry.u.n_elements * entry.size, pagesize);
+  MakeAllocationResident(memory, entry.u.n_elements * entry.size, entry.present_bytes, pagesize);
   time_nsecs = Nanotime() - time_nsecs;
 
   pointers->Add(entry.ptr, memory);
@@ -75,7 +75,7 @@ static uint64_t ReallocExecute(const memory_trace::Entry& entry, Pointers* point
   int pagesize = getpagesize();
   uint64_t time_nsecs = Nanotime();
   void* memory = realloc(old_memory, entry.size);
-  MakeAllocationResident(memory, entry.size, pagesize);
+  MakeAllocationResident(memory, entry.size, entry.present_bytes, pagesize);
   time_nsecs = Nanotime() - time_nsecs;
 
   pointers->Add(entry.ptr, memory);
@@ -87,7 +87,7 @@ static uint64_t MemalignExecute(const memory_trace::Entry& entry, Pointers* poin
   int pagesize = getpagesize();
   uint64_t time_nsecs = Nanotime();
   void* memory = memalign(entry.u.align, entry.size);
-  MakeAllocationResident(memory, entry.size, pagesize);
+  MakeAllocationResident(memory, entry.size, entry.present_bytes, pagesize);
   time_nsecs = Nanotime() - time_nsecs;
 
   pointers->Add(entry.ptr, memory);

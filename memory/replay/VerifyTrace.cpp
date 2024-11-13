@@ -78,16 +78,21 @@ static void VerifyTrace(const char* trace_file, bool attempt_repair) {
   for (size_t i = 0; i < num_entries; i++) {
     memory_trace::Entry* entry = &entries[i];
 
+    size_t size = 0;
     uint64_t ptr = 0;
     switch (entry->type) {
       case memory_trace::MALLOC:
       case memory_trace::MEMALIGN:
+        size = entry->size;
         ptr = entry->ptr;
         break;
       case memory_trace::CALLOC:
+        size = entry->size * entry->u.n_elements;
         ptr = entry->ptr;
         break;
+        break;
       case memory_trace::REALLOC:
+        size = entry->size;
         if (entry->ptr != 0) {
           ptr = entry->ptr;
         }
@@ -133,51 +138,60 @@ static void VerifyTrace(const char* trace_file, bool attempt_repair) {
         break;
     }
 
-    if (ptr != 0) {
-      auto old_entry = live_ptrs.find(ptr);
-      if (old_entry != live_ptrs.end()) {
-        printf("  Line %zu: duplicate ptr 0x%" PRIx64 "\n", i + 1, ptr);
-        printf("    Original entry at line %zu:\n", old_entry->second.second);
-        printf("      %s\n", memory_trace::CreateStringFromEntry(*old_entry->second.first).c_str());
-        printf("    Duplicate entry at line %zu:\n", i + 1);
-        printf("      %s\n", memory_trace::CreateStringFromEntry(*entry).c_str());
-        errors_found++;
-        if (attempt_repair) {
-          // There is a small chance of a race where the same pointer is returned
-          // in two different threads before the free is recorded. If this occurs,
-          // the way to repair is to search forward for the free of the pointer and
-          // swap the two entries.
-          bool fixed = false;
-          for (size_t j = i + 1; j < num_entries; j++) {
-            if ((entries[j].type == memory_trace::FREE && entries[j].ptr == ptr) ||
-                (entries[j].type == memory_trace::REALLOC && entries[j].u.old_ptr == ptr)) {
-              memory_trace::Entry tmp_entry = *entry;
-              *entry = entries[j];
-              entries[j] = tmp_entry;
-              errors_repaired++;
+    if (ptr == 0) {
+      continue;
+    }
 
-              live_ptrs.erase(old_entry);
-              if (entry->type == memory_trace::REALLOC) {
-                if (entry->ptr != 0) {
-                  // Need to add the newly allocated pointer.
-                  live_ptrs[entry->ptr] = std::make_pair(entry, i + 1);
-                }
-                if (erased.first != nullptr) {
-                  // Need to put the erased old ptr back.
-                  live_ptrs[tmp_entry.u.old_ptr] = erased;
-                }
+    auto old_entry = live_ptrs.find(ptr);
+    if (old_entry != live_ptrs.end()) {
+      printf("  Line %zu: duplicate ptr 0x%" PRIx64 "\n", i + 1, ptr);
+      printf("    Original entry at line %zu:\n", old_entry->second.second);
+      printf("      %s\n", memory_trace::CreateStringFromEntry(*old_entry->second.first).c_str());
+      printf("    Duplicate entry at line %zu:\n", i + 1);
+      printf("      %s\n", memory_trace::CreateStringFromEntry(*entry).c_str());
+      errors_found++;
+      if (attempt_repair) {
+        // There is a small chance of a race where the same pointer is returned
+        // in two different threads before the free is recorded. If this occurs,
+        // the way to repair is to search forward for the free of the pointer and
+        // swap the two entries.
+        bool fixed = false;
+        for (size_t j = i + 1; j < num_entries; j++) {
+          if ((entries[j].type == memory_trace::FREE && entries[j].ptr == ptr) ||
+              (entries[j].type == memory_trace::REALLOC && entries[j].u.old_ptr == ptr)) {
+            memory_trace::Entry tmp_entry = *entry;
+            *entry = entries[j];
+            entries[j] = tmp_entry;
+            errors_repaired++;
+
+            live_ptrs.erase(old_entry);
+            if (entry->type == memory_trace::REALLOC) {
+              if (entry->ptr != 0) {
+                // Need to add the newly allocated pointer.
+                live_ptrs[entry->ptr] = std::make_pair(entry, i + 1);
               }
-              fixed = true;
-              break;
+              if (erased.first != nullptr) {
+                // Need to put the erased old ptr back.
+                live_ptrs[tmp_entry.u.old_ptr] = erased;
+              }
             }
-          }
-          if (!fixed) {
-            printf("  Unable to fix error.\n");
+            fixed = true;
+            break;
           }
         }
-      } else {
-        live_ptrs[ptr] = std::make_pair(entry, i + 1);
+        if (!fixed) {
+          printf("  Unable to fix error.\n");
+        }
       }
+    } else {
+      live_ptrs[ptr] = std::make_pair(entry, i + 1);
+    }
+
+    if (entry->present_bytes != -1 && size != 0 &&
+        static_cast<size_t>(entry->present_bytes) > size) {
+      printf("Line %zu: present bytes %" PRId64 " greater than size %zu\n  %s\n", i + 1,
+             entry->present_bytes, size, memory_trace::CreateStringFromEntry(*entry).c_str());
+      errors_found++;
     }
   }
 
