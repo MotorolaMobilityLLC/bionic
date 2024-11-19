@@ -29,6 +29,7 @@ enum TypeEnum : uint8_t {
   REALLOC,
   FREE,
   THREAD_DONE,
+  UNKNOWN,
 };
 
 struct Entry {

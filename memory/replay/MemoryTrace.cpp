@@ -141,8 +141,9 @@ static const char* TypeToName(const TypeEnum type) {
       return "realloc";
     case THREAD_DONE:
       return "thread_done";
+    default:
+      return "unknown";
   }
-  return "unknown";
 }
 
 static size_t FormatEntry(const Entry& entry, char* buffer, size_t buffer_len) {

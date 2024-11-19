@@ -31,6 +31,7 @@ bool AllocDoesFree(const memory_trace::Entry& entry) {
     case memory_trace::CALLOC:
     case memory_trace::MEMALIGN:
     case memory_trace::THREAD_DONE:
+    case memory_trace::UNKNOWN:
       return false;
 
     case memory_trace::FREE:

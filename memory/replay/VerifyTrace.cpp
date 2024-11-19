@@ -129,6 +129,7 @@ static void VerifyTrace(const char* trace_file, bool attempt_repair) {
         }
         break;
       case memory_trace::THREAD_DONE:
+      case memory_trace::UNKNOWN:
         break;
     }
 

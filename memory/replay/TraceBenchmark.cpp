@@ -138,6 +138,7 @@ static void GetTraceData(const std::string& filename, TraceDataType* trace_data)
         }
         break;
       case memory_trace::THREAD_DONE:
+      case memory_trace::UNKNOWN:
         break;
     }
   }
@@ -239,6 +240,7 @@ static void RunTrace(benchmark::State& state, TraceDataType* trace_data) {
         break;
 
       case memory_trace::THREAD_DONE:
+      case memory_trace::UNKNOWN:
         break;
     }
   }

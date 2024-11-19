@@ -47,6 +47,7 @@ static size_t GetMaxAllocs(const memory_trace::Entry* entries, size_t num_entrie
   for (size_t i = 0; i < num_entries; i++) {
     switch (entries[i].type) {
       case memory_trace::THREAD_DONE:
+      case memory_trace::UNKNOWN:
         break;
       case memory_trace::MALLOC:
       case memory_trace::CALLOC:
