@@ -136,6 +136,19 @@ cc_binary_host {
     ],
 }
 
+cc_binary_host {
+    name: "verify_trace",
+    defaults: ["memory_replay_defaults"],
+
+    static_libs: [
+        "libmemory_replay",
+    ],
+
+    srcs: [
+        "VerifyTrace.cpp",
+    ],
+}
+
 cc_test {
     name: "memory_replay_tests",
     defaults: ["memory_replay_defaults"],
