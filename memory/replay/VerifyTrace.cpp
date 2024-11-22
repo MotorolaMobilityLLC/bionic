@@ -18,6 +18,7 @@
 #include <getopt.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include <string>
 #include <unordered_map>
@@ -30,36 +31,37 @@
 #include "File.h"
 
 static void Usage() {
-  fprintf(stderr, "Usage: %s [--attempt_recovery] TRACE_FILE1 TRACE_FILE2 ...\n",
+  fprintf(stderr, "Usage: %s [--attempt_repair] TRACE_FILE1 TRACE_FILE2 ...\n",
           android::base::Basename(android::base::GetExecutablePath()).c_str());
-  fprintf(stderr, "  --attempt_recovery\n");
-  fprintf(stderr, "    If a trace file has some errors, try to fix it. The new\n");
+  fprintf(stderr, "  --attempt_repair\n");
+  fprintf(stderr, "    If a trace file has some errors, try to fix them. The new\n");
   fprintf(stderr, "    file will be named TRACE_FILE.repair\n");
   fprintf(stderr, "  TRACE_FILE1 TRACE_FILE2 ...\n");
   fprintf(stderr, "      The trace files to verify\n");
-  fprintf(stderr, "\n  Print a trace to stdout.\n");
+  fprintf(stderr, "\n  Verify trace are valid.\n");
   exit(1);
 }
 
-static bool WriteRepairEntries(const char* trace_file, memory_trace::Entry* entries,
+static bool WriteRepairEntries(const std::string& repair_file, memory_trace::Entry* entries,
                                size_t num_entries) {
-  printf("Attempting to reapir trace_file %s\n", trace_file);
-  std::string repair_file(std::string(trace_file) + ".repair");
-  int fd = open(repair_file.c_str(), O_WRONLY | O_CREAT | O_CLOEXEC, 0644);
+  int fd = open(repair_file.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0644);
   if (fd == -1) {
-    printf("Failed to create repair file %s: %s\n", repair_file.c_str(), strerror(errno));
+    printf("  Failed to create repair file %s: %s\n", repair_file.c_str(), strerror(errno));
     return false;
   }
+  bool valid = true;
   for (size_t i = 0; i < num_entries; i++) {
     if (!memory_trace::WriteEntryToFd(fd, entries[i])) {
-      printf("Failed to write entry to file:\n");
-      close(fd);
-      return false;
+      printf("  Failed to write entry to file:\n");
+      valid = false;
+      break;
     }
   }
   close(fd);
-  printf("Attempt to repair trace has succeeded, new trace %s\n", repair_file.c_str());
-  return true;
+  if (!valid) {
+    unlink(repair_file.c_str());
+  }
+  return valid;
 }
 
 static void VerifyTrace(const char* trace_file, bool attempt_repair) {
@@ -69,9 +71,10 @@ static void VerifyTrace(const char* trace_file, bool attempt_repair) {
   size_t num_entries;
   GetUnwindInfo(trace_file, &entries, &num_entries);
 
-  bool found_error = false;
-  bool error_repaired = false;
+  size_t errors_found = 0;
+  size_t errors_repaired = 0;
   std::unordered_map<uint64_t, std::pair<memory_trace::Entry*, size_t>> live_ptrs;
+  std::pair<memory_trace::Entry*, size_t> erased(nullptr, 0);
   for (size_t i = 0; i < num_entries; i++) {
     memory_trace::Entry* entry = &entries[i];
 
@@ -90,32 +93,38 @@ static void VerifyTrace(const char* trace_file, bool attempt_repair) {
         }
         if (entry->u.old_ptr != 0) {
           // Verify old pointer
-          auto old_entry = live_ptrs.find(entry->u.old_ptr);
-          if (old_entry == live_ptrs.end()) {
-            printf("  Line %zu: freeing of unknown ptr 0x%" PRIx64 "\n", i + 1, entry->u.old_ptr);
-            printf("    %s\n", memory_trace::CreateStringFromEntry(*entry).c_str());
-            found_error = true;
-            if (attempt_repair) {
-              printf("  Unable to repair this failure.\n");
+          auto entry_iter = live_ptrs.find(entry->u.old_ptr);
+          if (entry_iter == live_ptrs.end()) {
+            // Verify the pointer didn't get realloc'd to itself.
+            if (entry->u.old_ptr != entry->ptr) {
+              printf("  Line %zu: freeing of unknown ptr 0x%" PRIx64 "\n", i + 1, entry->u.old_ptr);
+              printf("    %s\n", memory_trace::CreateStringFromEntry(*entry).c_str());
+              errors_found++;
+              if (attempt_repair) {
+                printf("  Unable to repair this failure.\n");
+              }
             }
           } else {
-            live_ptrs.erase(old_entry);
+            if (attempt_repair) {
+              erased = entry_iter->second;
+            }
+            live_ptrs.erase(entry_iter);
           }
         }
         break;
       case memory_trace::FREE:
         if (entry->ptr != 0) {
           // Verify pointer is present.
-          auto old_entry = live_ptrs.find(entry->ptr);
-          if (old_entry == live_ptrs.end()) {
+          auto entry_iter = live_ptrs.find(entry->ptr);
+          if (entry_iter == live_ptrs.end()) {
             printf("  Line %zu: freeing of unknown ptr 0x%" PRIx64 "\n", i + 1, entry->ptr);
             printf("    %s\n", memory_trace::CreateStringFromEntry(*entry).c_str());
-            found_error = true;
+            errors_found++;
             if (attempt_repair) {
               printf("  Unable to repair this failure.\n");
             }
           } else {
-            live_ptrs.erase(old_entry);
+            live_ptrs.erase(entry_iter);
           }
         }
         break;
@@ -126,29 +135,43 @@ static void VerifyTrace(const char* trace_file, bool attempt_repair) {
     if (ptr != 0) {
       auto old_entry = live_ptrs.find(ptr);
       if (old_entry != live_ptrs.end()) {
-        printf("  Line %zu: duplicate ptr 0x%" PRIx64 " previously found at line %" PRId64 "\n",
-               i + 1, ptr, old_entry->second.second);
-        printf("    Original entry:\n");
-        printf("      %s\n", memory_trace::CreateStringFromEntry(*entry).c_str());
-        printf("    Duplicate pointer entry:\n");
+        printf("  Line %zu: duplicate ptr 0x%" PRIx64 "\n", i + 1, ptr);
+        printf("    Original entry at line %zu:\n", old_entry->second.second);
         printf("      %s\n", memory_trace::CreateStringFromEntry(*old_entry->second.first).c_str());
-        found_error = true;
+        printf("    Duplicate entry at line %zu:\n", i + 1);
+        printf("      %s\n", memory_trace::CreateStringFromEntry(*entry).c_str());
+        errors_found++;
         if (attempt_repair) {
           // There is a small chance of a race where the same pointer is returned
           // in two different threads before the free is recorded. If this occurs,
           // the way to repair is to search forward for the free of the pointer and
           // swap the two entries.
-          error_repaired = false;
+          bool fixed = false;
           for (size_t j = i + 1; j < num_entries; j++) {
-            if (entries[j].type == memory_trace::FREE && entries[j].ptr == ptr) {
-              memory_trace::Entry alloc_entry = *entry;
+            if ((entries[j].type == memory_trace::FREE && entries[j].ptr == ptr) ||
+                (entries[j].type == memory_trace::REALLOC && entries[j].u.old_ptr == ptr)) {
+              memory_trace::Entry tmp_entry = *entry;
               *entry = entries[j];
-              entries[j] = alloc_entry;
-              error_repaired = true;
+              entries[j] = tmp_entry;
+              errors_repaired++;
 
               live_ptrs.erase(old_entry);
+              if (entry->type == memory_trace::REALLOC) {
+                if (entry->ptr != 0) {
+                  // Need to add the newly allocated pointer.
+                  live_ptrs[entry->ptr] = std::make_pair(entry, i + 1);
+                }
+                if (erased.first != nullptr) {
+                  // Need to put the erased old ptr back.
+                  live_ptrs[tmp_entry.u.old_ptr] = erased;
+                }
+              }
+              fixed = true;
               break;
             }
+          }
+          if (!fixed) {
+            printf("  Unable to fix error.\n");
           }
         }
       } else {
@@ -157,18 +180,22 @@ static void VerifyTrace(const char* trace_file, bool attempt_repair) {
     }
   }
 
-  if (found_error) {
+  if (errors_found != 0) {
     printf("Trace %s is not valid.\n", trace_file);
     if (attempt_repair) {
-      if (error_repaired) {
-        // Save the repaired data out to a file.
-        if (!WriteRepairEntries(trace_file, entries, num_entries)) {
-          printf("Failed to write repaired entries to a file.\n");
-        }
+      // Save the repaired data out to a file.
+      std::string repair_file(std::string(trace_file) + ".repair");
+      printf("Creating repaired trace file %s...\n", repair_file.c_str());
+      if (!WriteRepairEntries(repair_file, entries, num_entries)) {
+        printf("Failed trying to write repaired entries to file.\n");
+      } else if (errors_repaired == errors_found) {
+        printf("Repaired file is complete, no more errors.\n");
       } else {
-        printf("Attempt to repair trace has failed.\n");
+        printf("Repaired file is still not valid.\n");
       }
     }
+  } else if (attempt_repair) {
+    printf("Trace %s is valid, no repair needed.\n", trace_file);
   } else {
     printf("Trace %s is valid.\n", trace_file);
   }
@@ -183,17 +210,22 @@ int main(int argc, char** argv) {
   };
   int option_index = 0;
   int opt = getopt_long(argc, argv, "", options, &option_index);
+  if (argc == 1 || (argc == 2 && opt != -1)) {
+    fprintf(stderr, "Requires at least one TRACE_FILE\n");
+    Usage();
+  }
+
   bool attempt_repair = false;
   if (opt == 'a') {
     attempt_repair = true;
   } else if (opt != -1) {
     Usage();
-  } else if (optind == argc) {
-    fprintf(stderr, "Requires at least one TRACE_FILE\n");
-    Usage();
   }
 
-  for (int i = optind; i < argc; i++) {
+  for (int i = 1; i < argc; i++) {
+    if (i + 1 == optind) {
+      continue;
+    }
     VerifyTrace(argv[i], attempt_repair);
   }
 
