@@ -38,6 +38,11 @@ extern "C" __LIBC_HIDDEN__ uintptr_t __get_thread_stack_top() {
   return __get_thread()->stack_top;
 }
 
+__BIONIC_WEAK_FOR_NATIVE_BRIDGE
+extern "C" __LIBC_HIDDEN__ uintptr_t __get_thread_stack_bottom() {
+  return __get_thread()->stack_bottom;
+}
+
 /*
  * Implement fast stack unwinding for stack frames with frame pointers. Stores at most num_entries
  * return addresses to buffer buf. Returns the number of available return addresses, which may be
@@ -62,12 +67,22 @@ __attribute__((no_sanitize("address", "hwaddress"))) size_t android_unsafe_frame
     uintptr_t next_frame, return_addr;
   };
 
-  auto begin = reinterpret_cast<uintptr_t>(__builtin_frame_address(0));
-  auto end = __get_thread_stack_top();
+  static uintptr_t main_thread_bottom = UINTPTR_MAX;
 
-  stack_t ss;
-  if (sigaltstack(nullptr, &ss) == 0 && (ss.ss_flags & SS_ONSTACK)) {
-    end = reinterpret_cast<uintptr_t>(ss.ss_sp) + ss.ss_size;
+  auto bottom = __get_thread_stack_bottom();
+  if (bottom == 0) {
+    bottom = main_thread_bottom;
+  }
+  auto fp = reinterpret_cast<uintptr_t>(__builtin_frame_address(0));
+  auto top = __get_thread_stack_top();
+
+  if (fp < bottom || fp > top) {
+    stack_t ss;
+    if (sigaltstack(nullptr, &ss) == 0 && (ss.ss_flags & SS_ONSTACK)) {
+      top = reinterpret_cast<uintptr_t>(ss.ss_sp) + ss.ss_size;
+    } else if (__get_thread_stack_bottom() == 0) {
+      main_thread_bottom = MIN(main_thread_bottom, fp);
+    }
   }
 
   size_t num_frames = 0;
@@ -77,9 +92,9 @@ __attribute__((no_sanitize("address", "hwaddress"))) size_t android_unsafe_frame
     // See https://reviews.llvm.org/D87579. We did at least manage to get this
     // documented in the RISC-V psABI though:
     // https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/master/riscv-cc.adoc#frame-pointer-convention
-    auto* frame = reinterpret_cast<frame_record*>(begin - 16);
+    auto* frame = reinterpret_cast<frame_record*>(fp - 16);
 #else
-    auto* frame = reinterpret_cast<frame_record*>(begin);
+    auto* frame = reinterpret_cast<frame_record*>(fp);
 #endif
     if (num_frames < num_entries) {
       uintptr_t addr = __bionic_clear_pac_bits(frame->return_addr);
@@ -89,11 +104,11 @@ __attribute__((no_sanitize("address", "hwaddress"))) size_t android_unsafe_frame
       buf[num_frames] = addr;
     }
     ++num_frames;
-    if (frame->next_frame < begin + sizeof(frame_record) || frame->next_frame >= end ||
+    if (frame->next_frame < fp + sizeof(frame_record) || frame->next_frame >= top ||
         frame->next_frame % sizeof(void*) != 0) {
       break;
     }
-    begin = frame->next_frame;
+    fp = frame->next_frame;
   }
 
   return num_frames;
