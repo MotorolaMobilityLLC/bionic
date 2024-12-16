@@ -26,7 +26,8 @@ static inline void __bionic_statfs_to_statvfs(const struct statfs* src, struct s
   dst->f_files = src->f_files;
   dst->f_ffree = src->f_ffree;
   dst->f_favail = src->f_ffree;
-  dst->f_fsid = src->f_fsid.__val[0] | static_cast<uint64_t>(src->f_fsid.__val[1]) << 32;
+  dst->f_fsid = static_cast<uint64_t>(src->f_fsid.__val[0]) |
+                static_cast<uint64_t>(src->f_fsid.__val[1]) << 32;
   dst->f_flag = src->f_flags;
   dst->f_namemax = src->f_namelen;
 }
