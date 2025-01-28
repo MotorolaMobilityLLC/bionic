@@ -19,13 +19,15 @@
 #include <stdint.h>
 #include <time.h>
 
-static __always_inline uint64_t Nanotime() {
+__attribute__((always_inline))
+static uint64_t Nanotime() {
   struct timespec t = {};
   clock_gettime(CLOCK_MONOTONIC, &t);
   return static_cast<uint64_t>(t.tv_sec) * 1000000000LL + t.tv_nsec;
 }
 
-static __always_inline void MakeAllocationResident(void* ptr, size_t nbytes, int64_t present_bytes,
+__attribute__((always_inline))
+static void MakeAllocationResident(void* ptr, size_t nbytes, int64_t present_bytes,
                                                    int pagesize) {
   if (present_bytes != -1 && static_cast<size_t>(present_bytes) < nbytes) {
     nbytes = present_bytes;
