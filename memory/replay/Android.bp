@@ -91,7 +91,7 @@ cc_library_static {
 cc_binary {
     name: "memory_replay",
     defaults: ["memory_replay_defaults"],
-    host_supported: false,
+    host_supported: true,
 
     srcs: ["main.cpp"],
 
@@ -106,6 +106,15 @@ cc_binary {
         },
         lib64: {
             suffix: "64",
+        },
+    },
+
+    target: {
+        host: {
+            // Keep debug information for host executables.
+            strip: {
+                none: true,
+            },
         },
     },
 }

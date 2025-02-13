@@ -34,13 +34,13 @@ static void MakeAllocationResident(void* ptr, size_t nbytes, int64_t present_byt
   }
 
   size_t start = 0;
-  uintptr_t page_aligned = (reinterpret_cast<uintptr_t>(ptr) + pagesize - 1) & ~(pagesize - 1);
+  uintptr_t page_aligned = reinterpret_cast<uintptr_t>(__builtin_align_up(ptr, pagesize));
   uint8_t* data = reinterpret_cast<uint8_t*>(ptr);
   if (page_aligned != reinterpret_cast<uintptr_t>(data)) {
-    // Make the partial page data resident.
+    // Make the first page of the allocation resident.
     data[0] = 1;
 
-    data = reinterpret_cast<uint8_t*>(page_aligned);
+    // Skip to the start of the next page.
     start = page_aligned - reinterpret_cast<uintptr_t>(ptr);
   }
   for (size_t i = start; i < nbytes; i += pagesize) {
