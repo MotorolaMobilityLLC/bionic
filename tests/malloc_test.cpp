@@ -1800,10 +1800,10 @@ TEST(android_mallopt, decay_time_set_using_env_variable) {
   // fork'd and exec'd processes.
   ASSERT_EQ(0, setenv("MALLOC_USE_APP_DEFAULTS", "1", 1));
   ExecTestHelper eth;
-  eth.SetArgs({testing::internal::GetArgvs()[0].c_str(), "--gtest_also_run_disabled_tests",
+  std::string executable(testing::internal::GetArgvs()[0]);
+  eth.SetArgs({executable.c_str(), "--gtest_also_run_disabled_tests",
                "--gtest_filter=android_mallopt.DISABLED_verify_decay_time_on", nullptr});
-  eth.Run([&]() { execv(testing::internal::GetArgvs()[0].c_str(), eth.GetArgs()); }, 0,
-          R"(\[  PASSED  \] 1 test)");
+  eth.Run([&]() { execv(executable.c_str(), eth.GetArgs()); }, 0, R"(\[  PASSED  \] 1 test)");
 #else
   GTEST_SKIP() << "bionic-only test";
 #endif
