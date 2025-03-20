@@ -40,6 +40,9 @@
 #include "platform/bionic/macros.h"
 #include "platform/bionic/page.h"
 
+#include <android-base/stringprintf.h>
+
+#include <numeric>
 #include <string>
 
 static bool g_enable_16kb_app_compat;
@@ -188,13 +191,150 @@ static inline ElfW(Addr) perm_boundary_offset(const ElfW(Addr) addr) {
   return offset ? page_size() - offset : 0;
 }
 
-bool ElfReader::Setup16KiBAppCompat() {
+enum relro_pos_t {
+  NONE,    // No RELRO in the LOAD segment
+  PREFIX,  // RELRO is a prefix of the LOAD segment
+  MIDDLE,  // RELRO is contained in the middle of the LOAD segment
+  SUFFIX,  // RELRO is a suffix of the LOAD segment
+  ENTIRE,  // RELRO is the entire LOAD segment
+  ERROR,   // The relro size invalid (spans multiple segments?)
+};
+
+struct segment {
+  const ElfW(Phdr)* phdr;
+  relro_pos_t relro_pos;
+};
+
+static inline relro_pos_t relro_pos(const ElfW(Phdr)* phdr, const ElfW(Phdr)* relro) {
+  // For checking the relro boundaries we use instead the LOAD segment's p_align
+  // instead of the system or compat page size.
+  uint64_t align = phdr->p_align;
+  uint64_t seg_start = __builtin_align_down(phdr->p_vaddr, align);
+  uint64_t seg_end = __builtin_align_up(phdr->p_vaddr + phdr->p_memsz, align);
+  uint64_t relro_start = __builtin_align_down(relro->p_vaddr, align);
+  uint64_t relro_end = __builtin_align_up(relro->p_vaddr + relro->p_memsz, align);
+
+  if (relro_end <= seg_start || relro_start >= seg_end) return NONE;
+
+  // Spans multiple LOAD segments?
+  if (relro_start < seg_start || relro_end > seg_end) return ERROR;
+
+  // Prefix or entire?
+  if (relro_start == seg_start) return (relro_end < seg_end) ? PREFIX : ENTIRE;
+
+  // Must be suffix or middle
+  return (relro_end == seg_end) ? SUFFIX : MIDDLE;
+}
+
+static std::vector<struct segment> elf_segments(const ElfW(Phdr)* phdr_table, size_t phdr_count) {
+  std::vector<struct segment> segments;
+
+  for (size_t index = 0; index < phdr_count; ++index) {
+    const ElfW(Phdr)* phdr = &phdr_table[index];
+
+    if (phdr->p_type != PT_LOAD) continue;
+
+    struct segment segment = {
+        .phdr = phdr,
+        .relro_pos = NONE,
+    };
+
+    segments.emplace_back(segment);
+  }
+
+  for (size_t index = 0; index < phdr_count; ++index) {
+    const ElfW(Phdr)* relro = &phdr_table[index];
+
+    if (relro->p_type != PT_GNU_RELRO) continue;
+
+    for (struct segment& segment : segments) {
+      if (segment.relro_pos != NONE) continue;
+
+      segment.relro_pos = relro_pos(segment.phdr, relro);
+    }
+  }
+
+  // Sort by vaddr
+  std::sort(segments.begin(), segments.end(), [](const struct segment& a, const struct segment& b) {
+    return a.phdr->p_vaddr < b.phdr->p_vaddr;
+  });
+
+  return segments;
+}
+
+static inline std::string prot_str(const struct segment& segment) {
+  int prot = PFLAGS_TO_PROT(segment.phdr->p_flags);
+  std::string str;
+
+  if (prot & PROT_READ) str += "R";
+  if (prot & PROT_WRITE) str += "W";
+  if (prot & PROT_EXEC) str += "X";
+
+  return str;
+}
+
+static inline std::string relro_pos_str(const struct segment& segment) {
+  relro_pos_t relro_pos = segment.relro_pos;
+
+  switch (relro_pos) {
+    case NONE:
+      return "";
+    case PREFIX:
+      return "(PREFIX)";
+    case MIDDLE:
+      return "(MIDDLE)";
+    case SUFFIX:
+      return "(SUFFIX)";
+    case ENTIRE:
+      return "(ENTIRE)";
+    case ERROR:
+      return "(ERROR)";
+  }
+
+  // Unreachable
+  std::abort();
+}
+
+static inline std::string segment_format(const struct segment& segment) {
+  uint64_t align_kbytes = segment.phdr->p_align / 1024;
+  std::string format = prot_str(segment);
+
+  if (segment.relro_pos != NONE) format += " " + relro_pos_str(segment);
+
+  return format + " " + std::to_string(align_kbytes) + "K";
+}
+
+/*
+ * Returns a string representing the ELF's load segment layout.
+ *
+ * Each segment has the format: <permissions> [(<relro position>)] <p_align>
+ *
+ *   e.g. "RX 4K|RW (ENTIRE) 4K|RW 4K|RW 16K|RX 16K|R 16K|RW 16K"
+ */
+static inline std::string elf_layout(const ElfW(Phdr)* phdr_table, size_t phdr_count) {
+  std::vector<struct segment> segments = elf_segments(phdr_table, phdr_count);
+  std::vector<std::string> layout;
+
+  for (struct segment& segment : segments) {
+    layout.emplace_back(segment_format(segment));
+  }
+
+  if (layout.empty()) return "";
+
+  return std::accumulate(std::next(layout.begin()), layout.end(), layout[0],
+                         [](std::string a, std::string b) { return std::move(a) + "," + b; });
+}
+
+bool ElfReader::Setup16KiBAppCompat(std::string* error) {
   if (!should_use_16kib_app_compat_) {
     return true;
   }
 
   ElfW(Addr) rx_rw_boundary;  // Permission bounadry for compat mode
   if (!IsEligibleFor16KiBAppCompat(&rx_rw_boundary)) {
+    const std::string layout = elf_layout(phdr_table_, phdr_num_);
+    *error = android::base::StringPrintf("\"%s\" 16K app compat failed: load segments: [%s]",
+                                         name_.c_str(), layout.c_str());
     return false;
   }
 
