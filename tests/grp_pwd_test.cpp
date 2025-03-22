@@ -492,6 +492,18 @@ static void expect_ids(T ids, bool is_group) {
       EXPECT_STREQ(getpwuid(AID_MMD)->pw_name, "mmd");
     }
   }
+  // AID_UPDATE_ENGINE_LOG (1096) was added in API level 36, but "trunk stable" means
+  // that the 2024Q* builds are tested with the _previous_ release's CTS.
+  if (android::base::GetIntProperty("ro.build.version.sdk", 0) == 35) {
+#if !defined(AID_UPDATE_ENGINE_LOG)
+#define AID_UPDATE_ENGINE_LOG 1096
+#endif
+    ids.erase(AID_UPDATE_ENGINE_LOG);
+    expected_ids.erase(AID_UPDATE_ENGINE_LOG);
+    if (getpwuid(AID_UPDATE_ENGINE_LOG)) {
+      EXPECT_STREQ(getpwuid(AID_UPDATE_ENGINE_LOG)->pw_name, "update_engine_log");
+    }
+  }
 
   EXPECT_EQ(expected_ids, ids) << return_differences();
 }
