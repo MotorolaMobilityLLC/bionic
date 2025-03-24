@@ -79,3 +79,8 @@ sched_rr_get_interval_time64(pid_t, timespec64*) lp32
 # support seems potentially useful for Android (though the struct that
 # changes size over time is obviously problematic).
 clone3(clone_args*, size_t) all
+# Since 5.13, not in glibc. Probed for and conditionally used by
+# Chrome GPU processes.
+landlock_add_rule(int, uint64_t, const void*, uint32_t) all
+landlock_create_ruleset(const landlock_ruleset_attr*, size_t, uint64_t) all
+landlock_restrict_self(int, uint64_t) all
