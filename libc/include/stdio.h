@@ -140,9 +140,16 @@ int dprintf(int __fd, const char* _Nonnull __fmt, ...) __printflike(2, 3);
 int vdprintf(int __fd, const char* _Nonnull __fmt, va_list __args) __printflike(2, 0);
 
 #if (defined(__STDC_VERSION__) && __STDC_VERSION__ < 201112L) || \
-    (defined(__cplusplus) && __cplusplus <= 201103L)
-char* _Nullable gets(char* _Nonnull __buf) __attribute__((__deprecated__("gets is unsafe, use fgets instead")));
+    (defined(__cplusplus) && __cplusplus < 201402L)
+/**
+ * gets() is an unsafe version of getline() for stdin.
+ *
+ * It was removed in C11 and C++14,
+ * and should not be used by new code.
+ */
+char* _Nullable gets(char* _Nonnull __buf) __attribute__((__deprecated__("gets() is unsafe, use getline() instead")));
 #endif
+
 int sprintf(char* __BIONIC_COMPLICATED_NULLNESS __s, const char* _Nonnull __fmt, ...)
     __printflike(2, 3) __warnattr_strict("sprintf is often misused; please use snprintf");
 int vsprintf(char* __BIONIC_COMPLICATED_NULLNESS __s, const char* _Nonnull __fmt, va_list __args)
