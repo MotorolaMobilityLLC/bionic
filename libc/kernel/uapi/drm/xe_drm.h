@@ -345,6 +345,7 @@ struct drm_xe_oa_unit {
   __u32 oa_unit_type;
   __u64 capabilities;
 #define DRM_XE_OA_CAPS_BASE (1 << 0)
+#define DRM_XE_OA_CAPS_SYNCS (1 << 1)
   __u64 oa_timestamp_freq;
   __u64 reserved[4];
   __u64 num_engines;
@@ -379,6 +380,8 @@ enum drm_xe_oa_property_id {
   DRM_XE_OA_PROPERTY_EXEC_QUEUE_ID,
   DRM_XE_OA_PROPERTY_OA_ENGINE_INSTANCE,
   DRM_XE_OA_PROPERTY_NO_PREEMPT,
+  DRM_XE_OA_PROPERTY_NUM_SYNCS,
+  DRM_XE_OA_PROPERTY_SYNCS,
 };
 struct drm_xe_oa_config {
   __u64 extensions;

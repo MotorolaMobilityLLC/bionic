@@ -64,6 +64,8 @@ struct drm_panthor_sync_op {
 enum drm_panthor_dev_query_type {
   DRM_PANTHOR_DEV_QUERY_GPU_INFO = 0,
   DRM_PANTHOR_DEV_QUERY_CSIF_INFO,
+  DRM_PANTHOR_DEV_QUERY_TIMESTAMP_INFO,
+  DRM_PANTHOR_DEV_QUERY_GROUP_PRIORITIES_INFO,
 };
 struct drm_panthor_gpu_info {
   __u32 gpu_id;
@@ -107,6 +109,15 @@ struct drm_panthor_csif_info {
   __u32 scoreboard_slot_count;
   __u32 unpreserved_cs_reg_count;
   __u32 pad;
+};
+struct drm_panthor_timestamp_info {
+  __u64 timestamp_frequency;
+  __u64 current_timestamp;
+  __u64 timestamp_offset;
+};
+struct drm_panthor_group_priorities_info {
+  __u8 allowed_mask;
+  __u8 pad[3];
 };
 struct drm_panthor_dev_query {
   __u32 type;
@@ -179,6 +190,7 @@ enum drm_panthor_group_priority {
   PANTHOR_GROUP_PRIORITY_LOW = 0,
   PANTHOR_GROUP_PRIORITY_MEDIUM,
   PANTHOR_GROUP_PRIORITY_HIGH,
+  PANTHOR_GROUP_PRIORITY_REALTIME,
 };
 struct drm_panthor_group_create {
   struct drm_panthor_obj_array queues;

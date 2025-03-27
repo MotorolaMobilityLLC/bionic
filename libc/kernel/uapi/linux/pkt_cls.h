@@ -179,12 +179,7 @@ struct tc_u32_key {
   int offmask;
 };
 struct tc_u32_sel {
-  /**
-   ** ANDROID FIX: Comment out TAG value to avoid C++ error about using
-   ** a type declared in an anonymous union. This is being fixed upstream
-   ** and should be corrected by the next kernel import.
-   */
-  __struct_group(/*tc_u32_sel_hdr*/, hdr,, unsigned char flags;
+  __struct_group(tc_u32_sel_hdr, hdr,, unsigned char flags;
   unsigned char offshift;
   unsigned char nkeys;
   __be16 offmask;

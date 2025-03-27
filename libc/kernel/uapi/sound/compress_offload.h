@@ -9,7 +9,7 @@
 #include <linux/types.h>
 #include <sound/asound.h>
 #include <sound/compress_params.h>
-#define SNDRV_COMPRESS_VERSION SNDRV_PROTOCOL_VERSION(0, 2, 0)
+#define SNDRV_COMPRESS_VERSION SNDRV_PROTOCOL_VERSION(0, 3, 0)
 struct snd_compressed_buffer {
   __u32 fragment_size;
   __u32 fragments;
@@ -32,7 +32,8 @@ struct snd_compr_avail {
 } __attribute__((packed, aligned(4)));
 enum snd_compr_direction {
   SND_COMPRESS_PLAYBACK = 0,
-  SND_COMPRESS_CAPTURE
+  SND_COMPRESS_CAPTURE,
+  SND_COMPRESS_ACCEL
 };
 struct snd_compr_caps {
   __u32 num_codecs;
@@ -57,6 +58,29 @@ struct snd_compr_metadata {
   __u32 key;
   __u32 value[8];
 } __attribute__((packed, aligned(4)));
+#define SND_COMPRESS_TFLG_NEW_STREAM (1 << 0)
+struct snd_compr_task {
+  __u64 seqno;
+  __u64 origin_seqno;
+  int input_fd;
+  int output_fd;
+  __u64 input_size;
+  __u32 flags;
+  __u8 reserved[16];
+} __attribute__((packed, aligned(4)));
+enum snd_compr_state {
+  SND_COMPRESS_TASK_STATE_IDLE = 0,
+  SND_COMPRESS_TASK_STATE_ACTIVE,
+  SND_COMPRESS_TASK_STATE_FINISHED
+};
+struct snd_compr_task_status {
+  __u64 seqno;
+  __u64 input_size;
+  __u64 output_size;
+  __u32 output_flags;
+  __u8 state;
+  __u8 reserved[15];
+} __attribute__((packed, aligned(4)));
 #define SNDRV_COMPRESS_IOCTL_VERSION _IOR('C', 0x00, int)
 #define SNDRV_COMPRESS_GET_CAPS _IOWR('C', 0x10, struct snd_compr_caps)
 #define SNDRV_COMPRESS_GET_CODEC_CAPS _IOWR('C', 0x11, struct snd_compr_codec_caps)
@@ -73,6 +97,11 @@ struct snd_compr_metadata {
 #define SNDRV_COMPRESS_DRAIN _IO('C', 0x34)
 #define SNDRV_COMPRESS_NEXT_TRACK _IO('C', 0x35)
 #define SNDRV_COMPRESS_PARTIAL_DRAIN _IO('C', 0x36)
+#define SNDRV_COMPRESS_TASK_CREATE _IOWR('C', 0x60, struct snd_compr_task)
+#define SNDRV_COMPRESS_TASK_FREE _IOW('C', 0x61, __u64)
+#define SNDRV_COMPRESS_TASK_START _IOWR('C', 0x62, struct snd_compr_task)
+#define SNDRV_COMPRESS_TASK_STOP _IOW('C', 0x63, __u64)
+#define SNDRV_COMPRESS_TASK_STATUS _IOWR('C', 0x68, struct snd_compr_task_status)
 #define SND_COMPR_TRIGGER_DRAIN 7
 #define SND_COMPR_TRIGGER_NEXT_TRACK 8
 #define SND_COMPR_TRIGGER_PARTIAL_DRAIN 9

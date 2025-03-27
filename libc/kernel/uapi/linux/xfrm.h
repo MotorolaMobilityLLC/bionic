@@ -261,6 +261,7 @@ enum xfrm_attr_type_t {
   XFRMA_MTIMER_THRESH,
   XFRMA_SA_DIR,
   XFRMA_NAT_KEEPALIVE_INTERVAL,
+  XFRMA_SA_PCPU,
   __XFRMA_MAX
 #define XFRMA_OUTPUT_MARK XFRMA_SET_MARK
 #define XFRMA_MAX (__XFRMA_MAX - 1)
@@ -359,6 +360,7 @@ struct xfrm_userpolicy_info {
   __u8 flags;
 #define XFRM_POLICY_LOCALOK 1
 #define XFRM_POLICY_ICMP 2
+#define XFRM_POLICY_CPU_ACQUIRE 4
   __u8 share;
 };
 struct xfrm_userpolicy_id {

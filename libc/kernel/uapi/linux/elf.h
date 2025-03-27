@@ -361,6 +361,7 @@ typedef struct elf64_shdr {
 #define NT_ARM_ZT 0x40d
 #define NT_ARM_FPMR 0x40e
 #define NT_ARM_POE 0x40f
+#define NT_ARM_GCS 0x410
 #define NT_ARC_V2 0x600
 #define NT_VMCOREDD 0x700
 #define NT_MIPS_DSP 0x800
@@ -368,6 +369,7 @@ typedef struct elf64_shdr {
 #define NT_MIPS_MSA 0x802
 #define NT_RISCV_CSR 0x900
 #define NT_RISCV_VECTOR 0x901
+#define NT_RISCV_TAGGED_ADDR_CTRL 0x902
 #define NT_LOONGARCH_CPUCFG 0xa00
 #define NT_LOONGARCH_CSR 0xa01
 #define NT_LOONGARCH_LSX 0xa02

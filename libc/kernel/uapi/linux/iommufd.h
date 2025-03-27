@@ -26,6 +26,10 @@ enum {
   IOMMUFD_CMD_HWPT_GET_DIRTY_BITMAP = 0x8c,
   IOMMUFD_CMD_HWPT_INVALIDATE = 0x8d,
   IOMMUFD_CMD_FAULT_QUEUE_ALLOC = 0x8e,
+  IOMMUFD_CMD_IOAS_MAP_FILE = 0x8f,
+  IOMMUFD_CMD_VIOMMU_ALLOC = 0x90,
+  IOMMUFD_CMD_VDEVICE_ALLOC = 0x91,
+  IOMMUFD_CMD_IOAS_CHANGE_PROCESS = 0x92,
 };
 struct iommu_destroy {
   __u32 size;
@@ -74,6 +78,16 @@ struct iommu_ioas_map {
   __aligned_u64 iova;
 };
 #define IOMMU_IOAS_MAP _IO(IOMMUFD_TYPE, IOMMUFD_CMD_IOAS_MAP)
+struct iommu_ioas_map_file {
+  __u32 size;
+  __u32 flags;
+  __u32 ioas_id;
+  __s32 fd;
+  __aligned_u64 start;
+  __aligned_u64 length;
+  __aligned_u64 iova;
+};
+#define IOMMU_IOAS_MAP_FILE _IO(IOMMUFD_TYPE, IOMMUFD_CMD_IOAS_MAP_FILE)
 struct iommu_ioas_copy {
   __u32 size;
   __u32 flags;
@@ -124,6 +138,7 @@ enum iommufd_hwpt_alloc_flags {
   IOMMU_HWPT_ALLOC_NEST_PARENT = 1 << 0,
   IOMMU_HWPT_ALLOC_DIRTY_TRACKING = 1 << 1,
   IOMMU_HWPT_FAULT_ID_VALID = 1 << 2,
+  IOMMU_HWPT_ALLOC_PASID = 1 << 3,
 };
 enum iommu_hwpt_vtd_s1_flags {
   IOMMU_VTD_S1_SRE = 1 << 0,
@@ -136,9 +151,13 @@ struct iommu_hwpt_vtd_s1 {
   __u32 addr_width;
   __u32 __reserved;
 };
+struct iommu_hwpt_arm_smmuv3 {
+  __aligned_le64 ste[2];
+};
 enum iommu_hwpt_data_type {
   IOMMU_HWPT_DATA_NONE = 0,
   IOMMU_HWPT_DATA_VTD_S1 = 1,
+  IOMMU_HWPT_DATA_ARM_SMMUV3 = 2,
 };
 struct iommu_hwpt_alloc {
   __u32 size;
@@ -163,9 +182,17 @@ struct iommu_hw_info_vtd {
   __aligned_u64 cap_reg;
   __aligned_u64 ecap_reg;
 };
+struct iommu_hw_info_arm_smmuv3 {
+  __u32 flags;
+  __u32 __reserved;
+  __u32 idr[6];
+  __u32 iidr;
+  __u32 aidr;
+};
 enum iommu_hw_info_type {
   IOMMU_HW_INFO_TYPE_NONE = 0,
   IOMMU_HW_INFO_TYPE_INTEL_VTD = 1,
+  IOMMU_HW_INFO_TYPE_ARM_SMMUV3 = 2,
 };
 enum iommufd_hw_capabilities {
   IOMMU_HW_CAP_DIRTY_TRACKING = 1 << 0,
@@ -207,6 +234,7 @@ struct iommu_hwpt_get_dirty_bitmap {
 #define IOMMU_HWPT_GET_DIRTY_BITMAP _IO(IOMMUFD_TYPE, IOMMUFD_CMD_HWPT_GET_DIRTY_BITMAP)
 enum iommu_hwpt_invalidate_data_type {
   IOMMU_HWPT_INVALIDATE_DATA_VTD_S1 = 0,
+  IOMMU_VIOMMU_INVALIDATE_DATA_ARM_SMMUV3 = 1,
 };
 enum iommu_hwpt_vtd_s1_invalidate_flags {
   IOMMU_VTD_INV_FLAGS_LEAF = 1 << 0,
@@ -216,6 +244,9 @@ struct iommu_hwpt_vtd_s1_invalidate {
   __aligned_u64 npages;
   __u32 flags;
   __u32 __reserved;
+};
+struct iommu_viommu_arm_smmuv3_invalidate {
+  __aligned_le64 cmd[2];
 };
 struct iommu_hwpt_invalidate {
   __u32 size;
@@ -262,4 +293,30 @@ struct iommu_fault_alloc {
   __u32 out_fault_fd;
 };
 #define IOMMU_FAULT_QUEUE_ALLOC _IO(IOMMUFD_TYPE, IOMMUFD_CMD_FAULT_QUEUE_ALLOC)
+enum iommu_viommu_type {
+  IOMMU_VIOMMU_TYPE_DEFAULT = 0,
+  IOMMU_VIOMMU_TYPE_ARM_SMMUV3 = 1,
+};
+struct iommu_viommu_alloc {
+  __u32 size;
+  __u32 flags;
+  __u32 type;
+  __u32 dev_id;
+  __u32 hwpt_id;
+  __u32 out_viommu_id;
+};
+#define IOMMU_VIOMMU_ALLOC _IO(IOMMUFD_TYPE, IOMMUFD_CMD_VIOMMU_ALLOC)
+struct iommu_vdevice_alloc {
+  __u32 size;
+  __u32 viommu_id;
+  __u32 dev_id;
+  __u32 out_vdevice_id;
+  __aligned_u64 virt_id;
+};
+#define IOMMU_VDEVICE_ALLOC _IO(IOMMUFD_TYPE, IOMMUFD_CMD_VDEVICE_ALLOC)
+struct iommu_ioas_change_process {
+  __u32 size;
+  __u32 __reserved;
+};
+#define IOMMU_IOAS_CHANGE_PROCESS _IO(IOMMUFD_TYPE, IOMMUFD_CMD_IOAS_CHANGE_PROCESS)
 #endif

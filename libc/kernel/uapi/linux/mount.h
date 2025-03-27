@@ -109,7 +109,13 @@ struct statmount {
   __u32 mnt_root;
   __u32 mnt_point;
   __u64 mnt_ns_id;
-  __u64 __spare2[49];
+  __u32 fs_subtype;
+  __u32 sb_source;
+  __u32 opt_num;
+  __u32 opt_array;
+  __u32 opt_sec_num;
+  __u32 opt_sec_array;
+  __u64 __spare2[46];
   char str[];
 };
 struct mnt_id_req {
@@ -129,6 +135,10 @@ struct mnt_id_req {
 #define STATMOUNT_FS_TYPE 0x00000020U
 #define STATMOUNT_MNT_NS_ID 0x00000040U
 #define STATMOUNT_MNT_OPTS 0x00000080U
+#define STATMOUNT_FS_SUBTYPE 0x00000100U
+#define STATMOUNT_SB_SOURCE 0x00000200U
+#define STATMOUNT_OPT_ARRAY 0x00000400U
+#define STATMOUNT_OPT_SEC_ARRAY 0x00000800U
 #define LSMT_ROOT 0xffffffffffffffff
 #define LISTMOUNT_REVERSE (1 << 0)
 #endif

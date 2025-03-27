@@ -386,4 +386,39 @@ struct uvc_frame_mjpeg {
 #define UVC_FRAME_MJPEG(n) uvc_frame_mjpeg_ ##n
 #define DECLARE_UVC_FRAME_MJPEG(n) struct UVC_FRAME_MJPEG(n) { __u8 bLength; __u8 bDescriptorType; __u8 bDescriptorSubType; __u8 bFrameIndex; __u8 bmCapabilities; __le16 wWidth; __le16 wHeight; __le32 dwMinBitRate; __le32 dwMaxBitRate; __le32 dwMaxVideoFrameBufferSize; __le32 dwDefaultFrameInterval; __u8 bFrameIntervalType; __le32 dwFrameInterval[n]; \
 } __attribute__((packed))
+struct uvc_format_framebased {
+  __u8 bLength;
+  __u8 bDescriptorType;
+  __u8 bDescriptorSubType;
+  __u8 bFormatIndex;
+  __u8 bNumFrameDescriptors;
+  __u8 guidFormat[16];
+  __u8 bBitsPerPixel;
+  __u8 bDefaultFrameIndex;
+  __u8 bAspectRatioX;
+  __u8 bAspectRatioY;
+  __u8 bmInterfaceFlags;
+  __u8 bCopyProtect;
+  __u8 bVariableSize;
+} __attribute__((__packed__));
+#define UVC_DT_FORMAT_FRAMEBASED_SIZE 28
+struct uvc_frame_framebased {
+  __u8 bLength;
+  __u8 bDescriptorType;
+  __u8 bDescriptorSubType;
+  __u8 bFrameIndex;
+  __u8 bmCapabilities;
+  __u16 wWidth;
+  __u16 wHeight;
+  __u32 dwMinBitRate;
+  __u32 dwMaxBitRate;
+  __u32 dwDefaultFrameInterval;
+  __u8 bFrameIntervalType;
+  __u32 dwBytesPerLine;
+  __u32 dwFrameInterval[];
+} __attribute__((__packed__));
+#define UVC_DT_FRAME_FRAMEBASED_SIZE(n) (26 + 4 * (n))
+#define UVC_FRAME_FRAMEBASED(n) uvc_frame_framebased_ ##n
+#define DECLARE_UVC_FRAME_FRAMEBASED(n) struct UVC_FRAME_FRAMEBASED(n) { __u8 bLength; __u8 bDescriptorType; __u8 bDescriptorSubType; __u8 bFrameIndex; __u8 bmCapabilities; __u16 wWidth; __u16 wHeight; __u32 dwMinBitRate; __u32 dwMaxBitRate; __u32 dwDefaultFrameInterval; __u8 bFrameIntervalType; __u32 dwBytesPerLine; __u32 dwFrameInterval[n]; \
+} __attribute__((packed))
 #endif

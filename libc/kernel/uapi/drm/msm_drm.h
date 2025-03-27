@@ -169,7 +169,8 @@ struct drm_msm_gem_madvise {
   __u32 madv;
   __u32 retained;
 };
-#define MSM_SUBMITQUEUE_FLAGS (0)
+#define MSM_SUBMITQUEUE_ALLOW_PREEMPT 0x00000001
+#define MSM_SUBMITQUEUE_FLAGS (MSM_SUBMITQUEUE_ALLOW_PREEMPT | 0)
 struct drm_msm_submitqueue {
   __u32 flags;
   __u32 prio;

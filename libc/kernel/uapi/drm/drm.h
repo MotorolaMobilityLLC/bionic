@@ -456,6 +456,11 @@ struct drm_crtc_queue_sequence {
   __u64 sequence;
   __u64 user_data;
 };
+#define DRM_CLIENT_NAME_MAX_LEN 64
+struct drm_set_client_name {
+  __u64 name_len;
+  __u64 name;
+};
 #ifdef __cplusplus
 }
 #endif
@@ -576,6 +581,7 @@ extern "C" {
 #define DRM_IOCTL_MODE_GETFB2 DRM_IOWR(0xCE, struct drm_mode_fb_cmd2)
 #define DRM_IOCTL_SYNCOBJ_EVENTFD DRM_IOWR(0xCF, struct drm_syncobj_eventfd)
 #define DRM_IOCTL_MODE_CLOSEFB DRM_IOWR(0xD0, struct drm_mode_closefb)
+#define DRM_IOCTL_SET_CLIENT_NAME DRM_IOWR(0xD1, struct drm_set_client_name)
 #define DRM_COMMAND_BASE 0x40
 #define DRM_COMMAND_END 0xA0
 struct drm_event {
