@@ -15,4 +15,6 @@
 #define MCL_CURRENT 1
 #define MCL_FUTURE 2
 #define MCL_ONFAULT 4
+#define SHADOW_STACK_SET_TOKEN (1ULL << 0)
+#define SHADOW_STACK_SET_MARKER (1ULL << 1)
 #endif

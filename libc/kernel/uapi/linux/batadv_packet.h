@@ -8,6 +8,7 @@
 #define _UAPI_LINUX_BATADV_PACKET_H_
 #include <asm/byteorder.h>
 #include <linux/if_ether.h>
+#include <linux/stddef.h>
 #include <linux/types.h>
 #define batadv_tp_is_error(n) ((__u8) (n) > 127 ? 1 : 0)
 enum batadv_packettype {
@@ -252,15 +253,16 @@ struct batadv_tvlv_gateway_data {
   __be32 bandwidth_down;
   __be32 bandwidth_up;
 };
-struct batadv_tvlv_tt_data {
-  __u8 flags;
-  __u8 ttvn;
-  __be16 num_vlan;
-};
 struct batadv_tvlv_tt_vlan_data {
   __be32 crc;
   __be16 vid;
   __u16 reserved;
+};
+struct batadv_tvlv_tt_data {
+  __u8 flags;
+  __u8 ttvn;
+  __be16 num_vlan;
+  struct batadv_tvlv_tt_vlan_data vlan_data[] __counted_by_be(num_vlan);
 };
 struct batadv_tvlv_tt_change {
   __u8 flags;

@@ -367,7 +367,7 @@ struct kfd_ioctl_smi_events_args {
 #define KFD_EVENT_FMT_PAGEFAULT_START(ns,pid,addr,node,rw) "%lld -%d @%lx(%x) %c\n", (ns), (pid), (addr), (node), (rw)
 #define KFD_EVENT_FMT_PAGEFAULT_END(ns,pid,addr,node,migrate_update) "%lld -%d @%lx(%x) %c\n", (ns), (pid), (addr), (node), (migrate_update)
 #define KFD_EVENT_FMT_MIGRATE_START(ns,pid,start,size,from,to,prefetch_loc,preferred_loc,migrate_trigger) "%lld -%d @%lx(%lx) %x->%x %x:%x %d\n", (ns), (pid), (start), (size), (from), (to), (prefetch_loc), (preferred_loc), (migrate_trigger)
-#define KFD_EVENT_FMT_MIGRATE_END(ns,pid,start,size,from,to,migrate_trigger) "%lld -%d @%lx(%lx) %x->%x %d\n", (ns), (pid), (start), (size), (from), (to), (migrate_trigger)
+#define KFD_EVENT_FMT_MIGRATE_END(ns,pid,start,size,from,to,migrate_trigger,error_code) "%lld -%d @%lx(%lx) %x->%x %d %d\n", (ns), (pid), (start), (size), (from), (to), (migrate_trigger), (error_code)
 #define KFD_EVENT_FMT_QUEUE_EVICTION(ns,pid,node,evict_trigger) "%lld -%d %x %d\n", (ns), (pid), (node), (evict_trigger)
 #define KFD_EVENT_FMT_QUEUE_RESTORE(ns,pid,node,rescheduled) "%lld -%d %x %c\n", (ns), (pid), (node), (rescheduled)
 #define KFD_EVENT_FMT_UNMAP_FROM_GPU(ns,pid,addr,size,node,unmap_trigger) "%lld -%d @%lx(%lx) %x %d\n", (ns), (pid), (addr), (size), (node), (unmap_trigger)

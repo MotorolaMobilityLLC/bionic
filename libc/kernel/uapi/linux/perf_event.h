@@ -265,7 +265,12 @@ struct perf_event_attr {
   __u16 sample_max_stack;
   __u16 __reserved_2;
   __u32 aux_sample_size;
-  __u32 __reserved_3;
+  union {
+    __u32 aux_action;
+    struct {
+      __u32 aux_start_paused : 1, aux_pause : 1, aux_resume : 1, __reserved_3 : 29;
+    };
+  };
   __u64 sig_data;
   __u64 config3;
 };

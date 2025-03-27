@@ -438,6 +438,9 @@
 #if defined(__NR_getxattr)
   #define SYS_getxattr __NR_getxattr
 #endif
+#if defined(__NR_getxattrat)
+  #define SYS_getxattrat __NR_getxattrat
+#endif
 #if defined(__NR_gtty)
   #define SYS_gtty __NR_gtty
 #endif
@@ -554,6 +557,9 @@
 #endif
 #if defined(__NR_listxattr)
   #define SYS_listxattr __NR_listxattr
+#endif
+#if defined(__NR_listxattrat)
+  #define SYS_listxattrat __NR_listxattrat
 #endif
 #if defined(__NR_llistxattr)
   #define SYS_llistxattr __NR_llistxattr
@@ -921,6 +927,9 @@
 #if defined(__NR_removexattr)
   #define SYS_removexattr __NR_removexattr
 #endif
+#if defined(__NR_removexattrat)
+  #define SYS_removexattrat __NR_removexattrat
+#endif
 #if defined(__NR_rename)
   #define SYS_rename __NR_rename
 #endif
@@ -1157,6 +1166,9 @@
 #endif
 #if defined(__NR_setxattr)
   #define SYS_setxattr __NR_setxattr
+#endif
+#if defined(__NR_setxattrat)
+  #define SYS_setxattrat __NR_setxattrat
 #endif
 #if defined(__NR_sgetmask)
   #define SYS_sgetmask __NR_sgetmask

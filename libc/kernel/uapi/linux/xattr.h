@@ -5,12 +5,18 @@
  * for more information.
  */
 #include <linux/libc-compat.h>
+#include <linux/types.h>
 #ifndef _UAPI_LINUX_XATTR_H
 #define _UAPI_LINUX_XATTR_H
 #if __UAPI_DEF_XATTR
 #define __USE_KERNEL_XATTR_DEFS
 #define XATTR_CREATE 0x1
 #define XATTR_REPLACE 0x2
+struct xattr_args {
+  __aligned_u64  value;
+  __u32 size;
+  __u32 flags;
+};
 #endif
 #define XATTR_OS2_PREFIX "os2."
 #define XATTR_OS2_PREFIX_LEN (sizeof(XATTR_OS2_PREFIX) - 1)

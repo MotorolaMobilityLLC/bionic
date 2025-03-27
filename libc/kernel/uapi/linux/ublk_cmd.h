@@ -65,9 +65,11 @@
 #define UBLK_F_CMD_IOCTL_ENCODE (1UL << 6)
 #define UBLK_F_USER_COPY (1UL << 7)
 #define UBLK_F_ZONED (1ULL << 8)
+#define UBLK_F_USER_RECOVERY_FAIL_IO (1ULL << 9)
 #define UBLK_S_DEV_DEAD 0
 #define UBLK_S_DEV_LIVE 1
 #define UBLK_S_DEV_QUIESCED 2
+#define UBLK_S_DEV_FAIL_IO 3
 struct ublksrv_ctrl_cmd {
   __u32 dev_id;
   __u16 queue_id;

@@ -127,5 +127,10 @@ struct user_za_header {
 #define ZA_PT_ZAV_OFFSET(vq,n) (ZA_PT_ZA_OFFSET + ((vq * __SVE_VQ_BYTES) * n))
 #define ZA_PT_ZA_SIZE(vq) ((vq * __SVE_VQ_BYTES) * (vq * __SVE_VQ_BYTES))
 #define ZA_PT_SIZE(vq) (ZA_PT_ZA_OFFSET + ZA_PT_ZA_SIZE(vq))
+struct user_gcs {
+  __u64 features_enabled;
+  __u64 features_locked;
+  __u64 gcspr_el0;
+};
 #endif
 #endif

@@ -412,6 +412,7 @@ struct v4l2_pix_format {
 #define V4L2_PIX_FMT_S5C_UYVY_JPG v4l2_fourcc('S', '5', 'C', 'I')
 #define V4L2_PIX_FMT_Y8I v4l2_fourcc('Y', '8', 'I', ' ')
 #define V4L2_PIX_FMT_Y12I v4l2_fourcc('Y', '1', '2', 'I')
+#define V4L2_PIX_FMT_Y16I v4l2_fourcc('Y', '1', '6', 'I')
 #define V4L2_PIX_FMT_Z16 v4l2_fourcc('Z', '1', '6', ' ')
 #define V4L2_PIX_FMT_MT21C v4l2_fourcc('M', 'T', '2', '1')
 #define V4L2_PIX_FMT_MM21 v4l2_fourcc('M', 'M', '2', '1')
@@ -459,6 +460,8 @@ struct v4l2_pix_format {
 #define V4L2_META_FMT_RK_ISP1_STAT_3A v4l2_fourcc('R', 'K', '1', 'S')
 #define V4L2_META_FMT_RK_ISP1_EXT_PARAMS v4l2_fourcc('R', 'K', '1', 'E')
 #define V4L2_META_FMT_RPI_BE_CFG v4l2_fourcc('R', 'P', 'B', 'C')
+#define V4L2_META_FMT_RPI_FE_CFG v4l2_fourcc('R', 'P', 'F', 'C')
+#define V4L2_META_FMT_RPI_FE_STATS v4l2_fourcc('R', 'P', 'F', 'S')
 #define V4L2_PIX_FMT_PRIV_MAGIC 0xfeedcafe
 #define V4L2_PIX_FMT_FLAG_PREMUL_ALPHA 0x00000001
 #define V4L2_PIX_FMT_FLAG_SET_CSC 0x00000002
@@ -482,6 +485,7 @@ struct v4l2_fmtdesc {
 #define V4L2_FMT_FLAG_CSC_HSV_ENC V4L2_FMT_FLAG_CSC_YCBCR_ENC
 #define V4L2_FMT_FLAG_CSC_QUANTIZATION 0x0100
 #define V4L2_FMT_FLAG_META_LINE_BASED 0x0200
+#define V4L2_FMTDESC_FLAG_ENUM_ALL 0x80000000
 enum v4l2_frmsizetypes {
   V4L2_FRMSIZE_TYPE_DISCRETE = 1,
   V4L2_FRMSIZE_TYPE_CONTINUOUS = 2,
