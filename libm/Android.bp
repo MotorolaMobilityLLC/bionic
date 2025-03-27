@@ -413,7 +413,6 @@ cc_library {
 
     sanitize: {
         address: false,
-        fuzzer: false,
         integer_overflow: false,
     },
     stl: "none",
