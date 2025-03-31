@@ -260,7 +260,6 @@ char* _Nullable getlogin(void);
 int getlogin_r(char* _Nonnull __buffer, size_t __buffer_size) __INTRODUCED_IN(28);
 #endif /* __BIONIC_AVAILABILITY_GUARD(28) */
 
-
 long fpathconf(int __fd, int __name);
 long pathconf(const char* _Nonnull __path, int __name);
 
@@ -427,6 +426,8 @@ int tcsetpgrp(int __fd, pid_t __pid);
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int getdomainname(char* _Nonnull __buf, size_t __buf_size) __INTRODUCED_IN(26);
+#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#if __BIONIC_AVAILABILITY_GUARD(26)
 int setdomainname(const char* _Nonnull __name, size_t __n) __INTRODUCED_IN(26);
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */
 

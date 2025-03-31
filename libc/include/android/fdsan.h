@@ -135,44 +135,52 @@ enum android_fdsan_owner_type {
 /*
  * Create an owner tag with the specified type and least significant 56 bits of tag.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(29)
 uint64_t android_fdsan_create_owner_tag(enum android_fdsan_owner_type type, uint64_t tag) __INTRODUCED_IN(29) __attribute__((__weak__));
+#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
 
 /*
  * Exchange a file descriptor's tag.
  *
  * Logs and aborts if the fd's tag does not match expected_tag.
  */
+#if __BIONIC_AVAILABILITY_GUARD(29)
 void android_fdsan_exchange_owner_tag(int fd, uint64_t expected_tag, uint64_t new_tag) __INTRODUCED_IN(29) __attribute__((__weak__));
+#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
 
 /*
  * Close a file descriptor with a tag, and resets the tag to 0.
  *
  * Logs and aborts if the tag is incorrect.
  */
+#if __BIONIC_AVAILABILITY_GUARD(29)
 int android_fdsan_close_with_tag(int fd, uint64_t tag) __INTRODUCED_IN(29) __attribute__((__weak__));
+#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
 
 /*
  * Get a file descriptor's current owner tag.
  *
  * Returns 0 for untagged and invalid file descriptors.
  */
+#if __BIONIC_AVAILABILITY_GUARD(29)
 uint64_t android_fdsan_get_owner_tag(int fd) __INTRODUCED_IN(29);
+#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
 
 /*
  * Get an owner tag's string representation.
  *
  * The return value points to memory with static lifetime, do not attempt to modify it.
  */
+#if __BIONIC_AVAILABILITY_GUARD(29)
 const char* _Nonnull android_fdsan_get_tag_type(uint64_t tag) __INTRODUCED_IN(29);
+#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
 
 /*
  * Get an owner tag's value, with the type masked off.
  */
+#if __BIONIC_AVAILABILITY_GUARD(29)
 uint64_t android_fdsan_get_tag_value(uint64_t tag) __INTRODUCED_IN(29);
 #endif /* __BIONIC_AVAILABILITY_GUARD(29) */
-
 
 enum android_fdsan_error_level {
   // No errors.

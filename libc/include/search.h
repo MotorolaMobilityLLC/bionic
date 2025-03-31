@@ -85,9 +85,9 @@ void remque(void* _Nonnull __element);
  *
  * Available since API level 28.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int hcreate(size_t __n) __INTRODUCED_IN(28);
+#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
 
 /**
  * [hdestroy(3)](https://man7.org/linux/man-pages/man3/hdestroy.3.html) destroys
@@ -97,7 +97,9 @@ int hcreate(size_t __n) __INTRODUCED_IN(28);
  *
  * Available since API level 28.
  */
+#if __BIONIC_AVAILABILITY_GUARD(28)
 void hdestroy(void) __INTRODUCED_IN(28);
+#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
 
 /**
  * [hsearch(3)](https://man7.org/linux/man-pages/man3/hsearch.3.html) finds or
@@ -110,9 +112,9 @@ void hdestroy(void) __INTRODUCED_IN(28);
  *
  * Available since API level 28.
  */
+#if __BIONIC_AVAILABILITY_GUARD(28)
 ENTRY* _Nullable hsearch(ENTRY __entry, ACTION __action) __INTRODUCED_IN(28);
 #endif /* __BIONIC_AVAILABILITY_GUARD(28) */
-
 
 #if defined(__USE_BSD) || defined(__USE_GNU)
 
@@ -124,9 +126,9 @@ ENTRY* _Nullable hsearch(ENTRY __entry, ACTION __action) __INTRODUCED_IN(28);
  *
  * Available since API level 28.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int hcreate_r(size_t __n, struct hsearch_data* _Nonnull __table) __INTRODUCED_IN(28);
+#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
 
 /**
  * [hdestroy_r(3)](https://man7.org/linux/man-pages/man3/hdestroy_r.3.html) destroys
@@ -134,7 +136,9 @@ int hcreate_r(size_t __n, struct hsearch_data* _Nonnull __table) __INTRODUCED_IN
  *
  * Available since API level 28.
  */
+#if __BIONIC_AVAILABILITY_GUARD(28)
 void hdestroy_r(struct hsearch_data* _Nonnull __table) __INTRODUCED_IN(28);
+#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
 
 /**
  * [hsearch_r(3)](https://man7.org/linux/man-pages/man3/hsearch_r.3.html) finds or
@@ -145,9 +149,9 @@ void hdestroy_r(struct hsearch_data* _Nonnull __table) __INTRODUCED_IN(28);
  *
  * Available since API level 28.
  */
+#if __BIONIC_AVAILABILITY_GUARD(28)
 int hsearch_r(ENTRY __entry, ACTION __action, ENTRY* _Nullable * _Nonnull __result, struct hsearch_data* _Nonnull __table) __INTRODUCED_IN(28);
 #endif /* __BIONIC_AVAILABILITY_GUARD(28) */
-
 
 #endif
 

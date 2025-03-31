@@ -47,9 +47,9 @@ __BEGIN_DECLS
  *
  * Available since API level 33.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(33)
 int backtrace(void* _Nonnull * _Nonnull buffer, int size) __INTRODUCED_IN(33);
+#endif /* __BIONIC_AVAILABILITY_GUARD(33) */
 
 /**
  * [backtrace_symbols(3)](https://man7.org/linux/man-pages/man3/backtrace_symbols.3.html)
@@ -61,7 +61,9 @@ int backtrace(void* _Nonnull * _Nonnull buffer, int size) __INTRODUCED_IN(33);
  *
  * Available since API level 33.
  */
+#if __BIONIC_AVAILABILITY_GUARD(33)
 char* _Nullable * _Nullable backtrace_symbols(void* _Nonnull const* _Nonnull buffer, int size) __INTRODUCED_IN(33);
+#endif /* __BIONIC_AVAILABILITY_GUARD(33) */
 
 /**
  * [backtrace_symbols_fd(3)](https://man7.org/linux/man-pages/man3/backtrace_symbols_fd.3.html)
@@ -71,8 +73,8 @@ char* _Nullable * _Nullable backtrace_symbols(void* _Nonnull const* _Nonnull buf
  *
  * Available since API level 33.
  */
+#if __BIONIC_AVAILABILITY_GUARD(33)
 void backtrace_symbols_fd(void* _Nonnull const* _Nonnull buffer, int size, int fd) __INTRODUCED_IN(33);
 #endif /* __BIONIC_AVAILABILITY_GUARD(33) */
-
 
 __END_DECLS

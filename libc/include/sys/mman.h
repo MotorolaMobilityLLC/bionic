@@ -133,11 +133,9 @@ int mlock(const void* _Nonnull __addr, size_t __size);
  *
  * Returns 0 on success, and returns -1 and sets `errno` on failure.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(30)
 int mlock2(const void* _Nonnull __addr, size_t __size, int __flags) __INTRODUCED_IN(30);
 #endif /* __BIONIC_AVAILABILITY_GUARD(30) */
-
 
 /**
  * [munlock(2)](https://man7.org/linux/man-pages/man2/munlock.2.html)
@@ -175,11 +173,9 @@ int madvise(void* _Nonnull __addr, size_t __size, int __advice);
  *
  * Returns the number of bytes advised on success, and returns -1 and sets `errno` on failure.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(31)
 ssize_t process_madvise(int __pid_fd, const struct iovec* _Nonnull __iov, size_t __count, int __advice, unsigned __flags) __INTRODUCED_IN(31);
 #endif /* __BIONIC_AVAILABILITY_GUARD(31) */
-
 
 #if defined(__USE_GNU)
 
@@ -191,11 +187,9 @@ ssize_t process_madvise(int __pid_fd, const struct iovec* _Nonnull __iov, size_t
  *
  * Returns an fd on success, and returns -1 and sets `errno` on failure.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(30)
 int memfd_create(const char* _Nonnull __name, unsigned __flags) __INTRODUCED_IN(30);
 #endif /* __BIONIC_AVAILABILITY_GUARD(30) */
-
 
 #endif
 
@@ -232,11 +226,9 @@ int memfd_create(const char* _Nonnull __name, unsigned __flags) __INTRODUCED_IN(
  *
  * Returns 0 on success, and returns a positive error number on failure.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int posix_madvise(void* _Nonnull __addr, size_t __size, int __advice) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
-
 
 /**
  * [mseal(2)](https://man7.org/linux/man-pages/man2/mseal.2.html)
@@ -248,10 +240,8 @@ int posix_madvise(void* _Nonnull __addr, size_t __size, int __advice) __INTRODUC
  *
  * Returns 0 on success, and returns -1 and sets `errno` on failure.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(36)
 int mseal(void* _Nonnull __addr, size_t __size, unsigned long __flags) __INTRODUCED_IN(36);
 #endif /* __BIONIC_AVAILABILITY_GUARD(36) */
-
 
 __END_DECLS

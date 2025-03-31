@@ -44,9 +44,9 @@ __BEGIN_DECLS
  *
  * Available since API level 23.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(23)
 extern void (* _Nullable error_print_progname)(void) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 /**
  * [error_message_count(3)](https://man7.org/linux/man-pages/man3/error_message_count.3.html) is
@@ -54,7 +54,9 @@ extern void (* _Nullable error_print_progname)(void) __INTRODUCED_IN(23);
  *
  * Available since API level 23.
  */
+#if __BIONIC_AVAILABILITY_GUARD(23)
 extern unsigned int error_message_count __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 /**
  * [error_one_per_line(3)](https://man7.org/linux/man-pages/man3/error_one_per_line.3.html) is
@@ -63,7 +65,9 @@ extern unsigned int error_message_count __INTRODUCED_IN(23);
  *
  * Available since API level 23.
  */
+#if __BIONIC_AVAILABILITY_GUARD(23)
 extern int error_one_per_line __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 /**
  * [error(3)](https://man7.org/linux/man-pages/man3/error.3.html) formats the given printf()-like
@@ -72,7 +76,9 @@ extern int error_one_per_line __INTRODUCED_IN(23);
  *
  * Available since API level 23.
  */
+#if __BIONIC_AVAILABILITY_GUARD(23)
 void error(int __status, int __errno, const char* _Nonnull __fmt, ...) __printflike(3, 4) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 /**
  * [error_at_line(3)](https://man7.org/linux/man-pages/man3/error_at_line.3.html) formats the given
@@ -82,8 +88,8 @@ void error(int __status, int __errno, const char* _Nonnull __fmt, ...) __printfl
  *
  * Available since API level 23.
  */
+#if __BIONIC_AVAILABILITY_GUARD(23)
 void error_at_line(int __status, int __errno, const char* _Nonnull __filename, unsigned int __line_number, const char* _Nonnull __fmt, ...) __printflike(5, 6) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
-
 
 __END_DECLS

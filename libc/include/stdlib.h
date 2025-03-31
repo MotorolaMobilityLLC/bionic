@@ -63,8 +63,14 @@ char* _Nullable mktemp(char* _Nonnull __template) __attribute__((__deprecated__(
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int mkostemp64(char* _Nonnull __template, int __flags) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#if __BIONIC_AVAILABILITY_GUARD(23)
 int mkostemp(char* _Nonnull __template, int __flags) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#if __BIONIC_AVAILABILITY_GUARD(23)
 int mkostemps64(char* _Nonnull __template, int __suffix_length, int __flags) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#if __BIONIC_AVAILABILITY_GUARD(23)
 int mkostemps(char* _Nonnull __template, int __suffix_length, int __flags) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
@@ -135,11 +141,9 @@ void qsort(void* _Nullable __array, size_t __n, size_t __size, int (* _Nonnull _
  *
  * Available since API level 36.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(36)
 void qsort_r(void* _Nullable __array, size_t __n, size_t __size, int (* _Nonnull __comparator)(const void* _Nullable __lhs, const void* _Nullable __rhs, void* _Nullable __context), void* _Nullable __context) __INTRODUCED_IN(36);
 #endif /* __BIONIC_AVAILABILITY_GUARD(36) */
-
 
 uint32_t arc4random(void);
 uint32_t arc4random_uniform(uint32_t __upper_bound);
@@ -172,11 +176,9 @@ char* _Nullable ptsname(int __fd);
 int ptsname_r(int __fd, char* _Nonnull __buf, size_t __n);
 int unlockpt(int __fd);
 
-
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int getsubopt(char* _Nonnull * _Nonnull __option, char* _Nonnull const* _Nonnull __tokens, char* _Nullable * _Nonnull __value_ptr) __INTRODUCED_IN(26);
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */
-
 
 typedef struct {
   int quot;
@@ -206,7 +208,6 @@ lldiv_t lldiv(long long __numerator, long long __denominator) __attribute_const_
  *
  * Returns the number of samples written to `__averages` (at most 3), and returns -1 on failure.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(29)
 int getloadavg(double __averages[_Nonnull], int __n) __INTRODUCED_IN(29);
 #endif /* __BIONIC_AVAILABILITY_GUARD(29) */
@@ -215,7 +216,6 @@ int getloadavg(double __averages[_Nonnull], int __n) __INTRODUCED_IN(29);
 /* BSD compatibility. */
 const char* _Nullable getprogname(void);
 void setprogname(const char* _Nonnull __name);
-
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int mblen(const char* _Nullable __s, size_t __n) __INTRODUCED_IN(26);

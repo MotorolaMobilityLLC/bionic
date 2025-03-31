@@ -80,10 +80,10 @@ typedef struct crash_detail_t crash_detail_t;
  *
  * \return a handle to the extra crash detail.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(35)
 crash_detail_t* _Nullable android_crash_detail_register(
     const void* _Nonnull name, size_t name_size, const void* _Nullable data, size_t data_size) __INTRODUCED_IN(35);
+    #endif /* __BIONIC_AVAILABILITY_GUARD(35) */
 
 /**
  * Unregister crash detail from being logged into tombstones.
@@ -95,7 +95,9 @@ crash_detail_t* _Nullable android_crash_detail_register(
  *
  * \param crash_detail the crash_detail that should be removed.
  */
+#if __BIONIC_AVAILABILITY_GUARD(35)
 void android_crash_detail_unregister(crash_detail_t* _Nonnull crash_detail) __INTRODUCED_IN(35);
+#endif /* __BIONIC_AVAILABILITY_GUARD(35) */
 
 /**
  * Replace data of crash detail.
@@ -110,7 +112,9 @@ void android_crash_detail_unregister(crash_detail_t* _Nonnull crash_detail) __IN
  *             android_crash_detail_replace_data is called again with non-null data.
  * \param data_size the number of bytes of the buffer pointed to by data.
  */
+#if __BIONIC_AVAILABILITY_GUARD(35)
 void android_crash_detail_replace_data(crash_detail_t* _Nonnull crash_detail, const void* _Nullable data, size_t data_size) __INTRODUCED_IN(35);
+#endif /* __BIONIC_AVAILABILITY_GUARD(35) */
 
 /**
  * Replace name of crash detail.
@@ -124,8 +128,8 @@ void android_crash_detail_replace_data(crash_detail_t* _Nonnull crash_detail, co
  * \param name identifying name for this extra data.
  * \param name_size number of bytes of the buffer pointed to by name
  */
+#if __BIONIC_AVAILABILITY_GUARD(35)
 void android_crash_detail_replace_name(crash_detail_t* _Nonnull crash_detail, const void* _Nonnull name, size_t name_size) __INTRODUCED_IN(35);
 #endif /* __BIONIC_AVAILABILITY_GUARD(35) */
-
 
 __END_DECLS

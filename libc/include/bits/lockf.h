@@ -56,16 +56,16 @@ __BEGIN_DECLS
  *
  * See also flock().
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int lockf(int __fd, int __op, off_t __length) __RENAME_IF_FILE_OFFSET64(lockf64) __INTRODUCED_IN(24);
+#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
 
 /**
  * Like lockf() but allows using a 64-bit length
  * even from a 32-bit process without `_FILE_OFFSET_BITS=64`.
  */
+#if __BIONIC_AVAILABILITY_GUARD(24)
 int lockf64(int __fd, int __op, off64_t __length) __INTRODUCED_IN(24);
 #endif /* __BIONIC_AVAILABILITY_GUARD(24) */
-
 
 __END_DECLS

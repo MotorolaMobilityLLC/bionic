@@ -30,7 +30,6 @@
 #error "Never include this file directly; instead, include <sys/socket.h>"
 #endif
 
-
 #if __BIONIC_AVAILABILITY_GUARD(26)
 ssize_t __sendto_chk(int, const void* _Nonnull, size_t, size_t, int, const struct sockaddr* _Nullable, socklen_t) __INTRODUCED_IN(26);
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */

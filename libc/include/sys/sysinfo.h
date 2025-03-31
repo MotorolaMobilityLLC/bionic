@@ -53,9 +53,9 @@ int sysinfo(struct sysinfo* _Nonnull __info);
  *
  * See also sysconf().
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int get_nprocs_conf(void) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 /**
  * [get_nprocs(3)](https://man7.org/linux/man-pages/man3/get_nprocs.3.html) returns
@@ -65,7 +65,9 @@ int get_nprocs_conf(void) __INTRODUCED_IN(23);
  *
  * See also sysconf().
  */
+#if __BIONIC_AVAILABILITY_GUARD(23)
 int get_nprocs(void) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 /**
  * [get_phys_pages(3)](https://man7.org/linux/man-pages/man3/get_phys_pages.3.html) returns
@@ -75,7 +77,9 @@ int get_nprocs(void) __INTRODUCED_IN(23);
  *
  * See also sysconf().
  */
+#if __BIONIC_AVAILABILITY_GUARD(23)
 long get_phys_pages(void) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 /**
  * [get_avphys_pages(3)](https://man7.org/linux/man-pages/man3/get_avphys_pages.3.html) returns
@@ -85,8 +89,8 @@ long get_phys_pages(void) __INTRODUCED_IN(23);
  *
  * See also sysconf().
  */
+#if __BIONIC_AVAILABILITY_GUARD(23)
 long get_avphys_pages(void) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
-
 
 __END_DECLS

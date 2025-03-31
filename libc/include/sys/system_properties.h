@@ -71,13 +71,11 @@ const prop_info* _Nullable __system_property_find(const char* _Nonnull __name);
  *
  * Available since API level 26.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(26)
 void __system_property_read_callback(const prop_info* _Nonnull __pi,
     void (* _Nonnull __callback)(void* _Nullable __cookie, const char* _Nonnull __name, const char* _Nonnull __value, uint32_t __serial),
     void* _Nullable __cookie) __INTRODUCED_IN(26);
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */
-
 
 /**
  * Passes a `prop_info` for each system property to the provided
@@ -110,7 +108,6 @@ struct timespec;
 bool __system_property_wait(const prop_info* _Nullable __pi, uint32_t __old_serial, uint32_t* _Nonnull __new_serial_ptr, const struct timespec* _Nullable __relative_timeout)
     __INTRODUCED_IN(26);
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */
-
 
 /**
  * Deprecated: there's no limit on the length of a property name since
@@ -241,11 +238,9 @@ int __system_property_update(prop_info* _Nonnull __pi, const char* _Nonnull __va
  *
  * Available since API level 35.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(35)
 int __system_properties_zygote_reload(void) __INTRODUCED_IN(35);
 #endif /* __BIONIC_AVAILABILITY_GUARD(35) */
-
 
 /**
  * Deprecated: previously for testing, but now that SystemProperties is its own

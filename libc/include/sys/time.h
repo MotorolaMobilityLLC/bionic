@@ -50,6 +50,9 @@ int utimes(const char* _Nonnull __path, const struct timeval __times[_Nullable 2
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int futimes(int __fd, const struct timeval __times[_Nullable 2]) __INTRODUCED_IN(26);
+#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+
+#if __BIONIC_AVAILABILITY_GUARD(26)
 int lutimes(const char* _Nonnull __path, const struct timeval __times[_Nullable 2]) __INTRODUCED_IN(26);
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */
 
@@ -69,7 +72,6 @@ int lutimes(const char* _Nonnull __path, const struct timeval __times[_Nullable 
  *
  * Available since API level 26.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int futimesat(int __dir_fd, const char* __BIONIC_COMPLICATED_NULLNESS __path, const struct timeval __times[_Nullable 2]) __INTRODUCED_IN(26);
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */

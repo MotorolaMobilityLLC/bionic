@@ -56,9 +56,11 @@ __BEGIN_DECLS
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex cacos(double complex __z) __INTRODUCED_IN(23);
-float complex cacosf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex cacosf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex cacosl(long double complex __z) __INTRODUCED_IN(26);
@@ -68,9 +70,11 @@ long double complex cacosl(long double complex __z) __INTRODUCED_IN(26);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex casin(double complex __z) __INTRODUCED_IN(23);
-float complex casinf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex casinf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex casinl(long double complex __z) __INTRODUCED_IN(26);
@@ -80,9 +84,11 @@ long double complex casinl(long double complex __z) __INTRODUCED_IN(26);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex catan(double complex __z) __INTRODUCED_IN(23);
-float complex catanf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex catanf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex catanl(long double complex __z) __INTRODUCED_IN(26);
@@ -92,9 +98,11 @@ long double complex catanl(long double complex __z) __INTRODUCED_IN(26);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex ccos(double complex __z) __INTRODUCED_IN(23);
-float complex ccosf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex ccosf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex ccosl(long double complex __z) __INTRODUCED_IN(26);
@@ -104,9 +112,11 @@ long double complex ccosl(long double complex __z) __INTRODUCED_IN(26);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex csin(double complex __z) __INTRODUCED_IN(23);
-float complex csinf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex csinf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex csinl(long double complex __z) __INTRODUCED_IN(26);
@@ -116,9 +126,11 @@ long double complex csinl(long double complex __z) __INTRODUCED_IN(26);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex ctan(double complex __z) __INTRODUCED_IN(23);
-float complex ctanf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex ctanf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex ctanl(long double complex __z) __INTRODUCED_IN(26);
@@ -130,9 +142,11 @@ long double complex ctanl(long double complex __z) __INTRODUCED_IN(26);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex cacosh(double complex __z) __INTRODUCED_IN(23);
-float complex cacoshf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex cacoshf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex cacoshl(long double complex __z) __INTRODUCED_IN(26);
@@ -142,9 +156,11 @@ long double complex cacoshl(long double complex __z) __INTRODUCED_IN(26);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex casinh(double complex __z) __INTRODUCED_IN(23);
-float complex casinhf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex casinhf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex casinhl(long double complex __z) __INTRODUCED_IN(26);
@@ -154,9 +170,11 @@ long double complex casinhl(long double complex __z) __INTRODUCED_IN(26);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex catanh(double complex __z) __INTRODUCED_IN(23);
-float complex catanhf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex catanhf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex catanhl(long double complex __z) __INTRODUCED_IN(26);
@@ -166,9 +184,11 @@ long double complex catanhl(long double complex __z) __INTRODUCED_IN(26);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex ccosh(double complex __z) __INTRODUCED_IN(23);
-float complex ccoshf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex ccoshf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex ccoshl(long double complex __z) __INTRODUCED_IN(26);
@@ -178,9 +198,11 @@ long double complex ccoshl(long double complex __z) __INTRODUCED_IN(26);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex csinh(double complex __z) __INTRODUCED_IN(23);
-float complex csinhf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex csinhf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex csinhl(long double complex __z) __INTRODUCED_IN(26);
@@ -190,9 +212,11 @@ long double complex csinhl(long double complex __z) __INTRODUCED_IN(26);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex ctanh(double complex __z) __INTRODUCED_IN(23);
-float complex ctanhf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex ctanhf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex ctanhl(long double complex __z) __INTRODUCED_IN(26);
@@ -204,25 +228,42 @@ long double complex ctanhl(long double complex __z) __INTRODUCED_IN(26);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex cexp(double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
 float complex cexpf(float complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
-
 #if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex cexpl(long double complex __z) __INTRODUCED_IN(26);
-/* 7.3.7.2 The clog functions */
-double complex clog(double complex __z) __INTRODUCED_IN(26);
-float complex clogf(float complex __z) __INTRODUCED_IN(26);
-long double complex clogl(long double complex __z) __INTRODUCED_IN(26);
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */
 
+/* 7.3.7.2 The clog functions */
+
+#if __BIONIC_AVAILABILITY_GUARD(26)
+double complex clog(double complex __z) __INTRODUCED_IN(26);
+#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+
+#if __BIONIC_AVAILABILITY_GUARD(26)
+float complex clogf(float complex __z) __INTRODUCED_IN(26);
+#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+
+#if __BIONIC_AVAILABILITY_GUARD(26)
+long double complex clogl(long double complex __z) __INTRODUCED_IN(26);
+#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
 
 /* 7.3.8 Power and absolute-value functions */
 /* 7.3.8.1 The cabs functions */
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double cabs(double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
 float cabsf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
 long double cabsl(long double complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
@@ -230,7 +271,13 @@ long double cabsl(long double complex __z) __INTRODUCED_IN(23);
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 double complex cpow(double complex __x, double complex __z) __INTRODUCED_IN(26);
+#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+
+#if __BIONIC_AVAILABILITY_GUARD(26)
 float complex cpowf(float complex __x, float complex __z) __INTRODUCED_IN(26);
+#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+
+#if __BIONIC_AVAILABILITY_GUARD(26)
 long double complex cpowl(long double complex __x, long double complex __z) __INTRODUCED_IN(26);
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */
 
@@ -238,32 +285,87 @@ long double complex cpowl(long double complex __x, long double complex __z) __IN
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 double complex csqrt(double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
 float complex csqrtf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
 long double complex csqrtl(long double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
 
 /* 7.3.9 Manipulation functions */
 /* 7.3.9.1 The carg functions */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
 double carg(double complex __z) __INTRODUCED_IN(23);
-float cargf(float complex __z) __INTRODUCED_IN(23);
-long double cargl(long double complex __z) __INTRODUCED_IN(23);
-/* 7.3.9.2 The cimag functions */
-double cimag(double complex __z) __INTRODUCED_IN(23);
-float cimagf(float complex __z) __INTRODUCED_IN(23);
-long double cimagl(long double complex __z) __INTRODUCED_IN(23);
-/* 7.3.9.3 The conj functions */
-double complex conj(double complex __z) __INTRODUCED_IN(23);
-float complex conjf(float complex __z) __INTRODUCED_IN(23);
-long double complex conjl(long double complex __z) __INTRODUCED_IN(23);
-/* 7.3.9.4 The cproj functions */
-double complex cproj(double complex __z) __INTRODUCED_IN(23);
-float complex cprojf(float complex __z) __INTRODUCED_IN(23);
-long double complex cprojl(long double complex __z) __INTRODUCED_IN(23);
-/* 7.3.9.5 The creal functions */
-double creal(double complex __z) __INTRODUCED_IN(23);
-float crealf(float complex __z) __INTRODUCED_IN(23);
-long double creall(long double complex __z) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float cargf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+long double cargl(long double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+/* 7.3.9.2 The cimag functions */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+double cimag(double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float cimagf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+long double cimagl(long double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+/* 7.3.9.3 The conj functions */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+double complex conj(double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex conjf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+long double complex conjl(long double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+/* 7.3.9.4 The cproj functions */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+double complex cproj(double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float complex cprojf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+long double complex cprojl(long double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+/* 7.3.9.5 The creal functions */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+double creal(double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+float crealf(float complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+
+#if __BIONIC_AVAILABILITY_GUARD(23)
+long double creall(long double complex __z) __INTRODUCED_IN(23);
+#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 __END_DECLS
 

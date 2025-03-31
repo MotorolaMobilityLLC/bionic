@@ -62,9 +62,9 @@ typedef int nl_item;
  *
  * Available since API level 28.
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(26)
 nl_catd _Nonnull catopen(const char* _Nonnull __name, int __flag) __INTRODUCED_IN(26);
+#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
 
 /**
  * [catgets(3)](https://man7.org/linux/man-pages/man3/catgets.3.html) translates the given message
@@ -74,15 +74,17 @@ nl_catd _Nonnull catopen(const char* _Nonnull __name, int __flag) __INTRODUCED_I
  *
  * Available since API level 28.
  */
+#if __BIONIC_AVAILABILITY_GUARD(26)
 char* _Nonnull catgets(nl_catd _Nonnull __catalog, int __set_number, int __msg_number, const char* _Nonnull __msg) __INTRODUCED_IN(26);
+#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
 
 /**
  * [catclose(3)](https://man7.org/linux/man-pages/man3/catclose.3.html) closes a message catalog.
  *
  * On Android, this always returns -1 with `errno` set to `EBADF`.
  */
+#if __BIONIC_AVAILABILITY_GUARD(26)
 int catclose(nl_catd _Nonnull __catalog) __INTRODUCED_IN(26);
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */
-
 
 __END_DECLS

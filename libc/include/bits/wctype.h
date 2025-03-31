@@ -61,9 +61,11 @@ typedef const void* wctrans_t;
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 wint_t towctrans(wint_t __wc, wctrans_t _Nonnull __transform) __INTRODUCED_IN(26);
-wctrans_t _Nullable wctrans(const char* _Nonnull __name) __INTRODUCED_IN(26);
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */
 
+#if __BIONIC_AVAILABILITY_GUARD(26)
+wctrans_t _Nullable wctrans(const char* _Nonnull __name) __INTRODUCED_IN(26);
+#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
 
 __END_DECLS
 
