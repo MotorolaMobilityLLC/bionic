@@ -22,86 +22,142 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_ENDIAN_H_
-#define _SYS_ENDIAN_H_
+#pragma once
+
+/**
+ * @file sys/endian.h
+ * @brief Endianness utilities.
+ */
 
 #include <sys/cdefs.h>
 
 #include <stdint.h>
 
-#define _LITTLE_ENDIAN	1234
-#define _BIG_ENDIAN	4321
-#define _PDP_ENDIAN	3412
-#define _BYTE_ORDER _LITTLE_ENDIAN
-#define __LITTLE_ENDIAN_BITFIELD
-
-#ifndef __LITTLE_ENDIAN
-#define __LITTLE_ENDIAN _LITTLE_ENDIAN
-#endif
-#ifndef __BIG_ENDIAN
-#define __BIG_ENDIAN _BIG_ENDIAN
-#endif
-#define __BYTE_ORDER _BYTE_ORDER
-
 #define __swap16 __builtin_bswap16
 #define __swap32 __builtin_bswap32
 #define __swap64(x) __BIONIC_CAST(static_cast,uint64_t,__builtin_bswap64(x))
 
-/* glibc compatibility. */
 __BEGIN_DECLS
-uint32_t htonl(uint32_t __x) __attribute_const__;
-uint16_t htons(uint16_t __x) __attribute_const__;
-uint32_t ntohl(uint32_t __x) __attribute_const__;
-uint16_t ntohs(uint16_t __x) __attribute_const__;
-__END_DECLS
 
-#define htonl(x) __swap32(x)
-#define htons(x) __swap16(x)
-#define ntohl(x) __swap32(x)
-#define ntohs(x) __swap16(x)
+/* POSIX. */
 
-/* Bionic additions */
-#define htonq(x) __swap64(x)
-#define ntohq(x) __swap64(x)
+/** The value of BYTE_ORDER on little-endian systems. */
+#define LITTLE_ENDIAN 1234
 
-#if defined(__USE_BSD) || defined(__BIONIC__) /* Historically bionic exposed these. */
-#define LITTLE_ENDIAN _LITTLE_ENDIAN
-#define BIG_ENDIAN _BIG_ENDIAN
-#define PDP_ENDIAN _PDP_ENDIAN
-#define BYTE_ORDER _BYTE_ORDER
+/** The value of BYTE_ORDER on big-endian systems. */
+#define BIG_ENDIAN 4321
 
-#define	NTOHL(x) (x) = ntohl(__BIONIC_CAST(static_cast,u_int32_t,(x)))
-#define	NTOHS(x) (x) = ntohs(__BIONIC_CAST(static_cast,u_int16_t,(x)))
-#define	HTONL(x) (x) = htonl(__BIONIC_CAST(static_cast,u_int32_t,(x)))
-#define	HTONS(x) (x) = htons(__BIONIC_CAST(static_cast,u_int16_t,(x)))
+/** Android is always little-endian. */
+#define BYTE_ORDER LITTLE_ENDIAN
 
+/** Swap big-endian 16-bit quantity to host (little-endian) byte order. */
+#define be16toh(x) __swap16(x)
+/** Swap big-endian 32-bit quantity to host (little-endian) byte order. */
+#define be32toh(x) __swap32(x)
+/** Swap big-endian 64-bit quantity to host (little-endian) byte order. */
+#define be64toh(x) __swap64(x)
+
+/** Swap host (little-endian) 16-bit quantity to big-endian. */
 #define htobe16(x) __swap16(x)
+/** Swap host (little-endian) 32-bit quantity to big-endian. */
 #define htobe32(x) __swap32(x)
+/** swap host (little-endian) 64-bit quantity to big-endian. */
 #define htobe64(x) __swap64(x)
-#define betoh16(x) __swap16(x)
-#define betoh32(x) __swap32(x)
-#define betoh64(x) __swap64(x)
 
+/** No-op conversion of host (little-endian) 16-bit quantity to little-endian. */
 #define htole16(x) (x)
+/** No-op conversion of host (little-endian) 32-bit quantity to little-endian. */
 #define htole32(x) (x)
+/** No-op conversion of host (little-endian) 64-bit quantity to little-endian. */
 #define htole64(x) (x)
-#define letoh16(x) (x)
-#define letoh32(x) (x)
-#define letoh64(x) (x)
+
+/** No-op conversion of little-endian 16-bit quantity to host (little-endian) byte order. */
+#define le16toh(x) (x)
+/** No-op conversion of little-endian 32-bit quantity to host (little-endian) byte order. */
+#define le32toh(x) (x)
+/** No-op conversion of little-endian 64-bit quantity to host (little-endian) byte order. */
+#define le64toh(x) (x)
+
+/** Synonym for BIG_ENDIAN. */
+#define _BIG_ENDIAN	BIG_ENDIAN
+/** Synonym for BYTE_ORDER. */
+#define _BYTE_ORDER BYTE_ORDER
+/** Synonym for LITTLE_ENDIAN. */
+#define _LITTLE_ENDIAN LITTLE_ENDIAN
+
+/** Synonym for BIG_ENDIAN. */
+#define __BIG_ENDIAN BIG_ENDIAN
+/** Synonym for BYTE_ORDER. */
+#define __BYTE_ORDER BYTE_ORDER
+/** Synonym for LITTLE_ENDIAN. */
+#define __LITTLE_ENDIAN LITTLE_ENDIAN
+
+/** The byte order of bitfields. Accidental Linux header leakage. */
+#define __LITTLE_ENDIAN_BITFIELD
+
 
 /*
- * glibc-compatible beXXtoh/leXXtoh synonyms for htobeXX/htoleXX.
- * The BSDs export both sets of names, bionic historically only
- * exported the ones above (or on the rhs here), and glibc only
- * exports these names (on the lhs).
+ * POSIX has these in <arpa/inet.h>,
+ * but we have them here for glibc source compatibility.
  */
-#define be16toh(x) htobe16(x)
-#define be32toh(x) htobe32(x)
-#define be64toh(x) htobe64(x)
-#define le16toh(x) htole16(x)
-#define le32toh(x) htole32(x)
-#define le64toh(x) htole64(x)
 
-#endif
+/** Swap host (little-endian) 32-bit quantity to network (big-endian). */
+uint32_t htonl(uint32_t __x) __attribute_const__;
+#define htonl(x) __swap32(x)
 
-#endif
+/** Swap host (little-endian) 16-bit quantity to network (big-endian). */
+uint16_t htons(uint16_t __x) __attribute_const__;
+#define htons(x) __swap16(x)
+
+/** Swap network (big-endian) 32-bit quantity to host (little-endian). */
+uint32_t ntohl(uint32_t __x) __attribute_const__;
+#define ntohl(x) __swap32(x)
+
+/** Swap network (big-endian) 16-bit quantity to host (little-endian). */
+uint16_t ntohs(uint16_t __x) __attribute_const__;
+#define ntohs(x) __swap16(x)
+
+
+/* Bionic additions */
+
+/** Swap host (little-endian) 64-bit quantity to network (big-endian). */
+#define htonq(x) __swap64(x)
+
+/** Swap network (big-endian) 64-bit quantity to host (little-endian). */
+#define ntohq(x) __swap64(x)
+
+
+/* BSD extensions unconditionally exposed by bionic. */
+
+/** The value of BYTE_ORDER on PDP-endian systems. */
+#define PDP_ENDIAN 3412
+/** Synonym for PDP_ENDIAN. */
+#define _PDP_ENDIAN	PDP_ENDIAN
+
+/** In-place byte swap of 32-bit argument. */
+#define	NTOHL(x) (x) = ntohl(__BIONIC_CAST(static_cast,u_int32_t,(x)))
+/** In-place byte swap of 16-bit argument. */
+#define	NTOHS(x) (x) = ntohs(__BIONIC_CAST(static_cast,u_int16_t,(x)))
+/** In-place byte swap of 32-bit argument. */
+#define	HTONL(x) (x) = htonl(__BIONIC_CAST(static_cast,u_int32_t,(x)))
+/** In-place byte swap of 16-bit argument. */
+#define	HTONS(x) (x) = htons(__BIONIC_CAST(static_cast,u_int16_t,(x)))
+
+
+/* glibc extensions. */
+
+/** Swap big-endian 16-bit quantity to host (little-endian). */
+#define betoh16(x) __swap16(x)
+/** Swap big-endian 32-bit quantity to host (little-endian). */
+#define betoh32(x) __swap32(x)
+/** Swap big-endian 64-bit quantity to host (little-endian). */
+#define betoh64(x) __swap64(x)
+
+/** No-op conversion of little-endian 16-bit quantity to host (little-endian). */
+#define letoh16(x) (x)
+/** No-op conversion of little-endian 32-bit quantity to host (little-endian). */
+#define letoh32(x) (x)
+/** No-op conversion of little-endian 64-bit quantity to host (little-endian). */
+#define letoh64(x) (x)
+
+__END_DECLS
