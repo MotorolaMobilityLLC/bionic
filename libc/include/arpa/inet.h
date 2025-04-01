@@ -31,6 +31,7 @@
 
 #include <sys/cdefs.h>
 
+#include <endian.h>
 #include <netinet/in.h>
 #include <stdint.h>
 #include <sys/types.h>
