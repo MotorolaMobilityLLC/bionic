@@ -125,18 +125,12 @@ cc_library {
 // ==============================================================
 // Unit Tests
 // ==============================================================
-cc_test {
-    name: "malloc_debug_unit_tests",
-    test_suites: ["device-tests"],
-    isolated: true,
+cc_defaults {
+    name: "malloc_debug_tests",
 
     srcs: [
-        "tests/backtrace_fake.cpp",
         "tests/log_fake.cpp",
         "tests/libc_fake.cpp",
-        "tests/malloc_debug_config_tests.cpp",
-        "tests/malloc_debug_record_data_tests.cpp",
-        "tests/malloc_debug_unit_tests.cpp",
     ],
 
     local_include_dirs: ["tests"],
@@ -149,14 +143,13 @@ cc_test {
         "bionic_libc_platform_headers",
     ],
 
-    static_libs: [
-        "libc_malloc_debug",
-        "libtinyxml2",
-    ],
-
     shared_libs: [
         "libbase",
         "libunwindstack",
+    ],
+
+    static_libs: [
+        "libc_malloc_debug",
     ],
 
     cflags: [
@@ -164,6 +157,41 @@ cc_test {
         "-Werror",
         "-Wno-error=format-zero-length",
         "-O0",
+    ],
+}
+
+cc_test {
+    name: "malloc_debug_system_record_unit_tests",
+    defaults: ["malloc_debug_tests"],
+    test_suites: ["device-tests"],
+    isolated: true,
+
+    srcs: [
+        "tests/malloc_debug_config_tests.cpp",
+        "tests/malloc_debug_record_data_tests.cpp",
+    ],
+}
+
+cc_test {
+    name: "malloc_debug_unit_tests",
+    defaults: ["malloc_debug_tests"],
+    test_suites: ["device-tests"],
+    isolated: true,
+
+    srcs: [
+        "tests/backtrace_fake.cpp",
+        "tests/malloc_debug_unit_tests.cpp",
+    ],
+
+    static_libs: [
+        "libtinyxml2",
+    ],
+
+    cflags: [
+        // This code uses malloc_usable_size(),
+        // and thus can't be built with _FORTIFY_SOURCE=3.
+        "-U_FORTIFY_SOURCE",
+        "-D_FORTIFY_SOURCE=2",
     ],
 }
 
