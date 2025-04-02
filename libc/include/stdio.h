@@ -326,7 +326,6 @@ __nodiscard int getchar_unlocked(void);
 int putc_unlocked(int __ch, FILE* _Nonnull __fp);
 int putchar_unlocked(int __ch);
 
-
 #if __BIONIC_AVAILABILITY_GUARD(23)
 __nodiscard FILE* _Nullable fmemopen(void* _Nullable __buf, size_t __size, const char* _Nonnull __mode) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
@@ -334,8 +333,6 @@ __nodiscard FILE* _Nullable fmemopen(void* _Nullable __buf, size_t __size, const
 __nodiscard FILE* _Nullable open_memstream(char* _Nonnull * _Nonnull __ptr, size_t* _Nonnull __size_ptr) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
-
-#if defined(__USE_BSD) || defined(__BIONIC__) /* Historically bionic exposed these. */
 int  asprintf(char* _Nullable * _Nonnull __s_ptr, const char* _Nonnull __fmt, ...) __printflike(2, 3);
 char* _Nullable fgetln(FILE* _Nonnull __fp, size_t* _Nonnull __length_ptr);
 int fpurge(FILE* _Nonnull __fp);
@@ -353,14 +350,12 @@ __nodiscard int feof_unlocked(FILE* _Nonnull __fp) __INTRODUCED_IN(23);
 __nodiscard int ferror_unlocked(FILE* _Nonnull __fp) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
-
 #if __BIONIC_AVAILABILITY_GUARD(24)
 __nodiscard int fileno_unlocked(FILE* _Nonnull __fp) __INTRODUCED_IN(24);
 #endif /* __BIONIC_AVAILABILITY_GUARD(24) */
 
 #define fropen(cookie, fn) funopen(cookie, fn, 0, 0, 0)
 #define fwopen(cookie, fn) funopen(cookie, 0, fn, 0, 0)
-#endif
 
 #if defined(__USE_BSD)
 
