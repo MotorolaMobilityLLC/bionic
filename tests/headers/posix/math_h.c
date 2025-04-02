@@ -47,18 +47,44 @@ static void math_h() {
 #endif
 
   MACRO(M_E);
+  // TODO: MACRO(M_EGAMMA);
   MACRO(M_LOG2E);
   MACRO(M_LOG10E);
   MACRO(M_LN2);
   MACRO(M_LN10);
+  // TODO: MACRO(M_PHI);
   MACRO(M_PI);
   MACRO(M_PI_2);
   MACRO(M_PI_4);
   MACRO(M_1_PI);
+  // TODO: MACRO(M_1_SQRTPI);
   MACRO(M_2_PI);
   MACRO(M_2_SQRTPI);
   MACRO(M_SQRT2);
+  // TODO: MACRO(M_SQRT3);
   MACRO(M_SQRT1_2);
+  // TODO: MACRO(M_SQRT1_3);
+
+#if !defined(__GLIBC__) // glibc hasn't updated to POSIX 2024 yet.
+  MACRO(M_El);
+  // TODO: MACRO(M_EGAMMAl);
+  MACRO(M_LOG2El);
+  MACRO(M_LOG10El);
+  MACRO(M_LN2l);
+  MACRO(M_LN10l);
+  // TODO: MACRO(M_PHIl);
+  MACRO(M_PIl);
+  MACRO(M_PI_2l);
+  MACRO(M_PI_4l);
+  MACRO(M_1_PIl);
+  // TODO: MACRO(M_1_SQRTPIl);
+  MACRO(M_2_PIl);
+  MACRO(M_2_SQRTPIl);
+  MACRO(M_SQRT2l);
+  // TODO: MACRO(M_SQRT3l);
+  MACRO(M_SQRT1_2l);
+  // TODO: MACRO(M_SQRT1_3l);
+#endif
 
   MACRO(MAXFLOAT);
 
