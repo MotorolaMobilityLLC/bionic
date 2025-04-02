@@ -119,18 +119,11 @@ typedef __socklen_t socklen_t;
 
 typedef __builtin_va_list __va_list;
 
-#ifndef _SSIZE_T_DEFINED_
-#define _SSIZE_T_DEFINED_
-/* Traditionally, bionic's ssize_t was "long int". This caused GCC to emit warnings when you
- * pass a ssize_t to a printf-style function. The correct type is __kernel_ssize_t, which is
- * "int", which isn't an ABI change for C code (because they're the same size) but is an ABI
- * change for C++ because "int" and "long int" mangle to "i" and "l" respectively. So until
- * we can fix the ABI, this change should not be propagated to the NDK. http://b/8253769.
- *
- * TODO: this ship appears to have long since sailed, so remove this?
+/**
+ * A signed alternative to size_t,
+ * generally for cases that return -1 and set errno on error.
  */
 typedef __kernel_ssize_t ssize_t;
-#endif
 
 /** BSD synonym for unsigned int that's always exposed by historical accident. */
 typedef unsigned int        uint_t;
