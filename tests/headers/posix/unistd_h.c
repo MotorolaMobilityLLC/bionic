@@ -120,6 +120,10 @@ static void unistd_h() {
   MACRO(SEEK_CUR);
   MACRO(SEEK_END);
   MACRO(SEEK_SET);
+#if !defined(__GLIBC__) // Our glibc is too old.
+  MACRO(SEEK_HOLE);
+  MACRO(SEEK_DATA);
+#endif
 
   MACRO(F_LOCK);
   MACRO(F_TEST);
