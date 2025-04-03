@@ -86,12 +86,6 @@ int msync(void* _Nonnull __addr, size_t __size, int __flags);
  */
 int mprotect(void* _Nonnull __addr, size_t __size, int __prot);
 
-/** Flag for mremap(). */
-#define MREMAP_MAYMOVE  1
-
-/** Flag for mremap(). */
-#define MREMAP_FIXED    2
-
 /**
  * [mremap(2)](https://man7.org/linux/man-pages/man2/mremap.2.html)
  * expands or shrinks an existing memory mapping.
