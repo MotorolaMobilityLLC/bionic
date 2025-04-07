@@ -26,15 +26,15 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _PRIVATE_BIONIC_GLOBALS_H
-#define _PRIVATE_BIONIC_GLOBALS_H
+#pragma once
+
+#include <sys/cdefs.h>
 
 #include <inttypes.h>
 #include <link.h>
 #include <platform/bionic/malloc.h>
 #include <pthread.h>
 #include <stdatomic.h>
-#include <sys/cdefs.h>
 
 #include "private/WriteProtected.h"
 #include "private/bionic_allocator.h"
@@ -176,6 +176,4 @@ __LIBC_HIDDEN__ void __libc_init_vdso(libc_globals* globals);
 __LIBC_HIDDEN__ extern void* __libc_sysinfo;
 extern "C" __LIBC_HIDDEN__ void __libc_int0x80();
 __LIBC_HIDDEN__ void __libc_init_sysinfo();
-#endif
-
 #endif

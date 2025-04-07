@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include <string.h>
 #include <sys/system_properties.h>
 

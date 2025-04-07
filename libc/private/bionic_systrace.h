@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include "platform/bionic/macros.h"
 
 // Tracing class for bionic. To begin a trace at a specified point:

@@ -16,9 +16,10 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include <errno.h>
 #include <string.h>
-#include <sys/cdefs.h>
 #include <sys/mman.h>
 #include <sys/user.h>
 

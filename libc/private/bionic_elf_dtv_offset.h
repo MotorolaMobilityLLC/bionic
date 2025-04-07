@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #if defined(__riscv)
 // TLS_DTV_OFFSET is a constant used in relocation fields, defined in RISC-V ELF Specification[1]
 // The front of the TCB contains a pointer to the DTV, and each pointer in DTV

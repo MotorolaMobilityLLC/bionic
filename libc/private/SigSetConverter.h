@@ -28,6 +28,10 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
+#include <signal.h>
+
 // Android's 32-bit ABI shipped with a sigset_t too small to include any
 // of the realtime signals, so we have both sigset_t and sigset64_t. Many
 // new system calls only accept a sigset64_t, so this helps paper over

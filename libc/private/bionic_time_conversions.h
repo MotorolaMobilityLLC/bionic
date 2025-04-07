@@ -28,9 +28,10 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include <errno.h>
 #include <time.h>
-#include <sys/cdefs.h>
 
 #include "private/bionic_constants.h"
 

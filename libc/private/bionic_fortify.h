@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include <poll.h> // For struct pollfd.
 #include <stdarg.h>
 #include <stdlib.h>

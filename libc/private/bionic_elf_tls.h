@@ -28,11 +28,12 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include <link.h>
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdint.h>
-#include <sys/cdefs.h>
 
 #include "bionic_elf_dtv_offset.h"
 

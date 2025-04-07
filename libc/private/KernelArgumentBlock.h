@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include <elf.h>
 #include <link.h>
 #include <stdint.h>
