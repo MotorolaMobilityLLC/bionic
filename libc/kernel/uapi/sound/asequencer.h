@@ -7,7 +7,7 @@
 #ifndef _UAPI__SOUND_ASEQUENCER_H
 #define _UAPI__SOUND_ASEQUENCER_H
 #include <sound/asound.h>
-#define SNDRV_SEQ_VERSION SNDRV_PROTOCOL_VERSION(1, 0, 4)
+#define SNDRV_SEQ_VERSION SNDRV_PROTOCOL_VERSION(1, 0, 5)
 #define SNDRV_SEQ_EVENT_SYSTEM 0
 #define SNDRV_SEQ_EVENT_RESULT 1
 #define SNDRV_SEQ_EVENT_NOTE 5
@@ -48,6 +48,8 @@
 #define SNDRV_SEQ_EVENT_PORT_CHANGE 65
 #define SNDRV_SEQ_EVENT_PORT_SUBSCRIBED 66
 #define SNDRV_SEQ_EVENT_PORT_UNSUBSCRIBED 67
+#define SNDRV_SEQ_EVENT_UMP_EP_CHANGE 68
+#define SNDRV_SEQ_EVENT_UMP_BLOCK_CHANGE 69
 #define SNDRV_SEQ_EVENT_USR0 90
 #define SNDRV_SEQ_EVENT_USR1 91
 #define SNDRV_SEQ_EVENT_USR2 92
@@ -152,6 +154,10 @@ struct snd_seq_ev_quote {
   unsigned short value;
   struct snd_seq_event * event;
 } __attribute__((__packed__));
+struct snd_seq_ev_ump_notify {
+  unsigned char client;
+  unsigned char block;
+};
 union snd_seq_event_data {
   struct snd_seq_ev_note note;
   struct snd_seq_ev_ctrl control;
@@ -164,6 +170,7 @@ union snd_seq_event_data {
   struct snd_seq_connect connect;
   struct snd_seq_result result;
   struct snd_seq_ev_quote quote;
+  struct snd_seq_ev_ump_notify ump_notify;
 };
 struct snd_seq_event {
   snd_seq_event_type_t type;

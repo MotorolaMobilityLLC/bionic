@@ -8,6 +8,11 @@
 #define _NET_TIMESTAMPING_H
 #include <linux/types.h>
 #include <linux/socket.h>
+enum hwtstamp_provider_qualifier {
+  HWTSTAMP_PROVIDER_QUALIFIER_PRECISE,
+  HWTSTAMP_PROVIDER_QUALIFIER_APPROX,
+  HWTSTAMP_PROVIDER_QUALIFIER_CNT,
+};
 enum {
   SOF_TIMESTAMPING_TX_HARDWARE = (1 << 0),
   SOF_TIMESTAMPING_TX_SOFTWARE = (1 << 1),

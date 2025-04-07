@@ -15,6 +15,7 @@
 #define SNDRV_CTL_TLVT_CHMAP_FIXED 0x101
 #define SNDRV_CTL_TLVT_CHMAP_VAR 0x102
 #define SNDRV_CTL_TLVT_CHMAP_PAIRED 0x103
+#define SNDRV_CTL_TLVT_FCP_CHANNEL_LABELS 0x110
 #define SNDRV_CTL_TLVD_ITEM(type,...) (type), SNDRV_CTL_TLVD_LENGTH(__VA_ARGS__), __VA_ARGS__
 #define SNDRV_CTL_TLVD_LENGTH(...) ((unsigned int) sizeof((const unsigned int[]) { __VA_ARGS__ }))
 #define SNDRV_CTL_TLVO_TYPE 0

@@ -455,6 +455,7 @@
 #define KEY_NOTIFICATION_CENTER 0x1bc
 #define KEY_PICKUP_PHONE 0x1bd
 #define KEY_HANGUP_PHONE 0x1be
+#define KEY_LINK_PHONE 0x1bf
 #define KEY_DEL_EOL 0x1c0
 #define KEY_DEL_EOS 0x1c1
 #define KEY_INS_LINE 0x1c2

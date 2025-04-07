@@ -57,6 +57,7 @@ typedef struct mdu_array_info_s {
   int layout;
   int chunk_size;
 } mdu_array_info_t;
+#define LEVEL_LINEAR (- 1)
 #define LEVEL_NONE (- 1000000)
 typedef struct mdu_disk_info_s {
   int number;

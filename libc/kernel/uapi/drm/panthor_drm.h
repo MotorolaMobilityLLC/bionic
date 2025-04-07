@@ -225,6 +225,7 @@ struct drm_panthor_group_submit {
 enum drm_panthor_group_state_flags {
   DRM_PANTHOR_GROUP_STATE_TIMEDOUT = 1 << 0,
   DRM_PANTHOR_GROUP_STATE_FATAL_FAULT = 1 << 1,
+  DRM_PANTHOR_GROUP_STATE_INNOCENT = 1 << 2,
 };
 struct drm_panthor_group_get_state {
   __u32 group_handle;

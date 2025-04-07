@@ -25,6 +25,7 @@
 #define FAN_OPEN_PERM 0x00010000
 #define FAN_ACCESS_PERM 0x00020000
 #define FAN_OPEN_EXEC_PERM 0x00040000
+#define FAN_PRE_ACCESS 0x00100000
 #define FAN_EVENT_ON_CHILD 0x08000000
 #define FAN_RENAME 0x10000000
 #define FAN_ONDIR 0x40000000
@@ -81,6 +82,7 @@ struct fanotify_event_metadata {
 #define FAN_EVENT_INFO_TYPE_DFID 3
 #define FAN_EVENT_INFO_TYPE_PIDFD 4
 #define FAN_EVENT_INFO_TYPE_ERROR 5
+#define FAN_EVENT_INFO_TYPE_RANGE 6
 #define FAN_EVENT_INFO_TYPE_OLD_DFID_NAME 10
 #define FAN_EVENT_INFO_TYPE_NEW_DFID_NAME 12
 struct fanotify_event_info_header {
@@ -102,6 +104,12 @@ struct fanotify_event_info_error {
   __s32 error;
   __u32 error_count;
 };
+struct fanotify_event_info_range {
+  struct fanotify_event_info_header hdr;
+  __u32 pad;
+  __u64 offset;
+  __u64 count;
+};
 #define FAN_RESPONSE_INFO_NONE 0
 #define FAN_RESPONSE_INFO_AUDIT_RULE 1
 struct fanotify_response {
@@ -121,6 +129,10 @@ struct fanotify_response_info_audit_rule {
 };
 #define FAN_ALLOW 0x01
 #define FAN_DENY 0x02
+#define FAN_ERRNO_BITS 8
+#define FAN_ERRNO_SHIFT (32 - FAN_ERRNO_BITS)
+#define FAN_ERRNO_MASK ((1 << FAN_ERRNO_BITS) - 1)
+#define FAN_DENY_ERRNO(err) (FAN_DENY | ((((__u32) (err)) & FAN_ERRNO_MASK) << FAN_ERRNO_SHIFT))
 #define FAN_AUDIT 0x10
 #define FAN_INFO 0x20
 #define FAN_NOFD - 1

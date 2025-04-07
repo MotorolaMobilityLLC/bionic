@@ -274,7 +274,8 @@ struct iommu_hwpt_pgfault {
   __u32 pasid;
   __u32 grpid;
   __u32 perm;
-  __u64 addr;
+  __u32 __reserved;
+  __aligned_u64 addr;
   __u32 length;
   __u32 cookie;
 };

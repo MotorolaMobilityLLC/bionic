@@ -81,9 +81,22 @@ struct io_uring_sqe {
       __u64 addr3;
       __u64 __pad2[1];
     };
+    struct {
+      __u64 attr_ptr;
+      __u64 attr_type_mask;
+    };
     __u64 optval;
     __u8 cmd[0];
   };
+};
+#define IORING_RW_ATTR_FLAG_PI (1U << 0)
+struct io_uring_attr_pi {
+  __u16 flags;
+  __u16 app_tag;
+  __u32 len;
+  __u64 addr;
+  __u64 seed;
+  __u64 rsvd;
 };
 #define IORING_FILE_INDEX_ALLOC (~0U)
 enum io_uring_sqe_flags_bit {
@@ -303,6 +316,7 @@ struct io_uring_params {
 #define IORING_FEAT_REG_REG_RING (1U << 13)
 #define IORING_FEAT_RECVSEND_BUNDLE (1U << 14)
 #define IORING_FEAT_MIN_TIMEOUT (1U << 15)
+#define IORING_FEAT_RW_ATTR (1U << 16)
 enum io_uring_register_op {
   IORING_REGISTER_BUFFERS = 0,
   IORING_UNREGISTER_BUFFERS = 1,

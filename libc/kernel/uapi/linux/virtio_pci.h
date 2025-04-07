@@ -34,6 +34,7 @@
 #define VIRTIO_PCI_CAP_DEVICE_CFG 4
 #define VIRTIO_PCI_CAP_PCI_CFG 5
 #define VIRTIO_PCI_CAP_SHARED_MEMORY_CFG 8
+#define VIRTIO_PCI_CAP_VENDOR_CFG 9
 struct virtio_pci_cap {
   __u8 cap_vndr;
   __u8 cap_next;
@@ -44,6 +45,13 @@ struct virtio_pci_cap {
   __u8 padding[2];
   __le32 offset;
   __le32 length;
+};
+struct virtio_pci_vndr_data {
+  __u8 cap_vndr;
+  __u8 cap_next;
+  __u8 cap_len;
+  __u8 cfg_type;
+  __u16 vendor_id;
 };
 struct virtio_pci_cap64 {
   struct virtio_pci_cap cap;
