@@ -95,11 +95,13 @@ TEST(sys_hwprobe, __riscv_hwprobe_misaligned_vector) {
 #endif
 }
 
-TEST(sys_hwprobe, __riscv_hwprobe) {
+#define key_count(probes) (sizeof(probes)/sizeof(probes[0]))
+
+TEST(sys_hwprobe, __riscv_hwprobe_extensions) {
 #if defined(__riscv) && __has_include(<sys/hwprobe.h>)
-  riscv_hwprobe probes[] = {{.key = RISCV_HWPROBE_KEY_IMA_EXT_0},
-                            {.key = RISCV_HWPROBE_KEY_CPUPERF_0}};
-  ASSERT_EQ(0, __riscv_hwprobe(probes, 2, 0, nullptr, 0));
+  riscv_hwprobe probes[] = {{.key = RISCV_HWPROBE_KEY_IMA_EXT_0}};
+  ASSERT_EQ(0, __riscv_hwprobe(probes, key_count(probes), 0, nullptr, 0));
+
   EXPECT_EQ(RISCV_HWPROBE_KEY_IMA_EXT_0, probes[0].key);
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_IMA_FD) != 0);
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_IMA_C) != 0);
@@ -107,9 +109,43 @@ TEST(sys_hwprobe, __riscv_hwprobe) {
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_EXT_ZBA) != 0);
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_EXT_ZBB) != 0);
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_EXT_ZBS) != 0);
+#else
+  GTEST_SKIP() << "__riscv_hwprobe requires riscv64";
+#endif
+}
 
-  EXPECT_EQ(RISCV_HWPROBE_KEY_CPUPERF_0, probes[1].key);
-  EXPECT_TRUE((probes[1].value & RISCV_HWPROBE_MISALIGNED_MASK) == RISCV_HWPROBE_MISALIGNED_FAST);
+TEST(sys_hwprobe, __riscv_hwprobe_cpu_perf) {
+#if defined(__riscv) && __has_include(<sys/hwprobe.h>)
+  riscv_hwprobe probes[] = {{.key = RISCV_HWPROBE_KEY_CPUPERF_0}};
+  ASSERT_EQ(0, __riscv_hwprobe(probes, key_count(probes), 0, nullptr, 0));
+
+  EXPECT_EQ(RISCV_HWPROBE_KEY_CPUPERF_0, probes[0].key);
+  EXPECT_EQ(RISCV_HWPROBE_MISALIGNED_FAST,
+            static_cast<int>(probes[0].value & RISCV_HWPROBE_MISALIGNED_MASK));
+#else
+  GTEST_SKIP() << "__riscv_hwprobe requires riscv64";
+#endif
+}
+
+TEST(sys_hwprobe, __riscv_hwprobe_scalar_perf) {
+#if defined(__riscv) && __has_include(<sys/hwprobe.h>)
+  riscv_hwprobe probes[] = {{.key = RISCV_HWPROBE_KEY_MISALIGNED_SCALAR_PERF}};
+  ASSERT_EQ(0, __riscv_hwprobe(probes, key_count(probes), 0, nullptr, 0));
+
+  EXPECT_EQ(RISCV_HWPROBE_KEY_MISALIGNED_SCALAR_PERF, probes[0].key);
+  EXPECT_EQ(RISCV_HWPROBE_MISALIGNED_SCALAR_FAST, static_cast<int>(probes[0].value));
+#else
+  GTEST_SKIP() << "__riscv_hwprobe requires riscv64";
+#endif
+}
+
+TEST(sys_hwprobe, __riscv_hwprobe_vector_perf) {
+#if defined(__riscv) && __has_include(<sys/hwprobe.h>)
+  riscv_hwprobe probes[] = {{.key = RISCV_HWPROBE_KEY_MISALIGNED_SCALAR_PERF}};
+  ASSERT_EQ(0, __riscv_hwprobe(probes, key_count(probes), 0, nullptr, 0));
+
+  EXPECT_EQ(RISCV_HWPROBE_KEY_MISALIGNED_VECTOR_PERF, probes[0].key);
+  EXPECT_EQ(RISCV_HWPROBE_MISALIGNED_VECTOR_FAST, static_cast<int>(probes[0].value));
 #else
   GTEST_SKIP() << "__riscv_hwprobe requires riscv64";
 #endif
@@ -117,21 +153,35 @@ TEST(sys_hwprobe, __riscv_hwprobe) {
 
 TEST(sys_hwprobe, __riscv_hwprobe_syscall_vdso) {
 #if defined(__riscv) && __has_include(<sys/hwprobe.h>)
-  riscv_hwprobe probes_vdso[] = {{.key = RISCV_HWPROBE_KEY_IMA_EXT_0},
-                                 {.key = RISCV_HWPROBE_KEY_CPUPERF_0}};
-  ASSERT_EQ(0, __riscv_hwprobe(probes_vdso, 2, 0, nullptr, 0));
+  riscv_hwprobe probes_vdso[] = {
+    {.key = RISCV_HWPROBE_KEY_MVENDORID},
+    {.key = RISCV_HWPROBE_KEY_MARCHID},
+    {.key = RISCV_HWPROBE_KEY_MIMPID},
+    {.key = RISCV_HWPROBE_KEY_BASE_BEHAVIOR},
+    {.key = RISCV_HWPROBE_KEY_IMA_EXT_0},
+    {.key = RISCV_HWPROBE_KEY_CPUPERF_0},
+    {.key = RISCV_HWPROBE_KEY_MISALIGNED_SCALAR_PERF},
+    {.key = RISCV_HWPROBE_KEY_MISALIGNED_VECTOR_PERF},
+  };
+  ASSERT_EQ(0, __riscv_hwprobe(probes_vdso, key_count(probes_vdso), 0, nullptr, 0));
 
-  riscv_hwprobe probes_syscall[] = {{.key = RISCV_HWPROBE_KEY_IMA_EXT_0},
-                                    {.key = RISCV_HWPROBE_KEY_CPUPERF_0}};
-  ASSERT_EQ(0, syscall(SYS_riscv_hwprobe, probes_syscall, 2, 0, nullptr, 0));
+  riscv_hwprobe probes_syscall[] = {
+    {.key = RISCV_HWPROBE_KEY_MVENDORID},
+    {.key = RISCV_HWPROBE_KEY_MARCHID},
+    {.key = RISCV_HWPROBE_KEY_MIMPID},
+    {.key = RISCV_HWPROBE_KEY_BASE_BEHAVIOR},
+    {.key = RISCV_HWPROBE_KEY_IMA_EXT_0},
+    {.key = RISCV_HWPROBE_KEY_CPUPERF_0},
+    {.key = RISCV_HWPROBE_KEY_MISALIGNED_SCALAR_PERF},
+    {.key = RISCV_HWPROBE_KEY_MISALIGNED_VECTOR_PERF},
+  };
+  ASSERT_EQ(0, syscall(SYS_riscv_hwprobe, key_count(probes_syscall), 0, nullptr, 0));
 
   // Check we got the same answers from the vdso and the syscall.
-  EXPECT_EQ(RISCV_HWPROBE_KEY_IMA_EXT_0, probes_syscall[0].key);
-  EXPECT_EQ(probes_vdso[0].key, probes_syscall[0].key);
-  EXPECT_EQ(probes_vdso[0].value, probes_syscall[0].value);
-  EXPECT_EQ(RISCV_HWPROBE_KEY_CPUPERF_0, probes_syscall[1].key);
-  EXPECT_EQ(probes_vdso[1].key, probes_syscall[1].key);
-  EXPECT_EQ(probes_vdso[1].value, probes_syscall[1].value);
+  for (size_t i = 0; i < key_count(probes_vdso); ++i) {
+    EXPECT_EQ(probes_vdso[i].key, probes_syscall[i].key) << i;
+    EXPECT_EQ(probes_vdso[i].value, probes_syscall[i].value) << i;
+  }
 #else
   GTEST_SKIP() << "__riscv_hwprobe requires riscv64";
 #endif
