@@ -98,7 +98,7 @@ TEST(sys_hwprobe, __riscv_hwprobe_misaligned_vector) {
 #define key_count(probes) (sizeof(probes)/sizeof(probes[0]))
 
 TEST(sys_hwprobe, __riscv_hwprobe_extensions) {
-#if defined(__riscv) && __has_include(<sys/hwprobe.h>)
+#if defined(__riscv)
   riscv_hwprobe probes[] = {{.key = RISCV_HWPROBE_KEY_IMA_EXT_0}};
   ASSERT_EQ(0, __riscv_hwprobe(probes, key_count(probes), 0, nullptr, 0));
 
@@ -115,7 +115,7 @@ TEST(sys_hwprobe, __riscv_hwprobe_extensions) {
 }
 
 TEST(sys_hwprobe, __riscv_hwprobe_cpu_perf) {
-#if defined(__riscv) && __has_include(<sys/hwprobe.h>)
+#if defined(__riscv)
   riscv_hwprobe probes[] = {{.key = RISCV_HWPROBE_KEY_CPUPERF_0}};
   ASSERT_EQ(0, __riscv_hwprobe(probes, key_count(probes), 0, nullptr, 0));
 
@@ -128,7 +128,7 @@ TEST(sys_hwprobe, __riscv_hwprobe_cpu_perf) {
 }
 
 TEST(sys_hwprobe, __riscv_hwprobe_scalar_perf) {
-#if defined(__riscv) && __has_include(<sys/hwprobe.h>)
+#if defined(__riscv)
   riscv_hwprobe probes[] = {{.key = RISCV_HWPROBE_KEY_MISALIGNED_SCALAR_PERF}};
   ASSERT_EQ(0, __riscv_hwprobe(probes, key_count(probes), 0, nullptr, 0));
 
@@ -140,7 +140,7 @@ TEST(sys_hwprobe, __riscv_hwprobe_scalar_perf) {
 }
 
 TEST(sys_hwprobe, __riscv_hwprobe_vector_perf) {
-#if defined(__riscv) && __has_include(<sys/hwprobe.h>)
+#if defined(__riscv)
   riscv_hwprobe probes[] = {{.key = RISCV_HWPROBE_KEY_MISALIGNED_SCALAR_PERF}};
   ASSERT_EQ(0, __riscv_hwprobe(probes, key_count(probes), 0, nullptr, 0));
 
@@ -152,7 +152,7 @@ TEST(sys_hwprobe, __riscv_hwprobe_vector_perf) {
 }
 
 TEST(sys_hwprobe, __riscv_hwprobe_syscall_vdso) {
-#if defined(__riscv) && __has_include(<sys/hwprobe.h>)
+#if defined(__riscv)
   riscv_hwprobe probes_vdso[] = {
     {.key = RISCV_HWPROBE_KEY_MVENDORID},
     {.key = RISCV_HWPROBE_KEY_MARCHID},
@@ -188,7 +188,7 @@ TEST(sys_hwprobe, __riscv_hwprobe_syscall_vdso) {
 }
 
 TEST(sys_hwprobe, __riscv_hwprobe_fail) {
-#if defined(__riscv) && __has_include(<sys/hwprobe.h>)
+#if defined(__riscv)
   riscv_hwprobe probes[] = {};
   ASSERT_EQ(EINVAL, __riscv_hwprobe(probes, 0, 0, nullptr, ~0));
 #else
