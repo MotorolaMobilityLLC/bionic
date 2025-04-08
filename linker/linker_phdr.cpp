@@ -984,8 +984,8 @@ bool ElfReader::LoadSegments() {
     return false;
   }
 
-  if (!Setup16KiBAppCompat()) {
-    DL_ERR("\"%s\" failed to setup 16KiB App Compat", name_.c_str());
+  if (std::string error; !Setup16KiBAppCompat(&error)) {
+    DL_ERR_AND_LOG("%s", error.c_str());
     return false;
   }
 
