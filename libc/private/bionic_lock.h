@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include <stdatomic.h>
 #include "private/bionic_futex.h"
 #include "platform/bionic/macros.h"

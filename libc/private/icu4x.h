@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include <ctype.h>
 #include <stdint.h>
 #include <wchar.h>

@@ -28,10 +28,11 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include <locale.h>
 #include <mntent.h>
 #include <stdio.h>
-#include <sys/cdefs.h>
 #include <sys/param.h>
 
 #include <platform/bionic/tls.h>

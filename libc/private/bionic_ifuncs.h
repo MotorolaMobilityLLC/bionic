@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include <stdint.h>
 #include <sys/ifunc.h>
 

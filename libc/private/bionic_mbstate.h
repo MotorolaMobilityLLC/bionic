@@ -26,8 +26,9 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _BIONIC_MBSTATE_H
-#define _BIONIC_MBSTATE_H
+#pragma once
+
+#include <sys/cdefs.h>
 
 #include <errno.h>
 #include <wchar.h>
@@ -73,5 +74,3 @@ static inline __nodiscard size_t mbstate_reset_and_return(size_t _return, mbstat
 }
 
 __END_DECLS
-
-#endif // _BIONIC_MBSTATE_H

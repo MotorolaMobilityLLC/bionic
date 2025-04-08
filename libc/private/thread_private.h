@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include <pthread.h>
 
 __BEGIN_DECLS

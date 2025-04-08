@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-#ifndef CFI_SHADOW_H
-#define CFI_SHADOW_H
+#pragma once
+
+#include <sys/cdefs.h>
 
 #include <stdint.h>
 
@@ -86,5 +87,3 @@ class CFIShadow {
                            // kRegularShadowMin.
   };
 };
-
-#endif  // CFI_SHADOW_H
