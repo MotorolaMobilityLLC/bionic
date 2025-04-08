@@ -64,11 +64,9 @@ int semop(int __sem_id, struct sembuf* _Nonnull __ops, size_t __op_count) __INTR
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */
 
 #if defined(__USE_GNU)
-
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int semtimedop(int __sem_id, struct sembuf* _Nonnull __ops, size_t __op_count, const struct timespec* _Nullable __timeout) __INTRODUCED_IN(26);
 #endif /* __BIONIC_AVAILABILITY_GUARD(26) */
-
 #endif
 
 __END_DECLS
