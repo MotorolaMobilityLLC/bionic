@@ -356,35 +356,111 @@ double yn(int __n, double __x);
 
 #if defined(__USE_BSD) || defined(__USE_GNU)
 double gamma(double __x);
-double scalb(double __x, double __exponent);
-double drem(double __x, double __y);
-int finite(double __x) __attribute_const__;
-int isinff(float __x) __attribute_const__;
-int isnanf(float __x) __attribute_const__;
-double gamma_r(double __x, int* _Nonnull __sign);
-double lgamma_r(double __x, int* _Nonnull __sign);
-double significand(double __x);
+#endif
 
+#if defined(__USE_BSD) || defined(__USE_GNU)
+double scalb(double __x, double __exponent);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
+double drem(double __x, double __y);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
+int finite(double __x) __attribute_const__;
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
+int isinff(float __x) __attribute_const__;
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
+int isnanf(float __x) __attribute_const__;
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
+double gamma_r(double __x, int* _Nonnull __sign);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
+double lgamma_r(double __x, int* _Nonnull __sign);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
+double significand(double __x);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 #if __BIONIC_AVAILABILITY_GUARD(23)
 long double lgammal_r(long double __x, int* _Nonnull __sign) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
+#if defined(__USE_BSD) || defined(__USE_GNU)
 long double significandl(long double __x);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 float dremf(float __x, float __y);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 int finitef(float __x) __attribute_const__;
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 float gammaf(float __x);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 float j0f(float __x);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 float j1f(float __x);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 float jnf(int __n, float __x);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 float scalbf(float __x, float __exponent);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 float y0f(float __x);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 float y1f(float __x);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 float ynf(int __n, float __x);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 float gammaf_r(float __x, int* _Nonnull __sign);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 float lgammaf_r(float __x, int* _Nonnull __sign);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 float significandf(float __x);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 void sincos(double __x, double* _Nonnull __sin, double* _Nonnull __cos);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 void sincosf(float __x, float* _Nonnull __sin, float* _Nonnull __cos);
+#endif
+
+#if defined(__USE_BSD) || defined(__USE_GNU)
 void sincosl(long double __x, long double* _Nonnull __sin, long double* _Nonnull __cos);
 #endif
 
