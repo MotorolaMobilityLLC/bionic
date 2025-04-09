@@ -121,3 +121,12 @@ between -1 and -4096, set errno and return -1" code is inappropriate for
 these functions. Since LP32 is unlikely to be still supported long before
 those limits could ever matter, although -- unlike the others in this
 document -- this defect is actually fixable, it doesn't seem worth fixing.
+
+
+## `f_fsid` in `struct statvfs` is too small
+
+Linux uses 64 bits to represent a filesystem id in `struct statfs`,
+so the conversion to the POSIX `struct statvfs` with its `unsigned long`
+is necessarily lossy on ILP32 where `long` is 32-bit.
+We're not aware that anyone has ever hit this in practice,
+but it's recorded here for completeness.
