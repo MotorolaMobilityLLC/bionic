@@ -60,9 +60,10 @@ struct LinkerDebugConfig {
 
 extern LinkerDebugConfig g_linker_debug_config;
 
-__LIBC_HIDDEN__ void init_LD_DEBUG(const std::string& value);
-__LIBC_HIDDEN__ void __linker_log(int prio, const char* fmt, ...) __printflike(2, 3);
-__LIBC_HIDDEN__ void __linker_error(const char* fmt, ...) __printflike(1, 2);
+void init_LD_DEBUG(const std::string& value);
+
+void __linker_log(int prio, const char* fmt, ...) __printflike(2, 3);
+void __linker_error(const char* fmt, ...) __printflike(1, 2);
 
 #define LD_DEBUG(what, x...) \
   do { \
