@@ -31,40 +31,30 @@
  *	@(#)if_ether.h	8.3 (Berkeley) 5/2/95
  */
 
-#ifndef _NETINET_IF_ETHER_H_
-#define _NETINET_IF_ETHER_H_
+#pragma once
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
-
-#if defined(__USE_BSD)
-
-/* pull in Ethernet-specific definitions and packet structures */
-
 #include <linux/if_ether.h>
-
-/* pull in ARP-specific definitions and packet structures */
-
+#include <net/ethernet.h>
 #include <net/if_arp.h>
 
-#include <net/ethernet.h>
-
-/* ... and define some more which we don't need anymore: */
-
-/*
+/**
  * Ethernet Address Resolution Protocol.
  *
- * See RFC 826 for protocol description.  Structure below is not
- * used by our kernel!!! Only for userland programs which are externally
- * maintained and need it.
+ * See RFC 826 for protocol description.
  */
-
-struct	ether_arp {
-	struct	 arphdr ea_hdr;			/* fixed-size header */
-	u_int8_t arp_sha[ETHER_ADDR_LEN];	/* sender hardware address */
-	u_int8_t arp_spa[4];			/* sender protocol address */
-	u_int8_t arp_tha[ETHER_ADDR_LEN];	/* target hardware address */
-	u_int8_t arp_tpa[4];			/* target protocol address */
+struct ether_arp {
+	/** Fixed-size header. */
+	struct arphdr ea_hdr;
+	/** Sender hardware address. */
+	u_int8_t arp_sha[ETHER_ADDR_LEN];
+	/** Sender protocol address. */
+	u_int8_t arp_spa[4];
+  /** Target hardware address. */
+  u_int8_t arp_tha[ETHER_ADDR_LEN];
+  /** Target protocol address. */
+  u_int8_t arp_tpa[4];
 } __packed;
 #define	arp_hrd	ea_hdr.ar_hrd
 #define	arp_pro	ea_hdr.ar_pro
@@ -72,8 +62,8 @@ struct	ether_arp {
 #define	arp_pln	ea_hdr.ar_pln
 #define	arp_op	ea_hdr.ar_op
 
-/*
- * Macro to map an IP multicast address to an Ethernet multicast address.
+/**
+ * Maps an IP multicast address to an Ethernet multicast address.
  * The high-order 25 bits of the Ethernet address are statically assigned,
  * and the low-order 23 bits are taken from the low end of the IP address.
  */
@@ -88,8 +78,9 @@ struct	ether_arp {
 	(enaddr)[4] = ((u_int8_t *)ipaddr)[2];				\
 	(enaddr)[5] = ((u_int8_t *)ipaddr)[3];				\
 }
-/*
- * Macro to map an IP6 multicast address to an Ethernet multicast address.
+
+/**
+ * Maps an IP6 multicast address to an Ethernet multicast address.
  * The high-order 16 bits of the Ethernet address are statically assigned,
  * and the low-order 32 bits are taken from the low end of the IP6 address.
  */
@@ -104,7 +95,3 @@ struct	ether_arp {
 	(enaddr)[4] = ((u_int8_t *)ip6addr)[14];			\
 	(enaddr)[5] = ((u_int8_t *)ip6addr)[15];			\
 }
-
-#endif /* __USE_BSD */
-
-#endif /* !_NET_IF_ETHER_H_ */
