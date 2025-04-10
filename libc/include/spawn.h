@@ -156,12 +156,34 @@ int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t _Nonnull * _Non
 int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t _Nonnull * _Nonnull __actions, int __fd, int __new_fd) __INTRODUCED_IN(28);
 #endif
 
+/** Synonym for posix_spawn_file_actions_addchdir(). */
 #if __BIONIC_AVAILABILITY_GUARD(34)
 int posix_spawn_file_actions_addchdir_np(posix_spawn_file_actions_t _Nonnull * _Nonnull __actions, const char* _Nonnull __path) __INTRODUCED_IN(34);
 #endif
 
+/**
+ * posix_spawn_file_actions_addchdir() adds a chdir() as an action
+ * to be performed between the fork() and exec().
+ *
+ * Returns 0 on success and returns an error number on failure.
+ */
+#if __BIONIC_AVAILABILITY_GUARD(34)
+int posix_spawn_file_actions_addchdir(posix_spawn_file_actions_t _Nonnull * _Nonnull __actions, const char* _Nonnull __path) __INTRODUCED_IN(34) __RENAME(posix_spawn_file_actions_addchdir_np);
+#endif
+
+/** Synonym for posix_spawn_file_actions_addfchdir(). */
 #if __BIONIC_AVAILABILITY_GUARD(34)
 int posix_spawn_file_actions_addfchdir_np(posix_spawn_file_actions_t _Nonnull * _Nonnull __actions, int __fd) __INTRODUCED_IN(34);
+#endif
+
+/**
+ * posix_spawn_file_actions_addfchdir() adds an fchdir() as an action
+ * to be performed between the fork() and exec().
+ *
+ * Returns 0 on success and returns an error number on failure.
+ */
+#if __BIONIC_AVAILABILITY_GUARD(34)
+int posix_spawn_file_actions_addfchdir(posix_spawn_file_actions_t _Nonnull * _Nonnull __actions, int __fd) __INTRODUCED_IN(34) __RENAME(posix_spawn_file_actions_addfchdir_np);
 #endif
 
 __END_DECLS

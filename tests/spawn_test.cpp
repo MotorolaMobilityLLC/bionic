@@ -249,10 +249,10 @@ TEST(spawn, posix_spawn_file_actions) {
   ASSERT_EQ(0, posix_spawn_file_actions_addopen(&fa, 56, "/proc/version", O_RDONLY, 0));
   // Test addfchdir by opening the same file a second way...
   ASSERT_EQ(0, posix_spawn_file_actions_addopen(&fa, 57, "/proc", O_PATH, 0));
-  ASSERT_EQ(0, posix_spawn_file_actions_addfchdir_np(&fa, 57));
+  ASSERT_EQ(0, posix_spawn_file_actions_addfchdir(&fa, 57));
   ASSERT_EQ(0, posix_spawn_file_actions_addopen(&fa, 58, "version", O_RDONLY, 0));
   // Test addchdir by opening the same file a third way...
-  ASSERT_EQ(0, posix_spawn_file_actions_addchdir_np(&fa, "/"));
+  ASSERT_EQ(0, posix_spawn_file_actions_addchdir(&fa, "/"));
   ASSERT_EQ(0, posix_spawn_file_actions_addopen(&fa, 59, "proc/version", O_RDONLY, 0));
 
   ExecTestHelper eth;
