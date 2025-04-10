@@ -179,10 +179,8 @@ ssize_t process_madvise(int __pid_fd, const struct iovec* _Nonnull __iov, size_t
  *
  * Returns an fd on success, and returns -1 and sets `errno` on failure.
  */
-#if defined(__USE_GNU)
-#if __BIONIC_AVAILABILITY_GUARD(30)
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(30)
 int memfd_create(const char* _Nonnull __name, unsigned __flags) __INTRODUCED_IN(30);
-#endif /* __BIONIC_AVAILABILITY_GUARD(30) */
 #endif
 
 #if __ANDROID_API__ >= 23

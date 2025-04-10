@@ -124,10 +124,8 @@ ENTRY* _Nullable hsearch(ENTRY __entry, ACTION __action) __INTRODUCED_IN(28);
  *
  * Available since API level 28.
  */
-#if defined(__USE_BSD) || defined(__USE_GNU)
-#if __BIONIC_AVAILABILITY_GUARD(28)
+#if (defined(__USE_BSD) || defined(__USE_GNU)) && __BIONIC_AVAILABILITY_GUARD(28)
 int hcreate_r(size_t __n, struct hsearch_data* _Nonnull __table) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
 #endif
 
 /**
@@ -136,10 +134,8 @@ int hcreate_r(size_t __n, struct hsearch_data* _Nonnull __table) __INTRODUCED_IN
  *
  * Available since API level 28.
  */
-#if defined(__USE_BSD) || defined(__USE_GNU)
-#if __BIONIC_AVAILABILITY_GUARD(28)
+#if (defined(__USE_BSD) || defined(__USE_GNU)) && __BIONIC_AVAILABILITY_GUARD(28)
 void hdestroy_r(struct hsearch_data* _Nonnull __table) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
 #endif
 
 /**
@@ -151,10 +147,8 @@ void hdestroy_r(struct hsearch_data* _Nonnull __table) __INTRODUCED_IN(28);
  *
  * Available since API level 28.
  */
-#if defined(__USE_BSD) || defined(__USE_GNU)
-#if __BIONIC_AVAILABILITY_GUARD(28)
+#if (defined(__USE_BSD) || defined(__USE_GNU)) && __BIONIC_AVAILABILITY_GUARD(28)
 int hsearch_r(ENTRY __entry, ACTION __action, ENTRY* _Nullable * _Nonnull __result, struct hsearch_data* _Nonnull __table) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
 #endif
 
 /**

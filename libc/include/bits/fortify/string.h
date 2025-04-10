@@ -82,8 +82,7 @@ void* _Nonnull memset(void* _Nonnull const s __pass_object_size0, int c, size_t 
 #endif
 }
 
-#if defined(__USE_GNU)
-#if __ANDROID_API__ >= 30
+#if defined(__USE_GNU) && __ANDROID_API__ >= 30
 __BIONIC_FORTIFY_INLINE
 void* _Nonnull mempcpy(void* _Nonnull const dst __pass_object_size0, const void* _Nonnull src, size_t copy_amount)
         __diagnose_as_builtin(__builtin_mempcpy, 1, 2, 3)
@@ -98,8 +97,7 @@ void* _Nonnull mempcpy(void* _Nonnull const dst __pass_object_size0, const void*
 #endif
     return __builtin_mempcpy(dst, src, copy_amount);
 }
-#endif /* __ANDROID_API__ >= 30 */
-#endif /* __USE_GNU */
+#endif
 
 __BIONIC_FORTIFY_INLINE
 char* _Nonnull stpcpy(char* _Nonnull const dst __pass_object_size, const char* _Nonnull src)

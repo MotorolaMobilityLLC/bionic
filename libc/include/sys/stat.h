@@ -353,10 +353,8 @@ int futimens(int __fd, const struct timespec __times[_Nullable 2]);
  *
  * Available since API level 30.
  */
-#if defined(__USE_GNU)
-#if __BIONIC_AVAILABILITY_GUARD(30)
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(30)
 int statx(int __dir_fd, const char* _Nullable __path, int __flags, unsigned __mask, struct statx* _Nonnull __buf) __INTRODUCED_IN(30);
-#endif /* __BIONIC_AVAILABILITY_GUARD(30) */
 #endif
 
 __END_DECLS

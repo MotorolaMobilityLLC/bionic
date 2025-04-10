@@ -225,10 +225,8 @@ int scandir64(const char* _Nonnull __path, struct dirent64* _Nonnull * _Nonnull 
  *
  * Available since API level 24.
  */
-#if defined(__USE_GNU)
-#if __BIONIC_AVAILABILITY_GUARD(24)
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(24)
 int scandirat64(int __dir_fd, const char* _Nonnull __path, struct dirent64* _Nonnull * _Nonnull * _Nonnull __name_list, int (* _Nullable __filter)(const struct dirent64* _Nonnull), int (* _Nullable __comparator)(const struct dirent64* _Nonnull * _Nonnull, const struct dirent64* _Nonnull * _Nonnull)) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
 #endif
 
 /**
@@ -244,10 +242,8 @@ int scandirat64(int __dir_fd, const char* _Nonnull __path, struct dirent64* _Non
  *
  * Available since API level 24.
  */
-#if defined(__USE_GNU)
-#if __BIONIC_AVAILABILITY_GUARD(24)
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(24)
 int scandirat(int __dir_fd, const char* _Nonnull __path, struct dirent* _Nonnull * _Nonnull * _Nonnull __name_list, int (* _Nullable __filter)(const struct dirent* _Nonnull), int (* _Nullable __comparator)(const struct dirent* _Nonnull * _Nonnull, const struct dirent* _Nonnull * _Nonnull)) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
 #endif
 
 __END_DECLS

@@ -229,10 +229,8 @@ ssize_t readahead(int __fd, off64_t __offset, size_t __length);
  *
  * Available since API level 26.
  */
-#if defined(__USE_GNU)
-#if __BIONIC_AVAILABILITY_GUARD(26)
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(26)
 int sync_file_range(int __fd, off64_t __offset, off64_t __length, unsigned int __flags) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
 #endif
 
 #if defined(__BIONIC_INCLUDE_FORTIFY_HEADERS)

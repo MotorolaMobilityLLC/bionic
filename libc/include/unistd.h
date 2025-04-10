@@ -331,10 +331,8 @@ void sync(void);
  *
  * Returns 0 on success, and returns -1 and sets `errno` on failure.
  */
-#if defined(__USE_GNU)
-#if __BIONIC_AVAILABILITY_GUARD(28)
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(28)
 int syncfs(int __fd) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
 #endif
 
 int close(int __fd);

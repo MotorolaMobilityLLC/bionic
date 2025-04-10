@@ -129,10 +129,8 @@ wchar_t* _Nullable wmemchr(const wchar_t* _Nonnull __src, wchar_t __wc, size_t _
 int wmemcmp(const wchar_t* _Nullable __lhs, const wchar_t* _Nullable __rhs, size_t __n);
 wchar_t* _Nonnull wmemcpy(wchar_t* _Nonnull __dst, const wchar_t* _Nonnull __src, size_t __n);
 
-#if defined(__USE_GNU)
-#if __BIONIC_AVAILABILITY_GUARD(23)
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(23)
 wchar_t* _Nonnull wmempcpy(wchar_t* _Nonnull __dst, const wchar_t* _Nonnull __src, size_t __n) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 #endif
 
 wchar_t* _Nonnull wmemmove(wchar_t* _Nonnull __dst, const wchar_t* _Nonnull __src, size_t __n);
