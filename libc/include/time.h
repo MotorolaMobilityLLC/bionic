@@ -353,7 +353,7 @@ clock_t clock(void);
  * [clock_getcpuclockid(3)](https://man7.org/linux/man-pages/man3/clock_getcpuclockid.3.html)
  * gets the clock ID of the cpu-time clock for the given `pid`.
  *
- * Returns 0 on success, and returns -1 and returns an error number on failure.
+ * Returns 0 on success, and returns an error number on failure (unlike other clock functions).
  */
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int clock_getcpuclockid(pid_t __pid, clockid_t* _Nonnull __clock) __INTRODUCED_IN(23);
@@ -364,7 +364,7 @@ int clock_getcpuclockid(pid_t __pid, clockid_t* _Nonnull __clock) __INTRODUCED_I
  * [clock_getres(2)](https://man7.org/linux/man-pages/man2/clock_getres.2.html)
  * gets the resolution of the given clock.
  *
- * Returns 0 on success, and returns -1 and returns an error number on failure.
+ * Returns 0 on success, and returns -1 and sets `errno` on failure.
  */
 int clock_getres(clockid_t __clock, struct timespec* _Nullable __resolution);
 
@@ -372,7 +372,7 @@ int clock_getres(clockid_t __clock, struct timespec* _Nullable __resolution);
  * [clock_gettime(2)](https://man7.org/linux/man-pages/man2/clock_gettime.2.html)
  * gets the time according to the given clock.
  *
- * Returns 0 on success, and returns -1 and returns an error number on failure.
+ * Returns 0 on success, and returns -1 and sets `errno` on failure.
  */
 int clock_gettime(clockid_t __clock, struct timespec* _Nonnull __ts);
 
@@ -381,7 +381,7 @@ int clock_gettime(clockid_t __clock, struct timespec* _Nonnull __ts);
  * sleeps for the given time (or until the given time if the TIMER_ABSTIME flag
  * is used), as measured by the given clock.
  *
- * Returns 0 on success, and returns -1 and returns an error number on failure.
+ * Returns 0 on success, and returns an error number on failure (unlike other clock functions).
  * If the sleep was interrupted by a signal, the return value will be `EINTR`
  * and `remainder` will be the amount of time remaining.
  */
@@ -391,7 +391,7 @@ int clock_nanosleep(clockid_t __clock, int __flags, const struct timespec* _Nonn
  * [clock_settime(2)](https://man7.org/linux/man-pages/man2/clock_settime.2.html)
  * sets the time for the given clock.
  *
- * Returns 0 on success, and returns -1 and returns an error number on failure.
+ * Returns 0 on success, and returns -1 and sets `errno` on failure.
  */
 int clock_settime(clockid_t __clock, const struct timespec* _Nonnull __ts);
 
