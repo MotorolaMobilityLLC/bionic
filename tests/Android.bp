@@ -676,7 +676,8 @@ cc_test_library {
     ],
     cflags: [
         "-Werror",
-        "-D_FORTIFY_SOURCE=2",
+        "-U_FORTIFY_SOURCE",
+        "-D_FORTIFY_SOURCE=3",
         "-D__clang_analyzer__",
     ],
     srcs: ["clang_fortify_tests.cpp"],
@@ -706,6 +707,21 @@ cc_test_library {
     cflags: [
         "-D_FORTIFY_SOURCE=2",
         "-DTEST_NAME=Fortify2_clang",
+    ],
+    shared: {
+        enabled: false,
+    },
+}
+
+cc_test_library {
+    name: "libfortify3-tests-clang",
+    defaults: [
+        "bionic_fortify_tests_defaults",
+        "bionic_tests_defaults",
+    ],
+    cflags: [
+        "-D_FORTIFY_SOURCE=3",
+        "-DTEST_NAME=Fortify3_clang",
     ],
     shared: {
         enabled: false,
@@ -756,6 +772,21 @@ cc_test_library {
     },
 }
 
+cc_test_library {
+    name: "libfortify3-new-tests-clang",
+    defaults: [
+        "bionic_new_fortify_tests_defaults",
+        "bionic_tests_defaults",
+    ],
+    cflags: [
+        "-D_FORTIFY_SOURCE=3",
+        "-DTEST_NAME=Fortify3_clang_new",
+    ],
+    shared: {
+        enabled: false,
+    },
+}
+
 cc_defaults {
     name: "bionic_fortify_c_tests_defaults",
     defaults: [
@@ -789,6 +820,12 @@ cc_test_library {
     cflags: ["-D_FORTIFY_SOURCE=2"],
 }
 
+cc_test_library {
+    name: "libfortify3-c-tests-clang",
+    defaults: ["bionic_fortify_c_tests_defaults"],
+    cflags: ["-D_FORTIFY_SOURCE=3"],
+}
+
 // -----------------------------------------------------------------------------
 // Library of all tests (excluding the dynamic linker tests).
 // -----------------------------------------------------------------------------
@@ -806,6 +843,9 @@ cc_test_library {
         "libfortify2-c-tests-clang",
         "libfortify2-tests-clang",
         "libfortify2-new-tests-clang",
+        "libfortify3-c-tests-clang",
+        "libfortify3-tests-clang",
+        "libfortify3-new-tests-clang",
     ],
     shared: {
         enabled: false,
@@ -1375,6 +1415,7 @@ cc_test_host {
         "libBionicElfTlsLoaderTests",
         "libfortify1-tests-clang",
         "libfortify2-tests-clang",
+        "libfortify3-tests-clang",
     ],
 
     static_libs: [
@@ -1411,6 +1452,7 @@ cc_test_host {
                 // Musl doesn't have fortify
                 "libfortify1-tests-clang",
                 "libfortify2-tests-clang",
+                "libfortify3-tests-clang",
             ],
         },
     },
