@@ -124,16 +124,33 @@ struct stat64 { __STAT64_BODY };
 #define st_mtime_nsec st_mtim.tv_nsec
 #define st_ctime_nsec st_ctim.tv_nsec
 
+/** BSD macro corresponding to `a+rwx`, useful as a mask of just the permission bits. */
 #if defined(__USE_BSD)
-/* Permission macros provided by glibc for compatibility with BSDs. */
 #define ACCESSPERMS (S_IRWXU | S_IRWXG | S_IRWXO) /* 0777 */
+#endif
+
+/** BSD macro useful as a mask of the permission bits and setuid/setgid/sticky bits. */
+#if defined(__USE_BSD)
 #define ALLPERMS    (S_ISUID | S_ISGID | S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO) /* 07777 */
+#endif
+
+/** BSD macro corresponding to `a+rw`, useful as a default. */
+#if defined(__USE_BSD)
 #define DEFFILEMODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) /* 0666 */
 #endif
 
+/** BSD/GNU synonym for S_IRUSR. */
 #if defined(__USE_BSD) || defined(__USE_GNU)
 #define S_IREAD S_IRUSR
+#endif
+
+/** BSD/GNU synonym for S_IWUSR. */
+#if defined(__USE_BSD) || defined(__USE_GNU)
 #define S_IWRITE S_IWUSR
+#endif
+
+/** BSD/GNU synonym for S_IXUSR. */
+#if defined(__USE_BSD) || defined(__USE_GNU)
 #define S_IEXEC S_IXUSR
 #endif
 
