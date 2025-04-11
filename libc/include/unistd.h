@@ -330,6 +330,8 @@ void sync(void);
  * to disk, for the file system corresponding to the given file descriptor.
  *
  * Returns 0 on success, and returns -1 and sets `errno` on failure.
+ *
+ * Available since API level 28 when compiling with `_GNU_SOURCE`.
  */
 #if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(28)
 int syncfs(int __fd) __INTRODUCED_IN(28);

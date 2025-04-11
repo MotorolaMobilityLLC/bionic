@@ -206,6 +206,8 @@ int renameat(int __old_dir_fd, const char* _Nonnull __old_path, int __new_dir_fd
  * with optional `RENAME_` flags.
  *
  * Returns 0 on success, and returns -1 and sets `errno` on failure.
+ *
+ * Available since API level 30 when compiling with `_GNU_SOURCE`.
  */
 #if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(30)
 int renameat2(int __old_dir_fd, const char* _Nonnull __old_path, int __new_dir_fd, const char* _Nonnull __new_path, unsigned __flags) __INTRODUCED_IN(30);

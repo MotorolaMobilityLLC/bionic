@@ -213,6 +213,8 @@ int posix_fallocate64(int __fd, off64_t __offset, off64_t __length);
  * initiates readahead for the given file.
  *
  * Returns 0 on success and returns -1 and sets `errno` on failure.
+ *
+ * Available when compiling with `_GNU_SOURCE`.
  */
 #if defined(__USE_GNU)
 ssize_t readahead(int __fd, off64_t __offset, size_t __length);
@@ -227,7 +229,7 @@ ssize_t readahead(int __fd, off64_t __offset, size_t __length);
  *
  * Returns 0 on success and returns -1 and sets `errno` on failure.
  *
- * Available since API level 26.
+ * Available since API level 26 when compiling with `_GNU_SOURCE`.
  */
 #if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(26)
 int sync_file_range(int __fd, off64_t __offset, off64_t __length, unsigned int __flags) __INTRODUCED_IN(26);

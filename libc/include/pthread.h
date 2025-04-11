@@ -361,7 +361,7 @@ pthread_t pthread_self(void) __attribute_const__;
  *
  * Returns 0 on success and returns an error number on failure.
  *
- * Available since API level 26.
+ * Available since API level 26 when compiling with `_GNU_SOURCE`.
  */
 #if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(26)
 int pthread_getname_np(pthread_t __pthread, char* _Nonnull __buf, size_t __n) __INTRODUCED_IN(26);
@@ -387,7 +387,7 @@ int pthread_setname_np(pthread_t __pthread, const char* _Nonnull __name);
  *
  * Returns 0 on success and returns an error number on failure.
  *
- * Available since API level 36.
+ * Available since API level 36 when compiling with `_GNU_SOURCE`.
  * See sched_getaffinity() and pthread_gettid_np() for greater portability.
  */
 #if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(36)
@@ -400,7 +400,7 @@ int pthread_getaffinity_np(pthread_t __pthread, size_t __cpu_set_size, cpu_set_t
  *
  * Returns 0 on success and returns an error number on failure.
  *
- * Available since API level 36.
+ * Available since API level 36 when compiling with `_GNU_SOURCE`.
  * See sched_getaffinity() and pthread_gettid_np() for greater portability.
  */
 #if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(36)
