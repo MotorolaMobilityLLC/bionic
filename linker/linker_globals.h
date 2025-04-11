@@ -105,5 +105,5 @@ class DlErrorRestorer {
   std::string saved_error_msg_;
 };
 
-__LIBC_HIDDEN__ extern bool g_is_ldd;
-__LIBC_HIDDEN__ extern pthread_mutex_t g_dl_mutex;
+extern bool g_is_ldd;
+extern pthread_mutex_t g_dl_mutex;
