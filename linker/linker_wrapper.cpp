@@ -34,7 +34,7 @@
 extern const char __dlwrap_linker_offset;
 
 // The real entry point of the binary to use after linker bootstrapping.
-__LIBC_HIDDEN__ extern "C" void _start();
+extern "C" void _start();
 
 /* Find the load bias and base address of an executable or shared object loaded
  * by the kernel. The ELF file's PHDR table must have a PT_PHDR entry.
