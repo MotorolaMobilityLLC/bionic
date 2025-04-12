@@ -272,7 +272,7 @@ cc_library {
             srcs: [
                 "fenv-arm.c",
             ],
-            armv7_a_neon: {
+            soft_ceil_floor: {
                 // armv7 arm32 has no instructions to implement these as
                 // builtins, so we build the portable implementations for armv7,
                 // because the NDK still supports armv7.
