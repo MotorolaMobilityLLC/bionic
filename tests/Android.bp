@@ -647,6 +647,9 @@ cc_defaults {
 
 cc_defaults {
     name: "bionic_fortify_tests_defaults",
+    defaults: [
+        "bionic_tests_defaults",
+    ],
     cflags: [
         "-U_FORTIFY_SOURCE",
         // Without this, HWASan will not recognize (i.e. will not detect errors involving)
@@ -654,6 +657,9 @@ cc_defaults {
         "-fbuiltin",
     ],
     srcs: ["fortify_test_main.cpp"],
+    shared: {
+        enabled: false,
+    },
     static_libs: [
         "libbase",
     ],
@@ -687,51 +693,40 @@ cc_test_library {
     name: "libfortify1-tests-clang",
     defaults: [
         "bionic_fortify_tests_defaults",
-        "bionic_tests_defaults",
     ],
     cflags: [
         "-D_FORTIFY_SOURCE=1",
         "-DTEST_NAME=Fortify1_clang",
     ],
-    shared: {
-        enabled: false,
-    },
 }
 
 cc_test_library {
     name: "libfortify2-tests-clang",
     defaults: [
         "bionic_fortify_tests_defaults",
-        "bionic_tests_defaults",
     ],
     cflags: [
         "-D_FORTIFY_SOURCE=2",
         "-DTEST_NAME=Fortify2_clang",
     ],
-    shared: {
-        enabled: false,
-    },
 }
 
 cc_test_library {
     name: "libfortify3-tests-clang",
     defaults: [
         "bionic_fortify_tests_defaults",
-        "bionic_tests_defaults",
     ],
     cflags: [
         "-D_FORTIFY_SOURCE=3",
         "-DTEST_NAME=Fortify3_clang",
     ],
-    shared: {
-        enabled: false,
-    },
 }
 
 cc_defaults {
     name: "bionic_new_fortify_tests_defaults",
     defaults: [
         "bionic_clang_fortify_tests_w_flags",
+        "bionic_tests_defaults",
     ],
     cflags: [
         "-U_FORTIFY_SOURCE",
@@ -739,6 +734,9 @@ cc_defaults {
         // calls to mem* functions.
         "-fbuiltin",
     ],
+    shared: {
+        enabled: false,
+    },
     srcs: ["clang_fortify_tests.cpp"],
 }
 
@@ -746,45 +744,33 @@ cc_test_library {
     name: "libfortify1-new-tests-clang",
     defaults: [
         "bionic_new_fortify_tests_defaults",
-        "bionic_tests_defaults",
     ],
     cflags: [
         "-D_FORTIFY_SOURCE=1",
         "-DTEST_NAME=Fortify1_clang_new",
     ],
-    shared: {
-        enabled: false,
-    },
 }
 
 cc_test_library {
     name: "libfortify2-new-tests-clang",
     defaults: [
         "bionic_new_fortify_tests_defaults",
-        "bionic_tests_defaults",
     ],
     cflags: [
         "-D_FORTIFY_SOURCE=2",
         "-DTEST_NAME=Fortify2_clang_new",
     ],
-    shared: {
-        enabled: false,
-    },
 }
 
 cc_test_library {
     name: "libfortify3-new-tests-clang",
     defaults: [
         "bionic_new_fortify_tests_defaults",
-        "bionic_tests_defaults",
     ],
     cflags: [
         "-D_FORTIFY_SOURCE=3",
         "-DTEST_NAME=Fortify3_clang_new",
     ],
-    shared: {
-        enabled: false,
-    },
 }
 
 cc_defaults {
