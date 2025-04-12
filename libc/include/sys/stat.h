@@ -351,7 +351,7 @@ int futimens(int __fd, const struct timespec __times[_Nullable 2]);
  *
  * Returns 0 on success and returns -1 and sets `errno` on failure.
  *
- * Available since API level 30.
+ * Available since API level 30 when compiling with `_GNU_SOURCE`.
  */
 #if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(30)
 int statx(int __dir_fd, const char* _Nullable __path, int __flags, unsigned __mask, struct statx* _Nonnull __buf) __INTRODUCED_IN(30);

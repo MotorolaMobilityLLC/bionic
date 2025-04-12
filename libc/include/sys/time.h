@@ -65,7 +65,7 @@ int lutimes(const char* _Nonnull __path, const struct timeval __times[_Nullable 
  *
  * Returns 0 on success and -1 and sets `errno` on failure.
  *
- * Available since API level 26.
+ * Available since API level 26 when compiling with `_GNU_SOURCE`.
  */
 #if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(26)
 int futimesat(int __dir_fd, const char* __BIONIC_COMPLICATED_NULLNESS __path, const struct timeval __times[_Nullable 2]) __INTRODUCED_IN(26);

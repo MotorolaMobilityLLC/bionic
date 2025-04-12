@@ -168,7 +168,7 @@ int strerror_r(int __errno_value, char* _Nonnull __buf, size_t __n);
  *
  * Returns a pointer to a string, or null for unknown errno values.
  *
- * Available since API level 35.
+ * Available since API level 35 when compiling with `_GNU_SOURCE`.
  */
 #if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(35)
 const char* _Nullable strerrorname_np(int __errno_value) __INTRODUCED_IN(35);
@@ -180,6 +180,8 @@ const char* _Nullable strerrorname_np(int __errno_value) __INTRODUCED_IN(35);
  * does not localize, this is the same as strerror() on Android.
  *
  * Returns a pointer to a string.
+ *
+ * Available when compiling with `_GNU_SOURCE`.
  */
 #if defined(__USE_GNU)
 const char* _Nonnull strerrordesc_np(int __errno_value) __RENAME(strerror);
