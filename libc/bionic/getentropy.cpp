@@ -52,7 +52,7 @@ static int getentropy_urandom(void* buffer, size_t buffer_size, int saved_errno)
 
 int getentropy(void* buffer, size_t buffer_size) {
   if (buffer_size > GETENTROPY_MAX) {
-    errno = EIO;
+    errno = EINVAL;
     return -1;
   }
 
