@@ -203,13 +203,8 @@ typedef int64_t       intmax_t;
 #define SIG_ATOMIC_MAX   INT32_MAX
 #define SIG_ATOMIC_MIN   INT32_MIN
 
-#if defined(__WINT_UNSIGNED__)
-#  define WINT_MAX       UINT32_MAX
-#  define WINT_MIN       0
-#else
-#  define WINT_MAX       INT32_MAX
-#  define WINT_MIN       INT32_MIN
-#endif
+#define WINT_MAX       UINT32_MAX
+#define WINT_MIN       0
 
 #if defined(__LP64__)
 #  define INTPTR_MIN     INT64_MIN

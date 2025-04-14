@@ -18,6 +18,10 @@
 
 #include <stdint.h>
 
+#if !defined(__WINT_UNSIGNED__)
+#error wint_t is unsigned on Android
+#endif
+
 TEST(stdint_types, type_sizes) {
   ASSERT_EQ(1U, sizeof(int_fast8_t));
   ASSERT_EQ(8U, sizeof(int_fast64_t));
