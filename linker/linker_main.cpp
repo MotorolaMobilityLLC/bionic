@@ -62,7 +62,7 @@
 
 #include <vector>
 
-__LIBC_HIDDEN__ extern "C" void _start();
+extern "C" void _start();
 
 static ElfW(Addr) get_elf_exec_load_bias(const ElfW(Ehdr)* elf);
 
