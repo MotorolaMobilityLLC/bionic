@@ -62,14 +62,14 @@ TEST(sys_random, getentropy_EFAULT) {
 #pragma clang diagnostic pop
 }
 
-TEST(sys_random, getentropy_EIO) {
+TEST(sys_random, getentropy_EINVAL) {
 #if defined(HAVE_SYS_RANDOM)
   char buf[BUFSIZ];
   static_assert(BUFSIZ > 256, "BUFSIZ <= 256!");
 
   errno = 0;
   ASSERT_EQ(-1, getentropy(buf, sizeof(buf)));
-  ASSERT_ERRNO(EIO);
+  ASSERT_ERRNO(EINVAL);
 #else
   GTEST_SKIP() << "<sys/random.h> not available";
 #endif
