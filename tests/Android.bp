@@ -432,6 +432,7 @@ cc_test_library {
         "locale_test.cpp",
         "malloc_iterate_test.cpp",
         "malloc_test.cpp",
+        "malloc_test_with_usable_size.cpp",
         "math_test.cpp",
         "membarrier_test.cpp",
         "memtag_globals_test.cpp",
