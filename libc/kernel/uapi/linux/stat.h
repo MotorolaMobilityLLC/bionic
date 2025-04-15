@@ -72,7 +72,7 @@ struct statx {
   __u32 stx_atomic_write_unit_min;
   __u32 stx_atomic_write_unit_max;
   __u32 stx_atomic_write_segments_max;
-  __u32 __spare1[1];
+  __u32 stx_dio_read_offset_align;
   __u64 __spare3[9];
 };
 #define STATX_TYPE 0x00000001U
@@ -93,6 +93,7 @@ struct statx {
 #define STATX_MNT_ID_UNIQUE 0x00004000U
 #define STATX_SUBVOL 0x00008000U
 #define STATX_WRITE_ATOMIC 0x00010000U
+#define STATX_DIO_READ_ALIGN 0x00020000U
 #define STATX__RESERVED 0x80000000U
 #define STATX_ALL 0x00000fffU
 #define STATX_ATTR_COMPRESSED 0x00000004

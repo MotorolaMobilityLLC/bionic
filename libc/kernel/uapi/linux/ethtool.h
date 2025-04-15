@@ -255,6 +255,8 @@ enum ethtool_stringset {
   ETH_SS_STATS_ETH_MAC,
   ETH_SS_STATS_ETH_CTRL,
   ETH_SS_STATS_RMON,
+  ETH_SS_STATS_PHY,
+  ETH_SS_TS_FLAGS,
   ETH_SS_COUNT
 };
 enum ethtool_mac_stats_src {

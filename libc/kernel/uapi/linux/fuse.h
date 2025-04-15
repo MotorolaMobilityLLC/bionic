@@ -8,7 +8,7 @@
 #define _LINUX_FUSE_H
 #include <stdint.h>
 #define FUSE_KERNEL_VERSION 7
-#define FUSE_KERNEL_MINOR_VERSION 41
+#define FUSE_KERNEL_MINOR_VERSION 42
 #define FUSE_ROOT_ID 1
 struct fuse_attr {
   uint64_t ino;
@@ -136,6 +136,7 @@ struct fuse_file_lock {
 #define FUSE_HAS_RESEND (1ULL << 39)
 #define FUSE_DIRECT_IO_RELAX FUSE_DIRECT_IO_ALLOW_MMAP
 #define FUSE_ALLOW_IDMAP (1ULL << 40)
+#define FUSE_OVER_IO_URING (1ULL << 41)
 #define CUSE_UNRESTRICTED_IOCTL (1 << 0)
 #define FUSE_RELEASE_FLUSH (1 << 0)
 #define FUSE_RELEASE_FLOCK_UNLOCK (1 << 1)
@@ -632,5 +633,30 @@ struct fuse_ext_header {
 struct fuse_supp_groups {
   uint32_t nr_groups;
   uint32_t groups[];
+};
+#define FUSE_URING_IN_OUT_HEADER_SZ 128
+#define FUSE_URING_OP_IN_OUT_SZ 128
+struct fuse_uring_ent_in_out {
+  uint64_t flags;
+  uint64_t commit_id;
+  uint32_t payload_sz;
+  uint32_t padding;
+  uint64_t reserved;
+};
+struct fuse_uring_req_header {
+  char in_out[FUSE_URING_IN_OUT_HEADER_SZ];
+  char op_in[FUSE_URING_OP_IN_OUT_SZ];
+  struct fuse_uring_ent_in_out ring_ent_in_out;
+};
+enum fuse_uring_cmd {
+  FUSE_IO_URING_CMD_INVALID = 0,
+  FUSE_IO_URING_CMD_REGISTER = 1,
+  FUSE_IO_URING_CMD_COMMIT_AND_FETCH = 2,
+};
+struct fuse_uring_cmd_req {
+  uint64_t flags;
+  uint64_t commit_id;
+  uint16_t qid;
+  uint8_t padding[6];
 };
 #endif

@@ -17,6 +17,7 @@
 #define UBI_IOCRNVOL _IOW(UBI_IOC_MAGIC, 3, struct ubi_rnvol_req)
 #define UBI_IOCRPEB _IOW(UBI_IOC_MAGIC, 4, __s32)
 #define UBI_IOCSPEB _IOW(UBI_IOC_MAGIC, 5, __s32)
+#define UBI_IOCECNFO _IOWR(UBI_IOC_MAGIC, 6, struct ubi_ecinfo_req)
 #define UBI_CTRL_IOC_MAGIC 'o'
 #define UBI_IOCATT _IOW(UBI_CTRL_IOC_MAGIC, 64, struct ubi_attach_req)
 #define UBI_IOCDET _IOW(UBI_CTRL_IOC_MAGIC, 65, __s32)
@@ -75,6 +76,13 @@ struct ubi_rnvol_req {
     __s8 padding2[2];
     char name[UBI_MAX_VOLUME_NAME + 1];
   } ents[UBI_MAX_RNVOL];
+} __attribute__((__packed__));
+struct ubi_ecinfo_req {
+  __s32 start;
+  __s32 length;
+  __s32 read_length;
+  __s8 padding[16];
+  __s32 erase_counters[];
 } __attribute__((__packed__));
 struct ubi_leb_change_req {
   __s32 lnum;

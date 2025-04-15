@@ -456,6 +456,7 @@ union bpf_attr {
     __u32 core_relo_rec_size;
     __u32 log_true_size;
     __s32 prog_token_fd;
+    __u32 fd_array_cnt;
   };
   struct {
     __aligned_u64 pathname;

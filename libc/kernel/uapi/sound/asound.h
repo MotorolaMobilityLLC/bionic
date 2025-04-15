@@ -559,7 +559,7 @@ enum {
 #define SNDRV_PCM_IOCTL_READN_FRAMES _IOR('A', 0x53, struct snd_xfern)
 #define SNDRV_PCM_IOCTL_LINK _IOW('A', 0x60, int)
 #define SNDRV_PCM_IOCTL_UNLINK _IO('A', 0x61)
-#define SNDRV_RAWMIDI_VERSION SNDRV_PROTOCOL_VERSION(2, 0, 4)
+#define SNDRV_RAWMIDI_VERSION SNDRV_PROTOCOL_VERSION(2, 0, 5)
 enum {
   SNDRV_RAWMIDI_STREAM_OUTPUT = 0,
   SNDRV_RAWMIDI_STREAM_INPUT,
@@ -569,6 +569,8 @@ enum {
 #define SNDRV_RAWMIDI_INFO_INPUT 0x00000002
 #define SNDRV_RAWMIDI_INFO_DUPLEX 0x00000004
 #define SNDRV_RAWMIDI_INFO_UMP 0x00000008
+#define SNDRV_RAWMIDI_INFO_STREAM_INACTIVE 0x00000010
+#define SNDRV_RAWMIDI_DEVICE_UNKNOWN 0
 struct snd_rawmidi_info {
   unsigned int device;
   unsigned int subdevice;
@@ -580,7 +582,8 @@ struct snd_rawmidi_info {
   unsigned char subname[32];
   unsigned int subdevices_count;
   unsigned int subdevices_avail;
-  unsigned char reserved[64];
+  int tied_device;
+  unsigned char reserved[60];
 };
 #define SNDRV_RAWMIDI_MODE_FRAMING_MASK (7 << 0)
 #define SNDRV_RAWMIDI_MODE_FRAMING_SHIFT 0
