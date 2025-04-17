@@ -34,7 +34,6 @@
 __BEGIN_DECLS
 
 void insert_link_map_into_debug_map(link_map* map);
-void remove_link_map_from_debug_map(link_map* map);
 void notify_gdb_of_load(link_map* map);
 void notify_gdb_of_unload(link_map* map);
 void notify_gdb_of_libraries();

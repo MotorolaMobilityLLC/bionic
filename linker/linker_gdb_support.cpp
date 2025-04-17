@@ -60,7 +60,7 @@ void insert_link_map_into_debug_map(link_map* map) {
   r_debug_tail = map;
 }
 
-void remove_link_map_from_debug_map(link_map* map) {
+static void remove_link_map_from_debug_map(link_map* map) {
   if (r_debug_tail == map) {
     r_debug_tail = map->l_prev;
   }
