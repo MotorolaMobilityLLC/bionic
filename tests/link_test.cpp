@@ -37,6 +37,8 @@
 #include <string>
 #include <unordered_map>
 
+extern "C" void* __executable_start;
+
 TEST(link, dl_iterate_phdr_early_exit) {
   static size_t call_count = 0;
   ASSERT_EQ(123, dl_iterate_phdr([](dl_phdr_info*, size_t, void*) { ++call_count; return 123; },
@@ -160,6 +162,24 @@ static r_debug* find_exe_r_debug(ElfW(Dyn)* dynamic) {
     }
   }
   return nullptr;
+}
+
+TEST(link, dl_iterate_phdr_order) {
+  struct Object {
+    std::string name;
+    void* addr;
+  };
+  auto callback = [](dl_phdr_info* info, size_t, void* data) {
+    std::vector<Object>& names = *static_cast<std::vector<Object>*>(data);
+    names.push_back(Object{info->dlpi_name ?: "(null)", reinterpret_cast<void*>(info->dlpi_addr)});
+    return 0;
+  };
+  std::vector<Object> objects;
+  ASSERT_EQ(0, dl_iterate_phdr(callback, &objects));
+
+  // The executable should come first.
+  ASSERT_TRUE(!objects.empty());
+  ASSERT_EQ(&__executable_start, objects[0].addr) << objects[0].name;
 }
 
 // Walk the DT_DEBUG/_r_debug global module list and compare it with the same

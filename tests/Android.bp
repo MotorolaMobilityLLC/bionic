@@ -1383,6 +1383,7 @@ cc_test_host {
         "dlfcn_test.cpp",
         "dl_test.cpp",
         "execinfo_test.cpp",
+        "link_test.cpp",
         "gtest_globals.cpp",
         "gtest_main.cpp",
         "pthread_dlfcn_test.cpp",

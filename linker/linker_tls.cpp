@@ -108,16 +108,16 @@ extern "C" void __linker_reserve_bionic_tls_in_static_tls() {
 }
 
 void linker_setup_exe_static_tls(const char* progname) {
-  soinfo* somain = solist_get_somain();
+  soinfo* executable = solist_get_executable();
   StaticTlsLayout& layout = __libc_shared_globals()->static_tls_layout;
 
   // For ldd, don't add the executable's TLS segment to the static TLS layout.
   // It is likely to trigger the underaligned TLS segment error on arm32/arm64
   // when the ldd argument is actually a shared object.
-  if (somain->get_tls() == nullptr || g_is_ldd) {
+  if (executable->get_tls() == nullptr || g_is_ldd) {
     layout.reserve_exe_segment_and_tcb(nullptr, progname);
   } else {
-    register_tls_module(somain, layout.reserve_exe_segment_and_tcb(&somain->get_tls()->segment, progname));
+    register_tls_module(executable, layout.reserve_exe_segment_and_tcb(&executable->get_tls()->segment, progname));
   }
 
   // The pthread key data is located at the very front of bionic_tls. As a

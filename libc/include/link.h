@@ -101,11 +101,20 @@ struct dl_phdr_info {
 
 /**
  * [dl_iterate_phdr(3)](https://man7.org/linux/man-pages/man3/dl_iterate_phdr.3.html)
- * calls the given callback once for every loaded shared object. The size
- * argument to the callback lets you determine whether you have a smaller
- * `dl_phdr_info` from before API level 30, or the newer full one.
+ * calls the given callback once for every loaded shared object.
+ *
+ * The size argument to the callback lets you determine whether you have a
+ * smaller `dl_phdr_info` from before API level 30, or the newer full one.
  * The data argument to the callback is whatever you pass as the data argument
  * to dl_iterate_phdr().
+ *
+ * Before API level 38, iteration starts with the dynamic linker itself
+ * followed by the main executable.
+ *
+ * From API level 38, iteration starts with the main executable.
+ *
+ * On Android, the `dlpi_name` field for a dynamic executable points to
+ * its canonical path.
  *
  * Returns the value returned by the final call to the callback.
  */
