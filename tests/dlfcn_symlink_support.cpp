@@ -37,13 +37,6 @@ static int dl_callback(struct dl_phdr_info *info, size_t /* size */, void *data)
   // is disregarded intentionally since in bionic dlpi_name should always
   // be realpath to a shared object.
   const std::string suffix = std::string("/") + source_file_name;
-
-  // TODO (dimitry): remove this check once fake libdl.so is gone
-  if (info->dlpi_name == nullptr) {
-    // This is linker imposing as libdl.so - skip it
-    return 0;
-  }
-
   if (android::base::EndsWith(info->dlpi_name, suffix)) {
     std::string* path = reinterpret_cast<std::string*>(data);
     *path = info->dlpi_name;
