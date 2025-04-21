@@ -14,28 +14,45 @@
  * limitations under the License.
  */
 
+#include <stdint.h>
+
 #include <gtest/gtest.h>
 
-#include <stdint.h>
+#include <limits>
 
 #if !defined(__WINT_UNSIGNED__)
 #error wint_t is unsigned on Android
 #endif
 
-TEST(stdint_types, type_sizes) {
-  ASSERT_EQ(1U, sizeof(int_fast8_t));
-  ASSERT_EQ(8U, sizeof(int_fast64_t));
-  ASSERT_EQ(1U, sizeof(uint_fast8_t));
-  ASSERT_EQ(8U, sizeof(uint_fast64_t));
+TEST(stdint, wint_sign) {
+  EXPECT_FALSE(std::numeric_limits<wint_t>::is_signed);
+}
+
+TEST(stdint, fast_type_sizes) {
+  EXPECT_EQ(1U, sizeof(int_fast8_t));
+  EXPECT_EQ(8U, sizeof(int_fast64_t));
+  EXPECT_EQ(1U, sizeof(uint_fast8_t));
+  EXPECT_EQ(8U, sizeof(uint_fast64_t));
 #if defined(__LP64__)
-  ASSERT_EQ(8U, sizeof(int_fast16_t));
-  ASSERT_EQ(8U, sizeof(int_fast32_t));
-  ASSERT_EQ(8U, sizeof(uint_fast16_t));
-  ASSERT_EQ(8U, sizeof(uint_fast32_t));
+  EXPECT_EQ(8U, sizeof(int_fast16_t));
+  EXPECT_EQ(8U, sizeof(int_fast32_t));
+  EXPECT_EQ(8U, sizeof(uint_fast16_t));
+  EXPECT_EQ(8U, sizeof(uint_fast32_t));
 #else
-  ASSERT_EQ(4U, sizeof(int_fast16_t));
-  ASSERT_EQ(4U, sizeof(int_fast32_t));
-  ASSERT_EQ(4U, sizeof(uint_fast16_t));
-  ASSERT_EQ(4U, sizeof(uint_fast32_t));
+  EXPECT_EQ(4U, sizeof(int_fast16_t));
+  EXPECT_EQ(4U, sizeof(int_fast32_t));
+  EXPECT_EQ(4U, sizeof(uint_fast16_t));
+  EXPECT_EQ(4U, sizeof(uint_fast32_t));
 #endif
+}
+
+TEST(stdint, least_type_sizes) {
+  EXPECT_EQ(1U, sizeof(int_least8_t));
+  EXPECT_EQ(1U, sizeof(uint_least8_t));
+  EXPECT_EQ(2U, sizeof(int_least16_t));
+  EXPECT_EQ(2U, sizeof(uint_least16_t));
+  EXPECT_EQ(4U, sizeof(int_least32_t));
+  EXPECT_EQ(4U, sizeof(uint_least32_t));
+  EXPECT_EQ(8U, sizeof(int_least64_t));
+  EXPECT_EQ(8U, sizeof(uint_least64_t));
 }
