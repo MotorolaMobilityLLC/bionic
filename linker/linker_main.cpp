@@ -80,54 +80,68 @@ static void __linker_cannot_link(const char* argv0) {
   __linker_error("CANNOT LINK EXECUTABLE \"%s\": %s", argv0, linker_get_error_buffer());
 }
 
-// These should be preserved static to avoid emitting
+// These all need to be static to avoid emitting
 // RELATIVE relocations for the part of the code running
 // before linker links itself.
 
-// TODO (dimtiry): remove somain, rename solist to solist_head
-static soinfo* solist;
-static soinfo* sonext;
-static soinfo* somain; // main process, always the one after libdl_info
+/** The head of the list of all objects (including the executable and the linker itself), used for iteration. */
+static soinfo* solist_head;
+/** The tail of the list of all objects (including the executable and the linker itself), used for insertion. */
+static soinfo* solist_tail;
+
+/** The main executable. */
+static soinfo* somain;
+/** The linker. */
 static soinfo* solinker;
-static soinfo* vdso; // vdso if present
+/** The vdso (can be null). */
+static soinfo* vdso;
 
 void solist_add_soinfo(soinfo* si) {
-  sonext->next = si;
-  sonext = si;
+  if (solist_tail == nullptr) {
+    solist_head = solist_tail = si;
+  } else {
+    solist_tail->next = si;
+    solist_tail = si;
+  }
 }
 
 bool solist_remove_soinfo(soinfo* si) {
-  soinfo *prev = nullptr, *trav;
-  for (trav = solist; trav != nullptr; trav = trav->next) {
-    if (trav == si) {
+  soinfo *prev = nullptr, *it;
+  for (it = solist_get_head(); it != nullptr; it = it->next) {
+    if (it == si) {
       break;
     }
-    prev = trav;
+    prev = it;
   }
 
-  if (trav == nullptr) {
-    // si was not in solist
+  if (it == nullptr) {
     DL_WARN("name \"%s\"@%p is not in solist!", si->get_realpath(), si);
     return false;
   }
 
-  // prev will never be null, because the first entry in solist is
-  // always the static libdl_info.
+  // prev will never be null, nor the head of the list,
+  // because the main executable and linker are first,
+  // and they can't be removed.
   CHECK(prev != nullptr);
+  CHECK(prev != solist_head);
   prev->next = si->next;
-  if (si == sonext) {
-    sonext = prev;
+  if (solist_tail == si) {
+    solist_tail = prev;
   }
 
   return true;
 }
 
 soinfo* solist_get_head() {
-  return solist;
+  return solist_head;
 }
 
-soinfo* solist_get_somain() {
+soinfo* solist_get_executable() {
   return somain;
+}
+
+soinfo* solist_get_linker() {
+  return solinker;
 }
 
 soinfo* solist_get_vdso() {
@@ -329,6 +343,7 @@ static ElfW(Addr) linker_main(KernelArgumentBlock& args, const char* exe_to_load
   LD_DEBUG(any, "[ Linking executable \"%s\" ]", exe_info.path.c_str());
 
   // Initialize the main exe's soinfo.
+  // TODO: lose `si` and go straight to somain for clarity.
   soinfo* si = soinfo_alloc(&g_default_namespace,
                             exe_info.path.c_str(), &exe_info.file_stat,
                             0, RTLD_GLOBAL);
@@ -341,8 +356,13 @@ static ElfW(Addr) linker_main(KernelArgumentBlock& args, const char* exe_to_load
   si->dynamic = nullptr;
   si->set_main_executable();
   init_link_map_head(*si);
-
   set_bss_vma_name(si);
+
+  // Add the linker's soinfo.
+  // We need to do this manually because it's placement-new'ed by get_libdl_info(),
+  // not created by soinfo_alloc() like everything else.
+  // We do it here because we want it to come after the executable in solist.
+  solist_add_soinfo(solinker);
 
   // Use the executable's PT_INTERP string as the solinker filename in the
   // dynamic linker's module list. gdb reads both PT_INTERP and the module list,
@@ -393,7 +413,7 @@ static ElfW(Addr) linker_main(KernelArgumentBlock& args, const char* exe_to_load
   // and ".plt" sections. Gdb could also potentially use this to
   // relocate the offset of our exported 'rtld_db_dlactivity' symbol.
   //
-  insert_link_map_into_debug_map(&si->link_map_head);
+  insert_link_map_into_debug_map(&somain->link_map_head);
   insert_link_map_into_debug_map(&solinker->link_map_head);
 
   add_vdso();
@@ -480,7 +500,7 @@ static ElfW(Addr) linker_main(KernelArgumentBlock& args, const char* exe_to_load
   linker_finalize_static_tls();
   __libc_init_main_thread_final();
 
-  if (!get_cfi_shadow()->InitialLinkDone(solist)) __linker_cannot_link(g_argv[0]);
+  if (!get_cfi_shadow()->InitialLinkDone(solist_get_head())) __linker_cannot_link(g_argv[0]);
 
   si->call_pre_init_constructors();
   si->call_constructors();
@@ -820,22 +840,18 @@ __linker_init_post_relocation(KernelArgumentBlock& args, soinfo& tmp_linker_so) 
     }
   }
 
-  // store argc/argv/envp to use them for calling constructors
+  // Store argc/argv/envp to use them for calling constructors.
   g_argc = args.argc - __libc_shared_globals()->initial_linker_arg_count;
   g_argv = args.argv + __libc_shared_globals()->initial_linker_arg_count;
   g_envp = args.envp;
   __libc_shared_globals()->init_progname = g_argv[0];
 
-  // Initialize static variables. Note that in order to
-  // get correct libdl_info we need to call constructors
-  // before get_libdl_info().
-  sonext = solist = solinker = get_libdl_info(tmp_linker_so);
+  solinker = get_libdl_info(tmp_linker_so);
   g_default_namespace.add_soinfo(solinker);
 
   ElfW(Addr) start_address = linker_main(args, exe_to_load);
 
-  LD_DEBUG(any, "[ Jumping to _start (%p)... ]", reinterpret_cast<void*>(start_address));
-
   // Return the address that the calling assembly stub should jump to.
+  LD_DEBUG(any, "[ Jumping to _start (%p)... ]", reinterpret_cast<void*>(start_address));
   return start_address;
 }

@@ -68,8 +68,17 @@ bool find_libraries(android_namespace_t* ns,
 
 void solist_add_soinfo(soinfo* si);
 bool solist_remove_soinfo(soinfo* si);
+
+/** Everything: the executable, the linker, and all the libraries. */
 soinfo* solist_get_head();
-soinfo* solist_get_somain();
+
+/** The executable. */
+soinfo* solist_get_executable();
+
+/** The linker. */
+soinfo* solist_get_linker();
+
+/** The VDSO. */
 soinfo* solist_get_vdso();
 
 void linker_memcpy(void* dst, const void* src, size_t n);

@@ -844,7 +844,7 @@ static const ElfW(Sym)* dlsym_handle_lookup(soinfo* si,
   // Since RTLD_GLOBAL is always set for the main executable and all dt_needed shared
   // libraries and they are loaded in breath-first (correct) order we can just execute
   // dlsym(RTLD_DEFAULT, ...); instead of doing two stage lookup.
-  if (si == solist_get_somain()) {
+  if (si == solist_get_executable()) {
     return dlsym_linear_lookup(&g_default_namespace, name, vi, found, nullptr, RTLD_DEFAULT);
   }
 
@@ -1858,7 +1858,7 @@ static soinfo* find_library(android_namespace_t* ns,
   soinfo* si = nullptr;
 
   if (name == nullptr) {
-    si = solist_get_somain();
+    si = solist_get_head();
   } else if (!find_libraries(ns,
                              needed_by,
                              &name,
@@ -3324,7 +3324,7 @@ bool soinfo::prelink_image(bool dlext_use_relro) {
   // they could no longer be found by DT_NEEDED from another library.
   // The main executable does not need to have a DT_SONAME.
   // The linker has a DT_SONAME, but the soname_ field is initialized later on.
-  if (soname_.empty() && this != solist_get_somain() && !relocating_linker &&
+  if (soname_.empty() && this != solist_get_executable() && !relocating_linker &&
       get_application_target_sdk_version() < 23) {
     soname_ = basename(realpath_.c_str());
     // The `if` above means we don't get here for targetSdkVersion >= 23,
@@ -3711,7 +3711,7 @@ std::vector<android_namespace_t*> init_default_namespaces(const char* executable
   }
   // we can no longer rely on the fact that libdl.so is part of default namespace
   // this is why we want to add ld-android.so to all namespaces from ld.config.txt
-  soinfo* ld_android_so = solist_get_head();
+  soinfo* ld_android_so = solist_get_linker();
 
   // we also need vdso to be available for all namespaces (if present)
   soinfo* vdso = solist_get_vdso();
