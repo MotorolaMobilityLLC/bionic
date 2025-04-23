@@ -69,11 +69,10 @@ TEST(stdint, max) {
 
   EXPECT_EQ(std::numeric_limits<int_fast8_t>::max(), INT_FAST8_MAX);
   EXPECT_EQ(std::numeric_limits<uint_fast8_t>::max(), UINT_FAST8_MAX);
-  // TODO: these are currently wrong in <stdint.h>.
-  //EXPECT_EQ(std::numeric_limits<int_fast16_t>::max(), INT_FAST16_MAX);
-  //EXPECT_EQ(std::numeric_limits<uint_fast16_t>::max(), UINT_FAST16_MAX);
-  //EXPECT_EQ(std::numeric_limits<int_fast32_t>::max(), INT_FAST32_MAX);
-  //EXPECT_EQ(std::numeric_limits<uint_fast32_t>::max(), UINT_FAST32_MAX);
+  EXPECT_EQ(std::numeric_limits<int_fast16_t>::max(), INT_FAST16_MAX);
+  EXPECT_EQ(std::numeric_limits<uint_fast16_t>::max(), UINT_FAST16_MAX);
+  EXPECT_EQ(std::numeric_limits<int_fast32_t>::max(), INT_FAST32_MAX);
+  EXPECT_EQ(std::numeric_limits<uint_fast32_t>::max(), UINT_FAST32_MAX);
   EXPECT_EQ(std::numeric_limits<int_fast64_t>::max(), INT_FAST64_MAX);
   EXPECT_EQ(std::numeric_limits<uint_fast64_t>::max(), UINT_FAST64_MAX);
 
@@ -108,9 +107,8 @@ TEST(stdint, min) {
   EXPECT_EQ(std::numeric_limits<int64_t>::min(), INT64_MIN);
 
   EXPECT_EQ(std::numeric_limits<int_fast8_t>::min(), INT_FAST8_MIN);
-  // TODO: these are currently wrong in <stdint.h>.
-  //EXPECT_EQ(std::numeric_limits<int_fast16_t>::min(), INT_FAST16_MIN);
-  //EXPECT_EQ(std::numeric_limits<int_fast32_t>::min(), INT_FAST32_MIN);
+  EXPECT_EQ(std::numeric_limits<int_fast16_t>::min(), INT_FAST16_MIN);
+  EXPECT_EQ(std::numeric_limits<int_fast32_t>::min(), INT_FAST32_MIN);
   EXPECT_EQ(std::numeric_limits<int_fast64_t>::min(), INT_FAST64_MIN);
 
   EXPECT_EQ(std::numeric_limits<int_least8_t>::min(), INT_LEAST8_MIN);
