@@ -56,3 +56,75 @@ TEST(stdint, least_type_sizes) {
   EXPECT_EQ(8U, sizeof(int_least64_t));
   EXPECT_EQ(8U, sizeof(uint_least64_t));
 }
+
+TEST(stdint, max) {
+  EXPECT_EQ(std::numeric_limits<int8_t>::max(), INT8_MAX);
+  EXPECT_EQ(std::numeric_limits<uint8_t>::max(), UINT8_MAX);
+  EXPECT_EQ(std::numeric_limits<int16_t>::max(), INT16_MAX);
+  EXPECT_EQ(std::numeric_limits<uint16_t>::max(), UINT16_MAX);
+  EXPECT_EQ(std::numeric_limits<int32_t>::max(), INT32_MAX);
+  EXPECT_EQ(std::numeric_limits<uint32_t>::max(), UINT32_MAX);
+  EXPECT_EQ(std::numeric_limits<int64_t>::max(), INT64_MAX);
+  EXPECT_EQ(std::numeric_limits<uint64_t>::max(), UINT64_MAX);
+
+  EXPECT_EQ(std::numeric_limits<int_fast8_t>::max(), INT_FAST8_MAX);
+  EXPECT_EQ(std::numeric_limits<uint_fast8_t>::max(), UINT_FAST8_MAX);
+  // TODO: these are currently wrong in <stdint.h>.
+  //EXPECT_EQ(std::numeric_limits<int_fast16_t>::max(), INT_FAST16_MAX);
+  //EXPECT_EQ(std::numeric_limits<uint_fast16_t>::max(), UINT_FAST16_MAX);
+  //EXPECT_EQ(std::numeric_limits<int_fast32_t>::max(), INT_FAST32_MAX);
+  //EXPECT_EQ(std::numeric_limits<uint_fast32_t>::max(), UINT_FAST32_MAX);
+  EXPECT_EQ(std::numeric_limits<int_fast64_t>::max(), INT_FAST64_MAX);
+  EXPECT_EQ(std::numeric_limits<uint_fast64_t>::max(), UINT_FAST64_MAX);
+
+  EXPECT_EQ(std::numeric_limits<int_least8_t>::max(), INT_LEAST8_MAX);
+  EXPECT_EQ(std::numeric_limits<uint_least8_t>::max(), UINT_LEAST8_MAX);
+  EXPECT_EQ(std::numeric_limits<int_least16_t>::max(), INT_LEAST16_MAX);
+  EXPECT_EQ(std::numeric_limits<uint_least16_t>::max(), UINT_LEAST16_MAX);
+  EXPECT_EQ(std::numeric_limits<int_least32_t>::max(), INT_LEAST32_MAX);
+  EXPECT_EQ(std::numeric_limits<uint_least32_t>::max(), UINT_LEAST32_MAX);
+  EXPECT_EQ(std::numeric_limits<int_least64_t>::max(), INT_LEAST64_MAX);
+  EXPECT_EQ(std::numeric_limits<uint_least64_t>::max(), UINT_LEAST64_MAX);
+
+  EXPECT_EQ(std::numeric_limits<wchar_t>::max(), WCHAR_MAX);
+  EXPECT_EQ(std::numeric_limits<wint_t>::max(), WINT_MAX);
+
+  EXPECT_EQ(std::numeric_limits<intptr_t>::max(), INTPTR_MAX);
+  EXPECT_EQ(std::numeric_limits<uintptr_t>::max(), UINTPTR_MAX);
+  EXPECT_EQ(std::numeric_limits<intmax_t>::max(), INTMAX_MAX);
+  EXPECT_EQ(std::numeric_limits<uintmax_t>::max(), UINTMAX_MAX);
+
+  EXPECT_EQ(std::numeric_limits<ptrdiff_t>::max(), PTRDIFF_MAX);
+
+  EXPECT_EQ(std::numeric_limits<size_t>::max(), SIZE_MAX);
+
+  EXPECT_EQ(std::numeric_limits<sig_atomic_t>::max(), SIG_ATOMIC_MAX);
+}
+
+TEST(stdint, min) {
+  EXPECT_EQ(std::numeric_limits<int8_t>::min(), INT8_MIN);
+  EXPECT_EQ(std::numeric_limits<int16_t>::min(), INT16_MIN);
+  EXPECT_EQ(std::numeric_limits<int32_t>::min(), INT32_MIN);
+  EXPECT_EQ(std::numeric_limits<int64_t>::min(), INT64_MIN);
+
+  EXPECT_EQ(std::numeric_limits<int_fast8_t>::min(), INT_FAST8_MIN);
+  // TODO: these are currently wrong in <stdint.h>.
+  //EXPECT_EQ(std::numeric_limits<int_fast16_t>::min(), INT_FAST16_MIN);
+  //EXPECT_EQ(std::numeric_limits<int_fast32_t>::min(), INT_FAST32_MIN);
+  EXPECT_EQ(std::numeric_limits<int_fast64_t>::min(), INT_FAST64_MIN);
+
+  EXPECT_EQ(std::numeric_limits<int_least8_t>::min(), INT_LEAST8_MIN);
+  EXPECT_EQ(std::numeric_limits<int_least16_t>::min(), INT_LEAST16_MIN);
+  EXPECT_EQ(std::numeric_limits<int_least32_t>::min(), INT_LEAST32_MIN);
+  EXPECT_EQ(std::numeric_limits<int_least64_t>::min(), INT_LEAST64_MIN);
+
+  EXPECT_EQ(std::numeric_limits<wchar_t>::min(), WCHAR_MIN);
+  EXPECT_EQ(std::numeric_limits<wint_t>::min(), static_cast<uintmax_t>(WINT_MIN));
+
+  EXPECT_EQ(std::numeric_limits<intptr_t>::min(), INTPTR_MIN);
+  EXPECT_EQ(std::numeric_limits<intmax_t>::min(), INTMAX_MIN);
+
+  EXPECT_EQ(std::numeric_limits<ptrdiff_t>::min(), PTRDIFF_MIN);
+
+  EXPECT_EQ(std::numeric_limits<sig_atomic_t>::min(), SIG_ATOMIC_MIN);
+}
