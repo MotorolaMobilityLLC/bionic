@@ -240,88 +240,6 @@ New libc functions in M (API level 23):
   * all of <error.h>.
   * re-introduced various <resolv.h> functions: `ns_format_ttl`, `ns_get16`, `ns_get32`, `ns_initparse`, `ns_makecanon`, `ns_msg_getflag`, `ns_name_compress`, `ns_name_ntol`, `ns_name_ntop`, `ns_name_pack`, `ns_name_pton`, `ns_name_rollback`, `ns_name_skip`, `ns_name_uncompress`, `ns_name_unpack`, `ns_parserr`, `ns_put16`, `ns_put32`, `ns_samename`, `ns_skiprr`, `ns_sprintrr`, and `ns_sprintrrf`.
 
-New libc functions in L (API level 21):
-  * <android/dlext.h>.
-  * <android/set_abort_message.h>.
-  * <arpa/inet.h> `inet_lnaof`, `inet_netof`, `inet_network`, `inet_makeaddr`.
-  * <wctype.h> `iswblank`.
-  * <ctype.h> `isalnum_l`, `isalpha_l`, `isblank_l`, `icntrl_l`, `isdigit_l`, `isgraph_l`, `islower_l`, `isprint_l`, `ispunct_l`, `isspace_l`, `isupper_l`, `isxdigit_l`, `_tolower`, `tolower_l`, `_toupper`, `toupper_l`.
-  * <fcntl.h> `fallocate`, `posix_fadvise`, `posix_fallocate`, `splice`, `tee`, `vmsplice`.
-  * <inttypes.h> `wcstoimax`, `wcstoumax`.
-  * <link.h> `dl_iterate_phdr`.
-  * <mntent.h> `setmntent`, `endmntent`, `getmntent_r`.
-  * <poll.h> `ppoll`.
-  * <pthread.h> `pthread_condattr_getclock`, `pthread_condattr_setclock`, `pthread_mutex_timedlock`, `pthread_gettid_np`.
-  * <sched.h> `setns`.
-  * <search.h> `insque`, `remque`, `lfind`, `lsearch`, `twalk`.
-  * <stdio.h> `dprintf`, `vdprintf`.
-  * <stdlib.h> `initstate`, `setstate`, `getprogname`/`setprogname`, `atof`/`strtof`, `at_quick_exit`/`_Exit`/`quick_exit`, `grantpt`, `mbtowc`/`wctomb`, `posix_openpt`, `rand_r`/`rand`/`random`/`srand`/`srandom`, `strtold_l`/`strtoll_l`/`strtoull_l`.
-  * <string.h> `strcoll_l`/`strxfrm_l`, `stpcpy`/`stpncpy`.
-  * <sys/resource.h> `prlimit`.
-  * <sys/socket.h> `accept4`, `sendmmsg`.
-  * <sys/stat.h> `mkfifo`/`mknodat`.
-  * <time.h> `strftime_l`.
-  * <unistd.h> `dup3`, `execvpe`, `getpagesize`, `linkat`/`symlinkat`/`readlinkat`, `truncate`.
-  * <wchar.h> `wcstof`, `vfwscanf`/`vswscanf`/`vwscanf`, `wcstold_l`/`wcstoll`/`wcstoll_l`/`wcstoull`/`wcstoull_l`, `mbsnrtowcs`/`wcsnrtombs`, `wcscoll_l`/`wcsxfrm_l`.
-  * <wctype.h> `iswalnum_l`/`iswalpha_l`/`iswblank_l`/`iswcntrl_l`/`iswctype_l`/`iswdigit_l`/`iswgraph_l`/`iswlower_l`/`iswprint_l`/`iswpunct_l`/`iswspace_l`/`iswupper_l`/`iswxdigit_l`, `wctype_l`, `towlower_l`/`towupper_l`.
-  * all of <fts.h>.
-  * all of <locale.h>.
-  * all of <sys/epoll.h>.
-  * all of <sys/fsuid.h>.
-  * all of <sys/inotify.h>.
-  * all of <uchar.h>.
-
-New libc functions in K (API level 19):
-  * <inttypes.h> `imaxabs`, `imaxdiv`.
-  * <stdlib.h> `abs`, `labs`, `llabs`.
-  * <sys/stat.h> `futimens`.
-  * all of <sys/statvfs.h>.
-  * all of <sys/swap.h>.
-  * all of <sys/timerfd.h>.
-
-New libc functions in J-MR2 (API level 18):
-  * <stdio.h> `getdelim` and `getline`.
-  * <sys/auxv.h> `getauxval`.
-  * <sys/signalfd.h> `signalfd`.
-
-New libc functions in J-MR1 (API level 17):
-  * <ftw.h>.
-  * <signal.h> `psiginfo` and `psignal`.
-  * `getsid`, `malloc_usable_size`, `mlockall`/`munlockall`, `posix_memalign`, `unshare`.
-
-New libc functions in J (API level 16):
-  * the <search.h> tree functions `tdelete`, `tdestroy`, `tfind`, and `tsearch`.
-  * `faccessat`, `readahead`, `tgkill`.
-  * all of <sys/xattr.h>.
-
-libc function count over time:
-
-| API level | Function count |
-|-----------|----------------|
-| 16        | 842            |
-| 17        | 870            |
-| 18        | 878            |
-| 19        | 893            |
-| 21        | 1016           |
-| 22        | 1038           |
-| 23        | 1103           |
-| 24        | 1147           |
-| 25        | 1147           |
-| 26        | 1199           |
-| 27        | 1199           |
-| 28        | 1298           |
-| 29        | 1312           |
-| 30        | 1368           |
-| 31        | 1379           |
-| 32        | 1379           |
-| 33        | 1386           |
-| 34        | 1392           |
-
-Data collected by:
-```
-ndk-r26c$ for i in `ls -1v toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/*/libc.so` ; \
-  do echo $i; nm $i | grep -w T | wc -l ; done
-```
 
 ### libm
 
@@ -335,13 +253,6 @@ New libm functions in O (API level 26):
 New libm functions in M (API level 23):
   * <complex.h> `cabs`, `carg`, `cimag`, `cacos`, `cacosh`, `casin`, `casinh`, `catan`, `catanh`, `ccos`, `ccosh`, `cexp`, `conj`, `cproj`, `csin`, `csinh`, `csqrt`, `ctan`, `ctanh`, `creal`, `cabsf`, `cargf`, `cimagf`, `cacosf`, `cacoshf`, `casinf`, `casinhf`, `catanf`, `catanhf`, `ccosf`, `ccoshf`, `cexpf`, `conjf`, `cprojf`, `csinf`, `csinhf`, `csqrtf`, `ctanf`, `ctanhf`, `crealf`, `cabsl`, `cprojl`, `csqrtl`.
   * <math.h> `lgammal_r`.
-
-New libm functions in L (API level 21):
-  * <complex.h> `cabsl`, `cprojl`, `csqrtl`.
-  * <math.h> `isinf`, `significandl`.
-
-New libm functions in J-MR2 (API level 18):
-  * <math.h> `log2`, `log2f`.
 
 
 ## Target API level behavioral differences
