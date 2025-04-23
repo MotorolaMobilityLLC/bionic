@@ -46,6 +46,7 @@ class MemtagGlobalsTest : public testing::TestWithParam<bool> {};
 TEST_P(MemtagGlobalsTest, test) {
   SKIP_WITH_HWASAN << "MTE globals tests are incompatible with HWASan";
 #if defined(__BIONIC__) && defined(__aarch64__)
+  SKIP_WITH_NATIVE_BRIDGE;  // http://b/242170715
   std::string binary = GetTestLibRoot() + "/memtag_globals_binary";
   bool is_static = MemtagGlobalsTest::GetParam();
   if (is_static) {
