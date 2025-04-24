@@ -600,7 +600,9 @@ const unsigned kRelTag = DT_REL;
 const unsigned kRelSzTag = DT_RELSZ;
 #endif
 
-extern __LIBC_HIDDEN__ ElfW(Ehdr) __ehdr_start;
+// Magic linker-provided pointer to the ELF header.
+// Hidden so it's accessible before linker relocations have been processed.
+extern "C" const ElfW(Ehdr) __ehdr_start __attribute__((__visibility__("hidden")));
 
 static void call_ifunc_resolvers_for_section(RelType* begin, RelType* end) {
   auto ehdr = reinterpret_cast<ElfW(Addr)>(&__ehdr_start);
