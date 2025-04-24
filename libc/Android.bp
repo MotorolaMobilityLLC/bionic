@@ -1356,24 +1356,23 @@ cc_library_static {
 
 // ========================================================
 // libc_static_dispatch.a/libc_dynamic_dispatch.a --- string/memory "ifuncs"
-// (Actually ifuncs for libc.so, but a home-grown alternative for libc.a.)
 // ========================================================
 
 cc_defaults {
-    name: "libc_dispatch_defaults",
+    name: "libc_ifunc_defaults",
     defaults: ["libc_defaults"],
     arch: {
-        x86_64: {
-            srcs: ["arch-x86_64/dynamic_function_dispatch.cpp"],
-        },
-        x86: {
-            srcs: ["arch-x86/dynamic_function_dispatch.cpp"],
-        },
         arm: {
-            srcs: ["arch-arm/dynamic_function_dispatch.cpp"],
+            srcs: ["arch-arm/ifuncs.cpp"],
         },
         arm64: {
-            srcs: ["arch-arm64/dynamic_function_dispatch.cpp"],
+            srcs: ["arch-arm64/ifuncs.cpp"],
+        },
+        x86: {
+            srcs: ["arch-x86/ifuncs.cpp"],
+        },
+        x86_64: {
+            srcs: ["arch-x86_64/ifuncs.cpp"],
         },
     },
     // Prevent the compiler from inserting calls to libc/taking the address of
@@ -1388,7 +1387,7 @@ cc_defaults {
 
 cc_library_static {
     name: "libc_static_dispatch",
-    defaults: ["libc_dispatch_defaults"],
+    defaults: ["libc_ifunc_defaults"],
     cflags: [
         "-DBIONIC_STATIC_DISPATCH",
     ],
@@ -1396,7 +1395,7 @@ cc_library_static {
 
 cc_library_static {
     name: "libc_dynamic_dispatch",
-    defaults: ["libc_dispatch_defaults"],
+    defaults: ["libc_ifunc_defaults"],
     cflags: [
         "-DBIONIC_DYNAMIC_DISPATCH",
     ],
