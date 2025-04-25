@@ -126,3 +126,52 @@ TEST(stdint, min) {
 
   EXPECT_EQ(std::numeric_limits<sig_atomic_t>::min(), SIG_ATOMIC_MIN);
 }
+template <typename T>
+static inline int bitSize() {
+  return sizeof(T) * 8;
+}
+
+TEST(stdint, widths) {
+#if defined(__BIONIC__)
+  EXPECT_EQ(bitSize<int8_t>(), INT8_WIDTH);
+  EXPECT_EQ(bitSize<uint8_t>(), UINT8_WIDTH);
+  EXPECT_EQ(bitSize<int16_t>(), INT16_WIDTH);
+  EXPECT_EQ(bitSize<uint16_t>(), UINT16_WIDTH);
+  EXPECT_EQ(bitSize<int32_t>(), INT32_WIDTH);
+  EXPECT_EQ(bitSize<uint32_t>(), UINT32_WIDTH);
+  EXPECT_EQ(bitSize<int64_t>(), INT64_WIDTH);
+  EXPECT_EQ(bitSize<uint64_t>(), UINT64_WIDTH);
+
+  EXPECT_EQ(bitSize<int_fast8_t>(), INT_FAST8_WIDTH);
+  EXPECT_EQ(bitSize<uint_fast8_t>(), UINT_FAST8_WIDTH);
+  EXPECT_EQ(bitSize<int_fast16_t>(), INT_FAST16_WIDTH);
+  EXPECT_EQ(bitSize<uint_fast16_t>(), UINT_FAST16_WIDTH);
+  EXPECT_EQ(bitSize<int_fast32_t>(), INT_FAST32_WIDTH);
+  EXPECT_EQ(bitSize<uint_fast32_t>(), UINT_FAST32_WIDTH);
+  EXPECT_EQ(bitSize<int_fast64_t>(), INT_FAST64_WIDTH);
+  EXPECT_EQ(bitSize<uint_fast64_t>(), UINT_FAST64_WIDTH);
+
+  EXPECT_EQ(bitSize<int_least8_t>(), INT_LEAST8_WIDTH);
+  EXPECT_EQ(bitSize<uint_least8_t>(), UINT_LEAST8_WIDTH);
+  EXPECT_EQ(bitSize<int_least16_t>(), INT_LEAST16_WIDTH);
+  EXPECT_EQ(bitSize<uint_least16_t>(), UINT_LEAST16_WIDTH);
+  EXPECT_EQ(bitSize<int_least32_t>(), INT_LEAST32_WIDTH);
+  EXPECT_EQ(bitSize<uint_least32_t>(), UINT_LEAST32_WIDTH);
+  EXPECT_EQ(bitSize<int_least64_t>(), INT_LEAST64_WIDTH);
+  EXPECT_EQ(bitSize<uint_least64_t>(), UINT_LEAST64_WIDTH);
+
+  EXPECT_EQ(bitSize<wchar_t>(), WCHAR_WIDTH);
+  EXPECT_EQ(bitSize<wint_t>(), WINT_WIDTH);
+
+  EXPECT_EQ(bitSize<intptr_t>(), INTPTR_WIDTH);
+  EXPECT_EQ(bitSize<uintptr_t>(), UINTPTR_WIDTH);
+  EXPECT_EQ(bitSize<intmax_t>(), INTMAX_WIDTH);
+  EXPECT_EQ(bitSize<uintmax_t>() , UINTMAX_WIDTH);
+
+  EXPECT_EQ(bitSize<ptrdiff_t>(), PTRDIFF_WIDTH);
+
+  EXPECT_EQ(bitSize<size_t>(), SIZE_WIDTH);
+
+  EXPECT_EQ(bitSize<sig_atomic_t>(), SIG_ATOMIC_WIDTH);
+#endif
+}
