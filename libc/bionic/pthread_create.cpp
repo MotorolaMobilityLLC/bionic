@@ -70,22 +70,30 @@ void __init_bionic_tls_ptrs(bionic_tcb* tcb, bionic_tls* tls) {
   tcb->tls_slot(TLS_SLOT_BIONIC_TLS) = tls;
 }
 
+void __init_libgen_buffers_ptr(bionic_tls* tls, libgen_buffers* lb) {
+  tls->libgen_buffers_ptr = lb;
+}
+
+static inline size_t get_temp_bionic_tls_size() {
+  return __BIONIC_ALIGN(sizeof(bionic_tls) + sizeof(libgen_buffers), page_size());
+}
+
 // Allocate a temporary bionic_tls that the dynamic linker's main thread can
 // use while it's loading the initial set of ELF modules.
 bionic_tls* __allocate_temp_bionic_tls() {
-  size_t allocation_size = __BIONIC_ALIGN(sizeof(bionic_tls), page_size());
-  void* allocation = mmap(nullptr, allocation_size,
-                          PROT_READ | PROT_WRITE,
-                          MAP_PRIVATE | MAP_ANONYMOUS,
-                          -1, 0);
+  void* allocation = mmap(nullptr, get_temp_bionic_tls_size(), PROT_READ | PROT_WRITE,
+                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (allocation == MAP_FAILED) {
     async_safe_fatal("failed to allocate bionic_tls: %m");
   }
-  return static_cast<bionic_tls*>(allocation);
+  bionic_tls* tls = static_cast<bionic_tls*>(allocation);
+  tls->libgen_buffers_ptr =
+      reinterpret_cast<libgen_buffers*>(static_cast<char*>(allocation) + sizeof(bionic_tls));
+  return tls;
 }
 
 void __free_temp_bionic_tls(bionic_tls* tls) {
-  munmap(tls, __BIONIC_ALIGN(sizeof(bionic_tls), page_size()));
+  munmap(tls, get_temp_bionic_tls_size());
 }
 
 static void __init_alternate_signal_stack(pthread_internal_t* thread) {
@@ -216,11 +224,14 @@ int __init_thread(pthread_internal_t* thread) {
 ThreadMapping __allocate_thread_mapping(size_t stack_size, size_t stack_guard_size) {
   const StaticTlsLayout& layout = __libc_shared_globals()->static_tls_layout;
 
-  // Allocate in order: stack guard, stack, static TLS, guard page.
+  // Allocate in order: stack guard, stack, static TLS, libgen buffers, guard page.
   size_t mmap_size;
   if (__builtin_add_overflow(stack_size, stack_guard_size, &mmap_size)) return {};
   if (__builtin_add_overflow(mmap_size, layout.size(), &mmap_size)) return {};
   if (__builtin_add_overflow(mmap_size, PTHREAD_GUARD_SIZE, &mmap_size)) return {};
+  // Add space for the dedicated libgen buffers page(s).
+  size_t libgen_buffers_padded_size = __BIONIC_ALIGN(sizeof(libgen_buffers), page_size());
+  if (__builtin_add_overflow(mmap_size, libgen_buffers_padded_size, &mmap_size)) return {};
 
   // Align the result to a page size.
   const size_t unaligned_size = mmap_size;
@@ -255,12 +266,21 @@ ThreadMapping __allocate_thread_mapping(size_t stack_size, size_t stack_guard_si
     return {};
   }
 
+  // Layout from the end of the mmap-ed region (before the top PTHREAD_GUARD_SIZE):
+  //
+  // [ PTHREAD_GUARD_SIZE ]
+  // [ libgen_buffers_padded_size (for dedicated page(s) for libgen buffers) ]
+  // [ layout.size() (for static TLS) ]
+  // [ stack_size ]
+  // [ stack_guard_size ]
+
   ThreadMapping result = {};
   result.mmap_base = space;
   result.mmap_size = mmap_size;
   result.mmap_base_unguarded = space + stack_guard_size;
   result.mmap_size_unguarded = mmap_size - stack_guard_size - PTHREAD_GUARD_SIZE;
-  result.static_tls = space + mmap_size - PTHREAD_GUARD_SIZE - layout.size();
+  result.libgen_buffers = space + mmap_size - PTHREAD_GUARD_SIZE - libgen_buffers_padded_size;
+  result.static_tls = result.libgen_buffers - layout.size();
   result.stack_base = space;
   result.stack_top = result.static_tls;
   return result;
@@ -309,6 +329,7 @@ static int __allocate_thread(pthread_attr_t* attr, bionic_tcb** tcbp, void** chi
   const StaticTlsLayout& layout = __libc_shared_globals()->static_tls_layout;
   auto tcb = reinterpret_cast<bionic_tcb*>(mapping.static_tls + layout.offset_bionic_tcb());
   auto tls = reinterpret_cast<bionic_tls*>(mapping.static_tls + layout.offset_bionic_tls());
+  auto lb = reinterpret_cast<libgen_buffers*>(mapping.libgen_buffers);
 
   // Initialize TLS memory.
   __init_static_tls(mapping.static_tls);
@@ -316,6 +337,7 @@ static int __allocate_thread(pthread_attr_t* attr, bionic_tcb** tcbp, void** chi
   __init_tcb_dtv(tcb);
   __init_tcb_stack_guard(tcb);
   __init_bionic_tls_ptrs(tcb, tls);
+  __init_libgen_buffers_ptr(tls, lb);
 
   attr->stack_size = stack_top - static_cast<char*>(attr->stack_base);
   thread->attr = *attr;

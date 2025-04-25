@@ -156,12 +156,14 @@ extern "C" void __libc_init_main_thread_final() {
   const StaticTlsLayout& layout = __libc_shared_globals()->static_tls_layout;
   auto new_tcb = reinterpret_cast<bionic_tcb*>(mapping.static_tls + layout.offset_bionic_tcb());
   auto new_tls = reinterpret_cast<bionic_tls*>(mapping.static_tls + layout.offset_bionic_tls());
+  auto new_lb = reinterpret_cast<libgen_buffers*>(mapping.libgen_buffers);
 
   __init_static_tls(mapping.static_tls);
   new_tcb->copy_from_bootstrap(temp_tcb);
   new_tls->copy_from_bootstrap(temp_tls);
   __init_tcb(new_tcb, &main_thread);
   __init_bionic_tls_ptrs(new_tcb, new_tls);
+  __init_libgen_buffers_ptr(new_tls, new_lb);
 
   main_thread.mmap_base = mapping.mmap_base;
   main_thread.mmap_size = mapping.mmap_size;
