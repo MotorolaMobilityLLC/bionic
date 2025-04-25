@@ -25,6 +25,8 @@
 #include <sys/cdefs.h>
 #include <wchar.h>
 
+#include <limits>
+
 #include "utils.h"
 
 #define NUM_WCHARS(num_bytes) ((num_bytes)/sizeof(wchar_t))
@@ -62,7 +64,26 @@ constexpr bool kLibcSupportsParsingBinaryLiterals = true;
 
 TEST(wchar, sizeof_wchar_t) {
   EXPECT_EQ(4U, sizeof(wchar_t));
+}
+
+TEST(wchar, sizeof_wint_t) {
   EXPECT_EQ(4U, sizeof(wint_t));
+}
+
+TEST(stdint, wchar_sign) {
+#if defined(__arm__) || defined(__aarch64__)
+  EXPECT_FALSE(std::numeric_limits<wchar_t>::is_signed);
+#else
+  EXPECT_TRUE(std::numeric_limits<wchar_t>::is_signed);
+#endif
+}
+
+#if !defined(__WINT_UNSIGNED__)
+#error wint_t is unsigned on Android
+#endif
+
+TEST(stdint, wint_sign) {
+  EXPECT_FALSE(std::numeric_limits<wint_t>::is_signed);
 }
 
 TEST(wchar, mbrlen) {

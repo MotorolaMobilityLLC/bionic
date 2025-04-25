@@ -20,14 +20,6 @@
 
 #include <limits>
 
-#if !defined(__WINT_UNSIGNED__)
-#error wint_t is unsigned on Android
-#endif
-
-TEST(stdint, wint_sign) {
-  EXPECT_FALSE(std::numeric_limits<wint_t>::is_signed);
-}
-
 TEST(stdint, fast_type_sizes) {
   EXPECT_EQ(1U, sizeof(int_fast8_t));
   EXPECT_EQ(8U, sizeof(int_fast64_t));
