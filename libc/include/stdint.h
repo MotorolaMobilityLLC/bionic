@@ -196,9 +196,9 @@ typedef int64_t       intmax_t;
 #define UINT_LEAST64_MAX UINT64_MAX
 #define UINT_FAST64_MAX  UINT64_MAX
 
-#define INTMAX_MIN       INT64_MIN
-#define INTMAX_MAX       INT64_MAX
-#define UINTMAX_MAX      UINT64_MAX
+#define INTMAX_MAX __INTMAX_MAX__
+#define INTMAX_MIN (-__INTMAX_MAX__-1)
+#define UINTMAX_MAX __UINTMAX_MAX__
 
 #define SIG_ATOMIC_MAX   INT32_MAX
 #define SIG_ATOMIC_MIN   INT32_MIN
@@ -206,21 +206,14 @@ typedef int64_t       intmax_t;
 #define WINT_MAX       UINT32_MAX
 #define WINT_MIN       0
 
-#if defined(__LP64__)
-#  define INTPTR_MIN     INT64_MIN
-#  define INTPTR_MAX     INT64_MAX
-#  define UINTPTR_MAX    UINT64_MAX
-#  define PTRDIFF_MIN    INT64_MIN
-#  define PTRDIFF_MAX    INT64_MAX
-#  define SIZE_MAX       UINT64_MAX
-#else
-#  define INTPTR_MIN     INT32_MIN
-#  define INTPTR_MAX     INT32_MAX
-#  define UINTPTR_MAX    UINT32_MAX
-#  define PTRDIFF_MIN    INT32_MIN
-#  define PTRDIFF_MAX    INT32_MAX
-#  define SIZE_MAX       UINT32_MAX
-#endif
+#define INTPTR_MAX __INTPTR_MAX__
+#define INTPTR_MIN (-__INTPTR_MAX__-1)
+#define UINTPTR_MAX __UINTPTR_MAX__
+
+#define PTRDIFF_MAX __PTRDIFF_MAX__
+#define PTRDIFF_MIN (-__PTRDIFF_MAX__-1)
+
+#define SIZE_MAX __SIZE_MAX__
 
 #define INT8_WIDTH 8
 #define UINT8_WIDTH 8
