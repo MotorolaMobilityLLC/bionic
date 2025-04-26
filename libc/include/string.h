@@ -105,12 +105,7 @@ char* _Nonnull strcat(char* _Nonnull __dst, const char* _Nonnull __src);
 char* _Nullable strdup(const char* _Nonnull __s);
 
 char* _Nullable strstr(const char* _Nonnull __haystack, const char* _Nonnull __needle) __attribute_pure__;
-#if defined(__cplusplus)
-extern "C++" char* _Nullable strcasestr(char* _Nonnull, const char* _Nonnull) __RENAME(strcasestr) __attribute_pure__;
-extern "C++" const char* _Nullable strcasestr(const char* _Nonnull, const char* _Nonnull) __RENAME(strcasestr) __attribute_pure__;
-#else
 char* _Nullable strcasestr(const char* _Nonnull __haystack, const char* _Nonnull __needle) __attribute_pure__;
-#endif
 char* _Nullable strtok(char* _Nullable __s, const char* _Nonnull __delimiter);
 char* _Nullable strtok_r(char* _Nullable __s, const char* _Nonnull __delimiter, char* _Nonnull * _Nonnull __pos_ptr);
 
@@ -274,8 +269,26 @@ char* _Nullable strrchr(char* _Nonnull const s __pass_object_size, int c) __pref
 }
 
 /* Functions with no FORTIFY counterpart. */
+
 inline __always_inline
-char* _Nullable __bionic_strstr(const char* _Nonnull h, const char* _Nonnull n) { return strstr(h, n); }
+char* _Nullable __bionic_strcasestr(const char* _Nonnull h, const char* _Nonnull n) {
+    return strcasestr(h, n);
+}
+
+inline __always_inline
+const char* _Nullable strcasestr(const char* _Nonnull h, const char* _Nonnull n) __prefer_this_overload {
+    return __bionic_strcasestr(h, n);
+}
+
+inline __always_inline
+char* _Nullable strcasestr(char* _Nonnull h, const char* _Nonnull n) __prefer_this_overload {
+    return __bionic_strcasestr(h, n);
+}
+
+inline __always_inline
+char* _Nullable __bionic_strstr(const char* _Nonnull h, const char* _Nonnull n) {
+    return strstr(h, n);
+}
 
 inline __always_inline
 const char* _Nullable strstr(const char* _Nonnull h, const char* _Nonnull n) __prefer_this_overload {
