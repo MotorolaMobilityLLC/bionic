@@ -18,6 +18,7 @@
 
 #include <setjmp.h>
 #include <stdlib.h>
+#include <sys/auxv.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 
@@ -364,3 +365,42 @@ TEST(setjmp, bug_152210274) {
   GTEST_SKIP() << "tests uses functions not in glibc";
 #endif
 }
+
+#if defined(__aarch64__)
+TEST(setjmp, sigsetjmp_sme) {
+  if (!(getauxval(AT_HWCAP2) & HWCAP2_SME)) {
+    GTEST_SKIP() << "SME is not enabled on device.";
+  }
+
+  uint64_t svcr, za_state;
+  sigjmp_buf jb;
+  __asm__ __volatile__(".arch_extension sme; smstart za");
+  sigsetjmp(jb, 0);
+  __asm__ __volatile__(".arch_extension sme; mrs %0, SVCR" : "=r"(svcr));
+  __asm__ __volatile__(".arch_extension sme; smstop za");  // Turn ZA off anyway.
+  za_state = svcr & 0x2UL;
+  ASSERT_EQ(0UL, za_state);
+}
+
+TEST(setjmp, siglongjmp_sme) {
+  if (!(getauxval(AT_HWCAP2) & HWCAP2_SME)) {
+    GTEST_SKIP() << "SME is not enabled on device.";
+  }
+
+  uint64_t svcr, za_state;
+  int value;
+  sigjmp_buf jb;
+  if ((value = sigsetjmp(jb, 0)) == 0) {
+    __asm__ __volatile__(".arch_extension sme; smstart za");
+    siglongjmp(jb, 789);
+    __asm__ __volatile__(".arch_extension sme; smstop za");
+    FAIL();  // Unreachable.
+  } else {
+    __asm__ __volatile__(".arch_extension sme; mrs %0, SVCR" : "=r"(svcr));
+    __asm__ __volatile__(".arch_extension sme; smstop za");  // Turn ZA off anyway.
+    za_state = svcr & 0x2UL;
+    ASSERT_EQ(789, value);
+    ASSERT_EQ(0UL, za_state);
+  }
+}
+#endif
