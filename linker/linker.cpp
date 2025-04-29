@@ -1653,8 +1653,13 @@ bool find_libraries(android_namespace_t* ns,
       return t->get_soinfo() == si;
     };
 
-    if (!si->is_linked() &&
-        std::find_if(load_list.begin(), load_list.end(), pred) == load_list.end() ) {
+    // If the executable depends on itself (directly or indirectly), then the executable ends up on
+    // the list of LoadTask objects (b/328822319). It is already loaded, so don't try to load it
+    // again, which will fail because its ElfReader isn't ready. This can happen if ldd is invoked
+    // on a shared library that depends on itself, which happens with HWASan-ified Bionic libraries
+    // like libc.so, libm.so, etc.
+    if (!si->is_linked() && !si->is_main_executable() &&
+        std::find_if(load_list.begin(), load_list.end(), pred) == load_list.end()) {
       load_list.push_back(task);
     }
   }
