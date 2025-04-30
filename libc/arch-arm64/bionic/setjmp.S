@@ -114,6 +114,9 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   .cfi_rel_offset x0, 0
   .cfi_rel_offset x30, 8
 
+  // Commit SME's ZA lazy save. Note that the call preserves x1.
+  bl __arm_za_disable
+
   // Get the cookie and store it along with the signal flag.
   mov x0, x1
   bl __bionic_setjmp_cookie_get
@@ -183,6 +186,17 @@ END(sigsetjmp)
 
 // void siglongjmp(sigjmp_buf env, int value);
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
+  // First of all, disable SME's ZA, so that it does not interfere
+  // with anything else. Note that __arm_za_disable is guaranteed to
+  // preserve x0 and x1.
+  str x30, [sp, #-16]!
+  .cfi_adjust_cfa_offset 16
+  .cfi_rel_offset x30, 0
+  bl __arm_za_disable
+  ldr x30, [sp], #16
+  .cfi_adjust_cfa_offset -16
+  .cfi_restore x30
+
   // Check the checksum before doing anything.
   m_calculate_checksum x12, x0, x2
   ldr x2, [x0, #(_JB_CHECKSUM * 8)]
