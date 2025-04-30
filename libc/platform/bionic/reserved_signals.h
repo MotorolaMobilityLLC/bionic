@@ -63,6 +63,7 @@
 #define BIONIC_ENABLE_MTE (__SIGRTMIN + 9)
 
 #define __SIGRT_RESERVED 10
+
 static inline __always_inline sigset64_t filter_reserved_signals(sigset64_t sigset, int how) {
   int (*block)(sigset64_t*, int);
   int (*unblock)(sigset64_t*, int);
@@ -81,17 +82,12 @@ static inline __always_inline sigset64_t filter_reserved_signals(sigset64_t sigs
   }
 
   // The POSIX timer signal must be blocked.
-  block(&sigset, __SIGRTMIN + 0);
+  block(&sigset, BIONIC_SIGNAL_POSIX_TIMERS);
 
   // Everything else must remain unblocked.
-  unblock(&sigset, __SIGRTMIN + 1);
-  unblock(&sigset, __SIGRTMIN + 2);
-  unblock(&sigset, __SIGRTMIN + 3);
-  unblock(&sigset, __SIGRTMIN + 4);
-  unblock(&sigset, __SIGRTMIN + 5);
-  unblock(&sigset, __SIGRTMIN + 6);
-  unblock(&sigset, __SIGRTMIN + 7);
-  unblock(&sigset, __SIGRTMIN + 8);
-  unblock(&sigset, __SIGRTMIN + 9);
+  for (int i = 1; i < __SIGRT_RESERVED; ++i) {
+    unblock(&sigset, __SIGRTMIN + i);
+  }
+
   return sigset;
 }
