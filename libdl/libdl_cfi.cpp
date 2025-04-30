@@ -51,6 +51,10 @@ static uint16_t shadow_load(void* p) {
   return *reinterpret_cast<uint16_t*>(shadow_base_storage.v + ofs);
 }
 
+extern "C" uint16_t __cfi_shadow_load(void* p) {
+  return shadow_load(p);
+}
+
 static uintptr_t cfi_check_addr(uint16_t v, void* Ptr) {
   uintptr_t addr = reinterpret_cast<uintptr_t>(Ptr);
   // The aligned range of [0, kShadowAlign) uses a single shadow element, therefore all pointers in
