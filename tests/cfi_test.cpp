@@ -15,6 +15,7 @@
  */
 
 #include <dlfcn.h>
+#include <link.h>
 #include <sys/stat.h>
 
 #include <vector>
@@ -33,6 +34,7 @@ extern "C" {
 void __cfi_slowpath(uint64_t CallSiteTypeId, void* Ptr);
 void __cfi_slowpath_diag(uint64_t CallSiteTypeId, void* Ptr, void* DiagData);
 size_t __cfi_shadow_size();
+uintptr_t __cfi_shadow_load(void* p);
 }
 
 // Disables debuggerd stack traces to speed up death tests, make them less
@@ -175,5 +177,30 @@ TEST(cfi_test, early_init2) {
   ExecTestHelper eth;
   eth.SetArgs({ helper.c_str(), nullptr });
   eth.Run([&]() { execve(helper.c_str(), eth.GetArgs(), eth.GetEnv()); }, 0, nullptr);
+#endif
+}
+
+TEST(cfi_test, every_loaded_dso_has_valid_shadow) {
+#if defined(__BIONIC__)
+  if (__cfi_shadow_size() == 0) GTEST_SKIP();
+
+  auto callback = [](dl_phdr_info* info, size_t, void*) {
+    if (info->dlpi_phnum == 0 || !info->dlpi_phdr) return 0;
+    for (ElfW(Half) i = 0; i < info->dlpi_phnum; ++i) {
+      auto& ph = info->dlpi_phdr[i];
+      if (ph.p_type != PT_LOAD || !(ph.p_flags & PF_X)) continue;
+      uintptr_t sample_addr = info->dlpi_addr + ph.p_vaddr;
+      uint16_t v = __cfi_shadow_load(reinterpret_cast<void*>(sample_addr));
+
+      EXPECT_NE(uint16_t(CFIShadow::kInvalidShadow), v)
+          << "ERROR: cfi shadow value is invalid, " << info->dlpi_name
+          << " @ 0x" << std::hex << sample_addr
+          << " → shadow=0x" << v
+          << " (" << std::dec << v << ")";
+    }
+    return 0;
+  };
+
+  dl_iterate_phdr(callback, nullptr);
 #endif
 }

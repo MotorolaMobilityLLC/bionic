@@ -330,6 +330,8 @@ soinfo* get_libdl_info(const soinfo& linker_si) {
     __libdl_info->load_bias = linker_si.load_bias;
     __libdl_info->phdr = linker_si.phdr;
     __libdl_info->phnum = linker_si.phnum;
+    __libdl_info->base = linker_si.base;
+    __libdl_info->size = linker_si.size;
 
     __libdl_info->gnu_nbucket_ = linker_si.gnu_nbucket_;
     __libdl_info->gnu_maskwords_ = linker_si.gnu_maskwords_;
