@@ -2798,6 +2798,7 @@ cc_genrule {
         "kernel/android/**/*.h",
         "execinfo/include/**/*.h",
         "b64/include/**/*.h",
+        "include/*.h",
 
         "NOTICE",
 
