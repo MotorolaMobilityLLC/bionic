@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef __ANDROID_DLEXT_NAMESPACES_H__
-#define __ANDROID_DLEXT_NAMESPACES_H__
+#pragma once
 
 #include <android/dlext.h>
 
@@ -61,6 +60,13 @@ enum {
    */
   ANDROID_NAMESPACE_TYPE_EXEMPT_LIST_ENABLED = 0x08000000,
 
+  /* This flag instructs linker to use this namespace as the anonymous
+   * namespace. There can be only one anonymous namespace in a process. If there
+   * already an anonymous namespace in the process, using this flag when
+   * creating a new namespace causes an error
+   */
+  ANDROID_NAMESPACE_TYPE_ALSO_USED_AS_ANONYMOUS = 0x10000000,
+
   ANDROID_NAMESPACE_TYPE_SHARED_ISOLATED = ANDROID_NAMESPACE_TYPE_SHARED |
                                            ANDROID_NAMESPACE_TYPE_ISOLATED,
 };
@@ -98,8 +104,7 @@ extern bool android_link_namespaces(android_namespace_t* from,
 extern bool android_link_namespaces_all_libs(android_namespace_t* from,
                                              android_namespace_t* to);
 
+// TODO: move this somewhere else, since it's unrelated to linker namespaces.
 extern void android_set_application_target_sdk_version(int target);
 
 __END_DECLS
-
-#endif /* __ANDROID_DLEXT_NAMESPACES_H__ */

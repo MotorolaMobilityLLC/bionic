@@ -36,6 +36,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "platform/bionic/dlext_namespaces.h"
 #include "platform/bionic/page.h"
 #include "linked_list.h"
 #include "linker_common_types.h"
@@ -106,45 +107,6 @@ bool get_transparent_hugepages_supported();
 
 void set_16kb_appcompat_mode(bool enable_app_compat);
 bool get_16kb_appcompat_mode();
-
-enum {
-  /* A regular namespace is the namespace with a custom search path that does
-   * not impose any restrictions on the location of native libraries.
-   */
-  ANDROID_NAMESPACE_TYPE_REGULAR = 0,
-
-  /* An isolated namespace requires all the libraries to be on the search path
-   * or under permitted_when_isolated_path. The search path is the union of
-   * ld_library_path and default_library_path.
-   */
-  ANDROID_NAMESPACE_TYPE_ISOLATED = 1,
-
-  /* The shared namespace clones the list of libraries of the caller namespace upon creation
-   * which means that they are shared between namespaces - the caller namespace and the new one
-   * will use the same copy of a library if it was loaded prior to android_create_namespace call.
-   *
-   * Note that libraries loaded after the namespace is created will not be shared.
-   *
-   * Shared namespaces can be isolated or regular. Note that they do not inherit the search path nor
-   * permitted_path from the caller's namespace.
-   */
-  ANDROID_NAMESPACE_TYPE_SHARED = 2,
-
-  /* This flag instructs linker to enable exempt-list workaround for the namespace.
-   * See http://b/26394120 for details.
-   */
-  ANDROID_NAMESPACE_TYPE_EXEMPT_LIST_ENABLED = 0x08000000,
-
-  /* This flag instructs linker to use this namespace as the anonymous
-   * namespace. There can be only one anonymous namespace in a process. If there
-   * already an anonymous namespace in the process, using this flag when
-   * creating a new namespace causes an error
-   */
-  ANDROID_NAMESPACE_TYPE_ALSO_USED_AS_ANONYMOUS = 0x10000000,
-
-  ANDROID_NAMESPACE_TYPE_SHARED_ISOLATED = ANDROID_NAMESPACE_TYPE_SHARED |
-                                           ANDROID_NAMESPACE_TYPE_ISOLATED,
-};
 
 bool init_anonymous_namespace(const char* shared_lib_sonames, const char* library_search_path);
 android_namespace_t* create_namespace(const void* caller_addr,
