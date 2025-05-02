@@ -628,6 +628,7 @@ cc_test {
         "libns_hidden_child_global",
         "libdl_android",
     ],
+    include_dirs: ["bionic/libc"],
     ldflags: ["-Wl,--rpath,${ORIGIN}/.."],
 }
 
