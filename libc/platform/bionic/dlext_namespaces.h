@@ -20,75 +20,98 @@
 
 __BEGIN_DECLS
 
-/*
- * Initializes anonymous namespaces. The shared_libs_sonames is the list of sonames
- * to be shared by default namespace separated by colon. Example: "libc.so:libm.so:libdl.so".
+/**
+ * Initializes the anonymous namespace.
  *
- * The library_search_path is the search path for anonymous namespace. The anonymous namespace
- * is used in the case when linker cannot identify the caller of dlopen/dlsym. This happens
- * for the code not loaded by dynamic linker; for example calls from the mono-compiled code.
+ * `shared_libs_sonames` is a list of sonames to be shared with the default namespace,
+ * separated by colons (such as "libc.so:libm.so:libdl.so").
+ *
+ * `library_search_path` is the search path for the anonymous namespace.
+ * The anonymous namespace is used when the linker cannot identify the caller of
+ * dlopen() or dlsym(). This happens for code not loaded by the dynamic linker,
+ * such as calls from a custom JIT.
  */
 extern bool android_init_anonymous_namespace(const char* shared_libs_sonames,
                                              const char* library_search_path);
 
-
+/**
+ * Bitmask flags for the android_create_namespace() `type` argument.
+ */
 enum {
-  /* A regular namespace is the namespace with a custom search path that does
+  /**
+   * A regular namespace is a namespace with a custom search path that does
    * not impose any restrictions on the location of native libraries.
    */
   ANDROID_NAMESPACE_TYPE_REGULAR = 0,
 
-  /* An isolated namespace requires all the libraries to be on the search path
-   * or under permitted_when_isolated_path. The search path is the union of
-   * ld_library_path and default_library_path.
+  /**
+   * An isolated namespace requires all the libraries to be on the search path
+   * or under `permitted_when_isolated_path`. The search path is the union of
+   * `ld_library_path` and `default_library_path`.
    */
   ANDROID_NAMESPACE_TYPE_ISOLATED = 1,
 
-  /* The shared namespace clones the list of libraries of the caller namespace upon creation
-   * which means that they are shared between namespaces - the caller namespace and the new one
-   * will use the same copy of a library if it was loaded prior to android_create_namespace call.
+  /**
+   * "Share" the caller namespace's list of libraries.
    *
-   * Note that libraries loaded after the namespace is created will not be shared.
+   * This actually _clones_ the list of libraries of the caller namespace
+   * upon creation rather than actually sharing:
    *
-   * Shared namespaces can be isolated or regular. Note that they do not inherit the search path nor
-   * permitted_path from the caller's namespace.
+   * 1. Both the caller namespace and the new one will use the same copy of a
+   *    library if it was already loaded in the caller namespace.
+   *
+   * but
+   *
+   * 2. Libraries loaded after the namespace is created will not be shared.
+   *
+   * Shared namespaces can be isolated or regular.
+   *
+   * Shared namespaces do not inherit the search path or permitted path from
+   * the caller namespace.
    */
   ANDROID_NAMESPACE_TYPE_SHARED = 2,
 
-  /* This flag instructs linker to enable exempt-list workaround for the namespace.
+  /**
+   * Enable the exempt-list workaround for the namespace.
    * See http://b/26394120 for details.
    */
   ANDROID_NAMESPACE_TYPE_EXEMPT_LIST_ENABLED = 0x08000000,
 
-  /* This flag instructs linker to use this namespace as the anonymous
-   * namespace. There can be only one anonymous namespace in a process. If there
-   * already an anonymous namespace in the process, using this flag when
-   * creating a new namespace causes an error
+  /**
+   * Use this namespace as the anonymous namespace.
+   *
+   * There can be only one anonymous namespace in a process.
+   * If there is already an anonymous namespace in the process,
+   * using this flag when creating a new namespace is an error.
    */
   ANDROID_NAMESPACE_TYPE_ALSO_USED_AS_ANONYMOUS = 0x10000000,
 
+  /** A common combination. */
   ANDROID_NAMESPACE_TYPE_SHARED_ISOLATED = ANDROID_NAMESPACE_TYPE_SHARED |
                                            ANDROID_NAMESPACE_TYPE_ISOLATED,
 };
 
-/*
- * Creates new linker namespace.
- * ld_library_path and default_library_path represent the search path
+/**
+ * Create a new linker namespace.
+ *
+ * `ld_library_path` and `default_library_path` represent the search path
  * for the libraries in the namespace.
  *
- * The libraries in the namespace are searched by folowing order:
- * 1. ld_library_path (Think of this as namespace-local LD_LIBRARY_PATH)
+ * The libraries in the namespace are searched in the following order:
+ * 1. `ld_library_path` (think of this as a namespace-local $LD_LIBRARY_PATH).
  * 2. In directories specified by DT_RUNPATH of the "needed by" binary.
- * 3. deault_library_path (This of this as namespace-local default library path)
+ * 3. `default_library_path` (think of this as a namespace-local default library path).
  *
- * When type is ANDROID_NAMESPACE_TYPE_ISOLATED the resulting namespace requires all of
- * the libraries to be on the search path or under the permitted_when_isolated_path;
- * the search_path is ld_library_path:default_library_path. Note that the
- * permitted_when_isolated_path path is not part of the search_path and
- * does not affect the search order. It is a way to allow loading libraries from specific
- * locations when using absolute path.
- * If a library or any of its dependencies are outside of the permitted_when_isolated_path
- * and search_path, and it is not part of the public namespace dlopen will fail.
+ * If the ANDROID_NAMESPACE_TYPE_ISOLATED bit is set in `type`,
+ * the resulting namespace requires all of the libraries to be on the search
+ * path or under the `permitted_when_isolated_path`;
+ * the search path is `ld_library_path` followed by `default_library_path`.
+ * Note that the `permitted_when_isolated_path` path is not part of the search
+ * path and does not affect the search order: it's a way to allow loading
+ * libraries from specific locations when using absolute paths.
+ *
+ * If a library or any of its dependencies are outside of the `permitted_when_isolated_path`
+ * and search path, and not part of the public namespace, dlopen() will fail.
  */
 extern struct android_namespace_t* android_create_namespace(const char* name,
                                                             const char* ld_library_path,
