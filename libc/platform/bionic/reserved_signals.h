@@ -35,31 +35,44 @@
 #include "macros.h"
 
 // Realtime signals reserved for internal use:
-//   32 (__SIGRTMIN + 0)        POSIX timers
-//   33 (__SIGRTMIN + 1)        libbacktrace
-//   34 (__SIGRTMIN + 2)        libcore
-//   35 (__SIGRTMIN + 3)        debuggerd
-//   36 (__SIGRTMIN + 4)        platform profilers (heapprofd, traced_perf)
-//   37 (__SIGRTMIN + 5)        coverage (libprofile-extras)
-//   38 (__SIGRTMIN + 6)        heapprofd ART managed heap dumps
-//   39 (__SIGRTMIN + 7)        fdtrack
-//   40 (__SIGRTMIN + 8)        android_run_on_all_threads (bionic/pthread_internal.cpp)
-//   41 (__SIGRTMIN + 9)        re-enable MTE on thread
 
+//   32 (__SIGRTMIN + 0)        POSIX timers
 #define BIONIC_SIGNAL_POSIX_TIMERS (__SIGRTMIN + 0)
+
+//   33 (__SIGRTMIN + 1)        libbacktrace
 #define BIONIC_SIGNAL_BACKTRACE (__SIGRTMIN + 1)
+
+//   34 (__SIGRTMIN + 2)        libcore
+// There's no constant for this because it's hard-coded in the OpenJDK source.
+// It's used to implement Java's "close() on a Socket wakes blocked readers and
+// writers" semantics.
+
+//   35 (__SIGRTMIN + 3)        debuggerd
 #define BIONIC_SIGNAL_DEBUGGER (__SIGRTMIN + 3)
+
+//   36 (__SIGRTMIN + 4)        platform profilers (heapprofd, traced_perf)
 #define BIONIC_SIGNAL_PROFILER (__SIGRTMIN + 4)
-// When used for the dumping a heap dump, BIONIC_SIGNAL_ART_PROFILER is always handled
-// gracefully without crashing.
+
+//   37 (__SIGRTMIN + 5)        coverage (libprofile-extras)
+// Used by the clang coverage support to flush coverage data to disk.
+#define BIONIC_SIGNAL_FLUSH_COVERAGE (__SIGRTMIN + 5)
+
+//   38 (__SIGRTMIN + 6)        heapprofd ART managed heap dumps
+// When used in ART for heap dumps, this is handled without crashing.
 // In debuggerd, we crash the process with this signal to indicate to init that
 // a process has been terminated by an MTEAERR SEGV. This works because there is
 // no other reason a process could have terminated with this signal.
 // This is to work around the limitation of that it is not possible to get the
 // si_code that terminated a process.
 #define BIONIC_SIGNAL_ART_PROFILER (__SIGRTMIN + 6)
+
+//   39 (__SIGRTMIN + 7)        fdtrack
 #define BIONIC_SIGNAL_FDTRACK (__SIGRTMIN + 7)
+
+//   40 (__SIGRTMIN + 8)        android_run_on_all_threads (bionic/pthread_internal.cpp)
 #define BIONIC_SIGNAL_RUN_ON_ALL_THREADS (__SIGRTMIN + 8)
+
+//   41 (__SIGRTMIN + 9)        re-enable MTE on thread
 #define BIONIC_ENABLE_MTE (__SIGRTMIN + 9)
 
 #define __SIGRT_RESERVED 10
