@@ -26,9 +26,9 @@
 template <typename CheckSize, typename CheckOffset>
 void tests(CheckSize check_size, CheckOffset check_offset) {
 #define CHECK_SIZE(name, size) \
-    check_size(#name, sizeof(name), size);
+    check_size(#name, sizeof(name), size)
 #define CHECK_OFFSET(name, field, offset) \
-    check_offset(#name, #field, offsetof(name, field), offset);
+    check_offset(#name, #field, offsetof(name, field), offset)
 #ifdef __LP64__
   CHECK_SIZE(pthread_internal_t, 824);
   CHECK_OFFSET(pthread_internal_t, next, 0);
@@ -58,22 +58,21 @@ void tests(CheckSize check_size, CheckOffset check_offset) {
   CHECK_OFFSET(pthread_internal_t, bionic_tcb, 776);
   CHECK_OFFSET(pthread_internal_t, stack_mte_ringbuffer_vma_name_buffer, 784);
   CHECK_OFFSET(pthread_internal_t, should_allocate_stack_mte_ringbuffer, 816);
-  CHECK_SIZE(bionic_tls, 12200);
+  CHECK_SIZE(bionic_tls, 4016);
   CHECK_OFFSET(bionic_tls, key_data, 0);
   CHECK_OFFSET(bionic_tls, locale, 2080);
-  CHECK_OFFSET(bionic_tls, basename_buf, 2088);
-  CHECK_OFFSET(bionic_tls, dirname_buf, 6184);
-  CHECK_OFFSET(bionic_tls, mntent_buf, 10280);
-  CHECK_OFFSET(bionic_tls, mntent_strings, 10320);
-  CHECK_OFFSET(bionic_tls, ptsname_buf, 11344);
-  CHECK_OFFSET(bionic_tls, ttyname_buf, 11376);
-  CHECK_OFFSET(bionic_tls, strerror_buf, 11440);
-  CHECK_OFFSET(bionic_tls, strsignal_buf, 11695);
-  CHECK_OFFSET(bionic_tls, group, 11952);
-  CHECK_OFFSET(bionic_tls, passwd, 12040);
-  CHECK_OFFSET(bionic_tls, fdtrack_disabled, 12192);
-  CHECK_OFFSET(bionic_tls, bionic_systrace_disabled, 12193);
-  CHECK_OFFSET(bionic_tls, padding, 12194);
+  CHECK_OFFSET(bionic_tls, libgen_buffers_ptr, 2088);
+  CHECK_OFFSET(bionic_tls, mntent_buf, 2096);
+  CHECK_OFFSET(bionic_tls, mntent_strings, 2136);
+  CHECK_OFFSET(bionic_tls, ptsname_buf, 3160);
+  CHECK_OFFSET(bionic_tls, ttyname_buf, 3192);
+  CHECK_OFFSET(bionic_tls, strerror_buf, 3256);
+  CHECK_OFFSET(bionic_tls, strsignal_buf, 3511);
+  CHECK_OFFSET(bionic_tls, group, 3768);
+  CHECK_OFFSET(bionic_tls, passwd, 3856);
+  CHECK_OFFSET(bionic_tls, fdtrack_disabled, 4008);
+  CHECK_OFFSET(bionic_tls, bionic_systrace_disabled, 4009);
+  CHECK_OFFSET(bionic_tls, padding, 4010);
 #else
   CHECK_SIZE(pthread_internal_t, 708);
   CHECK_OFFSET(pthread_internal_t, next, 0);
@@ -103,22 +102,21 @@ void tests(CheckSize check_size, CheckOffset check_offset) {
   CHECK_OFFSET(pthread_internal_t, bionic_tcb, 668);
   CHECK_OFFSET(pthread_internal_t, stack_mte_ringbuffer_vma_name_buffer, 672);
   CHECK_OFFSET(pthread_internal_t, should_allocate_stack_mte_ringbuffer, 704);
-  CHECK_SIZE(bionic_tls, 11080);
+  CHECK_SIZE(bionic_tls, 2892);
   CHECK_OFFSET(bionic_tls, key_data, 0);
   CHECK_OFFSET(bionic_tls, locale, 1040);
-  CHECK_OFFSET(bionic_tls, basename_buf, 1044);
-  CHECK_OFFSET(bionic_tls, dirname_buf, 5140);
-  CHECK_OFFSET(bionic_tls, mntent_buf, 9236);
-  CHECK_OFFSET(bionic_tls, mntent_strings, 9260);
-  CHECK_OFFSET(bionic_tls, ptsname_buf, 10284);
-  CHECK_OFFSET(bionic_tls, ttyname_buf, 10316);
-  CHECK_OFFSET(bionic_tls, strerror_buf, 10380);
-  CHECK_OFFSET(bionic_tls, strsignal_buf, 10635);
-  CHECK_OFFSET(bionic_tls, group, 10892);
-  CHECK_OFFSET(bionic_tls, passwd, 10952);
-  CHECK_OFFSET(bionic_tls, fdtrack_disabled, 11076);
-  CHECK_OFFSET(bionic_tls, bionic_systrace_disabled, 11077);
-  CHECK_OFFSET(bionic_tls, padding, 11078);
+  CHECK_OFFSET(bionic_tls, libgen_buffers_ptr, 1044);
+  CHECK_OFFSET(bionic_tls, mntent_buf, 1048);
+  CHECK_OFFSET(bionic_tls, mntent_strings, 1072);
+  CHECK_OFFSET(bionic_tls, ptsname_buf, 2096);
+  CHECK_OFFSET(bionic_tls, ttyname_buf, 2128);
+  CHECK_OFFSET(bionic_tls, strerror_buf, 2192);
+  CHECK_OFFSET(bionic_tls, strsignal_buf, 2447);
+  CHECK_OFFSET(bionic_tls, group, 2704);
+  CHECK_OFFSET(bionic_tls, passwd, 2764);
+  CHECK_OFFSET(bionic_tls, fdtrack_disabled, 2888);
+  CHECK_OFFSET(bionic_tls, bionic_systrace_disabled, 2889);
+  CHECK_OFFSET(bionic_tls, padding, 2890);
 #endif  // __LP64__
 #undef CHECK_SIZE
 #undef CHECK_OFFSET

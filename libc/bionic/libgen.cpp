@@ -158,13 +158,13 @@ __LIBC32_LEGACY_PUBLIC__ int dirname_r(const char* path, char* buffer, size_t bu
 }
 
 char* basename(const char* path) {
-  char* buf = __get_bionic_tls().basename_buf;
-  int rc = __basename_r(path, buf, sizeof(__get_bionic_tls().basename_buf));
+  char* buf = (__get_bionic_tls().libgen_buffers_ptr)->basename_buf;
+  int rc = __basename_r(path, buf, sizeof((__get_bionic_tls().libgen_buffers_ptr)->basename_buf));
   return (rc < 0) ? nullptr : buf;
 }
 
 char* dirname(const char* path) {
-  char* buf = __get_bionic_tls().dirname_buf;
-  int rc = __dirname_r(path, buf, sizeof(__get_bionic_tls().dirname_buf));
+  char* buf = (__get_bionic_tls().libgen_buffers_ptr)->dirname_buf;
+  int rc = __dirname_r(path, buf, sizeof((__get_bionic_tls().libgen_buffers_ptr)->dirname_buf));
   return (rc < 0) ? nullptr : buf;
 }
