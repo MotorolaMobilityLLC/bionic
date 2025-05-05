@@ -248,7 +248,7 @@ typedef struct {
  * Returns 0 on success and returns -1 and sets `errno` on failure.
  */
 #if defined(__USE_GNU)
-int sched_setaffinity(pid_t __pid, size_t __set_size, const cpu_set_t* _Nonnull __set);
+int sched_setaffinity(pid_t __pid, size_t __cpu_set_size, const cpu_set_t* _Nonnull __cpu_set);
 #endif
 
 /**
@@ -258,7 +258,7 @@ int sched_setaffinity(pid_t __pid, size_t __set_size, const cpu_set_t* _Nonnull 
  * Returns 0 on success and returns -1 and sets `errno` on failure.
  */
 #if defined(__USE_GNU)
-int sched_getaffinity(pid_t __pid, size_t __set_size, cpu_set_t* _Nonnull __set);
+int sched_getaffinity(pid_t __pid, size_t __cpu_set_size, cpu_set_t* _Nonnull __cpu_set);
 #endif
 
 /**
@@ -375,7 +375,7 @@ int sched_getattr(pid_t __pid, struct sched_attr* _Nonnull __attr, unsigned __si
  */
 #if defined(__USE_GNU)
 #define CPU_COUNT_S(setsize, set)  __sched_cpucount((setsize), (set))
-int __sched_cpucount(size_t __set_size, const cpu_set_t* _Nonnull __set);
+int __sched_cpucount(size_t __cpu_set_size, const cpu_set_t* _Nonnull __cpu_set);
 #endif
 
 /**
@@ -483,7 +483,7 @@ cpu_set_t* _Nullable __sched_cpualloc(size_t __count);
  */
 #if defined(__USE_GNU)
 #define CPU_FREE(set)     __sched_cpufree((set))
-void __sched_cpufree(cpu_set_t* _Nonnull __set);
+void __sched_cpufree(cpu_set_t* _Nonnull __cpu_set);
 #endif
 
 __END_DECLS
