@@ -47,11 +47,11 @@ __BEGIN_DECLS
  * [__riscv_hwprobe(2)](https://docs.kernel.org/riscv/hwprobe.html)
  * queries hardware characteristics.
  *
- * A `__cpu_count` of 0 and null `__cpus` means "all online cpus".
+ * A `__cpu_set_size` of 0 and null `__cpu_set` means "all online cpus".
  *
  * Returns 0 on success and returns an error number on failure.
  */
-int __riscv_hwprobe(struct riscv_hwprobe* _Nonnull __pairs, size_t __pair_count, size_t __cpu_count, unsigned long* _Nullable __cpus, unsigned __flags);
+int __riscv_hwprobe(struct riscv_hwprobe* _Nonnull __pairs, size_t __pair_count, size_t __cpu_set_size, unsigned long* _Nullable __cpu_set, unsigned __flags);
 
 /**
  * The type of the second argument passed to riscv64 ifunc resolvers.
@@ -59,7 +59,7 @@ int __riscv_hwprobe(struct riscv_hwprobe* _Nonnull __pairs, size_t __pair_count,
  * without worrying about whether that relocation is resolved before
  * the ifunc resolver is called.
  */
-typedef int (*__riscv_hwprobe_t)(struct riscv_hwprobe* _Nonnull __pairs, size_t __pair_count, size_t __cpu_count, unsigned long* _Nullable __cpus, unsigned __flags);
+typedef int (*__riscv_hwprobe_t)(struct riscv_hwprobe* _Nonnull __pairs, size_t __pair_count, size_t __cpu_set_size, unsigned long* _Nullable __cpu_set, unsigned __flags);
 
 __END_DECLS
 
