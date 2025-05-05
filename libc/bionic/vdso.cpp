@@ -83,12 +83,12 @@ time_t time(time_t* t) {
 }
 
 #if defined(__riscv)
-int __riscv_hwprobe(struct riscv_hwprobe* _Nonnull pairs, size_t pair_count, size_t cpu_count,
-                    unsigned long* _Nullable cpus, unsigned flags) {
+int __riscv_hwprobe(struct riscv_hwprobe* _Nonnull pairs, size_t pair_count, size_t cpu_set_size,
+                    unsigned long* _Nullable cpu_set, unsigned flags) {
   auto vdso_riscv_hwprobe =
       reinterpret_cast<decltype(&__riscv_hwprobe)>(__libc_globals->vdso[VDSO_RISCV_HWPROBE].fn);
   if (__predict_true(vdso_riscv_hwprobe)) {
-    return -vdso_riscv_hwprobe(pairs, pair_count, cpu_count, cpus, flags);
+    return -vdso_riscv_hwprobe(pairs, pair_count, cpu_set_size, cpu_set, flags);
   }
   // Inline the syscall directly in case someone's calling it from an
   // ifunc resolver where we won't be able to set errno on failure.
@@ -97,8 +97,8 @@ int __riscv_hwprobe(struct riscv_hwprobe* _Nonnull pairs, size_t pair_count, siz
   // is to return an error value rather than setting errno.)
   register long a0 __asm__("a0") = reinterpret_cast<long>(pairs);
   register long a1 __asm__("a1") = pair_count;
-  register long a2 __asm__("a2") = cpu_count;
-  register long a3 __asm__("a3") = reinterpret_cast<long>(cpus);
+  register long a2 __asm__("a2") = cpu_set_size;
+  register long a3 __asm__("a3") = reinterpret_cast<long>(cpu_set);
   register long a4 __asm__("a4") = flags;
   register long a7 __asm__("a7") = __NR_riscv_hwprobe;
   __asm__ volatile("ecall" : "=r"(a0) : "r"(a0), "r"(a1), "r"(a2), "r"(a3), "r"(a4), "r"(a7));
