@@ -185,6 +185,13 @@ typedef struct {
   int rem;
 } div_t;
 
+/**
+ * Returns `__numerator / __denominator` and `__numerator % __denominator`,
+ * truncating towards zero.
+ *
+ * This function was useful for portability before C99,
+ * where `/` and `%` were also defined to truncate towards zero.
+ */
 div_t div(int __numerator, int __denominator) __attribute_const__;
 
 typedef struct {
@@ -192,6 +199,13 @@ typedef struct {
   long int rem;
 } ldiv_t;
 
+/**
+ * Returns `__numerator / __denominator` and `__numerator % __denominator`,
+ * truncating towards zero.
+ *
+ * This function was useful for portability before C99,
+ * where `/` and `%` were also defined to truncate towards zero.
+ */
 ldiv_t ldiv(long __numerator, long __denominator) __attribute_const__;
 
 typedef struct {
@@ -199,6 +213,13 @@ typedef struct {
   long long int rem;
 } lldiv_t;
 
+/**
+ * Returns `__numerator / __denominator` and `__numerator % __denominator`,
+ * truncating towards zero.
+ *
+ * This function was useful for portability before C99,
+ * where `/` and `%` were also defined to truncate towards zero.
+ */
 lldiv_t lldiv(long long __numerator, long long __denominator) __attribute_const__;
 
 /**
@@ -234,8 +255,22 @@ size_t __ctype_get_mb_cur_max(void);
 #include <bits/fortify/stdlib.h>
 #endif
 
+/**
+ * Returns the absolute value where possible.
+ * For the most negative value, the result is unchanged (and thus also negative).
+ */
 int abs(int __x) __attribute_const__;
+
+/**
+ * Returns the absolute value where possible.
+ * For the most negative value, the result is unchanged (and thus also negative).
+ */
 long labs(long __x) __attribute_const__;
+
+/**
+ * Returns the absolute value where possible.
+ * For the most negative value, the result is unchanged (and thus also negative).
+ */
 long long llabs(long long __x) __attribute_const__;
 
 int rand(void);

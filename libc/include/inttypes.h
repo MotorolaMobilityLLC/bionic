@@ -327,12 +327,27 @@ typedef struct {
 } imaxdiv_t;
 
 __BEGIN_DECLS
+
+/**
+ * Returns the absolute value where possible.
+ * For the most negative value, the result is unchanged (and thus also negative).
+ */
 intmax_t imaxabs(intmax_t __i) __attribute_const__;
+
+/**
+ * Returns `__numerator / __denominator` and `__numerator % __denominator`,
+ * truncating towards zero.
+ *
+ * This function was useful for portability before C99,
+ * where `/` and `%` were also defined to truncate towards zero.
+ */
 imaxdiv_t imaxdiv(intmax_t __numerator, intmax_t __denominator) __attribute_const__;
+
 intmax_t strtoimax(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, int __base);
 uintmax_t strtoumax(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, int __base);
 intmax_t wcstoimax(const wchar_t* _Nonnull __s, wchar_t* _Nullable * _Nullable __end_ptr, int __base);
 uintmax_t wcstoumax(const wchar_t* _Nonnull __s, wchar_t* _Nullable * _Nullable __end_ptr, int __base);
+
 __END_DECLS
 
 #endif
