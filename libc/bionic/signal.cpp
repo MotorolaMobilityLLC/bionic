@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/epoll.h>
 #include <sys/signalfd.h>
@@ -304,4 +305,16 @@ int sigwaitinfo(const sigset_t* set, siginfo_t* info) {
 
 int sigwaitinfo64(const sigset64_t* set, siginfo_t* info) {
   return sigtimedwait64(set, info, nullptr);
+}
+
+extern "C" const char* __strsignal(int, char*, size_t);
+
+void psignal(int sig, const char* msg) {
+  if (msg == nullptr) msg = "";
+  char buf[NL_TEXTMAX];
+  fprintf(stderr, "%s%s%s\n", msg, (*msg == '\0') ? "" : ": ", __strsignal(sig, buf, sizeof(buf)));
+}
+
+void psiginfo(const siginfo_t* si, const char* msg) {
+  psignal(si->si_signo, msg);
 }

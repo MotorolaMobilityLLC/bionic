@@ -26,6 +26,7 @@
 #include <thread>
 
 #include <android-base/macros.h>
+#include <android-base/test_utils.h>
 #include <android-base/threads.h>
 
 #include <gtest/gtest.h>
@@ -1103,3 +1104,42 @@ TEST(signal, sme_tpidr2_clear) {
       << "https://lore.kernel.org/linux-arm-kernel/20250417190113.3778111-1-mark.rutland@arm.com/";
 }
 #endif
+
+TEST(signal, psignal) {
+  CapturedStderr cap;
+  psignal(SIGINT, "a b c");
+  ASSERT_EQ(cap.str(), "a b c: Interrupt\n");
+}
+
+TEST(signal, psignal_null) {
+  CapturedStderr cap;
+  psignal(SIGINT, nullptr);
+  ASSERT_EQ(cap.str(), "Interrupt\n");
+}
+
+TEST(signal, psignal_empty) {
+  CapturedStderr cap;
+  psignal(SIGINT, "");
+  ASSERT_EQ(cap.str(), "Interrupt\n");
+}
+
+TEST(signal, psiginfo) {
+  CapturedStderr cap;
+  siginfo_t si{.si_signo = SIGINT};
+  psiginfo(&si, "a b c");
+  ASSERT_EQ(cap.str(), "a b c: Interrupt\n");
+}
+
+TEST(signal, psiginfo_null) {
+  CapturedStderr cap;
+  siginfo_t si{.si_signo = SIGINT};
+  psiginfo(&si, nullptr);
+  ASSERT_EQ(cap.str(), "Interrupt\n");
+}
+
+TEST(signal, psiginfo_empty) {
+  CapturedStderr cap;
+  siginfo_t si{.si_signo = SIGINT};
+  psiginfo(&si, "");
+  ASSERT_EQ(cap.str(), "Interrupt\n");
+}
