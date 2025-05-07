@@ -15,8 +15,8 @@
  */
 
 // (b/291762537): This code uses malloc_usable_size(), and thus can't be
-// built with _FORTIFY_SOURCE=3.
-#if defined(_FORTIFY_SOURCE) && _FORTIFY_SOURCE == 3
+// built with _FORTIFY_SOURCE>=3.
+#if defined(_FORTIFY_SOURCE) && _FORTIFY_SOURCE >= 3
 #undef _FORTIFY_SOURCE
 #define _FORTIFY_SOURCE 2
 #endif
