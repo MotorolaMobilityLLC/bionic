@@ -2641,25 +2641,45 @@ TEST(STDIO_TEST, constants) {
 }
 
 TEST(STDIO_TEST, perror) {
-  ExecTestHelper eth;
-  eth.Run([&]() { errno = EINVAL; perror("a b c"); exit(0); }, 0, "a b c: Invalid argument\n");
-  eth.Run([&]() { errno = EINVAL; perror(nullptr); exit(0); }, 0, "Invalid argument\n");
-  eth.Run([&]() { errno = EINVAL; perror(""); exit(0); }, 0, "Invalid argument\n");
+  CapturedStderr cap;
+  errno = EINVAL;
+  perror("a b c");
+  ASSERT_EQ(cap.str(), "a b c: Invalid argument\n");
+}
+
+TEST(STDIO_TEST, perror_null) {
+  CapturedStderr cap;
+  errno = EINVAL;
+  perror(nullptr);
+  ASSERT_EQ(cap.str(), "Invalid argument\n");
+}
+
+TEST(STDIO_TEST, perror_empty) {
+  CapturedStderr cap;
+  errno = EINVAL;
+  perror("");
+  ASSERT_EQ(cap.str(), "Invalid argument\n");
 }
 
 TEST(STDIO_TEST, puts) {
-  ExecTestHelper eth;
-  eth.Run([&]() { exit(puts("a b c")); }, 0, "a b c\n");
+  CapturedStdout cap;
+  puts("a b c");
+  fflush(stdout);
+  ASSERT_EQ(cap.str(), "a b c\n");
 }
 
 TEST(STDIO_TEST, putchar) {
-  ExecTestHelper eth;
-  eth.Run([&]() { exit(putchar('A')); }, 65, "A");
+  CapturedStdout cap;
+  ASSERT_EQ(65, putchar('A'));
+  fflush(stdout);
+  ASSERT_EQ(cap.str(), "A");
 }
 
 TEST(STDIO_TEST, putchar_unlocked) {
-  ExecTestHelper eth;
-  eth.Run([&]() { exit(putchar('B')); }, 66, "B");
+  CapturedStdout cap;
+  ASSERT_EQ(66, putchar_unlocked('B'));
+  fflush(stdout);
+  ASSERT_EQ(cap.str(), "B");
 }
 
 TEST(STDIO_TEST, unlocked) {
