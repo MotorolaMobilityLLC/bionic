@@ -25,7 +25,8 @@
 // (https://clang.llvm.org/doxygen/classclang_1_1VerifyDiagnosticConsumer.html#details)
 // to check diagnostics (e.g. the expected-* comments everywhere).
 //
-// 2. For run-time checks, we build and run as regular gtests.
+// 2. For run-time checks, we build and run as regular gtests (as described in
+// bionic/README.md).
 
 // Note that these tests do things like leaking memory. That's WAI.
 
