@@ -349,6 +349,8 @@ cc_prebuilt_test_library_shared {
         arm64: {
             srcs: ["prebuilt-elf-files/arm64/libtest_invalid-local-tls.so"],
         },
+        // No riscv64 here because the gold linker never had riscv64 support,
+        // and this is a test for a gold-specific bug.
         x86: {
             srcs: ["prebuilt-elf-files/x86/libtest_invalid-local-tls.so"],
         },
