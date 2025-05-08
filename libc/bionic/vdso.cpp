@@ -84,7 +84,7 @@ time_t time(time_t* t) {
 
 #if defined(__riscv)
 int __riscv_hwprobe(struct riscv_hwprobe* _Nonnull pairs, size_t pair_count, size_t cpu_set_size,
-                    unsigned long* _Nullable cpu_set, unsigned flags) {
+                    cpu_set_t* _Nullable cpu_set, unsigned flags) {
   auto vdso_riscv_hwprobe =
       reinterpret_cast<decltype(&__riscv_hwprobe)>(__libc_globals->vdso[VDSO_RISCV_HWPROBE].fn);
   if (__predict_true(vdso_riscv_hwprobe)) {

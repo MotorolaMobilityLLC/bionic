@@ -38,6 +38,9 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+/* For cpu_set_t. */
+#include <sched.h>
+
 /* Pull in struct riscv_hwprobe and corresponding constants. */
 #include <asm/hwprobe.h>
 
@@ -51,7 +54,7 @@ __BEGIN_DECLS
  *
  * Returns 0 on success and returns an error number on failure.
  */
-int __riscv_hwprobe(struct riscv_hwprobe* _Nonnull __pairs, size_t __pair_count, size_t __cpu_set_size, unsigned long* _Nullable __cpu_set, unsigned __flags);
+int __riscv_hwprobe(struct riscv_hwprobe* _Nonnull __pairs, size_t __pair_count, size_t __cpu_set_size, cpu_set_t* _Nullable __cpu_set, unsigned __flags);
 
 /**
  * The type of the second argument passed to riscv64 ifunc resolvers.
@@ -59,7 +62,7 @@ int __riscv_hwprobe(struct riscv_hwprobe* _Nonnull __pairs, size_t __pair_count,
  * without worrying about whether that relocation is resolved before
  * the ifunc resolver is called.
  */
-typedef int (*__riscv_hwprobe_t)(struct riscv_hwprobe* _Nonnull __pairs, size_t __pair_count, size_t __cpu_set_size, unsigned long* _Nullable __cpu_set, unsigned __flags);
+typedef int (*__riscv_hwprobe_t)(struct riscv_hwprobe* _Nonnull __pairs, size_t __pair_count, size_t __cpu_set_size, cpu_set_t* _Nullable __cpu_set, unsigned __flags);
 
 __END_DECLS
 
