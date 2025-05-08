@@ -140,16 +140,12 @@ cc_library {
         "upstream-freebsd/lib/msun/src/s_frexpf.c",
         "upstream-freebsd/lib/msun/src/s_ilogb.c",
         "upstream-freebsd/lib/msun/src/s_ilogbf.c",
-        "upstream-freebsd/lib/msun/src/s_llrint.c",
-        "upstream-freebsd/lib/msun/src/s_llrintf.c",
         "upstream-freebsd/lib/msun/src/s_llround.c",
         "upstream-freebsd/lib/msun/src/s_llroundf.c",
         "upstream-freebsd/lib/msun/src/s_log1p.c",
         "upstream-freebsd/lib/msun/src/s_log1pf.c",
         "upstream-freebsd/lib/msun/src/s_logb.c",
         "upstream-freebsd/lib/msun/src/s_logbf.c",
-        "upstream-freebsd/lib/msun/src/s_lrint.c",
-        "upstream-freebsd/lib/msun/src/s_lrintf.c",
         "upstream-freebsd/lib/msun/src/s_lround.c",
         "upstream-freebsd/lib/msun/src/s_lroundf.c",
         "upstream-freebsd/lib/msun/src/s_modf.c",
@@ -271,6 +267,12 @@ cc_library {
         arm: {
             srcs: [
                 "fenv-arm.c",
+
+                // Even armv8 arm32 doesn't have instructions for these.
+                "upstream-freebsd/lib/msun/src/s_llrint.c",
+                "upstream-freebsd/lib/msun/src/s_llrintf.c",
+                "upstream-freebsd/lib/msun/src/s_lrint.c",
+                "upstream-freebsd/lib/msun/src/s_lrintf.c",
             ],
             soft_ceil_floor: {
                 // armv7 arm32 has no instructions to implement these as
@@ -309,12 +311,8 @@ cc_library {
                 "upstream-freebsd/lib/msun/src/s_fmaxf.c",
                 "upstream-freebsd/lib/msun/src/s_fmin.c",
                 "upstream-freebsd/lib/msun/src/s_fminf.c",
-                "upstream-freebsd/lib/msun/src/s_llrint.c",
-                "upstream-freebsd/lib/msun/src/s_llrintf.c",
                 "upstream-freebsd/lib/msun/src/s_llround.c",
                 "upstream-freebsd/lib/msun/src/s_llroundf.c",
-                "upstream-freebsd/lib/msun/src/s_lrint.c",
-                "upstream-freebsd/lib/msun/src/s_lrintf.c",
                 "upstream-freebsd/lib/msun/src/s_lround.c",
                 "upstream-freebsd/lib/msun/src/s_lroundf.c",
                 "upstream-freebsd/lib/msun/src/s_round.c",
@@ -327,7 +325,6 @@ cc_library {
             srcs: [
                 "fenv-riscv64.c",
             ],
-
             exclude_srcs: [
                 "upstream-freebsd/lib/msun/src/s_fma.c",
                 "upstream-freebsd/lib/msun/src/s_fmaf.c",
@@ -335,12 +332,8 @@ cc_library {
                 "upstream-freebsd/lib/msun/src/s_fmaxf.c",
                 "upstream-freebsd/lib/msun/src/s_fmin.c",
                 "upstream-freebsd/lib/msun/src/s_fminf.c",
-                "upstream-freebsd/lib/msun/src/s_llrint.c",
-                "upstream-freebsd/lib/msun/src/s_llrintf.c",
                 "upstream-freebsd/lib/msun/src/s_llround.c",
                 "upstream-freebsd/lib/msun/src/s_llroundf.c",
-                "upstream-freebsd/lib/msun/src/s_lrint.c",
-                "upstream-freebsd/lib/msun/src/s_lrintf.c",
                 "upstream-freebsd/lib/msun/src/s_lround.c",
                 "upstream-freebsd/lib/msun/src/s_lroundf.c",
                 "upstream-freebsd/lib/msun/src/s_round.c",
@@ -353,12 +346,6 @@ cc_library {
             srcs: [
                 "fenv-x86.c",
             ],
-            exclude_srcs: [
-                "upstream-freebsd/lib/msun/src/s_llrint.c",
-                "upstream-freebsd/lib/msun/src/s_llrintf.c",
-                "upstream-freebsd/lib/msun/src/s_lrint.c",
-                "upstream-freebsd/lib/msun/src/s_lrintf.c",
-            ],
             // The x86 ABI doesn't include this, which is needed for the
             // roundss/roundsd instructions that we've used since API level 23,
             // originally by hand-written assembler but later via intrinsics.
@@ -369,12 +356,6 @@ cc_library {
         x86_64: {
             srcs: [
                 "fenv-x86_64.c",
-            ],
-            exclude_srcs: [
-                "upstream-freebsd/lib/msun/src/s_llrint.c",
-                "upstream-freebsd/lib/msun/src/s_llrintf.c",
-                "upstream-freebsd/lib/msun/src/s_lrint.c",
-                "upstream-freebsd/lib/msun/src/s_lrintf.c",
             ],
             version_script: ":libm.x86_64.map",
         },
