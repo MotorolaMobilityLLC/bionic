@@ -33,25 +33,24 @@
 #endif
 
 TEST(sys_stat, futimens) {
-  FILE* fp = tmpfile();
-  ASSERT_TRUE(fp != nullptr);
-
-  int fd = fileno(fp);
-  ASSERT_NE(fd, -1);
+  TemporaryFile tf;
 
   timespec times[2];
   times[0].tv_sec = 123;
   times[0].tv_nsec = 0;
   times[1].tv_sec = 456;
   times[1].tv_nsec = 0;
-  ASSERT_EQ(0, futimens(fd, times)) << strerror(errno);
+  ASSERT_EQ(0, futimens(tf.fd, times)) << strerror(errno);
 
   struct stat sb;
-  ASSERT_EQ(0, fstat(fd, &sb));
+  ASSERT_EQ(0, fstat(tf.fd, &sb));
   ASSERT_EQ(times[0].tv_sec, static_cast<long>(sb.st_atime));
   ASSERT_EQ(times[1].tv_sec, static_cast<long>(sb.st_mtime));
+}
 
-  fclose(fp);
+TEST(sys_stat, futimens_null) {
+  TemporaryFile tf;
+  ASSERT_EQ(0, futimens(tf.fd, nullptr));
 }
 
 TEST(sys_stat, futimens_EBADF) {
@@ -62,6 +61,27 @@ TEST(sys_stat, futimens_EBADF) {
   times[1].tv_nsec = 0;
   ASSERT_EQ(-1, futimens(-1, times));
   ASSERT_ERRNO(EBADF);
+}
+
+TEST(sys_stat, utimensat) {
+  TemporaryFile tf;
+
+  timespec times[2];
+  times[0].tv_sec = 123;
+  times[0].tv_nsec = 0;
+  times[1].tv_sec = 456;
+  times[1].tv_nsec = 0;
+  ASSERT_EQ(0, utimensat(AT_FDCWD, tf.path, times, 0)) << strerror(errno);
+
+  struct stat sb;
+  ASSERT_EQ(0, fstat(tf.fd, &sb));
+  ASSERT_EQ(times[0].tv_sec, static_cast<long>(sb.st_atime));
+  ASSERT_EQ(times[1].tv_sec, static_cast<long>(sb.st_mtime));
+}
+
+TEST(sys_stat, utimensat_null) {
+  TemporaryFile tf;
+  ASSERT_EQ(0, utimensat(AT_FDCWD, tf.path, nullptr, 0));
 }
 
 TEST(sys_stat, mkfifo_failure) {
