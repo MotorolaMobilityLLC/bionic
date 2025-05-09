@@ -26,7 +26,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <algorithm>
+#include <iterator>
 #include <set>
+#include <string>
 #include <vector>
 
 #include <android-base/file.h>

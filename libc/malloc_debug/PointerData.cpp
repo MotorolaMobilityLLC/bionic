@@ -36,6 +36,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <algorithm>
+#include <atomic>
+#include <deque>
 #include <functional>
 #include <mutex>
 #include <string>

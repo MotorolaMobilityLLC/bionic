@@ -31,6 +31,8 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include <atomic>
+
 #include "Config.h"
 #include "LogAllocatorStats.h"
 #include "debug_log.h"
