@@ -29,6 +29,7 @@
 #include "linker_phdr.h"
 
 #include <linux/prctl.h>
+#include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/prctl.h>
 #include <unistd.h>
@@ -42,8 +43,11 @@
 
 #include <android-base/stringprintf.h>
 
+#include <algorithm>
+#include <iterator>
 #include <numeric>
 #include <string>
+#include <vector>
 
 static bool g_enable_16kb_app_compat;
 
@@ -292,7 +296,7 @@ static inline std::string relro_pos_str(const struct segment& segment) {
   }
 
   // Unreachable
-  std::abort();
+  abort();
 }
 
 static inline std::string segment_format(const struct segment& segment) {
