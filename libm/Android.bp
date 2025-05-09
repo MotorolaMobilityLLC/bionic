@@ -130,24 +130,14 @@ cc_library {
         "upstream-freebsd/lib/msun/src/s_fdim.c",
         "upstream-freebsd/lib/msun/src/s_finite.c",
         "upstream-freebsd/lib/msun/src/s_finitef.c",
-        "upstream-freebsd/lib/msun/src/s_fma.c",
-        "upstream-freebsd/lib/msun/src/s_fmaf.c",
-        "upstream-freebsd/lib/msun/src/s_fmax.c",
-        "upstream-freebsd/lib/msun/src/s_fmaxf.c",
-        "upstream-freebsd/lib/msun/src/s_fmin.c",
-        "upstream-freebsd/lib/msun/src/s_fminf.c",
         "upstream-freebsd/lib/msun/src/s_frexp.c",
         "upstream-freebsd/lib/msun/src/s_frexpf.c",
         "upstream-freebsd/lib/msun/src/s_ilogb.c",
         "upstream-freebsd/lib/msun/src/s_ilogbf.c",
-        "upstream-freebsd/lib/msun/src/s_llround.c",
-        "upstream-freebsd/lib/msun/src/s_llroundf.c",
         "upstream-freebsd/lib/msun/src/s_log1p.c",
         "upstream-freebsd/lib/msun/src/s_log1pf.c",
         "upstream-freebsd/lib/msun/src/s_logb.c",
         "upstream-freebsd/lib/msun/src/s_logbf.c",
-        "upstream-freebsd/lib/msun/src/s_lround.c",
-        "upstream-freebsd/lib/msun/src/s_lroundf.c",
         "upstream-freebsd/lib/msun/src/s_modf.c",
         "upstream-freebsd/lib/msun/src/s_modff.c",
         "upstream-freebsd/lib/msun/src/s_nan.c",
@@ -156,8 +146,6 @@ cc_library {
         "upstream-freebsd/lib/msun/src/s_nextafterf.c",
         "upstream-freebsd/lib/msun/src/s_remquo.c",
         "upstream-freebsd/lib/msun/src/s_remquof.c",
-        "upstream-freebsd/lib/msun/src/s_round.c",
-        "upstream-freebsd/lib/msun/src/s_roundf.c",
         "upstream-freebsd/lib/msun/src/s_scalbln.c",
         "upstream-freebsd/lib/msun/src/s_scalbn.c",
         "upstream-freebsd/lib/msun/src/s_scalbnf.c",
@@ -268,6 +256,20 @@ cc_library {
             srcs: [
                 "fenv-arm.c",
 
+                // TODO: work out which of these actually are available on armv7/32-bit armv8.
+                "upstream-freebsd/lib/msun/src/s_fma.c",
+                "upstream-freebsd/lib/msun/src/s_fmaf.c",
+                "upstream-freebsd/lib/msun/src/s_fmax.c",
+                "upstream-freebsd/lib/msun/src/s_fmaxf.c",
+                "upstream-freebsd/lib/msun/src/s_fmin.c",
+                "upstream-freebsd/lib/msun/src/s_fminf.c",
+                "upstream-freebsd/lib/msun/src/s_llround.c",
+                "upstream-freebsd/lib/msun/src/s_llroundf.c",
+                "upstream-freebsd/lib/msun/src/s_lround.c",
+                "upstream-freebsd/lib/msun/src/s_lroundf.c",
+                "upstream-freebsd/lib/msun/src/s_round.c",
+                "upstream-freebsd/lib/msun/src/s_roundf.c",
+
                 // Even armv8 arm32 doesn't have instructions for these.
                 "upstream-freebsd/lib/msun/src/s_llrint.c",
                 "upstream-freebsd/lib/msun/src/s_llrintf.c",
@@ -304,20 +306,6 @@ cc_library {
             srcs: [
                 "fenv-arm64.c",
             ],
-            exclude_srcs: [
-                "upstream-freebsd/lib/msun/src/s_fma.c",
-                "upstream-freebsd/lib/msun/src/s_fmaf.c",
-                "upstream-freebsd/lib/msun/src/s_fmax.c",
-                "upstream-freebsd/lib/msun/src/s_fmaxf.c",
-                "upstream-freebsd/lib/msun/src/s_fmin.c",
-                "upstream-freebsd/lib/msun/src/s_fminf.c",
-                "upstream-freebsd/lib/msun/src/s_llround.c",
-                "upstream-freebsd/lib/msun/src/s_llroundf.c",
-                "upstream-freebsd/lib/msun/src/s_lround.c",
-                "upstream-freebsd/lib/msun/src/s_lroundf.c",
-                "upstream-freebsd/lib/msun/src/s_round.c",
-                "upstream-freebsd/lib/msun/src/s_roundf.c",
-            ],
             version_script: ":libm.arm64.map",
         },
 
@@ -325,7 +313,14 @@ cc_library {
             srcs: [
                 "fenv-riscv64.c",
             ],
-            exclude_srcs: [
+            version_script: ":libm.riscv64.map",
+        },
+
+        x86: {
+            srcs: [
+                "fenv-x86.c",
+
+                // TODO: work out which of these actually are available on 32-bit x86.
                 "upstream-freebsd/lib/msun/src/s_fma.c",
                 "upstream-freebsd/lib/msun/src/s_fmaf.c",
                 "upstream-freebsd/lib/msun/src/s_fmax.c",
@@ -338,13 +333,6 @@ cc_library {
                 "upstream-freebsd/lib/msun/src/s_lroundf.c",
                 "upstream-freebsd/lib/msun/src/s_round.c",
                 "upstream-freebsd/lib/msun/src/s_roundf.c",
-            ],
-            version_script: ":libm.riscv64.map",
-        },
-
-        x86: {
-            srcs: [
-                "fenv-x86.c",
             ],
             // The x86 ABI doesn't include this, which is needed for the
             // roundss/roundsd instructions that we've used since API level 23,
@@ -356,6 +344,20 @@ cc_library {
         x86_64: {
             srcs: [
                 "fenv-x86_64.c",
+
+                // TODO: work out which of these actually are available on x86-64.
+                "upstream-freebsd/lib/msun/src/s_fma.c",
+                "upstream-freebsd/lib/msun/src/s_fmaf.c",
+                "upstream-freebsd/lib/msun/src/s_fmax.c",
+                "upstream-freebsd/lib/msun/src/s_fmaxf.c",
+                "upstream-freebsd/lib/msun/src/s_fmin.c",
+                "upstream-freebsd/lib/msun/src/s_fminf.c",
+                "upstream-freebsd/lib/msun/src/s_llround.c",
+                "upstream-freebsd/lib/msun/src/s_llroundf.c",
+                "upstream-freebsd/lib/msun/src/s_lround.c",
+                "upstream-freebsd/lib/msun/src/s_lroundf.c",
+                "upstream-freebsd/lib/msun/src/s_round.c",
+                "upstream-freebsd/lib/msun/src/s_roundf.c",
             ],
             version_script: ":libm.x86_64.map",
         },
@@ -466,7 +468,7 @@ genrule {
     cmd: "$(location generate-version-script) x86_64 $(in) $(out)",
 }
 
-// Because of a historical accidnt, ldexp() is in libc,
+// Because of a historical accident, ldexp() is in libc,
 // even though ldexpf() and ldexpl() are in libm.
 filegroup {
     name: "libc_ldexp_srcs",
