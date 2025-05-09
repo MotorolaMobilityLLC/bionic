@@ -41,12 +41,12 @@ __BEGIN_DECLS
 
 /**
  * [utime(2)](https://man7.org/linux/man-pages/man2/utime.2.html) changes the access and
- * modification time of `__filename`. If `__times` is null, the current time is used.
+ * modification times of the given path. If `__times` is null, the current time is used.
  *
  * New code should prefer utimensat().
  *
  * Returns 0 on success and returns -1 and sets `errno` on failure.
  */
-int utime(const char* _Nonnull __filename, const struct utimbuf* _Nullable __times);
+int utime(const char* _Nonnull __path, const struct utimbuf* _Nullable __times);
 
 __END_DECLS
