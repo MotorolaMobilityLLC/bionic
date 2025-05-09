@@ -453,7 +453,6 @@ cc_library_static {
     srcs: [
         "upstream-netbsd/common/lib/libc/stdlib/random.c",
         "upstream-netbsd/lib/libc/gen/nice.c",
-        "upstream-netbsd/lib/libc/gen/utime.c",
         "upstream-netbsd/lib/libc/inet/nsap_addr.c",
         "upstream-netbsd/lib/libc/regex/regcomp.c",
         "upstream-netbsd/lib/libc/regex/regerror.c",
@@ -1025,6 +1024,7 @@ cc_library_static {
         "bionic/umount.cpp",
         "bionic/unlink.cpp",
         "bionic/usleep.cpp",
+        "bionic/utime.cpp",
         "bionic/utmp.cpp",
         "bionic/vdso.cpp",
         "bionic/wait.cpp",

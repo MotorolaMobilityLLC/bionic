@@ -531,6 +531,7 @@ cc_test_library {
         "unistd_nofortify_test.cpp",
         "unistd_test.cpp",
         "utils.cpp",
+        "utime_test.cpp",
         "utmp_test.cpp",
         "utmpx_test.cpp",
         "wchar_test.cpp",
