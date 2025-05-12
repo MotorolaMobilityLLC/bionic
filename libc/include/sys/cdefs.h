@@ -324,15 +324,6 @@
 /* Used to rename functions so that the compiler emits a call to 'x' rather than the function this was applied to. */
 #define __RENAME(x) __asm__(#x)
 
-/*
- * Used when we need to check for overflow when multiplying x and y. This
- * should only be used where __builtin_umull_overflow can not work, because it makes
- * assumptions that __builtin_umull_overflow doesn't (x and y are positive, ...),
- * *and* doesn't make use of compiler intrinsics, so it's probably slower than
- * __builtin_umull_overflow.
- */
-#define __unsafe_check_mul_overflow(x, y) ((__SIZE_TYPE__)-1 / (x) < (y))
-
 #include <android/versioning.h>
 #include <android/api-level.h>
 #if __has_include(<android/ndk-version.h>)
