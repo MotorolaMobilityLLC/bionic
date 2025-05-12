@@ -323,10 +323,6 @@ cc_library {
                 // TODO: work out which of these actually are available on 32-bit x86.
                 "upstream-freebsd/lib/msun/src/s_fma.c",
                 "upstream-freebsd/lib/msun/src/s_fmaf.c",
-                "upstream-freebsd/lib/msun/src/s_fmax.c",
-                "upstream-freebsd/lib/msun/src/s_fmaxf.c",
-                "upstream-freebsd/lib/msun/src/s_fmin.c",
-                "upstream-freebsd/lib/msun/src/s_fminf.c",
                 "upstream-freebsd/lib/msun/src/s_llround.c",
                 "upstream-freebsd/lib/msun/src/s_llroundf.c",
                 "upstream-freebsd/lib/msun/src/s_lround.c",
@@ -348,10 +344,6 @@ cc_library {
                 // TODO: work out which of these actually are available on x86-64.
                 "upstream-freebsd/lib/msun/src/s_fma.c",
                 "upstream-freebsd/lib/msun/src/s_fmaf.c",
-                "upstream-freebsd/lib/msun/src/s_fmax.c",
-                "upstream-freebsd/lib/msun/src/s_fmaxf.c",
-                "upstream-freebsd/lib/msun/src/s_fmin.c",
-                "upstream-freebsd/lib/msun/src/s_fminf.c",
                 "upstream-freebsd/lib/msun/src/s_llround.c",
                 "upstream-freebsd/lib/msun/src/s_llroundf.c",
                 "upstream-freebsd/lib/msun/src/s_lround.c",
