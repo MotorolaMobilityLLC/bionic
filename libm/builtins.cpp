@@ -48,12 +48,18 @@ __weak_reference(floor, floorl);
 #endif
 #endif
 
-#if defined(__aarch64__) || defined(__riscv)
+#if (defined(__arm__) && (__ARM_ARCH >= 8)) || defined(__aarch64__) || defined(__riscv)
 float fmaf(float x, float y, float z) { return __builtin_fmaf(x, y, z); }
 double fma(double x, double y, double z) { return __builtin_fma(x, y, z); }
+#if defined(__ILP32__)
+__weak_reference(fma, fmal);
+#endif
 #endif
 
-#if defined(__aarch64__) || defined(__riscv) || defined(__i386__) || defined(__x86_64__)
+#if (defined(__arm__) && (__ARM_ARCH <= 7))
+// armv7 arm32 has no instructions to implement these builtins,
+// so we include the msun source in the .bp file instead.
+#else
 float fmaxf(float x, float y) { return __builtin_fmaxf(x, y); }
 double fmax(double x, double y) { return __builtin_fmax(x, y); }
 float fminf(float x, float y) { return __builtin_fminf(x, y); }
@@ -85,7 +91,7 @@ __weak_reference(rint, rintl);
 #endif
 #endif
 
-#if defined(__aarch64__) || defined(__riscv)
+#if (defined(__arm__) && (__ARM_ARCH >= 8)) || defined(__aarch64__) || defined(__riscv)
 double round(double x) { return __builtin_round(x); }
 float roundf(float x) { return __builtin_roundf(x); }
 #endif
