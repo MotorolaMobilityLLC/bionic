@@ -47,6 +47,7 @@
 #include "private/bionic_constants.h"
 #include "private/bionic_time_conversions.h"
 #include "SignalUtils.h"
+#include "sme_utils.h"
 #include "utils.h"
 
 using pthread_DeathTest = SilentDeathTest;
@@ -3206,3 +3207,49 @@ TEST(pthread, pthread_setaffinity) {
   // but it ought to be safe to ask for the same affinity you already have.
   ASSERT_EQ(0, pthread_setaffinity_np(pthread_self(), sizeof(set), &set));
 }
+
+#if defined(__aarch64__)
+
+static void* sme_state_checking_thread(void*) {
+  // Expected state in the child thread:
+  //  - PSTATE.SM is 0
+  //  - PSTATE.ZA is 0
+  //  - TPIDR2_EL0 is 0
+  EXPECT_FALSE(sme_is_sm_on());
+  EXPECT_FALSE(sme_is_za_on());
+  EXPECT_EQ(0UL, sme_tpidr2_el0());
+
+  return nullptr;
+}
+
+static void create_thread() {
+  pthread_t thread;
+  // Even if these asserts fail sme_state_cleanup() will still be run.
+  ASSERT_EQ(0, pthread_create(&thread, nullptr, &sme_state_checking_thread, nullptr));
+  ASSERT_EQ(0, pthread_join(thread, nullptr));
+}
+
+// It is expected that the new thread is started with SME off.
+TEST(pthread, pthread_create_with_sme_off) {
+  if (!sme_is_enabled()) {
+    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
+  }
+
+  // It is safe to call __arm_za_disable(). This is required to avoid inter-test dependencies.
+  __arm_za_disable();
+  create_thread();
+  sme_state_cleanup();
+}
+
+// It is expected that the new thread is started with SME off.
+TEST(pthread, pthread_create_with_sme_dormant_state) {
+  if (!sme_is_enabled()) {
+    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
+  }
+
+  __arm_za_disable();
+  sme_dormant_caller(&create_thread);
+  sme_state_cleanup();
+}
+
+#endif  // defined(__aarch64__)
