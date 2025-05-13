@@ -32,6 +32,25 @@
 
 extern "C" {
 
+DEFINE_IFUNC_FOR(memmove) {
+  __builtin_cpu_init();
+  if (__builtin_cpu_supports("avx2")) RETURN_FUNC(memmove_func_t, memmove_avx2);
+  RETURN_FUNC(memmove_func_t, memmove_generic);
+}
+MEMMOVE_SHIM()
+
+DEFINE_IFUNC_FOR(memcpy) {
+  return memmove_resolver();
+}
+MEMCPY_SHIM()
+
+DEFINE_IFUNC_FOR(__memcpy_chk) {
+  __builtin_cpu_init();
+  if (__builtin_cpu_supports("avx2")) RETURN_FUNC(__memcpy_chk_func_t, __memcpy_chk_avx2);
+  RETURN_FUNC(__memcpy_chk_func_t, __memcpy_chk_generic);
+}
+__MEMCPY_CHK_SHIM()
+
 DEFINE_IFUNC_FOR(memset) {
   __builtin_cpu_init();
   if (__builtin_cpu_supports("avx2")) RETURN_FUNC(memset_func_t, memset_avx2);

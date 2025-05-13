@@ -1174,6 +1174,7 @@ cc_library_static {
                 "arch-x86_64/bionic/syscall.S",
                 "arch-x86_64/bionic/vfork.S",
 
+                "arch-x86_64/string/avx2-memmove-kbl.S",
                 "arch-x86_64/string/avx2-memset-kbl.S",
                 "arch-x86_64/string/sse2-memmove-slm.S",
                 "arch-x86_64/string/sse2-memset-slm.S",
@@ -2090,6 +2091,9 @@ cc_library_static {
         "-Wall",
         "-Werror",
     ],
+    asflags: [
+        "-DBIONIC_RUST_BAREMETAL",
+    ],
     srcs: [
         "bionic/fortify.cpp",
         "bionic/strtol.cpp",
@@ -2108,9 +2112,11 @@ cc_library_static {
         },
         x86_64: {
             asflags: [
-                // Statically choose the SSE2 memset_generic as memset for
-                // baremetal, where we do not have the dynamic function
-                // dispatch machinery.
+                // Statically choose the SSE2 variants for baremetal,
+                // where we do not have the dynamic function dispatch
+                // machinery.
+                "-D__memcpy_chk_generic=__memcpy_chk",
+                "-Dmemmove_generic=memmove",
                 "-Dmemset_generic=memset",
             ],
             srcs: [
