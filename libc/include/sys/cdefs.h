@@ -247,12 +247,21 @@
 #  define __bos_level 0
 #endif
 
-#define __bosn(s, n) __builtin_object_size((s), (n))
+#if _FORTIFY_SOURCE >= 3
+#  define __bosn(s, n) __builtin_dynamic_object_size((s), (n))
+#else
+#  define __bosn(s, n) __builtin_object_size((s), (n))
+#endif
 #define __bos(s) __bosn((s), __bos_level)
 
 #if defined(__BIONIC_FORTIFY)
 #  define __bos0(s) __bosn((s), 0)
-#  define __pass_object_size_n(n) __attribute__((__pass_object_size__(n)))
+#  if _FORTIFY_SOURCE >= 3
+#    define __pass_object_size_n(n) __attribute__((__pass_dynamic_object_size__(n)))
+#  else
+#    define __pass_object_size_n(n) __attribute__((__pass_object_size__(n)))
+#  endif
+
 /*
  * FORTIFY'ed functions all have either enable_if or pass_object_size, which
  * makes taking their address impossible. Saying (&read)(foo, bar, baz); will
@@ -291,8 +300,8 @@
 
 /* Intended for use in evaluated contexts. */
 #define __bos_dynamic_check_impl_and(bos_val, op, index, cond) \
-  ((bos_val) == __BIONIC_FORTIFY_UNKNOWN_SIZE ||                 \
-   (__builtin_constant_p(index) && bos_val op index && (cond)))
+  (__builtin_constant_p(bos_val) && ((bos_val) == __BIONIC_FORTIFY_UNKNOWN_SIZE || \
+   (__builtin_constant_p(index) && bos_val op index && (cond))))
 
 #define __bos_dynamic_check_impl(bos_val, op, index) \
   __bos_dynamic_check_impl_and(bos_val, op, index, 1)
