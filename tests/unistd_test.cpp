@@ -18,6 +18,7 @@
 
 #include "DoNotOptimize.h"
 #include "SignalUtils.h"
+#include "sme_utils.h"
 #include "utils.h"
 
 #include <errno.h>
@@ -1751,3 +1752,53 @@ TEST(UNISTD_TEST, copy_file_range) {
   ASSERT_EQ("hello world", content);
 #endif  // __GLIBC__
 }
+
+#if defined(__aarch64__)
+
+static bool expect_sme_off_after_fork{true};
+
+static void fork_process() {
+  const pid_t pid = fork();
+  ASSERT_NE(-1, pid);
+
+  if (pid == 0) {
+    if (expect_sme_off_after_fork) {
+      EXPECT_FALSE(sme_is_za_on());
+      EXPECT_EQ(sme_tpidr2_el0(), 0UL);
+    } else {
+      EXPECT_TRUE(sme_is_za_on());
+      EXPECT_NE(sme_tpidr2_el0(), 0UL);
+    }
+
+    exit(::testing::Test::HasFailure() ? 1 : 0);
+  } else {
+    int status;
+    ASSERT_EQ(pid, waitpid(pid, &status, 0));
+    ASSERT_TRUE(WIFEXITED(status));
+    ASSERT_EQ(0, WEXITSTATUS(status));
+  }
+}
+
+TEST(UNISTD_TEST, fork_with_sme_off) {
+  if (!sme_is_enabled()) {
+    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
+  }
+
+  __arm_za_disable();
+  expect_sme_off_after_fork = true;
+  fork_process();
+  sme_state_cleanup();
+}
+
+TEST(UNISTD_TEST, fork_with_sme_dormant_state) {
+  if (!sme_is_enabled()) {
+    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
+  }
+
+  __arm_za_disable();
+  expect_sme_off_after_fork = false;
+  sme_dormant_caller(&fork_process);
+  sme_state_cleanup();
+}
+
+#endif  // defined(__aarch64__)
