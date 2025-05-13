@@ -21,9 +21,6 @@
 
 __BEGIN_DECLS
 
-// TODO: libdl has several private extensions, but they have not all moved into a standard
-// private header.
-
 /**
  * Set whether to load libraries in app compat mode.
  *
