@@ -185,26 +185,21 @@ std::string ShowDiffs(uint8_t* a, uint8_t* b, size_t size) {
   return diff;
 }
 
-static void VerifyRecords(std::vector<std::string>& expected, std::string& actual) {
-  ASSERT_TRUE(expected.size() != 0);
-  size_t offset = 0;
-  for (std::string& str : expected) {
-    ASSERT_STREQ(str.c_str(), actual.substr(offset, str.size()).c_str());
-    if (str.find("thread_done") != std::string::npos) {
-      offset = actual.find_first_of("\n", offset) + 1;
-      continue;
-    }
-    offset += str.size() + 1;
-    uint64_t st = strtoull(&actual[offset], nullptr, 10);
-    offset = actual.find_first_of(" ", offset) + 1;
-    uint64_t et = strtoull(&actual[offset], nullptr, 10);
-    ASSERT_GT(et, st);
-    offset = actual.find_first_of("\n", offset) + 1;
+static std::string PrintAllEntries(const std::vector<memory_trace::Entry>& expected,
+                                   const std::vector<memory_trace::Entry>& actual) {
+  std::string result = "\nAll Entries\n  Expected:\n";
+  for (const auto& entry : expected) {
+    result += "    " + memory_trace::CreateStringFromEntry(entry) + "\n";
   }
+  result += "  Actual:\n";
+  for (const auto& entry : actual) {
+    result += "    " + memory_trace::CreateStringFromEntry(entry) + "\n";
+  }
+  return result;
 }
 
 static void VerifyRecordEntries(const std::vector<memory_trace::Entry>& expected,
-                                std::string& actual) {
+                                std::string& actual, bool check_present_bytes = false) {
   ASSERT_TRUE(expected.size() != 0);
   // Convert the text to entries.
   std::vector<memory_trace::Entry> actual_entries;
@@ -217,28 +212,33 @@ static void VerifyRecordEntries(const std::vector<memory_trace::Entry>& expected
     ASSERT_TRUE(memory_trace::FillInEntryFromString(line, entry, error)) << error;
     actual_entries.emplace_back(entry);
   }
-  auto expected_iter = expected.begin();
-  for (const auto& actual_entry : actual_entries) {
-    if (actual_entry.type == memory_trace::THREAD_DONE) {
-      // Skip thread done entries.
-      continue;
-    }
-    ASSERT_NE(expected_iter, expected.end())
-        << "Found extra entry " << memory_trace::CreateStringFromEntry(*expected_iter);
+  ASSERT_EQ(actual_entries.size(), expected.size()) << PrintAllEntries(expected, actual_entries);
+  for (size_t i = 0; i < actual_entries.size(); i++) {
     SCOPED_TRACE(testing::Message()
-                 << "\nExpected entry:\n  " << memory_trace::CreateStringFromEntry(*expected_iter)
-                 << "\nActual entry:\n  " << memory_trace::CreateStringFromEntry(actual_entry));
-    EXPECT_EQ(actual_entry.type, expected_iter->type);
-    EXPECT_EQ(actual_entry.ptr, expected_iter->ptr);
-    EXPECT_EQ(actual_entry.size, expected_iter->size);
-    EXPECT_EQ(actual_entry.u.old_ptr, expected_iter->u.old_ptr);
-    EXPECT_EQ(actual_entry.present_bytes, expected_iter->present_bytes);
+                 << "\nEntry " << i + 1 << "\nExpected entry:\n  "
+                 << memory_trace::CreateStringFromEntry(expected[i]) << "\nActual entry:\n  "
+                 << memory_trace::CreateStringFromEntry(actual_entries[i]) << "\n"
+                 << PrintAllEntries(expected, actual_entries));
+    if (expected[i].tid != 0) {
+      EXPECT_EQ(actual_entries[i].tid, expected[i].tid);
+    }
+    EXPECT_EQ(actual_entries[i].type, expected[i].type);
+    EXPECT_EQ(actual_entries[i].ptr, expected[i].ptr);
+    EXPECT_EQ(actual_entries[i].size, expected[i].size);
+    EXPECT_EQ(actual_entries[i].u.old_ptr, expected[i].u.old_ptr);
+    if (check_present_bytes) {
+      EXPECT_EQ(actual_entries[i].present_bytes, expected[i].present_bytes);
+    }
     // Verify the timestamps are non-zero.
-    EXPECT_NE(actual_entry.start_ns, 0U);
-    EXPECT_NE(actual_entry.end_ns, 0U);
-    ++expected_iter;
+    if (actual_entries[i].type == memory_trace::THREAD_DONE) {
+      // Thread done sets start to 0 since we don't know when the thread started.
+      EXPECT_EQ(actual_entries[i].start_ns, 0U);
+    } else {
+      // All other entries should have a non-zero start.
+      EXPECT_NE(actual_entries[i].start_ns, 0U);
+    }
+    EXPECT_NE(actual_entries[i].end_ns, 0U);
   }
-  EXPECT_TRUE(expected_iter == expected.end()) << "Not all expected entries found.";
 }
 
 void VerifyAllocCalls(bool all_options) {
@@ -2242,61 +2242,104 @@ TEST_F(MallocDebugTest, debug_valloc) {
 #endif
 
 void VerifyRecordAllocs(const std::string& record_filename) {
-  std::vector<std::string> expected;
+  std::vector<memory_trace::Entry> expected;
 
   void* pointer = debug_malloc(10);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: malloc %p 10", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{
+      .type = memory_trace::MALLOC, .ptr = reinterpret_cast<uint64_t>(pointer), .size = 10});
+
   debug_free(pointer);
-  expected.push_back(android::base::StringPrintf("%d: free %p", getpid(), pointer));
+  expected.push_back(
+      memory_trace::Entry{.type = memory_trace::FREE, .ptr = reinterpret_cast<uint64_t>(pointer)});
 
   pointer = debug_calloc(20, 1);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: calloc %p 20 1", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{.type = memory_trace::CALLOC,
+                                         .ptr = reinterpret_cast<uint64_t>(pointer),
+                                         .size = 1,
+                                         .u.n_elements = 20});
+
   debug_free(pointer);
-  expected.push_back(android::base::StringPrintf("%d: free %p", getpid(), pointer));
+  expected.push_back(
+      memory_trace::Entry{.type = memory_trace::FREE, .ptr = reinterpret_cast<uint64_t>(pointer)});
 
   pointer = debug_realloc(nullptr, 30);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: realloc %p 0x0 30", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{.type = memory_trace::REALLOC,
+                                         .ptr = reinterpret_cast<uint64_t>(pointer),
+                                         .size = 30,
+                                         .u.old_ptr = 0});
+
   void* old_pointer = pointer;
   pointer = debug_realloc(pointer, 2048);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(
-      android::base::StringPrintf("%d: realloc %p %p 2048", getpid(), pointer, old_pointer));
+  expected.push_back(memory_trace::Entry{.type = memory_trace::REALLOC,
+                                         .ptr = reinterpret_cast<uint64_t>(pointer),
+                                         .size = 2048,
+                                         .u.old_ptr = reinterpret_cast<uint64_t>(old_pointer)});
+
   debug_realloc(pointer, 0);
-  expected.push_back(android::base::StringPrintf("%d: realloc 0x0 %p 0", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{.type = memory_trace::REALLOC,
+                                         .ptr = 0,
+                                         .size = 0,
+                                         .u.old_ptr = reinterpret_cast<uint64_t>(pointer)});
 
   pointer = debug_memalign(16, 40);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: memalign %p 16 40", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{.type = memory_trace::MEMALIGN,
+                                         .ptr = reinterpret_cast<uint64_t>(pointer),
+                                         .size = 40,
+                                         .u.align = 16});
+
   debug_free(pointer);
-  expected.push_back(android::base::StringPrintf("%d: free %p", getpid(), pointer));
+  expected.push_back(
+      memory_trace::Entry{.type = memory_trace::FREE, .ptr = reinterpret_cast<uint64_t>(pointer)});
 
   pointer = debug_aligned_alloc(32, 64);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: memalign %p 32 64", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{.type = memory_trace::MEMALIGN,
+                                         .ptr = reinterpret_cast<uint64_t>(pointer),
+                                         .size = 64,
+                                         .u.align = 32});
+
   debug_free(pointer);
-  expected.push_back(android::base::StringPrintf("%d: free %p", getpid(), pointer));
+  expected.push_back(
+      memory_trace::Entry{.type = memory_trace::FREE, .ptr = reinterpret_cast<uint64_t>(pointer)});
 
   ASSERT_EQ(0, debug_posix_memalign(&pointer, 32, 50));
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: memalign %p 32 50", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{.type = memory_trace::MEMALIGN,
+                                         .ptr = reinterpret_cast<uint64_t>(pointer),
+                                         .size = 50,
+                                         .u.align = 32});
+
   debug_free(pointer);
-  expected.push_back(android::base::StringPrintf("%d: free %p", getpid(), pointer));
+  expected.push_back(
+      memory_trace::Entry{.type = memory_trace::FREE, .ptr = reinterpret_cast<uint64_t>(pointer)});
 
 #if defined(HAVE_DEPRECATED_MALLOC_FUNCS)
   pointer = debug_pvalloc(60);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: memalign %p 4096 4096", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{.type = memory_trace::MEMALIGN,
+                                         .ptr = reinterpret_cast<uint64_t>(pointer),
+                                         .size = 4096,
+                                         .u.align = 4096});
+
   debug_free(pointer);
-  expected.push_back(android::base::StringPrintf("%d: free %p", getpid(), pointer));
+  expected.push_back(
+      memory_trace::Entry{.type = memory_trace::FREE, .ptr = reinterpret_cast<uint64_t>(pointer)});
 
   pointer = debug_valloc(70);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: memalign %p 4096 70", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{.type = memory_trace::MEMALIGN,
+                                         .ptr = reinterpret_cast<uint64_t>(pointer),
+                                         .size = 70,
+                                         .u.align = 4096});
+
   debug_free(pointer);
-  expected.push_back(android::base::StringPrintf("%d: free %p", getpid(), pointer));
+  expected.push_back(
+      memory_trace::Entry{.type = memory_trace::FREE, .ptr = reinterpret_cast<uint64_t>(pointer)});
 #endif
 
   // Dump all of the data accumulated so far.
@@ -2305,8 +2348,7 @@ void VerifyRecordAllocs(const std::string& record_filename) {
   // Read all of the contents.
   std::string actual;
   ASSERT_TRUE(android::base::ReadFileToString(record_filename, &actual));
-
-  VerifyRecords(expected, actual);
+  VerifyRecordEntries(expected, actual);
 
   ASSERT_STREQ("", getFakeLogBuf().c_str());
   ASSERT_STREQ("", getFakeLogPrint().c_str());
@@ -2327,23 +2369,32 @@ TEST_F(MallocDebugTest, record_allocs_with_header) {
 TEST_F(MallocDebugTest, record_allocs_max) {
   InitRecordAllocs("record_allocs=5");
 
-  std::vector<std::string> expected;
+  std::vector<memory_trace::Entry> expected;
 
   void* pointer = debug_malloc(10);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: malloc %p 10", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{
+      .type = memory_trace::MALLOC, .ptr = reinterpret_cast<uint64_t>(pointer), .size = 10});
+
   debug_free(pointer);
-  expected.push_back(android::base::StringPrintf("%d: free %p", getpid(), pointer));
+  expected.push_back(
+      memory_trace::Entry{.type = memory_trace::FREE, .ptr = reinterpret_cast<uint64_t>(pointer)});
 
   pointer = debug_malloc(20);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: malloc %p 20", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{
+      .type = memory_trace::MALLOC, .ptr = reinterpret_cast<uint64_t>(pointer), .size = 20});
+
   debug_free(pointer);
-  expected.push_back(android::base::StringPrintf("%d: free %p", getpid(), pointer));
+  expected.push_back(
+      memory_trace::Entry{.type = memory_trace::FREE, .ptr = reinterpret_cast<uint64_t>(pointer)});
 
   pointer = debug_malloc(1024);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: malloc %p 1024", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{
+      .type = memory_trace::MALLOC, .ptr = reinterpret_cast<uint64_t>(pointer), .size = 1024});
+
+  // This entry will not be written since we hit the maximum number we can store.
   debug_free(pointer);
 
   // Dump all of the data accumulated so far.
@@ -2352,8 +2403,7 @@ TEST_F(MallocDebugTest, record_allocs_max) {
   // Read all of the contents.
   std::string actual;
   ASSERT_TRUE(android::base::ReadFileToString(record_filename, &actual));
-
-  VerifyRecords(expected, actual);
+  VerifyRecordEntries(expected, actual);
 
   ASSERT_STREQ("", getFakeLogBuf().c_str());
   ASSERT_STREQ(
@@ -2374,10 +2424,14 @@ TEST_F(MallocDebugTest, record_allocs_thread_done) {
   });
   thread.join();
 
-  std::vector<std::string> expected;
-  expected.push_back(android::base::StringPrintf("%d: malloc %p 100", tid, pointer));
-  expected.push_back(android::base::StringPrintf("%d: free %p", tid, pointer));
-  expected.push_back(android::base::StringPrintf("%d: thread_done 0x0", tid));
+  std::vector<memory_trace::Entry> expected;
+  expected.push_back(memory_trace::Entry{.tid = tid,
+                                         .type = memory_trace::MALLOC,
+                                         .ptr = reinterpret_cast<uint64_t>(pointer),
+                                         .size = 100});
+  expected.push_back(memory_trace::Entry{
+      .tid = tid, .type = memory_trace::FREE, .ptr = reinterpret_cast<uint64_t>(pointer)});
+  expected.push_back(memory_trace::Entry{.tid = tid, .type = memory_trace::THREAD_DONE});
 
   // Dump all of the data accumulated so far.
   ASSERT_TRUE(kill(getpid(), SIGRTMAX - 18) == 0);
@@ -2385,8 +2439,7 @@ TEST_F(MallocDebugTest, record_allocs_thread_done) {
   // Read all of the contents.
   std::string actual;
   ASSERT_TRUE(android::base::ReadFileToString(record_filename, &actual));
-
-  VerifyRecords(expected, actual);
+  VerifyRecordEntries(expected, actual);
 
   ASSERT_STREQ("", getFakeLogBuf().c_str());
   ASSERT_STREQ("", getFakeLogPrint().c_str());
@@ -2401,13 +2454,15 @@ TEST_F(MallocDebugTest, record_allocs_file_name_fail) {
 
   ASSERT_EQ(0, symlink("/data/local/tmp/does_not_exist", record_filename.c_str()));
 
-  std::vector<std::string> expected;
+  std::vector<memory_trace::Entry> expected;
 
   void* pointer = debug_malloc(10);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: malloc %p 10", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{
+      .type = memory_trace::MALLOC, .ptr = reinterpret_cast<uint64_t>(pointer), .size = 10});
   debug_free(pointer);
-  expected.push_back(android::base::StringPrintf("%d: free %p", getpid(), pointer));
+  expected.push_back(
+      memory_trace::Entry{.type = memory_trace::FREE, .ptr = reinterpret_cast<uint64_t>(pointer)});
 
   // Dump all of the data accumulated so far.
   ASSERT_TRUE(kill(getpid(), SIGRTMAX - 18) == 0);
@@ -2423,8 +2478,7 @@ TEST_F(MallocDebugTest, record_allocs_file_name_fail) {
   ASSERT_TRUE(kill(getpid(), SIGRTMAX - 18) == 0);
 
   ASSERT_TRUE(android::base::ReadFileToString(record_filename, &actual));
-
-  VerifyRecords(expected, actual);
+  VerifyRecordEntries(expected, actual);
 
   ASSERT_STREQ("", getFakeLogBuf().c_str());
   std::string expected_log = android::base::StringPrintf(
@@ -2448,13 +2502,16 @@ TEST_F(MallocDebugTest, record_allocs_no_entries_to_write) {
 TEST_F(MallocDebugTest, record_allocs_write_entries_does_not_allocate) {
   InitRecordAllocs("record_allocs=5");
 
-  std::vector<std::string> expected;
+  std::vector<memory_trace::Entry> expected;
 
   void* pointer = debug_malloc(10);
   ASSERT_TRUE(pointer != nullptr);
-  expected.push_back(android::base::StringPrintf("%d: malloc %p 10", getpid(), pointer));
+  expected.push_back(memory_trace::Entry{
+      .type = memory_trace::MALLOC, .ptr = reinterpret_cast<uint64_t>(pointer), .size = 10});
+
   debug_free(pointer);
-  expected.push_back(android::base::StringPrintf("%d: free %p", getpid(), pointer));
+  expected.push_back(
+      memory_trace::Entry{.type = memory_trace::FREE, .ptr = reinterpret_cast<uint64_t>(pointer)});
 
   malloc_disable();
   kill(getpid(), SIGRTMAX - 18);
@@ -2462,8 +2519,7 @@ TEST_F(MallocDebugTest, record_allocs_write_entries_does_not_allocate) {
 
   std::string actual;
   ASSERT_TRUE(android::base::ReadFileToString(record_filename, &actual));
-
-  VerifyRecords(expected, actual);
+  VerifyRecordEntries(expected, actual);
 
   ASSERT_STREQ("", getFakeLogBuf().c_str());
   ASSERT_STREQ("", getFakeLogPrint().c_str());
@@ -2476,13 +2532,20 @@ TEST_F(MallocDebugTest, record_allocs_on_exit) {
   // Modify the variable so the file is deleted at the end of the test.
   record_filename += '.' + std::to_string(getpid());
 
-  std::vector<std::string> expected;
+  std::vector<memory_trace::Entry> expected;
+
   void* ptr = debug_malloc(100);
-  expected.push_back(android::base::StringPrintf("%d: malloc %p 100", getpid(), ptr));
+  ASSERT_TRUE(ptr != nullptr);
+  expected.push_back(memory_trace::Entry{
+      .type = memory_trace::MALLOC, .ptr = reinterpret_cast<uint64_t>(ptr), .size = 100});
   ptr = debug_malloc(200);
-  expected.push_back(android::base::StringPrintf("%d: malloc %p 200", getpid(), ptr));
+  ASSERT_TRUE(ptr != nullptr);
+  expected.push_back(memory_trace::Entry{
+      .type = memory_trace::MALLOC, .ptr = reinterpret_cast<uint64_t>(ptr), .size = 200});
   ptr = debug_malloc(400);
-  expected.push_back(android::base::StringPrintf("%d: malloc %p 400", getpid(), ptr));
+  ASSERT_TRUE(ptr != nullptr);
+  expected.push_back(memory_trace::Entry{
+      .type = memory_trace::MALLOC, .ptr = reinterpret_cast<uint64_t>(ptr), .size = 400});
 
   // Call the exit function manually.
   debug_finalize();
@@ -2490,7 +2553,7 @@ TEST_F(MallocDebugTest, record_allocs_on_exit) {
   // Read all of the contents.
   std::string actual;
   ASSERT_TRUE(android::base::ReadFileToString(record_filename, &actual));
-  VerifyRecords(expected, actual);
+  VerifyRecordEntries(expected, actual);
 
   ASSERT_STREQ("", getFakeLogBuf().c_str());
   ASSERT_STREQ("", getFakeLogPrint().c_str());
@@ -2509,9 +2572,9 @@ TEST_F(MallocDebugTest, record_allocs_present_bytes_check) {
       .type = memory_trace::MALLOC, .ptr = reinterpret_cast<uint64_t>(ptr), .size = 100});
 
   // Make the entire allocation present.
-  memset(ptr, 1, 100);
-
   int64_t real_size = debug_malloc_usable_size(ptr);
+  memset(ptr, 1, real_size);
+
   debug_free(ptr);
   expected.push_back(memory_trace::Entry{.type = memory_trace::FREE,
                                          .ptr = reinterpret_cast<uint64_t>(ptr),
@@ -2521,8 +2584,8 @@ TEST_F(MallocDebugTest, record_allocs_present_bytes_check) {
   expected.push_back(memory_trace::Entry{
       .type = memory_trace::MALLOC, .ptr = reinterpret_cast<uint64_t>(ptr), .size = 4096});
 
-  memset(ptr, 1, 4096);
   real_size = debug_malloc_usable_size(ptr);
+  memset(ptr, 1, real_size);
   void* new_ptr = debug_realloc(ptr, 8192);
   expected.push_back(memory_trace::Entry{.type = memory_trace::REALLOC,
                                          .ptr = reinterpret_cast<uint64_t>(new_ptr),
@@ -2530,8 +2593,8 @@ TEST_F(MallocDebugTest, record_allocs_present_bytes_check) {
                                          .u.old_ptr = reinterpret_cast<uint64_t>(ptr),
                                          .present_bytes = real_size});
 
-  memset(new_ptr, 1, 8192);
   real_size = debug_malloc_usable_size(new_ptr);
+  memset(new_ptr, 1, real_size);
   debug_free(new_ptr);
   expected.push_back(memory_trace::Entry{.type = memory_trace::FREE,
                                          .ptr = reinterpret_cast<uint64_t>(new_ptr),
@@ -2540,10 +2603,10 @@ TEST_F(MallocDebugTest, record_allocs_present_bytes_check) {
   ptr = debug_malloc(4096);
   expected.push_back(memory_trace::Entry{
       .type = memory_trace::MALLOC, .ptr = reinterpret_cast<uint64_t>(ptr), .size = 4096});
-  memset(ptr, 1, 4096);
+  real_size = debug_malloc_usable_size(ptr);
+  memset(ptr, 1, real_size);
 
   // Verify a free realloc does update the present bytes.
-  real_size = debug_malloc_usable_size(ptr);
   EXPECT_TRUE(debug_realloc(ptr, 0) == nullptr);
   expected.push_back(memory_trace::Entry{.type = memory_trace::REALLOC,
                                          .ptr = 0,
@@ -2556,7 +2619,7 @@ TEST_F(MallocDebugTest, record_allocs_present_bytes_check) {
   // Read all of the contents.
   std::string actual;
   ASSERT_TRUE(android::base::ReadFileToString(record_filename, &actual));
-  VerifyRecordEntries(expected, actual);
+  VerifyRecordEntries(expected, actual, /*check_present_bytes*/ true);
 
   ASSERT_STREQ("", getFakeLogBuf().c_str());
   ASSERT_STREQ("", getFakeLogPrint().c_str());
@@ -2598,7 +2661,7 @@ TEST_F(MallocDebugTest, record_allocs_not_all_bytes_present) {
   // Read all of the contents.
   std::string actual;
   ASSERT_TRUE(android::base::ReadFileToString(record_filename, &actual));
-  VerifyRecordEntries(expected, actual);
+  VerifyRecordEntries(expected, actual, /*check_present_bytes*/ true);
 
   ASSERT_STREQ("", getFakeLogBuf().c_str());
   ASSERT_STREQ("", getFakeLogPrint().c_str());
