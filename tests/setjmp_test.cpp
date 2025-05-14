@@ -26,6 +26,7 @@
 #include <android-base/test_utils.h>
 
 #include "SignalUtils.h"
+#include "sme_utils.h"
 
 using setjmp_DeathTest = SilentDeathTest;
 
@@ -368,39 +369,35 @@ TEST(setjmp, bug_152210274) {
 
 #if defined(__aarch64__)
 TEST(setjmp, sigsetjmp_sme) {
-  if (!(getauxval(AT_HWCAP2) & HWCAP2_SME)) {
+  if (!sme_is_enabled()) {
     GTEST_SKIP() << "SME is not enabled on device.";
   }
 
-  uint64_t svcr, za_state;
   sigjmp_buf jb;
-  __asm__ __volatile__(".arch_extension sme; smstart za");
+  sme_enable_za();
   sigsetjmp(jb, 0);
-  __asm__ __volatile__(".arch_extension sme; mrs %0, SVCR" : "=r"(svcr));
-  __asm__ __volatile__(".arch_extension sme; smstop za");  // Turn ZA off anyway.
-  za_state = svcr & 0x2UL;
-  ASSERT_EQ(0UL, za_state);
+  bool za_state = sme_is_za_on();
+  sme_disable_za();  // Turn ZA off anyway.
+  ASSERT_FALSE(za_state);
 }
 
 TEST(setjmp, siglongjmp_sme) {
-  if (!(getauxval(AT_HWCAP2) & HWCAP2_SME)) {
+  if (!sme_is_enabled()) {
     GTEST_SKIP() << "SME is not enabled on device.";
   }
 
-  uint64_t svcr, za_state;
   int value;
   sigjmp_buf jb;
   if ((value = sigsetjmp(jb, 0)) == 0) {
-    __asm__ __volatile__(".arch_extension sme; smstart za");
+    sme_enable_za();
     siglongjmp(jb, 789);
-    __asm__ __volatile__(".arch_extension sme; smstop za");
+    sme_disable_za();
     FAIL();  // Unreachable.
   } else {
-    __asm__ __volatile__(".arch_extension sme; mrs %0, SVCR" : "=r"(svcr));
-    __asm__ __volatile__(".arch_extension sme; smstop za");  // Turn ZA off anyway.
-    za_state = svcr & 0x2UL;
+    bool za_state = sme_is_za_on();
+    sme_disable_za();  // Turn ZA off anyway.
     ASSERT_EQ(789, value);
-    ASSERT_EQ(0UL, za_state);
+    ASSERT_FALSE(za_state);
   }
 }
 #endif

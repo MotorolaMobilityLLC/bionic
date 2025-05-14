@@ -50,6 +50,13 @@
   __asm__ __volatile__(".arch_extension sme; bti c; smstop sm; ret;");
 }
 
+// Sets PSTATE.ZA to 1.
+//
+// Requires FEAT_SME, which is optional from Armv9.2.
+[[maybe_unused]] __attribute__((naked)) static void sme_enable_za() {
+  __asm__ __volatile__(".arch_extension sme; bti c; smstart za; ret;");
+}
+
 // Sets PSTATE.ZA to 0.
 //
 // Requires FEAT_SME, which is optional from Armv9.2.
