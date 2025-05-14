@@ -172,9 +172,7 @@ FORTIFY_TEST(string) {
     EXPECT_FORTIFY_OR_HWASAN_DEATH(memcpy(small_buffer, large_buffer, sizeof(large_buffer)));
     // expected-error@+1{{will always overflow}}
     EXPECT_FORTIFY_OR_HWASAN_DEATH(memmove(small_buffer, large_buffer, sizeof(large_buffer)));
-    // FIXME(gbiv): look into removing mempcpy's diagnose_if bits once the b/149839606 roll sticks.
-    // expected-error@+2{{will always overflow}}
-    // expected-error@+1{{size bigger than buffer}}
+    // expected-error@+1{{will always overflow}}
     EXPECT_FORTIFY_DEATH(mempcpy(small_buffer, large_buffer, sizeof(large_buffer)));
     // expected-error@+1{{will always overflow}}
     EXPECT_FORTIFY_OR_HWASAN_DEATH(memset(small_buffer, 0, sizeof(large_buffer)));
@@ -190,8 +188,7 @@ FORTIFY_TEST(string) {
     const char large_string[] = "Hello!!!";
     static_assert(sizeof(large_string) > sizeof(small_buffer), "");
 
-    // expected-error@+2{{will always overflow}}
-    // expected-error@+1{{string bigger than buffer}}
+    // expected-error@+1{{will always overflow}}
     EXPECT_FORTIFY_DEATH(strcpy(small_buffer, large_string));
     // expected-error@+1{{string bigger than buffer}}
     EXPECT_FORTIFY_DEATH(stpcpy(small_buffer, large_string));
@@ -228,8 +225,7 @@ FORTIFY_TEST(string) {
     static_assert(sizeof(small_string) > sizeof(split.tiny_buffer), "");
 
 #if _FORTIFY_SOURCE > 1
-    // expected-error@+3{{will always overflow}}
-    // expected-error@+2{{string bigger than buffer}}
+    // expected-error@+2{{will always overflow}}
 #endif
     EXPECT_FORTIFY_DEATH_STRUCT(strcpy(split.tiny_buffer, small_string));
 
