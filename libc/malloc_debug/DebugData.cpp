@@ -44,7 +44,7 @@ bool DebugData::Initialize(const char* options) {
   // Check to see if the options that require a header are enabled.
   if (config_.options() & HEADER_OPTIONS) {
     // Initialize all of the static header offsets.
-    pointer_offset_ = __BIONIC_ALIGN(sizeof(Header), MINIMUM_ALIGNMENT_BYTES);
+    pointer_offset_ = __builtin_align_up(sizeof(Header), MINIMUM_ALIGNMENT_BYTES);
 
     if (config_.options() & FRONT_GUARD) {
       front_guard.reset(new FrontGuardData(this, config_, &pointer_offset_));

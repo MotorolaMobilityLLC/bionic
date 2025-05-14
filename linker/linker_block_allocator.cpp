@@ -55,7 +55,7 @@ static_assert(kBlockSizeAlign >= alignof(FreeBlockInfo));
 static_assert(kBlockSizeMin == sizeof(FreeBlockInfo));
 
 LinkerBlockAllocator::LinkerBlockAllocator(size_t block_size)
-    : block_size_(__BIONIC_ALIGN(MAX(block_size, kBlockSizeMin), kBlockSizeAlign)),
+    : block_size_(__builtin_align_up(MAX(block_size, kBlockSizeMin), kBlockSizeAlign)),
       page_list_(nullptr),
       free_block_list_(nullptr),
       allocated_(0) {}

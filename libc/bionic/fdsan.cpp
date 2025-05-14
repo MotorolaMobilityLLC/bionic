@@ -81,7 +81,7 @@ FdEntry* FdTableImpl<inline_fds>::at(size_t idx) {
 
     size_t required_count = max - inline_fds;
     size_t required_size = sizeof(FdTableOverflow) + required_count * sizeof(FdEntry);
-    size_t aligned_size = __BIONIC_ALIGN(required_size, page_size());
+    size_t aligned_size = __builtin_align_up(required_size, page_size());
     size_t aligned_count = (aligned_size - sizeof(FdTableOverflow)) / sizeof(FdEntry);
 
     void* allocation =

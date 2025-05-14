@@ -124,7 +124,7 @@ void* mmap64(void* addr, size_t size, int prot, int flags, int fd, off64_t offse
 
   // Prevent allocations large enough for `end - start` to overflow,
   // to avoid security bugs.
-  size_t rounded = __BIONIC_ALIGN(size, page_size());
+  size_t rounded = __builtin_align_up(size, page_size());
   if (rounded < size || rounded > PTRDIFF_MAX) {
     errno = ENOMEM;
     return MAP_FAILED;
@@ -144,7 +144,7 @@ extern "C" void* __mremap(void*, size_t, size_t, int, void*);
 void* mremap(void* old_address, size_t old_size, size_t new_size, int flags, ...) {
   // Prevent allocations large enough for `end - start` to overflow,
   // to avoid security bugs.
-  size_t rounded = __BIONIC_ALIGN(new_size, page_size());
+  size_t rounded = __builtin_align_up(new_size, page_size());
   if (rounded < new_size || rounded > PTRDIFF_MAX) {
     errno = ENOMEM;
     return MAP_FAILED;
