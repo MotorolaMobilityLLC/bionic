@@ -145,7 +145,6 @@
 
 #define __errorattr(msg) __attribute__((__unavailable__(msg)))
 #define __warnattr(msg) __attribute__((__deprecated__(msg)))
-#define __warnattr_real(msg) __attribute__((__deprecated__(msg)))
 #define __enable_if(cond, msg) __attribute__((__enable_if__(cond, msg)))
 #define __clang_error_if(cond, msg) __attribute__((__diagnose_if__(cond, msg, "error")))
 #define __clang_warning_if(cond, msg) __attribute__((__diagnose_if__(cond, msg, "warning")))
