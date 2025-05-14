@@ -151,10 +151,9 @@
 
 #if defined(ANDROID_STRICT)
 /*
- * For things that are sketchy, but not necessarily an error. FIXME: Enable
- * this.
+ * For things that are sketchy, but not necessarily an error.
  */
-#  define __warnattr_strict(msg) /* __warnattr(msg) */
+#  define __warnattr_strict(msg) __warnattr(msg)
 #else
 #  define __warnattr_strict(msg)
 #endif
