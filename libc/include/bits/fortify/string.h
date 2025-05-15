@@ -86,9 +86,7 @@ void* _Nonnull memset(void* _Nonnull const s __pass_object_size0, int c, size_t 
 __BIONIC_FORTIFY_INLINE
 void* _Nonnull mempcpy(void* _Nonnull const dst __pass_object_size0, const void* _Nonnull src, size_t copy_amount)
         __diagnose_as_builtin(__builtin_mempcpy, 1, 2, 3)
-        __overloadable
-        __clang_error_if(__bos_unevaluated_lt(__bos0(dst), copy_amount),
-                         "'mempcpy' called with size bigger than buffer") {
+        __overloadable {
 #if __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
     size_t bos_dst = __bos0(dst);
     if (!__bos_trivially_ge(bos_dst, copy_amount)) {
@@ -114,9 +112,7 @@ char* _Nonnull stpcpy(char* _Nonnull const dst __pass_object_size, const char* _
 __BIONIC_FORTIFY_INLINE
 char* _Nonnull strcpy(char* _Nonnull const dst __pass_object_size, const char* _Nonnull src)
         __diagnose_as_builtin(__builtin_strcpy, 1, 2)
-        __overloadable
-        __clang_error_if(__bos_unevaluated_le(__bos(dst), __builtin_strlen(src)),
-                         "'strcpy' called with string bigger than buffer") {
+        __overloadable {
 #if __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
     return __builtin___strcpy_chk(dst, src, __bos(dst));
 #else
