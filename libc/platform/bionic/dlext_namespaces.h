@@ -127,6 +127,8 @@ extern bool android_link_namespaces(android_namespace_t* from,
 extern bool android_link_namespaces_all_libs(android_namespace_t* from,
                                              android_namespace_t* to);
 
+extern struct android_namespace_t* android_get_exported_namespace(const char* name);
+
 // TODO: move this somewhere else, since it's unrelated to linker namespaces.
 extern void android_set_application_target_sdk_version(int target);
 
