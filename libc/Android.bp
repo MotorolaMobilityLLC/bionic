@@ -1,5 +1,6 @@
 package {
     default_applicable_licenses: ["bionic_libc_license"],
+    default_team: "trendy_team_native_tools_libraries",
 }
 
 license {

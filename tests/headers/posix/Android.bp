@@ -16,6 +16,7 @@
 
 package {
     default_applicable_licenses: ["bionic_tests_license"],
+    default_team: "trendy_team_native_tools_libraries",
 }
 
 cc_library_static {
