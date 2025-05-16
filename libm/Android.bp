@@ -323,7 +323,7 @@ cc_library {
                 "upstream-freebsd/lib/msun/src/s_fma.c",
                 "upstream-freebsd/lib/msun/src/s_fmaf.c",
 
-                // These require x86-64-v2.
+                // https://github.com/llvm/llvm-project/issues/140252
                 "upstream-freebsd/lib/msun/src/s_round.c",
                 "upstream-freebsd/lib/msun/src/s_roundf.c",
 
@@ -348,7 +348,7 @@ cc_library {
                 "upstream-freebsd/lib/msun/src/s_fma.c",
                 "upstream-freebsd/lib/msun/src/s_fmaf.c",
 
-                // These require x86-64-v2.
+                // https://github.com/llvm/llvm-project/issues/140252
                 "upstream-freebsd/lib/msun/src/s_round.c",
                 "upstream-freebsd/lib/msun/src/s_roundf.c",
 
