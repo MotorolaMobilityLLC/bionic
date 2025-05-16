@@ -302,7 +302,22 @@ TEST_F(DEATHTEST, bzero_fortified2) {
   ASSERT_FORTIFY(bzero(myfoo.b, n));
 }
 
-#endif /* defined(_FORTIFY_SOURCE) && _FORTIFY_SOURCE=2 */
+#endif /* defined(_FORTIFY_SOURCE) && _FORTIFY_SOURCE>=2 */
+
+#if defined(_FORTIFY_SOURCE) && _FORTIFY_SOURCE >= 3
+
+TEST_F(DEATHTEST, dynamic_object_size_malloc) {
+#if __BIONIC__  // glibc doesn't use __builtin_dynamic_object_size
+  // Volatile because we have to fool both the frontend and the optimizer.
+  volatile int i = 32;
+  volatile int j = i + 1;
+  void* mem = malloc(i);
+  ASSERT_FORTIFY(memset(mem, 0, j));
+  free(mem);
+#endif
+}
+
+#endif /* defined(_FORTIFY_SOURCE) && _FORTIFY_SOURCE>=3 */
 
 // multibyte target where we over fill (should fail)
 TEST_F(DEATHTEST, strcpy_fortified) {
