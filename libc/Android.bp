@@ -1409,6 +1409,19 @@ filegroup {
 }
 
 // ========================================================
+// libc_sources_arc4random
+// linker_phdr dependency required by linker-unit-tests
+// ========================================================
+filegroup {
+    name: "libc_sources_arc4random",
+    defaults: ["libc_defaults"],
+    srcs: [
+        "bionic/bionic_arc4random.cpp",
+    ],
+    visibility: ["//bionic/linker"],
+}
+
+// ========================================================
 // libc.a + libc.so
 // ========================================================
 cc_defaults {

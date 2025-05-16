@@ -512,6 +512,9 @@ cc_test {
         "linker_dlwarning.cpp",
         "linker_phdr_16kib_compat.cpp",
         "linker_transparent_hugepage_support.cpp",
+
+        // linker_phdr.cpp dependency
+        ":libc_sources_arc4random",
     ],
 
     static_libs: [

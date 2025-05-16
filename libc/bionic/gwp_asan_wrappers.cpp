@@ -181,7 +181,7 @@ bool ShouldGwpAsanSampleProcess(unsigned sample_rate) {
   }
 
   uint8_t random_number;
-  __libc_safe_arc4random_buf(&random_number, sizeof(random_number));
+  __libc_arc4random_buf_or_die(&random_number, sizeof(random_number));
   return random_number % sample_rate == 0;
 }
 
