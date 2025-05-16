@@ -1615,6 +1615,11 @@ TEST(STRING_TEST, strcasestr_smoke) {
   ASSERT_EQ(haystack + 4, strcasestr(haystack, "Da"));
 }
 
+TEST(STRING_TEST, strcasestr_empty) {
+  const char* empty_haystack = "";
+  ASSERT_EQ(empty_haystack, strcasestr(empty_haystack, ""));
+}
+
 TEST(STRING_TEST, strcoll_smoke) {
   ASSERT_TRUE(strcoll("aab", "aac") < 0);
   ASSERT_TRUE(strcoll("aab", "aab") == 0);
