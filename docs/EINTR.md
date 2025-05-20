@@ -65,11 +65,11 @@ So, for example:
 
 ### close(2)
 
-TL;DR: *never* wrap close(2) calls with `TEMP_FAILURE_RETRY`.
+TL;DR: *never* wrap close(2) calls with `TEMP_FAILURE_RETRY()`.
 
 The case of close(2) is complicated. POSIX explicitly says that close(2)
 shouldn't close the file descriptor if it returns `EINTR`, but that's *not*
-true on Linux (and thus on Android). See
+true for the Linux kernel. See
 [Returning EINTR from close()](https://lwn.net/Articles/576478/)
 for more discussion.
 
@@ -78,6 +78,11 @@ retrying close(2) is especially dangerous because the file descriptor might
 already have been reused by another thread, so the "retry" succeeds, but
 actually closes a *different* file descriptor belonging to a *different*
 thread.
+
+Since API level 23, bionic's close() never returns EINTR,
+but portable code (or code that needs to run on API level 21)
+should not wrap close() with TEMP_FAILURE_RETRY().
+
 
 ### Timeouts
 
