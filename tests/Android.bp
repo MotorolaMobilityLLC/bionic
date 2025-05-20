@@ -40,7 +40,8 @@ cc_defaults {
         },
         android: {
             header_libs: ["bionic_libc_platform_headers"],
-        },
+            shared_libs: ["libdl_android"],
+         },
         linux_bionic: {
             header_libs: ["bionic_libc_platform_headers"],
         },
