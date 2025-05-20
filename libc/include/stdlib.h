@@ -131,6 +131,9 @@ __nodiscard void* _Nullable bsearch(const void* _Nonnull __key, const void* _Nul
 /**
  * [qsort(3)](https://man7.org/linux/man-pages/man3/qsort.3.html) sorts an array
  * of n elements each of the given size, using the given comparator.
+ *
+ * qsort() is not stable, so elements with the same key might be reordered.
+ * libc++ offers both std::sort() and std::stable_sort().
  */
 void qsort(void* _Nullable __array, size_t __n, size_t __size, int (* _Nonnull __comparator)(const void* _Nullable __lhs, const void* _Nullable __rhs));
 
@@ -139,7 +142,11 @@ void qsort(void* _Nullable __array, size_t __n, size_t __size, int (* _Nonnull _
  * array of n elements each of the given size, using the given comparator,
  * and passing the given context argument to the comparator.
  *
+ * qsort_r() is not stable, so elements with the same key might be reordered.
+ * libc++ offers both std::sort() and std::stable_sort().
+ *
  * Available since API level 36.
+ * std::sort() is available at all API levels.
  */
 #if __BIONIC_AVAILABILITY_GUARD(36)
 void qsort_r(void* _Nullable __array, size_t __n, size_t __size, int (* _Nonnull __comparator)(const void* _Nullable __lhs, const void* _Nullable __rhs, void* _Nullable __context), void* _Nullable __context) __INTRODUCED_IN(36);
