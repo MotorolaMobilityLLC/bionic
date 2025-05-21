@@ -55,10 +55,8 @@ char* realpath(const char* path, char* result) {
   if (fd.get() == -1) return nullptr;
 
   // (...remember the device/inode that we're talking about and...)
-  struct stat sb;
-  if (fstat(fd.get(), &sb) == -1) return nullptr;
-  dev_t st_dev = sb.st_dev;
-  ino_t st_ino = sb.st_ino;
+  struct stat sb_before;
+  if (fstat(fd.get(), &sb_before) == -1) return nullptr;
 
   // ...ask the kernel to do the hard work for us.
   FdPath fd_path(fd.get());
@@ -69,7 +67,10 @@ char* realpath(const char* path, char* result) {
 
   // What if the file was removed in the meantime? readlink(2) will have
   // returned "/a/b/c (deleted)", and we want to return ENOENT instead.
-  if (stat(dst, &sb) == -1 || st_dev != sb.st_dev || st_ino != sb.st_ino) {
+  struct stat sb_after;
+  if (stat(dst, &sb_after) == -1 ||
+      sb_before.st_dev != sb_after.st_dev ||
+      sb_before.st_ino != sb_after.st_ino) {
     errno = ENOENT;
     return nullptr;
   }
