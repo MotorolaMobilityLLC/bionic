@@ -385,8 +385,11 @@ android_fdsan_error_level android_fdsan_set_error_level_from_property(
 
 int close(int fd) {
   int rc = android_fdsan_close_with_tag(fd, 0);
+
+  // See the "close" section of bionic/docs/EINTR.md for more.
   if (rc == -1 && errno == EINTR) {
     return 0;
   }
+
   return rc;
 }
