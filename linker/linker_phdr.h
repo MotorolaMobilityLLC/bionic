@@ -47,6 +47,7 @@
                                       MAYBE_MAP_FLAG((x), PF_W, PROT_WRITE))
 
 static constexpr size_t kCompatPageSize = 0x1000;
+static constexpr size_t kVmaNameLimit = 80;
 
 class ElfReader {
  public:
@@ -202,3 +203,6 @@ void protect_memtag_globals_ro_segments(const ElfW(Phdr) * phdr_table, size_t ph
 void name_memtag_globals_segments(const ElfW(Phdr) * phdr_table, size_t phdr_count,
                                   ElfW(Addr) load_bias, const char* soname,
                                   std::list<std::string>* vma_names);
+
+void format_left_truncated_vma_anon_name(char* buffer, size_t buffer_size, const char* prefix,
+                                         const char* name, const char* suffix);
