@@ -103,5 +103,15 @@
     {
       "name": "CtsBionicTestCases"
     }
+  ],
+  "wear-cts-postsubmit": [
+    {
+      "name": "CtsAppTestCases",
+      "options": [
+       {
+         "include-filter": "android.app.cts.ServiceTest"
+       }
+     ]
+    }
   ]
 }
