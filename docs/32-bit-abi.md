@@ -128,5 +128,18 @@ document -- this defect is actually fixable, it doesn't seem worth fixing.
 Linux uses 64 bits to represent a filesystem id in `struct statfs`,
 so the conversion to the POSIX `struct statvfs` with its `unsigned long`
 is necessarily lossy on ILP32 where `long` is 32-bit.
+
+We're not aware that anyone has ever hit this in practice,
+but it's recorded here for completeness.
+
+
+## `dev_t` and `ino_t` are too small
+
+Linux uses 64 bits to represent device and inode numbers,
+but by historical accident Android's 32-bit ABI has them both
+as 32-bit types.
+The corresponding fields in `struct stat` do have the right sizes,
+though this means that they have the wrong types.
+
 We're not aware that anyone has ever hit this in practice,
 but it's recorded here for completeness.
