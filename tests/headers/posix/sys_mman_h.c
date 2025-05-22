@@ -14,6 +14,10 @@ static void sys_mman_h() {
   MACRO(MAP_FIXED);
   MACRO(MAP_PRIVATE);
   MACRO(MAP_SHARED);
+#if !defined(__GLIBC__) // Our glibc is too old.
+  MACRO(MAP_ANON);
+  MACRO(MAP_ANONYMOUS);
+#endif
 
   MACRO(MS_ASYNC);
   MACRO(MS_INVALIDATE);

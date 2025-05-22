@@ -108,6 +108,9 @@ static void sys_socket_h() {
   TYPE(ssize_t);
 
   FUNCTION(accept, int (*f)(int, struct sockaddr*, socklen_t*));
+#if !defined(__GLIBC__) // Our glibc is too old.
+  FUNCTION(accept4, int (*f)(int, struct sockaddr*, socklen_t*, int));
+#endif
   FUNCTION(bind, int (*f)(int, const struct sockaddr*, socklen_t));
   FUNCTION(connect, int (*f)(int, const struct sockaddr*, socklen_t));
   FUNCTION(getpeername, int (*f)(int, struct sockaddr*, socklen_t*));

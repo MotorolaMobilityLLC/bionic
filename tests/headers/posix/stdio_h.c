@@ -50,6 +50,9 @@ static void stdio_h() {
   fp = stdin;
   fp = stdout;
 
+#if !defined(__GLIBC__) // Our glibc is too old.
+  FUNCTION(asprintf, int (*f)(char**, const char*, ...));
+#endif
   FUNCTION(clearerr, void (*f)(FILE*));
   FUNCTION(ctermid, char* (*f)(char*));
   FUNCTION(dprintf, int (*f)(int, const char*, ...));
@@ -111,6 +114,9 @@ static void stdio_h() {
   FUNCTION(tmpfile, FILE* (*f)(void));
   FUNCTION(tmpnam, char* (*f)(char*));
   FUNCTION(ungetc, int (*f)(int, FILE*));
+#if !defined(__GLIBC__) // Our glibc is too old.
+  FUNCTION(vasprintf, int (*f)(char**, const char*, va_list));
+#endif
   FUNCTION(vdprintf, int (*f)(int, const char*, va_list));
   FUNCTION(vfprintf, int (*f)(FILE*, const char*, va_list));
   FUNCTION(vfscanf, int (*f)(FILE*, const char*, va_list));

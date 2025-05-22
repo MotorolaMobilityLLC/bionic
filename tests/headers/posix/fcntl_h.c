@@ -18,6 +18,12 @@ static void fcntl_h() {
   MACRO(F_GETOWN);
   MACRO(F_SETOWN);
 
+#if !defined(__GLIBC__) // Our glibc is too old.
+  MACRO(F_OFD_GETLK);
+  MACRO(F_OFD_SETLK);
+  MACRO(F_OFD_SETLKW);
+#endif
+
   MACRO(FD_CLOEXEC);
 
   MACRO(F_RDLCK);

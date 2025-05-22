@@ -48,6 +48,7 @@ static void stdlib_h() {
 #endif
   FUNCTION(abort, void (*f)(void));
   FUNCTION(abs, int (*f)(int));
+  FUNCTION(aligned_alloc, void* (*f)(size_t, size_t));
   FUNCTION(atexit, int (*f)(void (*)(void)));
   FUNCTION(atof, double (*f)(const char*));
   FUNCTION(atoi, int (*f)(const char*));
@@ -79,12 +80,18 @@ static void stdlib_h() {
   FUNCTION(mbstowcs, size_t (*f)(wchar_t*, const char*, size_t));
   FUNCTION(mbtowc, int (*f)(wchar_t*, const char*, size_t));
   FUNCTION(mkdtemp, char* (*f)(char*));
+#if !defined(__GLIBC__) // Our glibc is too old.
+  FUNCTION(mkostemp, int (*f)(char*, int));
+#endif
   FUNCTION(mkstemp, int (*f)(char*));
   FUNCTION(mrand48, long (*f)(void));
   FUNCTION(nrand48, long (*f)(unsigned short[3]));
   FUNCTION(posix_memalign, int (*f)(void**, size_t, size_t));
   FUNCTION(posix_openpt, int (*f)(int));
   FUNCTION(ptsname, char* (*f)(int));
+#if !defined(__GLIBC__) // Our glibc is too old.
+  FUNCTION(ptsname_r, int (*f)(int, char*, size_t));
+#endif
   FUNCTION(putenv, int (*f)(char*));
   FUNCTION(qsort, void (*f)(void*, size_t, size_t, int (*)(const void*, const void*)));
 #if !defined(__GLIBC__) // Our glibc is too old.

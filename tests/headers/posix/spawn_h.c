@@ -24,8 +24,14 @@ static void spawn_h() {
   MACRO(POSIX_SPAWN_SETSIGMASK);
 
   FUNCTION(posix_spawn, int (*f)(pid_t*, const char*, const posix_spawn_file_actions_t*, const posix_spawnattr_t*, char* const[], char* const[]));
+#if !defined(__GLIBC__) // Our glibc is too old.
+  FUNCTION(posix_spawn_file_actions_addchdir, int (*f)(posix_spawn_file_actions_t*, const char*));
+#endif
   FUNCTION(posix_spawn_file_actions_addclose, int (*f)(posix_spawn_file_actions_t*, int));
   FUNCTION(posix_spawn_file_actions_adddup2, int (*f)(posix_spawn_file_actions_t*, int, int));
+#if !defined(__GLIBC__) // Our glibc is too old.
+  FUNCTION(posix_spawn_file_actions_addfchdir, int (*f)(posix_spawn_file_actions_t*, int));
+#endif
   FUNCTION(posix_spawn_file_actions_addopen, int (*f)(posix_spawn_file_actions_t*, int, const char*, int, mode_t));
   FUNCTION(posix_spawn_file_actions_destroy, int (*f)(posix_spawn_file_actions_t*));
   FUNCTION(posix_spawn_file_actions_init, int (*f)(posix_spawn_file_actions_t*));
