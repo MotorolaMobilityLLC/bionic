@@ -304,9 +304,7 @@ int pipe(int __fds[_Nonnull 2]);
  *
  * Returns 0 on success, and returns -1 and sets `errno` on failure.
  */
-#if defined(__USE_GNU)
 int pipe2(int __fds[_Nonnull 2], int __flags);
-#endif
 
 int chroot(const char* _Nonnull __path);
 int symlink(const char* _Nonnull __old_path, const char* _Nonnull __new_path);
