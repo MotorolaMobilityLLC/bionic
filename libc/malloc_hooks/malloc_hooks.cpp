@@ -233,7 +233,7 @@ bool hooks_write_malloc_leak_info(FILE*) {
 #if defined(HAVE_DEPRECATED_MALLOC_FUNCS)
 void* hooks_pvalloc(size_t bytes) {
   size_t pagesize = getpagesize();
-  size_t size = __BIONIC_ALIGN(bytes, pagesize);
+  size_t size = __builtin_align_up(bytes, pagesize);
   if (size < bytes) {
     // Overflow
     errno = ENOMEM;

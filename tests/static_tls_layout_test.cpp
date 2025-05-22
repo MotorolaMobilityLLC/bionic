@@ -163,8 +163,8 @@ TEST_F(static_tls_layout_DeathTest, arm) {
 
   // Amount of memory needed for negative TLS slots, given a segment p_align of
   // 8 or 16 words.
-  const size_t base8 = __BIONIC_ALIGN(-MIN_TLS_SLOT, 8) * sizeof(void*);
-  const size_t base16 = __BIONIC_ALIGN(-MIN_TLS_SLOT, 16) * sizeof(void*);
+  const size_t base8 = __builtin_align_up(-MIN_TLS_SLOT, 8) * sizeof(void*);
+  const size_t base16 = __builtin_align_up(-MIN_TLS_SLOT, 16) * sizeof(void*);
 
   StaticTlsLayout layout;
 

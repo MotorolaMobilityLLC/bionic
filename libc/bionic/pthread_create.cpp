@@ -75,7 +75,7 @@ void __init_libgen_buffers_ptr(bionic_tls* tls, libgen_buffers* lb) {
 }
 
 static inline size_t get_temp_bionic_tls_size() {
-  return __BIONIC_ALIGN(sizeof(bionic_tls) + sizeof(libgen_buffers), page_size());
+  return __builtin_align_up(sizeof(bionic_tls) + sizeof(libgen_buffers), page_size());
 }
 
 // Allocate a temporary bionic_tls that the dynamic linker's main thread can
@@ -230,12 +230,12 @@ ThreadMapping __allocate_thread_mapping(size_t stack_size, size_t stack_guard_si
   if (__builtin_add_overflow(mmap_size, layout.size(), &mmap_size)) return {};
   if (__builtin_add_overflow(mmap_size, PTHREAD_GUARD_SIZE, &mmap_size)) return {};
   // Add space for the dedicated libgen buffers page(s).
-  size_t libgen_buffers_padded_size = __BIONIC_ALIGN(sizeof(libgen_buffers), page_size());
+  size_t libgen_buffers_padded_size = __builtin_align_up(sizeof(libgen_buffers), page_size());
   if (__builtin_add_overflow(mmap_size, libgen_buffers_padded_size, &mmap_size)) return {};
 
   // Align the result to a page size.
   const size_t unaligned_size = mmap_size;
-  mmap_size = __BIONIC_ALIGN(mmap_size, page_size());
+  mmap_size = __builtin_align_up(mmap_size, page_size());
   if (mmap_size < unaligned_size) return {};
 
   // Create a new private anonymous map. Make the entire mapping PROT_NONE, then carve out a
@@ -296,7 +296,7 @@ static int __allocate_thread(pthread_attr_t* attr, bionic_tcb** tcbp, void** chi
 
     // Make sure the guard size is a multiple of page_size().
     const size_t unaligned_guard_size = attr->guard_size;
-    attr->guard_size = __BIONIC_ALIGN(attr->guard_size, page_size());
+    attr->guard_size = __builtin_align_up(attr->guard_size, page_size());
     if (attr->guard_size < unaligned_guard_size) return EAGAIN;
 
     mapping = __allocate_thread_mapping(attr->stack_size, attr->guard_size);

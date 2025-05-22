@@ -60,8 +60,6 @@
 #define __BIONIC_CAST(_k,_t,_v) ((_t) (_v))
 #endif
 
-#define __BIONIC_ALIGN(__value, __alignment) (((__value) + (__alignment)-1) & ~((__alignment)-1))
-
 /*
  * The nullness constraints of this parameter or return value are
  * quite complex. This is used to highlight spots where developers

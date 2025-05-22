@@ -81,7 +81,7 @@ static const uint32_t kLargeObject = 111;
 
 // Allocated pointers must be at least 16-byte aligned.  Round up the size of
 // page_info to multiple of 16.
-static constexpr size_t kPageInfoSize = __BIONIC_ALIGN(sizeof(page_info), 16);
+static constexpr size_t kPageInfoSize = __builtin_align_up(sizeof(page_info), 16);
 
 static inline uint16_t log2(size_t number) {
   uint16_t result = 0;
@@ -207,7 +207,7 @@ void BionicSmallObjectAllocator::alloc_page() {
 
   // Align the first block to block_size_.
   const uintptr_t first_block_addr =
-      __BIONIC_ALIGN(reinterpret_cast<uintptr_t>(page + 1), block_size_);
+      __builtin_align_up(reinterpret_cast<uintptr_t>(page + 1), block_size_);
   small_object_block_record* const first_block =
       reinterpret_cast<small_object_block_record*>(first_block_addr);
 
@@ -262,7 +262,7 @@ void BionicAllocator::initialize_allocators() {
 }
 
 void* BionicAllocator::alloc_mmap(size_t align, size_t size) {
-  size_t header_size = __BIONIC_ALIGN(kPageInfoSize, align);
+  size_t header_size = __builtin_align_up(kPageInfoSize, align);
   size_t allocated_size;
   if (__builtin_add_overflow(header_size, size, &allocated_size) ||
       page_end(allocated_size) < allocated_size) {

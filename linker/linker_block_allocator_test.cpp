@@ -78,7 +78,7 @@ void linker_allocator_test_helper() {
   ASSERT_TRUE(ptr2 != nullptr);
 
   // they should be next to each other.
-  size_t dist = __BIONIC_ALIGN(MAX(sizeof(Element), kBlockSizeMin), kBlockSizeAlign);
+  size_t dist = __builtin_align_up(MAX(sizeof(Element), kBlockSizeMin), kBlockSizeAlign);
   ASSERT_EQ(reinterpret_cast<uint8_t*>(ptr1) + dist, reinterpret_cast<uint8_t*>(ptr2));
 
   allocator.free(ptr1);
