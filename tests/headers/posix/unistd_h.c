@@ -296,6 +296,9 @@ static void unistd_h() {
 #endif
   FUNCTION(dup, int (*f)(int));
   FUNCTION(dup2, int (*f)(int, int));
+#if !defined(__GLIBC__) // Our glibc is too old.
+  FUNCTION(dup3, int (*f)(int, int, int));
+#endif
   FUNCTION(_exit, void (*f)(int));
 #if !defined(__BIONIC__)
   FUNCTION(encrypt, void (*f)(char[64], int));
@@ -338,6 +341,10 @@ static void unistd_h() {
   FUNCTION(getpgrp, pid_t (*f)(void));
   FUNCTION(getpid, pid_t (*f)(void));
   FUNCTION(getppid, pid_t (*f)(void));
+#if !defined(__GLIBC__) // Our glibc is too old.
+  FUNCTION(getresgid, int (*f)(gid_t*, gid_t*, gid_t*));
+  FUNCTION(getresuid, int (*f)(uid_t*, uid_t*, uid_t*));
+#endif
   FUNCTION(getsid, pid_t (*f)(pid_t));
   FUNCTION(getuid, uid_t (*f)(void));
   FUNCTION(isatty, int (*f)(int));
@@ -350,6 +357,9 @@ static void unistd_h() {
   FUNCTION(pathconf, long (*f)(const char*, int));
   FUNCTION(pause, int (*f)(void));
   FUNCTION(pipe, int (*f)(int[2]));
+#if !defined(__GLIBC__) // Our glibc is too old.
+  FUNCTION(pipe2, int (*f)(int[2], int));
+#endif
   FUNCTION(pread, ssize_t (*f)(int, void*, size_t, off_t));
   FUNCTION(pwrite, ssize_t (*f)(int, const void*, size_t, off_t));
   FUNCTION(read, ssize_t (*f)(int, void*, size_t));
@@ -362,6 +372,10 @@ static void unistd_h() {
   FUNCTION(setpgid, int (*f)(pid_t, pid_t));
   FUNCTION(setpgrp, pid_t (*f)(void));
   FUNCTION(setregid, int (*f)(gid_t, gid_t));
+#if !defined(__GLIBC__) // Our glibc is too old.
+  FUNCTION(setresgid, int (*f)(gid_t, gid_t, gid_t));
+  FUNCTION(setresuid, int (*f)(uid_t, uid_t, uid_t));
+#endif
   FUNCTION(setreuid, int (*f)(uid_t, uid_t));
   FUNCTION(setsid, pid_t (*f)(void));
   FUNCTION(setuid, int (*f)(uid_t));

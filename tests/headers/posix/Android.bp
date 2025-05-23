@@ -28,6 +28,10 @@ cc_library_static {
         "-Werror",
         "-D_POSIX_C_SOURCE=200809L",
         "-D_XOPEN_SOURCE=700",
+
+        // Ensure that __BIONIC__ or __GLIBC__ is always defined.
+        // Any header suffices for bionic, but glibc is pretty ad hoc.
+        "-include features.h",
     ],
     host_supported: true,
     target: {
