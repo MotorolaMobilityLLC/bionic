@@ -80,7 +80,6 @@ cc_test {
     cflags: [
         "-Wall",
         "-Werror",
-        "-O1", // FIXME: http://b/169206016 - issues with aligned_alloc and -O2
     ],
     test_suites: ["general-tests"],
 }
