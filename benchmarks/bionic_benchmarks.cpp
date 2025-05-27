@@ -401,8 +401,8 @@ void RegisterCliBenchmarks(bench_opts_t cmdline_opts,
   // Register any of the extra benchmarks that were specified in the options.
   args_vector_t arg_vector;
   args_vector_t* run_args = &arg_vector;
-  for (const std::string& extra_fn : cmdline_opts.extra_benchmarks) {
-    android::base::Trim(extra_fn);
+  for (std::string extra_fn : cmdline_opts.extra_benchmarks) {
+    extra_fn = android::base::Trim(extra_fn);
     size_t first_space_pos = extra_fn.find(' ');
     std::string fn_name = extra_fn.substr(0, first_space_pos);
     std::string cmd_args;
