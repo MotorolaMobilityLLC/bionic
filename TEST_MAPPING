@@ -104,7 +104,7 @@
       "name": "CtsBionicTestCases"
     }
   ],
-  "wear-cts-postsubmit": [
+  "wear-cts-presubmit": [
     {
       "name": "CtsAppTestCases",
       "options": [
