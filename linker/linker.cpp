@@ -380,11 +380,9 @@ static bool realpath_fd(int fd, std::string* realpath) {
   // proc_self_fd needs to be large enough to hold "/proc/self/fd/" plus an
   // integer, plus the NULL terminator.
   char proc_self_fd[32];
-  // We want to statically allocate this large buffer so that we don't grow
-  // the stack by too much.
-  static char buf[PATH_MAX];
-
   async_safe_format_buffer(proc_self_fd, sizeof(proc_self_fd), "/proc/self/fd/%d", fd);
+
+  char buf[PATH_MAX];
   auto length = readlink(proc_self_fd, buf, sizeof(buf));
   if (length == -1) {
     if (!is_first_stage_init()) {
