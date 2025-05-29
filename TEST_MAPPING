@@ -106,10 +106,10 @@
   ],
   "wear-cts-presubmit": [
     {
-      "name": "CtsAppTestCases",
+      "name": "CtsAppServiceTestCases",
       "options": [
        {
-         "include-filter": "android.app.cts.ServiceTest"
+         "include-filter": "android.app.cts.service.ServiceTest"
        }
      ]
     }
