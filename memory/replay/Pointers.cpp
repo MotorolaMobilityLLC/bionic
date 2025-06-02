@@ -16,7 +16,6 @@
 
 #include <err.h>
 #include <inttypes.h>
-#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,7 +53,7 @@ void Pointers::Add(uintptr_t key_pointer, void* pointer) {
   if (data == nullptr) {
     errx(1, "No empty entry found for 0x%" PRIxPTR, key_pointer);
   }
-  atomic_store(&data->key_pointer, key_pointer);
+  data->key_pointer.store(key_pointer);
   data->pointer = pointer;
 }
 
@@ -69,7 +68,7 @@ void* Pointers::Remove(uintptr_t key_pointer) {
   }
 
   void* pointer = data->pointer;
-  atomic_store(&data->key_pointer, uintptr_t(0));
+  data->key_pointer.store(uintptr_t(0));
 
   return pointer;
 }
@@ -77,7 +76,7 @@ void* Pointers::Remove(uintptr_t key_pointer) {
 Pointers::pointer_data* Pointers::Find(uintptr_t key_pointer) {
   size_t index = GetHash(key_pointer);
   for (size_t entries = max_pointers_; entries != 0; entries--) {
-    if (atomic_load(&pointers_[index].key_pointer) == key_pointer) {
+    if (pointers_[index].key_pointer.load() == key_pointer) {
       return pointers_ + index;
     }
     if (++index == max_pointers_) {
@@ -91,8 +90,7 @@ Pointers::pointer_data* Pointers::FindEmpty(uintptr_t key_pointer) {
   size_t index = GetHash(key_pointer);
   for (size_t entries = 0; entries < max_pointers_; entries++) {
     uintptr_t empty = 0;
-    if (atomic_compare_exchange_strong(&pointers_[index].key_pointer, &empty,
-        uintptr_t(1))) {
+    if (pointers_[index].key_pointer.compare_exchange_strong(empty, uintptr_t(1))) {
       return pointers_ + index;
     }
     if (++index == max_pointers_) {
@@ -108,7 +106,7 @@ size_t Pointers::GetHash(uintptr_t key_pointer) {
 
 void Pointers::FreeAll() {
   for (size_t i = 0; i < max_pointers_; i++) {
-    if (atomic_load(&pointers_[i].key_pointer) != 0) {
+    if (pointers_[i].key_pointer.load() != 0) {
       free(pointers_[i].pointer);
     }
   }

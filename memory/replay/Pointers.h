@@ -16,8 +16,9 @@
 
 #pragma once
 
-#include <stdatomic.h>
 #include <stdint.h>
+
+#include <atomic>
 
 class Pointers {
  public:
