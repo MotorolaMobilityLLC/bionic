@@ -1342,3 +1342,22 @@ TEST(wchar, wmemset) {
   ASSERT_EQ(dst, wmemset(dst, L'y', 0));
   ASSERT_EQ(dst[0], wchar_t(0x12345678));
 }
+
+TEST(wchar, btowc) {
+  // This function only works for single-byte "wide" characters.
+  ASSERT_EQ(wint_t('a'), btowc('a'));
+  // It _truncates_ the input to unsigned char.
+  ASSERT_EQ(wint_t(0x66), btowc(0x666));
+  // And rejects anything with the top bit set.
+  ASSERT_EQ(WEOF, btowc(0xa0));
+}
+
+TEST(wchar, wctob) {
+  // This function only works for single-byte "wide" characters.
+  ASSERT_EQ('a', wctob(L'a'));
+  // And rejects anything that would have the top bit set.
+  ASSERT_EQ(EOF, wctob(0xa0));
+  // There's no truncation here (unlike btowc()),
+  // so this is rejected rather than seen as 0x66 ('f').
+  ASSERT_EQ(EOF, wctob(0x666));
+}
