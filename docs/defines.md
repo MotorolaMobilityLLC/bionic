@@ -12,6 +12,10 @@ the system property functions. Common alternatives on this dimension are
 `__GLIBC__`, `__APPLE__`, or `_WIN32`. Note that although bionic is most often
 seen on Android devices, it is possible to use bionic on the host too.
 
+(Note that though `__APPLE__` and `_WIN32` are defined by the compiler,
+both `__BIONIC__` and `__GLIBC__` are defined by <sys/cdefs.h>,
+which you should include before testing either of these.)
+
 ## `__ANDROID__`
 
 If your code is specific to Android devices, use `__ANDROID__`. This isn't
@@ -20,6 +24,8 @@ more appropriate. This is typically a good choice if you have code that's part
 of the OS and needs to behave differently on the host than on the device.
 Genuine cases are quite rare, and `__BIONIC__` is often more specific (but
 remember that it is possible -- if unusual -- to use bionic on the host).
+
+(This is defined by the compiler.)
 
 ## `ANDROID` (rarely useful)
 
@@ -42,6 +48,8 @@ that for most of the year, the OS builds with this set to 10,000 rather than the
 obvious "next" API level such as 19. Once the API level has been decided, the
 value of `__ANDROID_API__` drops to that number.
 
+(This is defined by the compiler, based on the api level in your target triple.)
+
 ## `__linux__`
 
 If your code requires a Linux kernel, use `__linux__`. This is typically a good
@@ -50,6 +58,8 @@ a file in `/proc`, but aren't restricted to just Android and would work equally
 well on a desktop Linux distro, say. Common alternatives on this dimension
 are `__APPLE__` or `_WIN32`.
 
+(This is defined by the compiler.)
+
 ## `__ANDROID_NDK__`
 
 If your code can be built either as part of an app _or_ as part of the OS
@@ -57,11 +67,15 @@ itself, use `__ANDROID_NDK__` to differentiate between those two circumstances.
 This is typically a good choice when your code uses non-NDK API if it's built as
 part of the OS, but sticks to just the NDK APIs otherwise.
 
+(This is available after including <sys/cdefs.h> directly or transitively.)
+
 ## `__NDK_MAJOR__`, `__NDK_MINOR__`, `__NDK_BETA__`, `__NDK_BUILD__`, `__NDK_CANARY__`
 
 If your code can be built with a variety of different NDK versions, and needs to
-work around issues with some of them, use these macros to detect the versinon of
+work around issues with some of them, use these macros to detect the version of
 the NDK you're being built with. Usually only `__NDK_MAJOR__` will be necessary.
+
+(These are available after including <sys/cdefs.h> directly or transitively.)
 
 ## `__arm__`/`__aarch64__`, `__i386__`/`__x86_64__`, `__riscv`
 
@@ -73,9 +87,13 @@ check for Android-only code. If you need to write code portable to other
 operating systems that do support riscv32, you'll also need to check
 whether `__riscv_xlen` is 32 or 64.
 
+(These are defined by the compiler.)
+
 ## `__ILP32__` and `__LP64__`
 
 If your code depends on "bitness" -- whether `long` and pointers are 32-
 or 64-bit -- use these macros to conditionally compile. Note the extra
 "I" in the 32-bit macro (since `int`, `long`, and pointers are all 32-bit
 on such systems, with `long long` being needed for a 64-bit type).
+
+(These are defined by the compiler.)
