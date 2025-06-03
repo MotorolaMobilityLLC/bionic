@@ -155,10 +155,10 @@ int sprintf(char* __BIONIC_COMPLICATED_NULLNESS __s, const char* _Nonnull __fmt,
 int vsprintf(char* __BIONIC_COMPLICATED_NULLNESS __s, const char* _Nonnull __fmt, va_list __args)
     __printflike(2, 0) __warnattr_strict("vsprintf is often misused; please use vsnprintf");
 char* _Nullable tmpnam(char* _Nullable __s)
-    __warnattr("tmpnam is unsafe, use mkstemp or tmpfile instead");
+    __attribute__((__deprecated__("tmpnam is unsafe, use mkstemp or tmpfile instead")));
 #define P_tmpdir "/tmp/" /* deprecated */
 char* _Nullable tempnam(const char* _Nullable __dir, const char* _Nullable __prefix)
-    __warnattr("tempnam is unsafe, use mkstemp or tmpfile instead");
+    __attribute__((__deprecated__("tempnam is unsafe, use mkstemp or tmpfile instead")));
 
 /**
  * [rename(2)](https://man7.org/linux/man-pages/man2/rename.2.html) changes

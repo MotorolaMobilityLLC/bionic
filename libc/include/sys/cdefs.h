@@ -142,7 +142,6 @@
 #define __wur __nodiscard
 
 #define __errorattr(msg) __attribute__((__unavailable__(msg)))
-#define __warnattr(msg) __attribute__((__deprecated__(msg)))
 #define __enable_if(cond, msg) __attribute__((__enable_if__(cond, msg)))
 #define __clang_error_if(cond, msg) __attribute__((__diagnose_if__(cond, msg, "error")))
 #define __clang_warning_if(cond, msg) __attribute__((__diagnose_if__(cond, msg, "warning")))
@@ -151,7 +150,7 @@
 /*
  * For things that are sketchy, but not necessarily an error.
  */
-#  define __warnattr_strict(msg) __warnattr(msg)
+#  define __warnattr_strict(msg) __attribute__((__deprecated__(msg)))
 #else
 #  define __warnattr_strict(msg)
 #endif
