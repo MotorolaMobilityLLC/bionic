@@ -44,7 +44,6 @@
 
 __BEGIN_DECLS
 
-wint_t btowc(int __ch);
 int fwprintf(FILE* _Nonnull __fp, const wchar_t* _Nonnull __fmt, ...);
 int fwscanf(FILE* _Nonnull __fp, const wchar_t* _Nonnull __fmt, ...);
 wint_t fgetwc(FILE* _Nonnull __fp);
@@ -123,7 +122,6 @@ unsigned long wcstoul_l(const wchar_t* _Nonnull __s, wchar_t* __BIONIC_COMPLICAT
 unsigned long long wcstoull(const wchar_t* _Nonnull __s, wchar_t* __BIONIC_COMPLICATED_NULLNESS * _Nullable __end_ptr, int __base);
 int wcswidth(const wchar_t* _Nonnull __s, size_t __n);
 size_t wcsxfrm(wchar_t* __BIONIC_COMPLICATED_NULLNESS __dst, const wchar_t* _Nonnull __src, size_t __n);
-int wctob(wint_t __wc);
 int wcwidth(wchar_t __wc);
 wchar_t* _Nullable wmemchr(const wchar_t* _Nonnull __src, wchar_t __wc, size_t __n);
 int wmemcmp(const wchar_t* _Nullable __lhs, const wchar_t* _Nullable __rhs, size_t __n);
@@ -154,6 +152,11 @@ FILE* _Nullable open_wmemstream(wchar_t* _Nonnull * _Nonnull __ptr, size_t* _Non
 
 wchar_t* _Nullable wcsdup(const wchar_t* _Nonnull __s);
 size_t wcsnlen(const wchar_t* _Nonnull __s, size_t __n);
+
+/** ASCII-only; use mbtowc() instead. */
+wint_t btowc(int __ch) __attribute__((__deprecated__("ASCII-only; use mbtowc() instead")));
+/** ASCII-only; use wctomb() instead. */
+int wctob(wint_t __wc) __attribute__((__deprecated__("ASCII-only; use wctomb() instead")));
 
 __END_DECLS
 
