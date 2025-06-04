@@ -397,3 +397,54 @@ bool ElfReader::CompatMapSegment(size_t seg_idx, size_t len) {
 
   return true;
 }
+
+static size_t phdr_table_get_relro_min_align(const ElfW(Phdr)* relro_phdr,
+                                             const ElfW(Phdr)* phdr_table, size_t phdr_count) {
+  for (size_t index = 0; index < phdr_count; ++index) {
+    const ElfW(Phdr)* phdr = &phdr_table[index];
+
+    if (phdr->p_type != PT_LOAD) {
+      continue;
+    }
+
+    // Only check for the case, where the relro segment is a prefix of a load segment. Conventional
+    // linkers will only generate binaries where the relro segment is either the prefix of the first
+    // RW load segment, or is entirely contained in the first RW segment.
+    if (phdr->p_vaddr == relro_phdr->p_vaddr) {
+      // No extra alignment checks needed if the whole load segment is relro.
+      if (phdr->p_memsz <= relro_phdr->p_memsz) {
+        return 0;
+      }
+
+      ElfW(Addr) relro_end = relro_phdr->p_vaddr + relro_phdr->p_memsz;
+      // Alignments must be powers of two, so the RELRO segment's alignment can be determined by
+      // calculating its lowest set bit with (n & -n).
+      size_t relro_align = static_cast<size_t>(relro_end & -relro_end);
+      // We only care about relro segments that are aligned to at least 4KiB. This is always
+      // expected for outputs of a conventional linker.
+      return relro_align >= kCompatPageSize ? relro_align : 0;
+    }
+  }
+  return 0;
+}
+
+/*
+ * In the base page size is 16KiB and the RELRO's end alignment is less than min_align_;
+ *  override min_align_ with the relro's end alignment. This ensures that the ELF is
+ * loaded in compat mode even if the LOAD segments are 16KB aligned.
+ * Linker bug: https://sourceware.org/bugzilla/show_bug.cgi?id=28824
+ */
+void ElfReader::FixMinAlignFor16KiB() {
+  // A binary with LOAD segment alignments of at least 16KiB can still be incompatible with 16KiB
+  // page sizes if the first RW segment has a RELRO prefix ending at a non-16KiB-aligned address. We
+  // need to check for this possibility here and adjust min_align_ accordingly.
+  // We only check if the ELF file contains a single RELRO segment, because that's what the 16KiB
+  // compatibility loader can handle.
+  const ElfW(Phdr)* relro_phdr = nullptr;
+  if (HasAtMostOneRelroSegment(&relro_phdr) && relro_phdr != nullptr) {
+    size_t relro_min_align = phdr_table_get_relro_min_align(relro_phdr, phdr_table_, phdr_num_);
+    if (relro_min_align) {
+      min_align_ = std::min(min_align_, relro_min_align);
+    }
+  }
+}
