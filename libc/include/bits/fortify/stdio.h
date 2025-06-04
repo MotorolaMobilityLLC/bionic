@@ -62,7 +62,7 @@ int sprintf(char* __BIONIC_COMPLICATED_NULLNESS dest, const char* _Nonnull forma
     __overloadable
     __enable_if(__bos_unevaluated_lt(__bos(dest), __builtin_strlen(format)),
                 "format string will always overflow destination buffer")
-    __errorattr("format string will always overflow destination buffer");
+    __clang_error_if(1, "format string will always overflow destination buffer");
 
 #if __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
 __BIONIC_FORTIFY_VARIADIC __printflike(2, 3)

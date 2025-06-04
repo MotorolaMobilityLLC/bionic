@@ -47,7 +47,7 @@ int __openat_real(int, const char* _Nonnull, int, ...) __RENAME(openat);
 
 __BIONIC_ERROR_FUNCTION_VISIBILITY
 int open(const char* _Nonnull pathname, int flags, mode_t modes, ...) __overloadable
-        __errorattr(__open_too_many_args_error);
+        __clang_error_if(1, __open_too_many_args_error);
 
 /*
  * pass_object_size serves two purposes here, neither of which involve __bos: it
@@ -77,7 +77,7 @@ int open(const char* _Nonnull const __pass_object_size pathname, int flags, mode
 __BIONIC_ERROR_FUNCTION_VISIBILITY
 int openat(int dirfd, const char* _Nonnull pathname, int flags, mode_t modes, ...)
         __overloadable
-        __errorattr(__open_too_many_args_error);
+        __clang_error_if(1, __open_too_many_args_error);
 
 __BIONIC_FORTIFY_INLINE
 int openat(int dirfd, const char* _Nonnull const __pass_object_size pathname, int flags)
@@ -102,7 +102,7 @@ int openat(int dirfd, const char* _Nonnull const __pass_object_size pathname, in
 
 __BIONIC_ERROR_FUNCTION_VISIBILITY
 int open64(const char* _Nonnull pathname, int flags, mode_t modes, ...) __overloadable
-        __errorattr(__open_too_many_args_error);
+        __clang_error_if(1, __open_too_many_args_error);
 
 __BIONIC_FORTIFY_INLINE
 int open64(const char* _Nonnull const __pass_object_size pathname, int flags)
@@ -122,7 +122,7 @@ int open64(const char* _Nonnull const __pass_object_size pathname, int flags, mo
 __BIONIC_ERROR_FUNCTION_VISIBILITY
 int openat64(int dirfd, const char* _Nonnull pathname, int flags, mode_t modes, ...)
         __overloadable
-        __errorattr(__open_too_many_args_error);
+        __clang_error_if(1, __open_too_many_args_error);
 
 __BIONIC_FORTIFY_INLINE
 int openat64(int dirfd, const char* _Nonnull const __pass_object_size pathname, int flags)
