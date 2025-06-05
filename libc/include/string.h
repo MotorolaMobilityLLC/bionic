@@ -78,12 +78,9 @@ void* _Nonnull memset(void* _Nonnull __dst, int __ch, size_t __n);
 #if __BIONIC_AVAILABILITY_GUARD(34)
 void* _Nonnull memset_explicit(void* _Nonnull __dst, int __ch, size_t __n) __INTRODUCED_IN(34);
 #elif defined(__ANDROID_UNAVAILABLE_SYMBOLS_ARE_WEAK__)
-static __inline void* _Nonnull memset_explicit(void* _Nonnull __dst, int __ch, size_t __n) {
-  void* __result = memset(__dst, __ch, __n);
-  // https://bugs.llvm.org/show_bug.cgi?id=15495
-  __asm__ __volatile__("" : : "r"(__dst) : "memory");
-  return __result;
-}
+#define __BIONIC_MEMSET_EXPLICIT_INLINE static __inline
+#include <bits/memset_explicit_impl.h>
+#undef __BIONIC_MEMSET_EXPLICIT_INLINE
 #endif
 
 void* _Nullable memmem(const void* _Nonnull __haystack, size_t __haystack_size, const void* _Nonnull __needle, size_t __needle_size) __attribute_pure__;
