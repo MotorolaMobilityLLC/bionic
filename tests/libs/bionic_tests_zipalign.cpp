@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/param.h>
 
 #include <algorithm>
 #include <memory>
@@ -129,7 +130,7 @@ int main(int argc, char* argv[]) {
     usage();
     return 1;
   }
-  if (((alignment - 1) & alignment) != 0) {
+  if (!powerof2(alignment)) {
     fprintf(stderr, "ALIGNMENT value is not a power of 2: %s\n", argv[1]);
     return 1;
   }

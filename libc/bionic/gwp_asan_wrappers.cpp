@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/param.h>
 #include <sys/types.h>
 
 #include "gwp_asan/crash_handler.h"
@@ -172,13 +173,8 @@ const MallocDispatch gwp_asan_dispatch __attribute__((unused)) = {
     Malloc(malloc_info),
 };
 
-bool isPowerOfTwo(uint64_t x) {
-  assert(x != 0);
-  return (x & (x - 1)) == 0;
-}
-
 bool ShouldGwpAsanSampleProcess(unsigned sample_rate) {
-  if (!isPowerOfTwo(sample_rate)) {
+  if (!powerof2(sample_rate)) {
     warning_log(
         "GWP-ASan process sampling rate of %u is not a power-of-two, and so modulo bias occurs.",
         sample_rate);
