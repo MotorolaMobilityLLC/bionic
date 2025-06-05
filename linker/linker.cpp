@@ -376,6 +376,11 @@ static void parse_LD_LIBRARY_PATH(const char* path) {
   g_default_namespace.set_ld_library_paths(std::move(ld_libary_paths));
 }
 
+static bool is_proc_mounted() {
+  static bool result = (access("/proc", F_OK) == 0);
+  return result;
+}
+
 static bool realpath_fd(int fd, std::string* realpath) {
   // proc_self_fd needs to be large enough to hold "/proc/self/fd/" plus an
   // integer, plus the NULL terminator.
@@ -387,7 +392,7 @@ static bool realpath_fd(int fd, std::string* realpath) {
   async_safe_format_buffer(proc_self_fd, sizeof(proc_self_fd), "/proc/self/fd/%d", fd);
   auto length = readlink(proc_self_fd, buf, sizeof(buf));
   if (length == -1) {
-    if (!is_first_stage_init()) {
+    if (is_proc_mounted()) {
       DL_WARN("readlink(\"%s\" [fd=%d]) failed: %m", proc_self_fd, fd);
     }
     return false;
@@ -981,7 +986,7 @@ static int open_library_in_zipfile(ZipArchiveCache* zip_archive_cache,
   if (realpath_fd(fd, realpath)) {
     *realpath += separator;
   } else {
-    if (!is_first_stage_init()) {
+    if (is_proc_mounted()) {
       DL_WARN("unable to get realpath for the library \"%s\". Will use given path.",
               normalized_path.c_str());
     }
@@ -1014,7 +1019,7 @@ static int open_library_at_path(ZipArchiveCache* zip_archive_cache,
     if (fd != -1) {
       *file_offset = 0;
       if (!realpath_fd(fd, realpath)) {
-        if (!is_first_stage_init()) {
+        if (is_proc_mounted()) {
           DL_WARN("unable to get realpath for the library \"%s\". Will use given path.", path);
         }
         *realpath = path;
@@ -1326,7 +1331,7 @@ static bool load_library(android_namespace_t* ns,
 
     std::string realpath;
     if (!realpath_fd(extinfo->library_fd, &realpath)) {
-      if (!is_first_stage_init()) {
+      if (is_proc_mounted()) {
         DL_WARN("unable to get realpath for the library \"%s\" by extinfo->library_fd. "
                 "Will use given name.",
                 name);
