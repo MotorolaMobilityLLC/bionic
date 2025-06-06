@@ -21,13 +21,14 @@
 #include <sched.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/param.h>
 #include <wchar.h>
 
 #include <cstdlib>
 
 // This function returns a pointer less than 2 * alignment + or_mask bytes into the array.
 char* GetAlignedMemory(char* orig_ptr, size_t alignment, size_t or_mask) {
-  if ((alignment & (alignment - 1)) != 0) {
+  if (!powerof2(alignment)) {
     errx(1, "warning: alignment passed into GetAlignedMemory is not a power of two.");
   }
   if (or_mask > alignment) {
