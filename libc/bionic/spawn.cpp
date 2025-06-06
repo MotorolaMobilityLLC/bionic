@@ -42,28 +42,6 @@
 
 #include "private/ScopedSignalBlocker.h"
 
-static int set_cloexec(int i) {
-  int v = fcntl(i, F_GETFD);
-  if (v == -1) return -1;  // almost certainly: errno == EBADF
-  return fcntl(i, F_SETFD, v | FD_CLOEXEC);
-}
-
-// mark all open fds except stdin/out/err as close-on-exec
-static int cloexec_except_stdioe() {
-  // requires 5.11+ or ACK 5.10-T kernel, otherwise returns ENOSYS or EINVAL
-  if (!close_range(3, ~0U, CLOSE_RANGE_CLOEXEC)) return 0;
-
-  // unfortunately getrlimit can lie:
-  // - both soft and hard limits can be lowered to 0, with fds still open, so it can underestimate
-  // - in practice it usually is some really large value (like 32K or more)
-  //   even though only a handful of small fds are actually open (ie. < 500),
-  //   this results in poor performance when trying to act on all possibly open fds
-  struct rlimit m;
-  int max = getrlimit(RLIMIT_NOFILE, &m) ? 1000000 : m.rlim_max;
-  for (int i = 3; i < max; ++i) set_cloexec(i);
-  return 0;
-}
-
 enum Action {
   kOpen,
   kClose,
@@ -175,7 +153,8 @@ static void ApplyAttrs(short flags, const posix_spawnattr_t* attr) {
   }
 
   if ((flags & POSIX_SPAWN_CLOEXEC_DEFAULT) != 0) {
-    if (cloexec_except_stdioe()) _exit(127);
+    // mark all open fds except stdin/out/err as close-on-exec
+    if (close_range(3, ~0U, CLOSE_RANGE_CLOEXEC)) _exit(127);
   }
 }
 
