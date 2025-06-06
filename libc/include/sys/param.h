@@ -65,7 +65,7 @@
 #define powerof2(x)                                               \
   ({                                                              \
     __auto_type _x = (x);                                         \
-    __typeof__(_x) _x2;                                           \
+    __auto_type _x2 = _x;                                         \
     __builtin_add_overflow(_x, -1, &_x2) ? 1 : ((_x2 & _x) == 0); \
   })
 

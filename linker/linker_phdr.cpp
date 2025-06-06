@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/param.h>
 #include <sys/prctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -552,7 +553,7 @@ bool ElfReader::CheckProgramHeaderAlignment() {
     // or a positive, integral power of two.
     // The kernel ignores loadable segments with other values,
     // so we just warn rather than reject them.
-    if ((phdr->p_align & (phdr->p_align - 1)) != 0) {
+    if (!powerof2(phdr->p_align)) {
       DL_WARN("\"%s\" has invalid p_align %zx in phdr %zu", name_.c_str(),
                      static_cast<size_t>(phdr->p_align), i);
       continue;
