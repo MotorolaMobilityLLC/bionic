@@ -263,7 +263,7 @@ __signalfd4:signalfd4(int, const sigset64_t*, size_t, int)  all
 
 # sockets
 __socket:socket(int, int, int)              arm,lp64
-__socketpair:socketpair(int, int, int, int*)    all
+__socketpair:socketpair(int, int, int, int*)    arm,lp64
 bind(int, struct sockaddr*, socklen_t)  arm,lp64
 __connect:connect(int, struct sockaddr*, socklen_t)   arm,lp64
 listen(int, int) all
@@ -286,6 +286,7 @@ bind:socketcall:2(int, struct sockaddr*, int)  x86
 __connect:socketcall:3(int, struct sockaddr*, socklen_t)   x86
 getsockname:socketcall:6(int, struct sockaddr*, socklen_t*)  x86
 getpeername:socketcall:7(int, struct sockaddr*, socklen_t*)  x86
+__socketpair:socketcall:8(int, int, int, int*)    x86
 __sendto:socketcall:11(int, const void*, size_t, int, const struct sockaddr*, socklen_t)  x86
 recvfrom:socketcall:12(int, void*, size_t, unsigned int, struct sockaddr*, socklen_t*)  x86
 shutdown:socketcall:13(int, int)  x86
