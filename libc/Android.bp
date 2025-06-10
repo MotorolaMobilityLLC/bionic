@@ -386,7 +386,6 @@ cc_library_static {
         "upstream-freebsd/lib/libc/string/wcscspn.c",
         "upstream-freebsd/lib/libc/string/wcsdup.c",
         "upstream-freebsd/lib/libc/string/wcslcat.c",
-        "upstream-freebsd/lib/libc/string/wcslen.c",
         "upstream-freebsd/lib/libc/string/wcsncasecmp.c",
         "upstream-freebsd/lib/libc/string/wcsncat.c",
         "upstream-freebsd/lib/libc/string/wcsncmp.c",
