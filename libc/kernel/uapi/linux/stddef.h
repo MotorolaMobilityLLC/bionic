@@ -30,4 +30,5 @@
 #ifndef __counted_by_be
 #define __counted_by_be(m)
 #endif
+#define __kernel_nonstring
 #endif

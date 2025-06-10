@@ -23,7 +23,7 @@
 #define XLF_5LEVEL (1 << 5)
 #define XLF_5LEVEL_ENABLED (1 << 6)
 #define XLF_MEM_ENCRYPTION (1 << 7)
-#ifndef __ASSEMBLY__
+#ifndef __ASSEMBLER__
 #include <linux/types.h>
 #include <linux/screen_info.h>
 #include <linux/apm_bios.h>

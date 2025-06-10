@@ -19,7 +19,7 @@
 #define SETUP_ENUM_MAX SETUP_RNG_SEED
 #define SETUP_INDIRECT (1 << 31)
 #define SETUP_TYPE_MAX (SETUP_ENUM_MAX | SETUP_INDIRECT)
-#ifndef __ASSEMBLY__
+#ifndef __ASSEMBLER__
 #include <linux/types.h>
 struct setup_data {
   __u64 next;

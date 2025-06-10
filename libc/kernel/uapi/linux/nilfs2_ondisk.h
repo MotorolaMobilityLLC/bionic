@@ -91,7 +91,7 @@ struct nilfs_super_block {
   __le16 s_checkpoint_size;
   __le16 s_segment_usage_size;
   __u8 s_uuid[16];
-  char s_volume_name[80];
+  char s_volume_name[80] __kernel_nonstring;
   __le32 s_c_interval;
   __le32 s_c_block_max;
   __le64 s_feature_compat;

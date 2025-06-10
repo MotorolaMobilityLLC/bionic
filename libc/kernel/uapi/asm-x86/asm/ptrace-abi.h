@@ -26,7 +26,7 @@
 #define SS 16
 #define FRAME_SIZE 17
 #else
-#if defined(__ASSEMBLY__) || defined(__FRAME_OFFSETS)
+#if defined(__ASSEMBLER__) || defined(__FRAME_OFFSETS)
 #define R15 0
 #define R14 8
 #define R13 16
@@ -66,7 +66,7 @@
 #define PTRACE_SYSEMU 31
 #define PTRACE_SYSEMU_SINGLESTEP 32
 #define PTRACE_SINGLEBLOCK 33
-#ifndef __ASSEMBLY__
+#ifndef __ASSEMBLER__
 #include <linux/types.h>
 #endif
 #endif

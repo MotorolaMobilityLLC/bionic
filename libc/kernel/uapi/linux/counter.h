@@ -35,6 +35,7 @@ enum counter_event_type {
   COUNTER_EVENT_INDEX,
   COUNTER_EVENT_CHANGE_OF_STATE,
   COUNTER_EVENT_CAPTURE,
+  COUNTER_EVENT_DIRECTION_CHANGE,
 };
 struct counter_watch {
   struct counter_component component;

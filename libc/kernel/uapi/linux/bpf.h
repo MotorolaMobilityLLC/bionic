@@ -34,6 +34,8 @@
 #define BPF_FETCH 0x01
 #define BPF_XCHG (0xe0 | BPF_FETCH)
 #define BPF_CMPXCHG (0xf0 | BPF_FETCH)
+#define BPF_LOAD_ACQ 0x100
+#define BPF_STORE_REL 0x110
 enum bpf_cond_pseudo_jmp {
   BPF_MAY_GOTO = 0,
 };
@@ -311,6 +313,7 @@ enum bpf_perf_event_type {
 #define BPF_F_BEFORE (1U << 3)
 #define BPF_F_AFTER (1U << 4)
 #define BPF_F_ID (1U << 5)
+#define BPF_F_PREORDER (1U << 6)
 #define BPF_F_LINK BPF_F_LINK
 #define BPF_F_STRICT_ALIGNMENT (1U << 0)
 #define BPF_F_ANY_ALIGNMENT (1U << 1)
@@ -506,6 +509,7 @@ union bpf_attr {
     };
     __u32 next_id;
     __u32 open_flags;
+    __s32 fd_by_id_token_fd;
   };
   struct {
     __u32 bpf_fd;
@@ -1235,6 +1239,10 @@ enum {
   BPF_SOCK_OPS_ALL_CB_FLAGS = 0x7F,
 };
 enum {
+  SK_BPF_CB_TX_TIMESTAMPING = 1 << 0,
+  SK_BPF_CB_MASK = (SK_BPF_CB_TX_TIMESTAMPING - 1) | SK_BPF_CB_TX_TIMESTAMPING
+};
+enum {
   BPF_SOCK_OPS_VOID,
   BPF_SOCK_OPS_TIMEOUT_INIT,
   BPF_SOCK_OPS_RWND_INIT,
@@ -1251,6 +1259,11 @@ enum {
   BPF_SOCK_OPS_PARSE_HDR_OPT_CB,
   BPF_SOCK_OPS_HDR_OPT_LEN_CB,
   BPF_SOCK_OPS_WRITE_HDR_OPT_CB,
+  BPF_SOCK_OPS_TSTAMP_SCHED_CB,
+  BPF_SOCK_OPS_TSTAMP_SND_SW_CB,
+  BPF_SOCK_OPS_TSTAMP_SND_HW_CB,
+  BPF_SOCK_OPS_TSTAMP_ACK_CB,
+  BPF_SOCK_OPS_TSTAMP_SENDMSG_CB,
 };
 enum {
   BPF_TCP_ESTABLISHED = 1,
@@ -1277,6 +1290,7 @@ enum {
   TCP_BPF_SYN_IP = 1006,
   TCP_BPF_SYN_MAC = 1007,
   TCP_BPF_SOCK_OPS_CB_FLAGS = 1008,
+  SK_BPF_CB_FLAGS = 1009,
 };
 enum {
   BPF_LOAD_HDR_OPT_TCP_SYN = (1ULL << 0),

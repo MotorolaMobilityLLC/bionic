@@ -229,6 +229,7 @@ enum {
 #define RTPROT_MROUTED 17
 #define RTPROT_KEEPALIVED 18
 #define RTPROT_BABEL 42
+#define RTPROT_OVN 84
 #define RTPROT_OPENR 99
 #define RTPROT_BGP 186
 #define RTPROT_ISIS 187

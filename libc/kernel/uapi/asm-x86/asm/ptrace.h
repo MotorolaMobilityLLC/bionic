@@ -9,7 +9,7 @@
 #include <linux/compiler.h>
 #include <asm/ptrace-abi.h>
 #include <asm/processor-flags.h>
-#ifndef __ASSEMBLY__
+#ifndef __ASSEMBLER__
 #ifdef __i386__
 struct pt_regs {
   long ebx;

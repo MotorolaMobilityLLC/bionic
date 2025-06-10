@@ -115,7 +115,12 @@ struct statmount {
   __u32 opt_array;
   __u32 opt_sec_num;
   __u32 opt_sec_array;
-  __u64 __spare2[46];
+  __u64 supported_mask;
+  __u32 mnt_uidmap_num;
+  __u32 mnt_uidmap;
+  __u32 mnt_gidmap_num;
+  __u32 mnt_gidmap;
+  __u64 __spare2[43];
   char str[];
 };
 struct mnt_id_req {
@@ -139,6 +144,9 @@ struct mnt_id_req {
 #define STATMOUNT_SB_SOURCE 0x00000200U
 #define STATMOUNT_OPT_ARRAY 0x00000400U
 #define STATMOUNT_OPT_SEC_ARRAY 0x00000800U
+#define STATMOUNT_SUPPORTED_MASK 0x00001000U
+#define STATMOUNT_MNT_UIDMAP 0x00002000U
+#define STATMOUNT_MNT_GIDMAP 0x00004000U
 #define LSMT_ROOT 0xffffffffffffffff
 #define LISTMOUNT_REVERSE (1 << 0)
 #endif

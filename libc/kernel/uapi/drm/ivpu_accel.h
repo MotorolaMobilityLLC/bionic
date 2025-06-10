@@ -20,6 +20,9 @@ extern "C" {
 #define DRM_IVPU_METRIC_STREAMER_STOP 0x08
 #define DRM_IVPU_METRIC_STREAMER_GET_DATA 0x09
 #define DRM_IVPU_METRIC_STREAMER_GET_INFO 0x0a
+#define DRM_IVPU_CMDQ_CREATE 0x0b
+#define DRM_IVPU_CMDQ_DESTROY 0x0c
+#define DRM_IVPU_CMDQ_SUBMIT 0x0d
 #define DRM_IOCTL_IVPU_GET_PARAM DRM_IOWR(DRM_COMMAND_BASE + DRM_IVPU_GET_PARAM, struct drm_ivpu_param)
 #define DRM_IOCTL_IVPU_SET_PARAM DRM_IOW(DRM_COMMAND_BASE + DRM_IVPU_SET_PARAM, struct drm_ivpu_param)
 #define DRM_IOCTL_IVPU_BO_CREATE DRM_IOWR(DRM_COMMAND_BASE + DRM_IVPU_BO_CREATE, struct drm_ivpu_bo_create)
@@ -30,6 +33,9 @@ extern "C" {
 #define DRM_IOCTL_IVPU_METRIC_STREAMER_STOP DRM_IOW(DRM_COMMAND_BASE + DRM_IVPU_METRIC_STREAMER_STOP, struct drm_ivpu_metric_streamer_stop)
 #define DRM_IOCTL_IVPU_METRIC_STREAMER_GET_DATA DRM_IOWR(DRM_COMMAND_BASE + DRM_IVPU_METRIC_STREAMER_GET_DATA, struct drm_ivpu_metric_streamer_get_data)
 #define DRM_IOCTL_IVPU_METRIC_STREAMER_GET_INFO DRM_IOWR(DRM_COMMAND_BASE + DRM_IVPU_METRIC_STREAMER_GET_INFO, struct drm_ivpu_metric_streamer_get_data)
+#define DRM_IOCTL_IVPU_CMDQ_CREATE DRM_IOWR(DRM_COMMAND_BASE + DRM_IVPU_CMDQ_CREATE, struct drm_ivpu_cmdq_create)
+#define DRM_IOCTL_IVPU_CMDQ_DESTROY DRM_IOW(DRM_COMMAND_BASE + DRM_IVPU_CMDQ_DESTROY, struct drm_ivpu_cmdq_destroy)
+#define DRM_IOCTL_IVPU_CMDQ_SUBMIT DRM_IOW(DRM_COMMAND_BASE + DRM_IVPU_CMDQ_SUBMIT, struct drm_ivpu_cmdq_submit)
 #define DRM_IVPU_PARAM_DEVICE_ID 0
 #define DRM_IVPU_PARAM_DEVICE_REVISION 1
 #define DRM_IVPU_PARAM_PLATFORM_TYPE 2
@@ -56,6 +62,7 @@ extern "C" {
 #define DRM_IVPU_JOB_PRIORITY_REALTIME 4
 #define DRM_IVPU_CAP_METRIC_STREAMER 1
 #define DRM_IVPU_CAP_DMA_MEMORY_RANGE 2
+#define DRM_IVPU_CAP_MANAGE_CMDQ 3
 struct drm_ivpu_param {
   __u32 param;
   __u32 index;
@@ -93,6 +100,13 @@ struct drm_ivpu_submit {
   __u32 commands_offset;
   __u32 priority;
 };
+struct drm_ivpu_cmdq_submit {
+  __u64 buffers_ptr;
+  __u32 buffer_count;
+  __u32 cmdq_id;
+  __u32 flags;
+  __u32 commands_offset;
+};
 #define DRM_IVPU_JOB_STATUS_SUCCESS 0
 #define DRM_IVPU_JOB_STATUS_ABORTED 256
 struct drm_ivpu_bo_wait {
@@ -114,6 +128,13 @@ struct drm_ivpu_metric_streamer_get_data {
   __u64 buffer_ptr;
   __u64 buffer_size;
   __u64 data_size;
+};
+struct drm_ivpu_cmdq_create {
+  __u32 cmdq_id;
+  __u32 priority;
+};
+struct drm_ivpu_cmdq_destroy {
+  __u32 cmdq_id;
 };
 struct drm_ivpu_metric_streamer_stop {
   __u64 metric_group_mask;

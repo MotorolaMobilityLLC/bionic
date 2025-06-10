@@ -7,7 +7,7 @@
 #ifndef _LINUX_TASKSTATS_H
 #define _LINUX_TASKSTATS_H
 #include <linux/types.h>
-#define TASKSTATS_VERSION 15
+#define TASKSTATS_VERSION 16
 #define TS_COMM_LEN 32
 struct taskstats {
   __u16 version;
@@ -16,16 +16,10 @@ struct taskstats {
   __u8 ac_nice;
   __u64 cpu_count __attribute__((aligned(8)));
   __u64 cpu_delay_total;
-  __u64 cpu_delay_max;
-  __u64 cpu_delay_min;
   __u64 blkio_count;
   __u64 blkio_delay_total;
-  __u64 blkio_delay_max;
-  __u64 blkio_delay_min;
   __u64 swapin_count;
   __u64 swapin_delay_total;
-  __u64 swapin_delay_max;
-  __u64 swapin_delay_min;
   __u64 cpu_run_real_total;
   __u64 cpu_run_virtual_total;
   char ac_comm[TS_COMM_LEN];
@@ -60,27 +54,33 @@ struct taskstats {
   __u64 cpu_scaled_run_real_total;
   __u64 freepages_count;
   __u64 freepages_delay_total;
-  __u64 freepages_delay_max;
-  __u64 freepages_delay_min;
   __u64 thrashing_count;
   __u64 thrashing_delay_total;
-  __u64 thrashing_delay_max;
-  __u64 thrashing_delay_min;
   __u64 ac_btime64;
   __u64 compact_count;
   __u64 compact_delay_total;
-  __u64 compact_delay_max;
-  __u64 compact_delay_min;
   __u32 ac_tgid;
   __u64 ac_tgetime __attribute__((aligned(8)));
   __u64 ac_exe_dev;
   __u64 ac_exe_inode;
   __u64 wpcopy_count;
   __u64 wpcopy_delay_total;
-  __u64 wpcopy_delay_max;
-  __u64 wpcopy_delay_min;
   __u64 irq_count;
   __u64 irq_delay_total;
+  __u64 cpu_delay_max;
+  __u64 cpu_delay_min;
+  __u64 blkio_delay_max;
+  __u64 blkio_delay_min;
+  __u64 swapin_delay_max;
+  __u64 swapin_delay_min;
+  __u64 freepages_delay_max;
+  __u64 freepages_delay_min;
+  __u64 thrashing_delay_max;
+  __u64 thrashing_delay_min;
+  __u64 compact_delay_max;
+  __u64 compact_delay_min;
+  __u64 wpcopy_delay_max;
+  __u64 wpcopy_delay_min;
   __u64 irq_delay_max;
   __u64 irq_delay_min;
 };

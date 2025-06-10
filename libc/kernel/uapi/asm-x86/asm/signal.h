@@ -6,7 +6,7 @@
  */
 #ifndef _UAPI_ASM_X86_SIGNAL_H
 #define _UAPI_ASM_X86_SIGNAL_H
-#ifndef __ASSEMBLY__
+#ifndef __ASSEMBLER__
 #include <linux/types.h>
 #include <linux/compiler.h>
 struct siginfo;
@@ -53,7 +53,7 @@ typedef unsigned long sigset_t;
 #define MINSIGSTKSZ 2048
 #define SIGSTKSZ 8192
 #include <asm-generic/signal-defs.h>
-#ifndef __ASSEMBLY__
+#ifndef __ASSEMBLER__
 #ifdef __i386__
 struct __kernel_sigaction {
   union {
