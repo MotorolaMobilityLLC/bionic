@@ -218,6 +218,7 @@ enum {
 };
 enum {
   VFIO_AP_REQ_IRQ_INDEX,
+  VFIO_AP_CFG_CHG_IRQ_INDEX,
   VFIO_AP_NUM_IRQS
 };
 struct vfio_pci_dependent_device {
@@ -306,12 +307,16 @@ struct vfio_device_bind_iommufd {
 struct vfio_device_attach_iommufd_pt {
   __u32 argsz;
   __u32 flags;
+#define VFIO_DEVICE_ATTACH_PASID (1 << 0)
   __u32 pt_id;
+  __u32 pasid;
 };
 #define VFIO_DEVICE_ATTACH_IOMMUFD_PT _IO(VFIO_TYPE, VFIO_BASE + 19)
 struct vfio_device_detach_iommufd_pt {
   __u32 argsz;
   __u32 flags;
+#define VFIO_DEVICE_DETACH_PASID (1 << 0)
+  __u32 pasid;
 };
 #define VFIO_DEVICE_DETACH_IOMMUFD_PT _IO(VFIO_TYPE, VFIO_BASE + 20)
 #define VFIO_DEVICE_FEATURE_PCI_VF_TOKEN (0)

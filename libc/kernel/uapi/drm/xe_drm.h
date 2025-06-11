@@ -92,6 +92,8 @@ struct drm_xe_query_config {
 #define DRM_XE_QUERY_CONFIG_REV_AND_DEVICE_ID 0
 #define DRM_XE_QUERY_CONFIG_FLAGS 1
 #define DRM_XE_QUERY_CONFIG_FLAG_HAS_VRAM (1 << 0)
+#define DRM_XE_QUERY_CONFIG_FLAG_HAS_LOW_LATENCY (1 << 1)
+#define DRM_XE_QUERY_CONFIG_FLAG_HAS_CPU_ADDR_MIRROR (1 << 2)
 #define DRM_XE_QUERY_CONFIG_MIN_ALIGNMENT 2
 #define DRM_XE_QUERY_CONFIG_VA_BITS 3
 #define DRM_XE_QUERY_CONFIG_MAX_EXEC_QUEUE_PRIORITY 4
@@ -149,6 +151,10 @@ struct drm_xe_query_uc_fw_version {
   __u32 pad2;
   __u64 reserved;
 };
+struct drm_xe_query_pxp_status {
+  __u32 status;
+  __u32 supported_session_types;
+};
 struct drm_xe_device_query {
   __u64 extensions;
 #define DRM_XE_DEVICE_QUERY_ENGINES 0
@@ -160,12 +166,16 @@ struct drm_xe_device_query {
 #define DRM_XE_DEVICE_QUERY_ENGINE_CYCLES 6
 #define DRM_XE_DEVICE_QUERY_UC_FW_VERSION 7
 #define DRM_XE_DEVICE_QUERY_OA_UNITS 8
+#define DRM_XE_DEVICE_QUERY_PXP_STATUS 9
+#define DRM_XE_DEVICE_QUERY_EU_STALL 10
   __u32 query;
   __u32 size;
   __u64 data;
   __u64 reserved[2];
 };
 struct drm_xe_gem_create {
+#define DRM_XE_GEM_CREATE_EXTENSION_SET_PROPERTY 0
+#define DRM_XE_GEM_CREATE_SET_PROPERTY_PXP_TYPE 0
   __u64 extensions;
   __u64 size;
   __u32 placement;
@@ -184,6 +194,7 @@ struct drm_xe_gem_create {
 struct drm_xe_gem_mmap_offset {
   __u64 extensions;
   __u32 handle;
+#define DRM_XE_MMAP_OFFSET_FLAG_PCI_BARRIER (1 << 0)
   __u32 flags;
   __u64 offset;
   __u64 reserved[2];
@@ -210,6 +221,7 @@ struct drm_xe_vm_bind_op {
   union {
     __u64 obj_offset;
     __u64 userptr;
+    __s64 cpu_addr_mirror_offset;
   };
   __u64 range;
   __u64 addr;
@@ -223,6 +235,8 @@ struct drm_xe_vm_bind_op {
 #define DRM_XE_VM_BIND_FLAG_IMMEDIATE (1 << 1)
 #define DRM_XE_VM_BIND_FLAG_NULL (1 << 2)
 #define DRM_XE_VM_BIND_FLAG_DUMPABLE (1 << 3)
+#define DRM_XE_VM_BIND_FLAG_CHECK_PXP (1 << 4)
+#define DRM_XE_VM_BIND_FLAG_CPU_ADDR_MIRROR (1 << 5)
   __u32 flags;
   __u32 prefetch_mem_region_instance;
   __u32 pad2;
@@ -247,10 +261,12 @@ struct drm_xe_exec_queue_create {
 #define DRM_XE_EXEC_QUEUE_EXTENSION_SET_PROPERTY 0
 #define DRM_XE_EXEC_QUEUE_SET_PROPERTY_PRIORITY 0
 #define DRM_XE_EXEC_QUEUE_SET_PROPERTY_TIMESLICE 1
+#define DRM_XE_EXEC_QUEUE_SET_PROPERTY_PXP_TYPE 2
   __u64 extensions;
   __u16 width;
   __u16 num_placements;
   __u32 vm_id;
+#define DRM_XE_EXEC_QUEUE_LOW_LATENCY_HINT (1 << 0)
   __u32 flags;
   __u32 exec_queue_id;
   __u64 instances;
@@ -316,6 +332,7 @@ struct drm_xe_wait_user_fence {
 };
 enum drm_xe_observation_type {
   DRM_XE_OBSERVATION_TYPE_OA,
+  DRM_XE_OBSERVATION_TYPE_EU_STALL,
 };
 enum drm_xe_observation_op {
   DRM_XE_OBSERVATION_OP_STREAM_OPEN,
@@ -406,6 +423,27 @@ struct drm_xe_oa_stream_info {
   __u64 extensions;
   __u64 oa_buf_size;
   __u64 reserved[3];
+};
+enum drm_xe_pxp_session_type {
+  DRM_XE_PXP_TYPE_NONE = 0,
+  DRM_XE_PXP_TYPE_HWDRM = 1,
+};
+#define DRM_XE_PXP_HWDRM_DEFAULT_SESSION 0xf
+enum drm_xe_eu_stall_property_id {
+#define DRM_XE_EU_STALL_EXTENSION_SET_PROPERTY 0
+  DRM_XE_EU_STALL_PROP_GT_ID = 1,
+  DRM_XE_EU_STALL_PROP_SAMPLE_RATE,
+  DRM_XE_EU_STALL_PROP_WAIT_NUM_REPORTS,
+};
+struct drm_xe_query_eu_stall {
+  __u64 extensions;
+  __u64 capabilities;
+#define DRM_XE_EU_STALL_CAPS_BASE (1 << 0)
+  __u64 record_size;
+  __u64 per_xecore_buf_size;
+  __u64 reserved[5];
+  __u64 num_sampling_rates;
+  __u64 sampling_rates[];
 };
 #ifdef __cplusplus
 }

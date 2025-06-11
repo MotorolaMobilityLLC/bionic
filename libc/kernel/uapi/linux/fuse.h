@@ -8,7 +8,7 @@
 #define _LINUX_FUSE_H
 #include <stdint.h>
 #define FUSE_KERNEL_VERSION 7
-#define FUSE_KERNEL_MINOR_VERSION 42
+#define FUSE_KERNEL_MINOR_VERSION 43
 #define FUSE_ROOT_ID 1
 struct fuse_attr {
   uint64_t ino;
@@ -137,6 +137,7 @@ struct fuse_file_lock {
 #define FUSE_DIRECT_IO_RELAX FUSE_DIRECT_IO_ALLOW_MMAP
 #define FUSE_ALLOW_IDMAP (1ULL << 40)
 #define FUSE_OVER_IO_URING (1ULL << 41)
+#define FUSE_REQUEST_TIMEOUT (1ULL << 42)
 #define CUSE_UNRESTRICTED_IOCTL (1 << 0)
 #define FUSE_RELEASE_FLUSH (1 << 0)
 #define FUSE_RELEASE_FLOCK_UNLOCK (1 << 1)
@@ -430,7 +431,8 @@ struct fuse_init_out {
   uint16_t map_alignment;
   uint32_t flags2;
   uint32_t max_stack_depth;
-  uint32_t unused[6];
+  uint16_t request_timeout;
+  uint16_t unused[11];
 };
 #define CUSE_INIT_INFO_MAX 4096
 struct cuse_init_in {

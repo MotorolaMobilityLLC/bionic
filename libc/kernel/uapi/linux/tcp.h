@@ -16,6 +16,7 @@ union tcp_word_hdr {
 };
 #define tcp_flag_word(tp) (((union tcp_word_hdr *) (tp))->words[3])
 enum {
+  TCP_FLAG_AE = __constant_cpu_to_be32(0x01000000),
   TCP_FLAG_CWR = __constant_cpu_to_be32(0x00800000),
   TCP_FLAG_ECE = __constant_cpu_to_be32(0x00400000),
   TCP_FLAG_URG = __constant_cpu_to_be32(0x00200000),
@@ -24,7 +25,7 @@ enum {
   TCP_FLAG_RST = __constant_cpu_to_be32(0x00040000),
   TCP_FLAG_SYN = __constant_cpu_to_be32(0x00020000),
   TCP_FLAG_FIN = __constant_cpu_to_be32(0x00010000),
-  TCP_RESERVED_BITS = __constant_cpu_to_be32(0x0F000000),
+  TCP_RESERVED_BITS = __constant_cpu_to_be32(0x0E000000),
   TCP_DATA_OFFSET = __constant_cpu_to_be32(0xF0000000)
 };
 #define TCP_MSS_DEFAULT 536U
@@ -72,6 +73,9 @@ enum {
 #define TCP_AO_GET_KEYS 41
 #define TCP_AO_REPAIR 42
 #define TCP_IS_MPTCP 43
+#define TCP_RTO_MAX_MS 44
+#define TCP_RTO_MIN_US 45
+#define TCP_DELACK_MAX_US 46
 #define TCP_REPAIR_ON 1
 #define TCP_REPAIR_OFF 0
 #define TCP_REPAIR_OFF_NO_WP - 1

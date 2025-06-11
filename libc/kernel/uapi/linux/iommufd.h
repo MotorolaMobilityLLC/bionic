@@ -30,6 +30,7 @@ enum {
   IOMMUFD_CMD_VIOMMU_ALLOC = 0x90,
   IOMMUFD_CMD_VDEVICE_ALLOC = 0x91,
   IOMMUFD_CMD_IOAS_CHANGE_PROCESS = 0x92,
+  IOMMUFD_CMD_VEVENTQ_ALLOC = 0x93,
 };
 struct iommu_destroy {
   __u32 size;
@@ -196,6 +197,8 @@ enum iommu_hw_info_type {
 };
 enum iommufd_hw_capabilities {
   IOMMU_HW_CAP_DIRTY_TRACKING = 1 << 0,
+  IOMMU_HW_CAP_PCI_PASID_EXEC = 1 << 1,
+  IOMMU_HW_CAP_PCI_PASID_PRIV = 1 << 2,
 };
 struct iommu_hw_info {
   __u32 size;
@@ -204,7 +207,8 @@ struct iommu_hw_info {
   __u32 data_len;
   __aligned_u64 data_uptr;
   __u32 out_data_type;
-  __u32 __reserved;
+  __u8 out_max_pasid_log2;
+  __u8 __reserved[3];
   __aligned_u64 out_capabilities;
 };
 #define IOMMU_GET_HW_INFO _IO(IOMMUFD_TYPE, IOMMUFD_CMD_GET_HW_INFO)
@@ -320,4 +324,29 @@ struct iommu_ioas_change_process {
   __u32 __reserved;
 };
 #define IOMMU_IOAS_CHANGE_PROCESS _IO(IOMMUFD_TYPE, IOMMUFD_CMD_IOAS_CHANGE_PROCESS)
+enum iommu_veventq_flag {
+  IOMMU_VEVENTQ_FLAG_LOST_EVENTS = (1U << 0),
+};
+struct iommufd_vevent_header {
+  __u32 flags;
+  __u32 sequence;
+};
+enum iommu_veventq_type {
+  IOMMU_VEVENTQ_TYPE_DEFAULT = 0,
+  IOMMU_VEVENTQ_TYPE_ARM_SMMUV3 = 1,
+};
+struct iommu_vevent_arm_smmuv3 {
+  __aligned_le64 evt[4];
+};
+struct iommu_veventq_alloc {
+  __u32 size;
+  __u32 flags;
+  __u32 viommu_id;
+  __u32 type;
+  __u32 veventq_depth;
+  __u32 out_veventq_id;
+  __u32 out_veventq_fd;
+  __u32 __reserved;
+};
+#define IOMMU_VEVENTQ_ALLOC _IO(IOMMUFD_TYPE, IOMMUFD_CMD_VEVENTQ_ALLOC)
 #endif

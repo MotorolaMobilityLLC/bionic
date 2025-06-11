@@ -415,8 +415,9 @@
 #define __NR_getxattrat 464
 #define __NR_listxattrat 465
 #define __NR_removexattrat 466
+#define __NR_open_tree_attr 467
 #undef __NR_syscalls
-#define __NR_syscalls 467
+#define __NR_syscalls 468
 #if __BITS_PER_LONG == 64 && !defined(__SYSCALL_COMPAT)
 #define __NR_fcntl __NR3264_fcntl
 #define __NR_statfs __NR3264_statfs

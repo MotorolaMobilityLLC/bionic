@@ -149,6 +149,7 @@ extern "C" {
 #define DRM_FORMAT_MOD_VENDOR_ARM 0x08
 #define DRM_FORMAT_MOD_VENDOR_ALLWINNER 0x09
 #define DRM_FORMAT_MOD_VENDOR_AMLOGIC 0x0a
+#define DRM_FORMAT_MOD_VENDOR_MTK 0x0b
 #define DRM_FORMAT_RESERVED ((1ULL << 56) - 1)
 #define fourcc_mod_get_vendor(modifier) (((modifier) >> 56) & 0xff)
 #define fourcc_mod_is_vendor(modifier,vendor) (fourcc_mod_get_vendor(modifier) == DRM_FORMAT_MOD_VENDOR_ ##vendor)
@@ -251,6 +252,18 @@ extern "C" {
 #define AMLOGIC_FBC_LAYOUT_BASIC (1ULL)
 #define AMLOGIC_FBC_LAYOUT_SCATTER (2ULL)
 #define AMLOGIC_FBC_OPTION_MEM_SAVING (1ULL << 0)
+#define DRM_FORMAT_MOD_MTK(__flags) fourcc_mod_code(MTK, __flags)
+#define MTK_FMT_MOD_TILE_MASK 0xf
+#define MTK_FMT_MOD_TILE_NONE 0x0
+#define MTK_FMT_MOD_TILE_16L32S 0x1
+#define MTK_FMT_MOD_COMPRESS_MASK (0xf << 8)
+#define MTK_FMT_MOD_COMPRESS_NONE (0x0 << 8)
+#define MTK_FMT_MOD_COMPRESS_V1 (0x1 << 8)
+#define MTK_FMT_MOD_10BIT_LAYOUT_MASK (0xf << 16)
+#define MTK_FMT_MOD_10BIT_LAYOUT_PACKED (0x0 << 16)
+#define MTK_FMT_MOD_10BIT_LAYOUT_LSBTILED (0x1 << 16)
+#define MTK_FMT_MOD_10BIT_LAYOUT_LSBRASTER (0x2 << 16)
+#define DRM_FORMAT_MOD_MTK_16L_32S_TILE DRM_FORMAT_MOD_MTK(MTK_FMT_MOD_TILE_16L32S)
 #define AMD_FMT_MOD fourcc_mod_code(AMD, 0)
 #define IS_AMD_FMT_MOD(val) (((val) >> 56) == DRM_FORMAT_MOD_VENDOR_AMD)
 #define AMD_FMT_MOD_TILE_VER_GFX9 1

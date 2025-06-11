@@ -8,7 +8,7 @@
 #define _ASM_X86_LDT_H
 #define LDT_ENTRIES 8192
 #define LDT_ENTRY_SIZE 8
-#ifndef __ASSEMBLY__
+#ifndef __ASSEMBLER__
 struct user_desc {
   unsigned int entry_number;
   unsigned int base_addr;

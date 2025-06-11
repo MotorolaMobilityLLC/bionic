@@ -118,6 +118,7 @@ struct usb_ctrlrequest {
 #define USB_DT_BOS 0x0f
 #define USB_DT_DEVICE_CAPABILITY 0x10
 #define USB_DT_WIRELESS_ENDPOINT_COMP 0x11
+#define USB_DT_EUSB2_ISOC_ENDPOINT_COMP 0x12
 #define USB_DT_WIRE_ADAPTER 0x21
 #define USB_DT_DFU_FUNCTIONAL 0x21
 #define USB_DT_RPIPE 0x22
@@ -169,6 +170,7 @@ struct usb_device_descriptor {
 #define USB_CLASS_AUDIO_VIDEO 0x10
 #define USB_CLASS_BILLBOARD 0x11
 #define USB_CLASS_USB_TYPE_C_BRIDGE 0x12
+#define USB_CLASS_MCTP 0x14
 #define USB_CLASS_MISC 0xef
 #define USB_CLASS_APP_SPEC 0xfe
 #define USB_SUBCLASS_DFU 0x01
@@ -246,6 +248,13 @@ struct usb_endpoint_descriptor {
 #define USB_ENDPOINT_USAGE_DATA 0x00
 #define USB_ENDPOINT_USAGE_FEEDBACK 0x10
 #define USB_ENDPOINT_USAGE_IMPLICIT_FB 0x20
+struct usb_eusb2_isoc_ep_comp_descriptor {
+  __u8 bLength;
+  __u8 bDescriptorType;
+  __le16 wMaxPacketSize;
+  __le32 dwBytesPerInterval;
+} __attribute__((packed));
+#define USB_DT_EUSB2_ISOC_EP_COMP_SIZE 8
 struct usb_ssp_isoc_ep_comp_descriptor {
   __u8 bLength;
   __u8 bDescriptorType;

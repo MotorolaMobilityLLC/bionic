@@ -311,13 +311,20 @@ struct btrfs_ioctl_clone_range_args {
 };
 #define BTRFS_DEFRAG_RANGE_COMPRESS 1
 #define BTRFS_DEFRAG_RANGE_START_IO 2
-#define BTRFS_DEFRAG_RANGE_FLAGS_SUPP (BTRFS_DEFRAG_RANGE_COMPRESS | BTRFS_DEFRAG_RANGE_START_IO)
+#define BTRFS_DEFRAG_RANGE_COMPRESS_LEVEL 4
+#define BTRFS_DEFRAG_RANGE_FLAGS_SUPP (BTRFS_DEFRAG_RANGE_COMPRESS | BTRFS_DEFRAG_RANGE_COMPRESS_LEVEL | BTRFS_DEFRAG_RANGE_START_IO)
 struct btrfs_ioctl_defrag_range_args {
   __u64 start;
   __u64 len;
   __u64 flags;
   __u32 extent_thresh;
-  __u32 compress_type;
+  union {
+    __u32 compress_type;
+    struct {
+      __u8 type;
+      __s8 level;
+    } compress;
+  };
   __u32 unused[4];
 };
 #define BTRFS_SAME_DATA_DIFFERS 1

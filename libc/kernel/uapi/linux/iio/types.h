@@ -112,6 +112,7 @@ enum iio_event_type {
   IIO_EV_TYPE_CHANGE,
   IIO_EV_TYPE_MAG_REFERENCED,
   IIO_EV_TYPE_GESTURE,
+  IIO_EV_TYPE_FAULT,
 };
 enum iio_event_direction {
   IIO_EV_DIR_EITHER,
@@ -120,5 +121,6 @@ enum iio_event_direction {
   IIO_EV_DIR_NONE,
   IIO_EV_DIR_SINGLETAP,
   IIO_EV_DIR_DOUBLETAP,
+  IIO_EV_DIR_FAULT_OPENWIRE,
 };
 #endif

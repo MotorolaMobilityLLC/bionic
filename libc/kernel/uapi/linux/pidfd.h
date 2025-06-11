@@ -17,7 +17,12 @@
 #define PIDFD_INFO_PID (1UL << 0)
 #define PIDFD_INFO_CREDS (1UL << 1)
 #define PIDFD_INFO_CGROUPID (1UL << 2)
+#define PIDFD_INFO_EXIT (1UL << 3)
 #define PIDFD_INFO_SIZE_VER0 64
+#define PIDFD_SELF_THREAD - 10000
+#define PIDFD_SELF_THREAD_GROUP - 20000
+#define PIDFD_SELF PIDFD_SELF_THREAD
+#define PIDFD_SELF_PROCESS PIDFD_SELF_THREAD_GROUP
 struct pidfd_info {
   __u64 mask;
   __u64 cgroupid;
@@ -32,7 +37,7 @@ struct pidfd_info {
   __u32 sgid;
   __u32 fsuid;
   __u32 fsgid;
-  __u32 spare0[1];
+  __s32 exit_code;
 };
 #define PIDFS_IOCTL_MAGIC 0xFF
 #define PIDFD_GET_CGROUP_NAMESPACE _IO(PIDFS_IOCTL_MAGIC, 1)

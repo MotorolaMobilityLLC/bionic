@@ -55,6 +55,7 @@ struct canfd_frame {
 };
 #define CANXL_XLF 0x80
 #define CANXL_SEC 0x01
+#define CANXL_RRS 0x02
 #define CANXL_VCID_OFFSET 16
 #define CANXL_VCID_VAL_MASK 0xFFUL
 #define CANXL_VCID_MASK (CANXL_VCID_VAL_MASK << CANXL_VCID_OFFSET)

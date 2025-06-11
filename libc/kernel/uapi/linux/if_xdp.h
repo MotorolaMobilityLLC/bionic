@@ -71,12 +71,14 @@ struct xdp_options {
 #define XSK_UNALIGNED_BUF_ADDR_MASK ((1ULL << XSK_UNALIGNED_BUF_OFFSET_SHIFT) - 1)
 #define XDP_TXMD_FLAGS_TIMESTAMP (1 << 0)
 #define XDP_TXMD_FLAGS_CHECKSUM (1 << 1)
+#define XDP_TXMD_FLAGS_LAUNCH_TIME (1 << 2)
 struct xsk_tx_metadata {
   __u64 flags;
   union {
     struct {
       __u16 csum_start;
       __u16 csum_offset;
+      __u64 launch_time;
     } request;
     struct {
       __u64 tx_timestamp;
