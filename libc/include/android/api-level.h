@@ -162,7 +162,7 @@ __BEGIN_DECLS
 #define __ANDROID_API_V__ 35
 
 /* This file is included in <features.h>, and might be used from .S files. */
-#if !defined(__ASSEMBLY__)
+#if !defined(__ASSEMBLER__)
 
 /**
  * Returns the `targetSdkVersion` of the caller, or `__ANDROID_API_FUTURE__` if
@@ -202,7 +202,7 @@ int android_get_device_api_level() __INTRODUCED_IN(29);
 
 #endif
 
-#endif /* defined(__ASSEMBLY__) */
+#endif /* defined(__ASSEMBLER__) */
 
 __END_DECLS
 
