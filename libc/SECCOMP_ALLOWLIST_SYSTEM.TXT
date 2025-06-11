@@ -2,5 +2,3 @@
 # Note that the resultant policy is applied only to zygote spawned processes.
 #
 # This file is processed by a python script named genseccomp.py.
-
-bpf(int cmd, union bpf_attr *attr, unsigned int size) all
