@@ -31,8 +31,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <ios>
 #include <vector>
 
+#include <android-base/stringprintf.h>
 #include <android-base/test_utils.h>
 #include <async_safe/log.h>
 #include <procinfo/process_map.h>
@@ -51,9 +53,15 @@ struct AllocDataType {
   size_t count;
 };
 
+constexpr size_t kMaxFailures = 10;
 struct TestDataType {
   size_t total_allocated_bytes;
   std::vector<AllocDataType> allocs;
+  // This data structure is updated during the callback for malloc_iterate.
+  // Since no allocations are allowed in this callback, we have an array to
+  // contain any errors encountered to be reported after the call is done.
+  AllocDataType failures[kMaxFailures] = {};
+  size_t num_failures = 0;
 };
 
 static void AllocPtr(TestDataType* test_data, size_t size) {
@@ -80,7 +88,12 @@ static void SavePointers(uintptr_t base, size_t size, void* data) {
 
   uintptr_t end;
   if (__builtin_add_overflow(base, size, &end)) {
-    // Skip this entry.
+    size_t index = test_data->num_failures;
+    if (index < kMaxFailures) {
+      test_data->failures[index].ptr = reinterpret_cast<void*>(base);
+      test_data->failures[index].size = size;
+      test_data->num_failures++;
+    }
     return;
   }
 
@@ -89,12 +102,15 @@ static void SavePointers(uintptr_t base, size_t size, void* data) {
     if (ptr >= base && ptr < end) {
       test_data->allocs[i].count++;
 
-      uintptr_t max_size = end - ptr;
-      if (max_size > test_data->allocs[i].size) {
+      uintptr_t usable_size = end - ptr;
+      if (usable_size > test_data->allocs[i].size) {
+        // The usable size is greater than the allocated size, so set
+        // the size reported to allocated size.
         test_data->allocs[i].size_reported = test_data->allocs[i].size;
       } else {
-        test_data->allocs[i].size_reported = max_size;
+        test_data->allocs[i].size_reported = usable_size;
       }
+      break;
     }
   }
 }
@@ -122,8 +138,19 @@ static void VerifyPtrs(TestDataType* test_data) {
 
   ASSERT_TRUE(parsed) << "Failed to parse /proc/self/maps";
 
+  if (test_data->num_failures != 0) {
+    std::string error_msg;
+    for (size_t i = 0; i < test_data->num_failures; i++) {
+      error_msg +=
+          android::base::StringPrintf("Pointer overflow %p size %zu\n", test_data->failures[i].ptr,
+                                      test_data->failures[i].size);
+    }
+    FAIL() << error_msg;
+  }
+
   for (size_t i = 0; i < test_data->allocs.size(); i++) {
-    EXPECT_EQ(1UL, test_data->allocs[i].count) << "Failed on size " << test_data->allocs[i].size;
+    EXPECT_EQ(1UL, test_data->allocs[i].count)
+        << "Unable to find allocation of size " << test_data->allocs[i].size;
     if (test_data->allocs[i].count == 1) {
       EXPECT_EQ(test_data->allocs[i].size, test_data->allocs[i].size_reported);
     }
