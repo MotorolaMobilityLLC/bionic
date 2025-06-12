@@ -268,7 +268,7 @@ bind(int, struct sockaddr*, socklen_t)  all
 __connect:connect(int, struct sockaddr*, socklen_t)   arm,lp64
 listen(int, int) all
 __accept4:accept4(int, struct sockaddr*, socklen_t*, int)  all
-getsockname(int, struct sockaddr*, socklen_t*)  arm,lp64
+getsockname(int, struct sockaddr*, socklen_t*)  all
 getpeername(int, struct sockaddr*, socklen_t*)  all
 __sendto:sendto(int, const void*, size_t, int, const struct sockaddr*, socklen_t)  arm,lp64
 recvfrom(int, void*, size_t, unsigned int, struct sockaddr*, socklen_t*)  arm,lp64
@@ -283,7 +283,6 @@ __sendmmsg:sendmmsg(int, struct mmsghdr*, unsigned int, int)   all
 # sockets for x86. These are done as an "indexed" call to socketcall syscall.
 __socket:socketcall:1(int, int, int) x86
 __connect:socketcall:3(int, struct sockaddr*, socklen_t)   x86
-getsockname:socketcall:6(int, struct sockaddr*, socklen_t*)  x86
 __socketpair:socketcall:8(int, int, int, int*)    x86
 __sendto:socketcall:11(int, const void*, size_t, int, const struct sockaddr*, socklen_t)  x86
 recvfrom:socketcall:12(int, void*, size_t, unsigned int, struct sockaddr*, socklen_t*)  x86
