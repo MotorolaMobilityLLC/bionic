@@ -110,9 +110,6 @@ typedef struct {
   Elf64_Half si_flags;
 } Elf64_Syminfo;
 
-typedef Elf32_Half Elf32_Versym;
-typedef Elf64_Half Elf64_Versym;
-
 typedef struct {
   Elf32_Half vn_version;
   Elf32_Half vn_cnt;
