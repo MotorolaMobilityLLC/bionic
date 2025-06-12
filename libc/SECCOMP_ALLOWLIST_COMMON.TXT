@@ -3,6 +3,21 @@
 #
 # This file is processed by a python script named genseccomp.py.
 
+# These are the syscalls that are currently still multiplexed through socketcall(2) for x86.
+# We put them here for the convenience of anyone who wants to transition early,
+# or rewrite socketcall() invocations as the individual syscalls.
+# TODO: remove these when the socketcall transition is complete
+socket(int, int, int) x86
+socketpair(int, int, int, int*) x86
+connect(int, sockaddr*, socklen_t) x86
+sendto(int, const void*, size_t, int, const sockaddr*, socklen_t) x86
+recvfrom(int, void*, size_t, unsigned int, sockaddr*, socklen_t*) x86
+shutdown(int, int) x86
+setsockopt(int, int, int, const void*, socklen_t) x86
+getsockopt(int, int, int, void*, socklen_t*) x86
+recvmsg(int, msghdr*, unsigned int) x86
+sendmsg(int, const msghdr*, unsigned int) x86
+
 # Syscalls needed to boot android
 pivot_root(const char*, const char*)	lp64
 ioprio_get(int, int)	lp64
