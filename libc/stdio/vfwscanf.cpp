@@ -71,8 +71,8 @@ static inline bool in_ccl(wchar_t wc, const wchar_t* ccl) {
   return !member_result;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wframe-larger-than="
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wframe-larger-than="
 
 /*
  * vfwscanf
@@ -601,4 +601,4 @@ input_failure:
 match_failure:
   return (nassigned);
 }
-#pragma GCC diagnostic pop
+#pragma clang diagnostic pop

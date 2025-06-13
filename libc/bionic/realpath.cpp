@@ -41,7 +41,7 @@
 // (Remember that readlink(2) won't tell you the needed size, so the multi-pass
 // algorithm isn't even an option unless you want to just guess, in which case
 // you're back needing to trim again.)
-#pragma GCC diagnostic ignored "-Wframe-larger-than="
+#pragma clang diagnostic ignored "-Wframe-larger-than="
 
 char* realpath(const char* path, char* result) {
   // Weird special case.
