@@ -28,7 +28,6 @@
 
 #include "linker_phdr.h"
 
-#include <linux/prctl.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/prctl.h>
