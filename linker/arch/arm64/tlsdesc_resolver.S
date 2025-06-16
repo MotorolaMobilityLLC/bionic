@@ -115,12 +115,12 @@ END(tlsdesc_resolver_dynamic)
 ENTRY_PRIVATE(tlsdesc_resolver_dynamic_slow_path)
   sub sp, sp, #(8 * 84)
   .cfi_def_cfa_offset (8 * 84)
-  SAVE_GPR_PAIR(x29, x30, 0)
-  mov x29, sp
+  SAVE_GPR_PAIR(fp, lr, 0)
+  mov fp, sp
 
   // Avoid leaking the contents of the shadow call stack register (x18) into
-  // memory. x19 through x29 are callee-save registers, so we do not need to
-  // save them.
+  // memory. x19 through x29 (fp) are callee-save registers, so we do not need
+  // to save them.
   SAVE_GPR_PAIR(x1,  x2,  2)
   SAVE_GPR_PAIR(x3,  x4,  4)
   SAVE_GPR_PAIR(x5,  x6,  6)
@@ -180,7 +180,7 @@ ENTRY_PRIVATE(tlsdesc_resolver_dynamic_slow_path)
   RESTORE_REG_PAIR(x3,  x4,  4)
   RESTORE_REG_PAIR(x1,  x2,  2)
 
-  RESTORE_REG_PAIR(x29, x30, 0)
+  RESTORE_REG_PAIR(fp, lr, 0)
   add sp, sp, #(8 * 84)
   .cfi_def_cfa_offset 0
   ret

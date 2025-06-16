@@ -36,10 +36,10 @@ ENTRY(__memset_chk)
 
 L(__memset_chk_fail_trampoline):
   // Preserve for accurate backtrace.
-  stp x29, x30, [sp, -16]!
+  stp fp, lr, [sp, -16]!
   .cfi_def_cfa_offset 16
-  .cfi_rel_offset x29, 0
-  .cfi_rel_offset x30, 8
+  .cfi_rel_offset fp, 0
+  .cfi_rel_offset lr, 8
 
   bl __memset_chk_fail
 END(__memset_chk)
