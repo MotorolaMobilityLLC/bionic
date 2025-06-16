@@ -16,7 +16,11 @@
 
 #pragma once
 
+#include <sys/cdefs.h>
+
 #include <android/dlext.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 __BEGIN_DECLS
 
@@ -118,14 +122,14 @@ extern struct android_namespace_t* android_create_namespace(const char* name,
                                                             const char* default_library_path,
                                                             uint64_t type,
                                                             const char* permitted_when_isolated_path,
-                                                            android_namespace_t* parent);
+                                                            struct android_namespace_t* parent);
 
-extern bool android_link_namespaces(android_namespace_t* from,
-                                    android_namespace_t* to,
+extern bool android_link_namespaces(struct android_namespace_t* from,
+                                    struct android_namespace_t* to,
                                     const char* shared_libs_sonames);
 
-extern bool android_link_namespaces_all_libs(android_namespace_t* from,
-                                             android_namespace_t* to);
+extern bool android_link_namespaces_all_libs(struct android_namespace_t* from,
+                                             struct android_namespace_t* to);
 
 extern struct android_namespace_t* android_get_exported_namespace(const char* name);
 
