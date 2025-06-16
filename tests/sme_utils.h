@@ -107,8 +107,8 @@
   __asm__ __volatile__(
     ".arch_extension sme\n\r"
     "bti      c\n\r"
-    "stp      x29, x30, [sp, #-16]!\n\r"
-    "mov      x29, sp\n\r"
+    "stp      fp, lr, [sp, #-16]!\n\r"
+    "mov      fp, sp\n\r"
     // Set up a lazy-save buffer on the stack.
     // It is 16 bytes + size according to VL.
     "sub      sp, sp, #16\n\r"
@@ -119,7 +119,7 @@
     // Bytes 0-7: za_save_buffer
     // Bytes 8-9: num_za_save_slices
     // Other bytes are cleared.
-    "stp      x9, x8, [x29, #-16]\n\r"
+    "stp      x9, x8, [fp, #-16]\n\r"
     // Finalize the lazy-save buffer.
     "msr      TPIDR2_EL0, x9\n\r"
     // Call the given function with dormant SME state.
@@ -128,8 +128,8 @@
     // Set SME state to off.
     "msr      TPIDR2_EL0, xzr\n\r"
     "smstop   za\n\r"
-    "mov      sp, x29\n\r"
-    "ldp      x29, x30, [sp], #16\n\r"
+    "mov      sp, fp\n\r"
+    "ldp      fp, lr, [sp], #16\n\r"
     "ret\n\r"
   );
   // clang-format on

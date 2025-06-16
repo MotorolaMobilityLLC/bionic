@@ -50,9 +50,9 @@ ENTRY_PRIVATE(__bionic_clone)
 
 L(child):
     # We're in the child now. Set the end of the frame record chain.
-    mov     x29, #0
-    # Setting x30 to 0 will make the unwinder stop at __start_thread.
-    mov     x30, #0
+    mov     fp, #0
+    # Setting lr to 0 will make the unwinder stop at __start_thread.
+    mov     lr, #0
     # Call __start_thread with the 'fn' and 'arg' we stored on the child stack.
     ldp     x0, x1, [sp], #16
     b       __start_thread

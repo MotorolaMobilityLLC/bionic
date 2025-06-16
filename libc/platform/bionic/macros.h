@@ -32,10 +32,8 @@
     ? (1UL << (64 - __builtin_clzl(static_cast<unsigned long>(value)))) \
     : (1UL << (32 - __builtin_clz(static_cast<unsigned int>(value)))))
 
-#if defined(__arm__)
-#define BIONIC_STOP_UNWIND asm volatile(".cfi_undefined r14")
-#elif defined(__aarch64__)
-#define BIONIC_STOP_UNWIND asm volatile(".cfi_undefined x30")
+#if defined(__arm__) || defined(__aarch64__)
+#define BIONIC_STOP_UNWIND asm volatile(".cfi_undefined lr")
 #elif defined(__i386__)
 #define BIONIC_STOP_UNWIND asm volatile(".cfi_undefined \%eip")
 #elif defined(__riscv)
