@@ -154,7 +154,6 @@ ns_subdomain(const char *a, const char *b) {
 }
 #endif
 
-#ifdef _LIBC
 /*
  *	make a canonical copy of domain name "src"
  *
@@ -207,4 +206,3 @@ ns_samename(const char *a, const char *b) {
 	else
 		return (0);
 }
-#endif

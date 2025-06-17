@@ -147,22 +147,6 @@ __LIBC_HIDDEN__ const char* const _res_opcodes[] = {
   "ZONEREF",
 };
 
-#ifndef _LIBC
-/*
- * Print the current options.
- */
-void
-fp_resstat(const res_state statp, FILE *file) {
-	u_long mask;
-
-	fprintf(file, ";; res options:");
-	for (mask = 1;  mask != 0U;  mask <<= 1)
-		if (statp->options & mask)
-			fprintf(file, " %s", p_option(mask));
-	putc('\n', file);
-}
-#endif
-
 static void
 do_section(const res_state statp,
 	   ns_msg *handle, ns_sect section,

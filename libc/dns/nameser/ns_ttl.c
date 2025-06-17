@@ -92,58 +92,6 @@ ns_format_ttl(u_long src, char *dst, size_t dstlen) {
 	return (int)(dst - odst);
 }
 
-#ifndef _LIBC
-int
-ns_parse_ttl(const char *src, u_long *dst) {
-	u_long ttl, tmp;
-	int ch, digits, dirty;
-
-	ttl = 0;
-	tmp = 0;
-	digits = 0;
-	dirty = 0;
-	while ((ch = *src++) != '\0') {
-		if (!isascii(ch) || !isprint(ch))
-			goto einval;
-		if (isdigit(ch)) {
-			tmp *= 10;
-			tmp += (ch - '0');
-			digits++;
-			continue;
-		}
-		if (digits == 0)
-			goto einval;
-		if (islower(ch))
-			ch = toupper(ch);
-		switch (ch) {
-		case 'W':  tmp *= 7;	/*FALLTHROUGH*/
-		case 'D':  tmp *= 24;	/*FALLTHROUGH*/
-		case 'H':  tmp *= 60;	/*FALLTHROUGH*/
-		case 'M':  tmp *= 60;	/*FALLTHROUGH*/
-		case 'S':  break;
-		default:   goto einval;
-		}
-		ttl += tmp;
-		tmp = 0;
-		digits = 0;
-		dirty = 1;
-	}
-	if (digits > 0) {
-		if (dirty)
-			goto einval;
-		else
-			ttl += tmp;
-	} else if (!dirty)
-		goto einval;
-	*dst = ttl;
-	return (0);
-
- einval:
-	errno = EINVAL;
-	return (-1);
-}
-#endif
-
 /* Private. */
 
 static int
