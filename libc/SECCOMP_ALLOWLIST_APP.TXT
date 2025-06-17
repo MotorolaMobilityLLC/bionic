@@ -12,7 +12,6 @@ stat64(const char*, struct stat64*)	lp32
 
 # b/34813887
 open(const char *path, int oflag, ... ) lp32,x86_64
-getdents(unsigned int fd, struct linux_dirent *dirp, unsigned int count) lp32,x86_64
 
 # b/34719286
 eventfd(unsigned int initval, int flags)	lp32
