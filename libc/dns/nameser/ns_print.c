@@ -466,11 +466,7 @@ ns_sprintrrf(const u_char *msg, size_t msglen,
 			goto formerr;
 
 		/* Key flags, Protocol, Algorithm. */
-#ifndef _LIBC
-		key_id = dst_s_dns_key_id(rdata, edata-rdata);
-#else
 		key_id = 0;
-#endif
 		keyflags = ns_get16(rdata);  rdata += NS_INT16SZ;
 		protocol = *rdata++;
 		algorithm = *rdata++;
