@@ -387,7 +387,6 @@ cc_library_static {
         "upstream-freebsd/lib/libc/string/wcsncasecmp.c",
         "upstream-freebsd/lib/libc/string/wcsnlen.c",
         "upstream-freebsd/lib/libc/string/wcstok.c",
-        "upstream-freebsd/lib/libc/string/wmemchr.c",
         "upstream-freebsd/lib/libc/string/wmemcmp.c",
         "upstream-freebsd/lib/libc/string/wmemcpy.c",
         "upstream-freebsd/lib/libc/string/wmemmove.c",
