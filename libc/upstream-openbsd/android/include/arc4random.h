@@ -30,7 +30,12 @@
 
 #include <async_safe/log.h>
 
-// Android gets these from "thread_private.h".
+// Android gets these from "thread_private.h" so we can set an atfork handler.
+// TODO: we should investigate MADV_WIPEONFORK for the structs allocated
+// by _rs_allocate() [where OpenBSD uses their MAP_INHERIT_ZERO and has an
+// empty _rs_forkdetect()], but because the mutex guards the creation of that
+// VMA, we'd still need an external mutex, and we'd still want some way to
+// lock/unlock around a fork().
 #include "thread_private.h"
 //static pthread_mutex_t arc4random_mtx = PTHREAD_MUTEX_INITIALIZER;
 //#define _ARC4_LOCK()   pthread_mutex_lock(&arc4random_mtx)
