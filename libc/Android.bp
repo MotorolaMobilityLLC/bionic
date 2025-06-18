@@ -998,7 +998,6 @@ cc_library_static {
         "bionic/system_property_set.cpp",
         "bionic/tdestroy.cpp",
         "bionic/termios.cpp",
-        "bionic/thread_private.cpp",
         "bionic/threads.cpp",
         "bionic/time.cpp",
         "bionic/tmpfile.cpp",

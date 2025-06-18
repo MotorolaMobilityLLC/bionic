@@ -1,4 +1,4 @@
-/*	$OpenBSD: arc4random_linux.h,v 1.7 2014/07/20 20:51:13 bcook Exp $	*/
+/*    $OpenBSD: arc4random_linux.h,v 1.7 2014/07/20 20:51:13 bcook Exp $    */
 
 /*
  * Copyright (c) 1996, David Mazieres <dm@uun.org>
@@ -18,67 +18,56 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/*
- * Stub functions for portability.
- */
-
-#include <errno.h>
 #include <pthread.h>
-#include <signal.h>
 #include <sys/mman.h>
 #include <sys/prctl.h>
 
 #include <async_safe/log.h>
 
-// Android gets these from "thread_private.h" so we can set an atfork handler.
-// TODO: we should investigate MADV_WIPEONFORK for the structs allocated
-// by _rs_allocate() [where OpenBSD uses their MAP_INHERIT_ZERO and has an
-// empty _rs_forkdetect()], but because the mutex guards the creation of that
-// VMA, we'd still need an external mutex, and we'd still want some way to
-// lock/unlock around a fork().
-#include "thread_private.h"
-//static pthread_mutex_t arc4random_mtx = PTHREAD_MUTEX_INITIALIZER;
-//#define _ARC4_LOCK()   pthread_mutex_lock(&arc4random_mtx)
-//#define _ARC4_UNLOCK() pthread_mutex_unlock(&arc4random_mtx)
+static pthread_mutex_t g_arc4random_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void arc4random_mutex_lock() {
+  pthread_mutex_lock(&g_arc4random_mutex);
+}
+
+void arc4random_mutex_unlock() {
+  pthread_mutex_unlock(&g_arc4random_mutex);
+}
+
+#define _ARC4_LOCK() arc4random_mutex_lock()
+#define _ARC4_UNLOCK() arc4random_mutex_unlock()
 
 static inline void _getentropy_fail(void) {
-    async_safe_fatal("getentropy failed: %s", strerror(errno));
+  async_safe_fatal("getentropy failed: %m");
 }
 
-volatile sig_atomic_t _rs_forked;
-
-static inline void
-_rs_forkdetect(void)
-{
-	static pid_t _rs_pid = 0;
-	pid_t pid = getpid();
-
-	if (_rs_pid == 0 || _rs_pid != pid || _rs_forked) {
-		_rs_pid = pid;
-		_rs_forked = 0;
-		if (rs)
-			memset(rs, 0, sizeof(*rs));
-	}
+static inline void _rs_forkdetect(void) {
+  // Not needed thanks to the MADV_WIPEONFORK below.
 }
 
-static inline int
-_rs_allocate(struct _rs **rsp, struct _rsx **rsxp)
-{
-	// OpenBSD's arc4random_linux.h allocates two separate mappings, but for
-	// themselves they just allocate both structs into one mapping like this.
-	struct {
-		struct _rs rs;
-		struct _rsx rsx;
-	} *p;
+static inline int _rs_allocate(struct _rs** rsp, struct _rsx** rsxp) {
+  // OpenBSD's arc4random_linux.h allocates two separate mappings, but for
+  // themselves they just allocate both structs into one mapping like this.
+  struct data {
+    struct _rs rs;
+    struct _rsx rsx;
+  };
+  const size_t size = sizeof(struct data);
 
-	if ((p = mmap(NULL, sizeof(*p), PROT_READ|PROT_WRITE,
-	    MAP_ANON|MAP_PRIVATE, -1, 0)) == MAP_FAILED)
-		return (-1);
+  struct data* p = mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0);
+  if (p == MAP_FAILED) {
+    async_safe_fatal("arc4random data allocation failed: %m");
+  }
 
-	prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, p, sizeof(*p), "arc4random data");
+  // Equivalent to OpenBSD's minherit(MAP_INHERIT_ZERO).
+  if (madvise(p, size, MADV_WIPEONFORK) == -1) {
+    async_safe_fatal("arc4random data MADV_WIPEONFORK failed: %m");
+  }
 
-	*rsp = &p->rs;
-	*rsxp = &p->rsx;
+  // Give the allocation a name to make tombstones more intelligible.
+  prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, p, size, "arc4random data");
 
-	return (0);
+  *rsp = &p->rs;
+  *rsxp = &p->rsx;
+  return 0;
 }
