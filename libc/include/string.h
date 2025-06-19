@@ -193,6 +193,16 @@ char* _Nullable strpbrk(const char* _Nonnull __s, const char* _Nonnull __accept)
 char* _Nullable strsep(char* _Nullable * _Nonnull __s_ptr, const char* _Nonnull __delimiter);
 size_t strspn(const char* _Nonnull __s, const char* _Nonnull __accept);
 
+/**
+ * [strsignal(3)](https://man7.org/linux/man-pages/man3/strsignal.3.html)
+ * converts the integer corresponding to SIGSEGV (say) into a string
+ * like "Segmentation violation".
+ *
+ * Use sig2str() instead to convert the integer corresponding to SIGSEGV (say)
+ * into a string like "SEGV".
+ *
+ * Returns a pointer to a string. For invalid signals, the string is in TLS.
+ */
 char* _Nonnull strsignal(int __signal);
 
 int strcoll(const char* _Nonnull __lhs, const char* _Nonnull __rhs) __attribute_pure__;
