@@ -203,11 +203,13 @@ int sigwaitinfo64(const sigset64_t* _Nonnull __set, siginfo_t* _Nullable __info)
  * like "SEGV" (not including the "SIG" used in the constants).
  * SIG2STR_MAX is a safe size to use for the buffer.
  *
+ * Use strsignal() instead to convert the integer corresponding to SIGSEGV (say)
+ * into a string like "Segmentation violation".
+ *
  * Returns 0 on success, and returns -1 _without_ setting errno otherwise.
  *
- * Available since API level 36.
+ * Available since API level 36 (but see also strsignal()).
  */
-
 #if __BIONIC_AVAILABILITY_GUARD(36)
 int sig2str(int __signal, char* _Nonnull __buf) __INTRODUCED_IN(36);
 #endif /* __BIONIC_AVAILABILITY_GUARD(36) */
