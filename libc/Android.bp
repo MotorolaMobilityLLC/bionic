@@ -1014,7 +1014,6 @@ cc_library_static {
         "bionic/wcstod.cpp",
         "bionic/wctype.cpp",
         "bionic/wcwidth.cpp",
-        "bionic/wmempcpy.cpp",
 
         // Forked but not yet cleaned up/rewritten stdio code.
         // TODO: finish cleanup.
