@@ -30,6 +30,7 @@
 
 #include <sys/cdefs.h>
 
+#include <errno.h>
 #include <stddef.h>
 #include <sys/types.h>
 #include <sys/select.h>
