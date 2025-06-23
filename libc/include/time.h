@@ -257,7 +257,8 @@ char* _Nullable strptime_l(const char* _Nonnull __s, const char* _Nonnull __fmt,
  * [strftime(3)](https://man7.org/linux/man-pages/man3/strftime.3.html) formats
  * a broken-down time `tm` into the buffer `buf` using format `fmt`.
  *
- * Returns a pointer to the first character _not_ parsed, or null if no characters were parsed.
+ * Returns the number of bytes written (not including the NUL),
+ * or zero if the buffer is too small.
  */
 size_t strftime(char* _Nonnull __buf, size_t __n, const char* _Nonnull __fmt, const struct tm* _Nullable __tm) __strftimelike(3);
 
