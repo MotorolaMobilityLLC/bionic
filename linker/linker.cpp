@@ -377,7 +377,7 @@ static void parse_LD_LIBRARY_PATH(const char* path) {
 }
 
 static bool is_proc_mounted() {
-  static bool result = (access("/proc", F_OK) == 0);
+  static bool result = (access("/proc/self/fd", F_OK) == 0);
   return result;
 }
 
