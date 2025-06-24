@@ -56,7 +56,6 @@
 #include "private/FdPath.h"
 #include "private/__bionic_get_shell_path.h"
 #include "private/bionic_fortify.h"
-#include "private/thread_private.h"
 
 #define	NDYNAMIC 10		/* add ten more whenever necessary */
 
