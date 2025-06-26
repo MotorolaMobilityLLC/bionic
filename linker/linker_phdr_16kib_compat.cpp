@@ -135,6 +135,7 @@ bool ElfReader::IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr) {
     return false;
   }
 
+  const ElfW(Phdr)* last_rx = nullptr;
   const ElfW(Phdr)* last_rw = nullptr;
   const ElfW(Phdr)* first_rw = nullptr;
 
@@ -154,12 +155,21 @@ bool ElfReader::IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr) {
       }
 
       if (last_rw && last_rw != prev) {
-        DL_WARN("\"%s\": Compat loading failed: ELF contains multiple non-adjacent RW segments",
+        DL_WARN("\"%s\": Compat loading failed: ELF contains non-adjacent RW segments",
                 name_.c_str());
         return false;
       }
 
       last_rw = curr;
+    } else if ((prot & PROT_EXEC) && (prot & PROT_READ)) {
+      if (!last_rx || last_rx > last_rw) {
+        last_rx = curr;
+      } else  {
+        DL_WARN("\"%s\": Compat loading failed: ELF contains RX segments "
+                "separated by RW segments",
+                name_.c_str());
+        return false;
+      }
     }
   }
 
