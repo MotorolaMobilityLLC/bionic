@@ -59,10 +59,6 @@ __LIBC_HIDDEN__ constinit WriteProtected<libc_globals> __libc_globals;
 __LIBC_HIDDEN__ constinit _Atomic(bool) __libc_memtag_stack;
 __LIBC_HIDDEN__ constinit bool __libc_memtag_stack_abi;
 
-// Not public, but well-known in the BSDs.
-__BIONIC_WEAK_VARIABLE_FOR_NATIVE_BRIDGE
-const char* __progname;
-
 #if defined(__i386__) || defined(__x86_64__)
 // Default sizes based on the old hard-coded values for Atom/Silvermont (x86) and Core 2 (x86-64)...
 size_t __x86_data_cache_size = 24 * 1024;
