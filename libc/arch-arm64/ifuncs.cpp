@@ -45,7 +45,7 @@ static inline bool __bionic_is_oryon(unsigned long hwcap) {
   uint16_t cpu = (midr >> 20) & 0xfff;
 
   // Check for implementor Qualcomm's parts 0..15 (Oryon).
-  // Variant and revision are ignored.
+  // Variant (big vs middle vs little) and revision are ignored.
   return implementer(midr) == 'Q' && part(midr) <= 15;
 }
 
