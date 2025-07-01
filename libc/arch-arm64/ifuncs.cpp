@@ -32,6 +32,7 @@
 // Accessors for the fields in MIDR_EL1.
 // https://developer.arm.com/documentation/ddi0601/latest/AArch64-Registers/MIDR-EL1--Main-ID-Register
 // https://www.kernel.org/doc/html/latest/arch/arm64/cpu-feature-registers.html#list-of-registers-with-visible-features
+// We don't bother with "architecture" here because it's only meaningful for arm32.
 inline int implementer(uint64_t midr_el1) { return (midr_el1 >> 24) & 0xff; }
 inline int variant(uint64_t midr_el1) { return (midr_el1 >> 20) & 0xf; }
 inline int part(uint64_t midr_el1) { return (midr_el1 >> 4) & 0xfff; }
@@ -42,7 +43,6 @@ static inline bool __bionic_is_oryon(unsigned long hwcap) {
 
   unsigned long midr;
   __asm__ __volatile__("mrs %0, MIDR_EL1" : "=r"(midr));
-  uint16_t cpu = (midr >> 20) & 0xfff;
 
   // Check for implementor Qualcomm's parts 0..15 (Oryon).
   // Variant (big vs middle vs little) and revision are ignored.
