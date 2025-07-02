@@ -35,33 +35,33 @@
 
 # Calls that have historical 16-bit variants camping on the best names (CONFIG_UID16).
 getuid:getuid32()   lp32
-getuid:getuid()     lp64
+getuid()     lp64
 getgid:getgid32()   lp32
-getgid:getgid()     lp64
+getgid()     lp64
 geteuid:geteuid32() lp32
-geteuid:geteuid()   lp64
+geteuid()   lp64
 getegid:getegid32() lp32
-getegid:getegid()   lp64
+getegid()   lp64
 getresuid:getresuid32(uid_t* ruid, uid_t* euid, uid_t* suid) lp32
-getresuid:getresuid(uid_t* ruid, uid_t* euid, uid_t* suid)   lp64
+getresuid(uid_t* ruid, uid_t* euid, uid_t* suid)   lp64
 getresgid:getresgid32(gid_t* rgid, gid_t* egid, gid_t* sgid) lp32
-getresgid:getresgid(gid_t* rgid, gid_t* egid, gid_t* sgid)   lp64
+getresgid(gid_t* rgid, gid_t* egid, gid_t* sgid)   lp64
 getgroups:getgroups32(int, gid_t*) lp32
-getgroups:getgroups(int, gid_t*)   lp64
+getgroups(int, gid_t*)   lp64
 setgid:setgid32(gid_t) lp32
-setgid:setgid(gid_t)   lp64
+setgid(gid_t)   lp64
 setuid:setuid32(uid_t) lp32
-setuid:setuid(uid_t)   lp64
+setuid(uid_t)   lp64
 setreuid:setreuid32(uid_t, uid_t) lp32
-setreuid:setreuid(uid_t, uid_t)   lp64
+setreuid(uid_t, uid_t)   lp64
 setresuid:setresuid32(uid_t, uid_t, uid_t) lp32
-setresuid:setresuid(uid_t, uid_t, uid_t)   lp64
+setresuid(uid_t, uid_t, uid_t)   lp64
 setresgid:setresgid32(gid_t, gid_t, gid_t) lp32
-setresgid:setresgid(gid_t, gid_t, gid_t)   lp64
+setresgid(gid_t, gid_t, gid_t)   lp64
 setfsgid:setfsgid32(gid_t) lp32
-setfsgid:setfsgid(gid_t)   lp64
+setfsgid(gid_t)   lp64
 setfsuid:setfsuid32(uid_t) lp32
-setfsuid:setfsuid(uid_t)   lp64
+setfsuid(uid_t)   lp64
 
 readahead(int, off64_t, size_t) all
 getpgid(pid_t) all
@@ -89,10 +89,10 @@ prlimit64|prlimit(pid_t, int, struct rlimit64*, const struct rlimit64*)  lp64
 prlimit64(pid_t, int, struct rlimit64*, const struct rlimit64*)  lp32
 
 setgroups:setgroups32(int, const gid_t*)   lp32
-setgroups:setgroups(int, const gid_t*)     lp64
+setgroups(int, const gid_t*)     lp64
 setpgid(pid_t, pid_t)  all
 setregid:setregid32(gid_t, gid_t)  lp32
-setregid:setregid(gid_t, gid_t)    lp64
+setregid(gid_t, gid_t)    lp64
 chroot(const char*)  all
 prctl(int, unsigned long, unsigned long, unsigned long, unsigned long) all
 capget(cap_user_header_t header, cap_user_data_t data) all
@@ -148,7 +148,7 @@ __dup3:dup3(int, int, int)   all
 fsync(int)  all
 fdatasync(int) all
 fchown:fchown32(int, uid_t, gid_t)  lp32
-fchown:fchown(int, uid_t, gid_t)    lp64
+fchown(int, uid_t, gid_t)    lp64
 sync(void)  all
 syncfs(int)  all
 __fsetxattr:fsetxattr(int, const char*, const void*, size_t, int) all
