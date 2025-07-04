@@ -1,5 +1,8 @@
 # 32-bit ABI bugs
 
+Note: Android 16+ will only run with a 64-bit kernel, however userspace may
+still be 32-bit.
+
 ## 32-bit `off_t` and `_FILE_OFFSET_BITS=64`
 
 On 32-bit Android, `off_t` is a signed 32-bit integer. This limits functions
