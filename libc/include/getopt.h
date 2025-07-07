@@ -41,6 +41,8 @@
 
 #include <bits/getopt.h>
 
+__BEGIN_DECLS
+
 /** A `has_arg` value for `struct option`. */
 #define no_argument 0
 /** A `has_arg` value for `struct option`. */
@@ -66,8 +68,6 @@ struct option {
   /** If `flag` not NULL, the value to assign to `*flag`; otherwise the return value. */
   int val;
 };
-
-__BEGIN_DECLS
 
 /**
  * [getopt_long(3)](https://man7.org/linux/man-pages/man3/getopt_long.3.html) parses command-line options.

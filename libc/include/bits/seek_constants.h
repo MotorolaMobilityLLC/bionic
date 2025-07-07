@@ -35,6 +35,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /**
  * Seek to an absolute offset.
  *
@@ -71,3 +73,5 @@
  * See [lseek(2)](https://man7.org/linux/man-pages/man2/lseek.2.html).
  */
 #define SEEK_HOLE 4
+
+__END_DECLS

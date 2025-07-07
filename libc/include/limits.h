@@ -60,6 +60,8 @@
 /* Many of the POSIX limits come from the kernel. */
 #include <linux/limits.h>
 
+__BEGIN_DECLS
+
 /** Maximum buffer size for getentropy(). */
 #define GETENTROPY_MAX 256
 
@@ -144,3 +146,5 @@
 
 /** bionic has no fixed limit on the number of threads. */
 #undef PTHREAD_THREADS_MAX
+
+__END_DECLS

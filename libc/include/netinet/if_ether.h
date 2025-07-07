@@ -39,6 +39,8 @@
 #include <net/ethernet.h>
 #include <net/if_arp.h>
 
+__BEGIN_DECLS
+
 /**
  * Ethernet Address Resolution Protocol.
  *
@@ -95,3 +97,5 @@ struct ether_arp {
 	(enaddr)[4] = ((u_int8_t *)ip6addr)[14];			\
 	(enaddr)[5] = ((u_int8_t *)ip6addr)[15];			\
 }
+
+__END_DECLS

@@ -36,6 +36,8 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+__BEGIN_DECLS
+
 /** lockf() command to unlock a section of a file. */
 #define F_ULOCK 0
 /** lockf() command to block until it locks a section of a file. */
@@ -44,8 +46,6 @@
 #define F_TLOCK 2
 /** lockf() command to test whether a section of a file is unlocked (or locked by the caller). */
 #define F_TEST 3
-
-__BEGIN_DECLS
 
 /**
  * [lockf(3)](https://man7.org/linux/man-pages/man3/lockf.3.html) manipulates POSIX file locks.

@@ -33,11 +33,11 @@
 
 #include <stdint.h>
 
+__BEGIN_DECLS
+
 #define __swap16 __builtin_bswap16
 #define __swap32 __builtin_bswap32
 #define __swap64(x) __BIONIC_CAST(static_cast,uint64_t,__builtin_bswap64(x))
-
-__BEGIN_DECLS
 
 /* POSIX. */
 

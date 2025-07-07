@@ -35,6 +35,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /**
  * An opaque type used by the multibyte conversion functions.
  * Do not make assumptions about the content of this type.
@@ -45,3 +47,5 @@ typedef struct {
   unsigned char __reserved[4];
 #endif
 } mbstate_t;
+
+__END_DECLS

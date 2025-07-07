@@ -31,6 +31,8 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+__BEGIN_DECLS
+
 typedef struct {
   uint32_t flags;
   void* stack_base;
@@ -96,3 +98,5 @@ typedef struct {
 } pthread_spinlock_t;
 
 typedef long pthread_t;
+
+__END_DECLS

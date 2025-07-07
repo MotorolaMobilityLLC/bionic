@@ -38,6 +38,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /** Path to the default system shell. Historically the 'B' was to specify the Bourne shell. */
 #define _PATH_BSHELL "/system/bin/sh"
 
@@ -61,3 +63,5 @@
 
 /** Path to the calling process' tty. */
 #define _PATH_TTY "/dev/tty"
+
+__END_DECLS

@@ -16,6 +16,8 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+__BEGIN_DECLS
+
 /** See hsearch()/hsearch_r(). */
 typedef enum {
   FIND,
@@ -60,8 +62,6 @@ struct hsearch_data {
   struct __hsearch* _Nullable __hsearch;
 };
 #endif
-
-__BEGIN_DECLS
 
 /**
  * [insque(3)](https://man7.org/linux/man-pages/man3/insque.3.html) inserts

@@ -45,6 +45,8 @@
 #include <asm/hwcap2.h>
 #endif
 
+__BEGIN_DECLS
+
 /** Historical SuperH cruft. Irrelevant on Android. */
 #define AT_FPUCW 18
 /** Historical PowerPC cruft. Irrelevant on Android. */
@@ -55,3 +57,5 @@
 #define AT_UCACHEBSIZE 21
 /** Historical PowerPC cruft. Irrelevant on Android. */
 #define AT_IGNOREPPC 22
+
+__END_DECLS

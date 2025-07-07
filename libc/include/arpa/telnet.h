@@ -35,6 +35,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /*
  * Definitions for the TELNET protocol.
  */
@@ -341,5 +343,7 @@ extern char *enctype_names[];
 
 #define	ENCTYPE_NAME_OK(x)	((unsigned int)(x) < ENCTYPE_CNT)
 #define	ENCTYPE_NAME(x)		enctype_names[x]
+
+__END_DECLS
 
 #endif /* !_TELNET_H_ */

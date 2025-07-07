@@ -36,6 +36,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /* Definitions for FTP; see RFC-765. */
 
 /*
@@ -105,5 +107,7 @@ char *modenames[] =  {"0", "Stream", "Block", "Compressed" };
 #define	BLK_RESTART	0x10	/* Block is Restart Marker */
 
 #define	BLK_BYTECOUNT	2	/* Bytes in this block */
+
+__END_DECLS
 
 #endif /* !_FTP_H_ */

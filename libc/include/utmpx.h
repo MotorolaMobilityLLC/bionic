@@ -37,6 +37,8 @@
 #include <sys/types.h>
 #include <time.h>
 
+__BEGIN_DECLS
+
 #define EMPTY         0
 #define RUN_LVL       1
 #define BOOT_TIME     2
@@ -67,8 +69,6 @@ struct utmpx {
   int32_t ut_addr_v6[4];
   char unused[20];
 };
-
-__BEGIN_DECLS
 
 /**
  * Does nothing.

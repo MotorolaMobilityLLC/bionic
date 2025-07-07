@@ -35,6 +35,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /** The maximum value of a `wchar_t`. */
 #define WCHAR_MAX __WCHAR_MAX__
 
@@ -46,3 +48,5 @@
 /** The minimum value of a `wchar_t`. */
 #  define WCHAR_MIN (-(WCHAR_MAX) - 1)
 #endif
+
+__END_DECLS

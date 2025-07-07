@@ -35,5 +35,9 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /** The type of fields like `sa_family`. */
 typedef unsigned short sa_family_t;
+
+__END_DECLS

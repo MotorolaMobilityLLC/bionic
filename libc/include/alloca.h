@@ -35,6 +35,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /**
  * [alloca(3)](https://man7.org/linux/man-pages/man3/alloca.3.html) allocates space on the stack.
  *
@@ -44,3 +46,5 @@
  * @return a pointer to the space on success, but has undefined behavior on failure.
  */
 #define alloca(size)   __builtin_alloca(size)
+
+__END_DECLS

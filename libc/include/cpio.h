@@ -35,6 +35,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /** Readable by user mode field bit. */
 #define C_IRUSR 0000400
 /** Writable by user mode field bit. */
@@ -78,3 +80,5 @@
 
 /** cpio file magic. */
 #define MAGIC "070707"
+
+__END_DECLS

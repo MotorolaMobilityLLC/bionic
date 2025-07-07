@@ -46,6 +46,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /** The magic at the beginning of a `.a` file. */
 #define ARMAG  "!<arch>\n"
 /** The length of the magic at the beginning of a `.a` file. */
@@ -70,3 +72,5 @@ struct ar_hdr {
   /** Consistency check. Always contains `ARFMAG`. */
   char ar_fmag[2];
 };
+
+__END_DECLS

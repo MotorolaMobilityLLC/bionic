@@ -44,6 +44,8 @@
 
 #include <endian.h>
 
+__BEGIN_DECLS
+
 #define	__BIND		19950621	/* (DEAD) interface version stamp. */
 
 /*
@@ -173,5 +175,7 @@ typedef struct {
 #define	GETLONG			NS_GET32
 #define	PUTSHORT		NS_PUT16
 #define	PUTLONG			NS_PUT32
+
+__END_DECLS
 
 #endif /* _ARPA_NAMESER_COMPAT_ */

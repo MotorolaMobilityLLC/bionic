@@ -38,6 +38,8 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+__BEGIN_DECLS
+
 struct dirent;
 struct stat;
 
@@ -113,8 +115,6 @@ typedef struct {
 #if __USE_BSD
 #define GLOB_LIMIT	0x1000
 #endif
-
-__BEGIN_DECLS
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int glob(const char* _Nonnull __pattern, int __flags, int (* _Nullable __error_callback)(const char* _Nonnull __failure_path, int __failure_errno), glob_t* _Nonnull __result_ptr) __INTRODUCED_IN(28);

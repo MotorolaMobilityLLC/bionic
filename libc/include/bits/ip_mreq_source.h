@@ -36,6 +36,8 @@
 #include <sys/cdefs.h>
 #include <bits/in_addr.h>
 
+__BEGIN_DECLS
+
 /**
  * The type representing an IPv4 multicast source.
  */
@@ -44,3 +46,5 @@ struct ip_mreq_source {
   struct in_addr imr_interface;
   struct in_addr imr_sourceaddr;
 };
+
+__END_DECLS

@@ -38,8 +38,12 @@
 #include <bits/sa_family_t.h>
 #include <linux/un.h>
 
+__BEGIN_DECLS
+
 #if defined(__USE_BSD) || defined(__USE_GNU)
 #include <string.h>
 /** Returns the actual length of the given `sockaddr_un`. */
 #define SUN_LEN(__ptr) (offsetof(struct sockaddr_un, sun_path) + strlen((__ptr)->sun_path))
 #endif
+
+__END_DECLS

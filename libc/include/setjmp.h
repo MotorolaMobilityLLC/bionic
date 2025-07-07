@@ -46,6 +46,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 #if defined(__aarch64__)
 /**
  * The size in words of an arm64 jmp_buf. Room for callee-saved registers,
@@ -86,8 +88,6 @@ typedef long sigjmp_buf[_JBLEN + 1];
 typedef long jmp_buf[_JBLEN];
 
 #undef _JBLEN
-
-__BEGIN_DECLS
 
 /**
  * Equivalent to sigsetjmp() with the second argument 0, so that the signal

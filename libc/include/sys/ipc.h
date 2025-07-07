@@ -37,14 +37,14 @@
 #include <sys/types.h>
 #include <linux/ipc.h>
 
+__BEGIN_DECLS
+
 #if defined(__USE_GNU)
 #define __key key
 #define __seq seq
 #endif
 
 #define ipc_perm ipc64_perm
-
-__BEGIN_DECLS
 
 /**
  * [ftok(3)](https://man7.org/linux/man-pages/man3/ftok.3.html) converts a path and id to a

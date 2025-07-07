@@ -40,10 +40,10 @@
 
 #include <linux/shm.h>
 
+__BEGIN_DECLS
+
 #define shmid_ds shmid64_ds
 #define SHMLBA getpagesize()
-
-__BEGIN_DECLS
 
 typedef unsigned long shmatt_t;
 

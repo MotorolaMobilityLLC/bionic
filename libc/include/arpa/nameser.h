@@ -59,6 +59,8 @@
 
 #include <sys/types.h>
 
+__BEGIN_DECLS
+
 /*
  * Revision information.  This is the release date in YYYYMMDD format.
  * It can change every day so the right thing to do with it is use it
@@ -519,8 +521,6 @@ typedef enum __ns_cert_types {
 	*t_cp   = t_l; \
 	(cp) += NS_INT32SZ; \
 } while (/*CONSTCOND*/0)
-
-__BEGIN_DECLS
 
 #if !defined(__LP64__)
 /* Annoyingly, LP32 shipped with __ names. */

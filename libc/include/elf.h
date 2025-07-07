@@ -37,6 +37,8 @@
 #include <bits/auxvec.h>
 #include <bits/elf_common.h>
 
+__BEGIN_DECLS
+
 /* http://www.sco.com/developers/gabi/latest/ch4.intro.html */
 typedef __u64 Elf32_Xword;
 typedef __s64 Elf32_Sxword;
@@ -264,3 +266,5 @@ typedef Elf64_Xword Elf64_Relr;
 
 /* FreeBSD spells this slightly differently to Linux. */
 #define R_X86_64_JUMP_SLOT R_X86_64_JMP_SLOT
+
+__END_DECLS

@@ -36,6 +36,8 @@
 #include <sys/cdefs.h>
 #include <sys/endian.h>
 
+__BEGIN_DECLS
+
 /**
  * [bswap_16(3)](https://man7.org/linux/man-pages/man3/bswap_16.3.html) swaps the bytes in a
  * 16-bit value.
@@ -53,3 +55,5 @@
  * 64-bit value.
  */
 #define bswap_64(x) __swap64(x)
+
+__END_DECLS

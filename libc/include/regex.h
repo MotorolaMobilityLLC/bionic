@@ -42,6 +42,8 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+__BEGIN_DECLS
+
 /* POSIX says regoff_t is at least as large as the larger of ptrdiff_t and
  * ssize_t. BSD uses off_t, but that interacts badly with _FILE_OFFSET_BITS. */
 typedef ssize_t regoff_t;
@@ -98,11 +100,12 @@ typedef struct {
 #define	REG_LARGE	01000	/* force large representation */
 #define	REG_BACKR	02000	/* force use of backref code */
 
-__BEGIN_DECLS
+
 int regcomp(regex_t* _Nonnull __re, const char* _Nonnull __regex, int __flags);
 size_t regerror(int __error_code, const regex_t* _Nullable __re, char* _Nullable __buf, size_t __n);
 int regexec(const regex_t* _Nonnull __re, const char* _Nonnull __s, size_t __match_count, regmatch_t __matches[_Nullable], int __flags);
 void regfree(regex_t* _Nonnull __re);
+
 __END_DECLS
 
 #endif

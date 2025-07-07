@@ -31,6 +31,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 #if defined(__i386__)
 
 #define EBX 0
@@ -82,5 +84,7 @@
 #define GS 26
 
 #endif
+
+__END_DECLS
 
 #endif

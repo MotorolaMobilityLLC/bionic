@@ -70,6 +70,8 @@
 
 #include <linux/in6.h>
 
+__BEGIN_DECLS
+
 /*
  * Definition for internet protocol version 6.
  * RFC 2460
@@ -238,5 +240,7 @@ struct ip6_frag {
 
 #define IPV6_MMTU	1280	/* minimal MTU and reassembly. 1024 + 256 */
 #define IPV6_MAXPACKET	65535	/* ip6 max packet size without Jumbo payload*/
+
+__END_DECLS
 
 #endif /* !_NETINET_IP6_H_ */

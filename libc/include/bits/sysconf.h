@@ -30,6 +30,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /** sysconf() query for the maximum number of bytes of exec() arguments. */
 #define _SC_ARG_MAX 0x0000
 /** sysconf() query for bc(1) behavior equivalent to _POSIX2_BC_BASE_MAX. */
@@ -330,8 +332,6 @@
 #define _SC_LEVEL4_CACHE_LINESIZE 0x009d
 /** sysconf() query equivalent to NSIG. Available from API level 37. */
 #define _SC_NSIG 0x009e
-
-__BEGIN_DECLS
 
 /**
  * [sysconf(3)](https://man7.org/linux/man-pages/man3/sysconf.3.html)

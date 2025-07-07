@@ -38,14 +38,14 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+__BEGIN_DECLS
+
 struct group {
   char* _Nullable gr_name; /* group name */
   char* _Nullable gr_passwd; /* group password */
   gid_t gr_gid; /* group id */
   char* _Nullable * _Nullable gr_mem; /* group members */
 };
-
-__BEGIN_DECLS
 
 struct group* _Nullable getgrgid(gid_t __gid);
 struct group* _Nullable getgrnam(const char* _Nonnull __name);

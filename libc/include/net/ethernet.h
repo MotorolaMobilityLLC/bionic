@@ -34,6 +34,8 @@
 
 #include <linux/if_ether.h>
 
+__BEGIN_DECLS
+
 #define ETHERTYPE_IP 0x0800
 #define ETHERTYPE_ARP 0x0806
 #define ETHERTYPE_REVARP 0x8035
@@ -76,5 +78,7 @@ struct	ether_header {
 #define	ETHERMTU_JUMBO	(ETHER_MAX_LEN_JUMBO - ETHER_HDR_LEN - ETHER_CRC_LEN)
 #define	ETHERMTU	(ETHER_MAX_LEN - ETHER_HDR_LEN - ETHER_CRC_LEN)
 #define	ETHERMIN	(ETHER_MIN_LEN - ETHER_HDR_LEN - ETHER_CRC_LEN)
+
+__END_DECLS
 
 #endif

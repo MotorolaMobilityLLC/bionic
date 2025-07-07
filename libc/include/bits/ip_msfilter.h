@@ -36,6 +36,8 @@
 #include <sys/cdefs.h>
 #include <bits/in_addr.h>
 
+__BEGIN_DECLS
+
 /** The type representing an IPv4 multicast filter. */
 struct ip_msfilter {
   struct in_addr imsf_multiaddr;
@@ -44,3 +46,5 @@ struct ip_msfilter {
   uint32_t imsf_numsrc;
   struct in_addr imsf_slist[1];
 };
+
+__END_DECLS

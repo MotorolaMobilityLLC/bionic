@@ -37,6 +37,8 @@
 
 #include <bits/sa_family_t.h>
 
+__BEGIN_DECLS
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnullability-completeness"
 /**
@@ -55,3 +57,5 @@ struct sockaddr_storage {
   };
 };
 #pragma clang diagnostic pop
+
+__END_DECLS

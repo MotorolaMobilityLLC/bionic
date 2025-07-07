@@ -35,6 +35,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /** `.tar` file magic. (Includes the NUL.) */
 #define TMAGIC "ustar"
 /** `.tar` file magic length in bytes. */
@@ -87,3 +89,5 @@
 #define TOWRITE 00002
 /** Executable by other mode field bit. */
 #define TOEXEC 00001
+
+__END_DECLS

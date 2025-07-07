@@ -69,6 +69,8 @@
 
 #include <netinet/in.h> /* android-added: glibc source compatibility. */
 
+__BEGIN_DECLS
+
 #define ICMPV6_PLD_MAXLEN	1232	/* IPV6_MMTU - sizeof(struct ip6_hdr)
 					   - sizeof(struct icmp6_hdr) */
 
@@ -512,5 +514,7 @@ struct icmp6_filter {
 /*
  * END android-changed
  */
+
+__END_DECLS
 
 #endif /* !_NETINET_ICMP6_H_ */
