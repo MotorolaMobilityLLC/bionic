@@ -38,6 +38,8 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+__BEGIN_DECLS
+
 typedef struct _ftsent {
 	struct _ftsent * _Nullable fts_cycle;	/* cycle node */
 	struct _ftsent * _Nullable fts_parent;	/* parent directory */
@@ -114,8 +116,6 @@ typedef struct {
 #define FTS_FOR_FTW 0x4000   /* (private) fts is being called by ftw/nftw */
 	int fts_options;		/* fts_open options, global flags */
 } FTS;
-
-__BEGIN_DECLS
 
 FTSENT* _Nullable fts_children(FTS* _Nonnull __fts, int __options);
 int fts_close(FTS* _Nonnull __fts);

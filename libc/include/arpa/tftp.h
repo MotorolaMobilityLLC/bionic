@@ -35,6 +35,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /*
  * Trivial File Transfer Protocol (IEN-133)
  */
@@ -77,5 +79,7 @@ struct tftphdr {
 #define	EEXISTS		6		/* file already exists */
 #define	ENOUSER		7		/* no such user */
 #define	EOPTNEG		8		/* option negotiation failed */
+
+__END_DECLS
 
 #endif /* !_TFTP_H_ */

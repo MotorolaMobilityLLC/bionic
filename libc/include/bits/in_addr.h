@@ -36,6 +36,8 @@
 #include <sys/cdefs.h>
 #include <stdint.h>
 
+__BEGIN_DECLS
+
 /** An integral type representing an IPv4 address. */
 typedef uint32_t in_addr_t;
 
@@ -43,3 +45,5 @@ typedef uint32_t in_addr_t;
 struct in_addr {
   in_addr_t s_addr;
 };
+
+__END_DECLS

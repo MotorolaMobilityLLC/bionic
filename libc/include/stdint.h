@@ -34,6 +34,8 @@
 #include <bits/wchar_limits.h>
 #include <stddef.h>
 
+__BEGIN_DECLS
+
 typedef signed char __int8_t;
 typedef unsigned char __uint8_t;
 typedef short __int16_t;
@@ -256,5 +258,7 @@ typedef int64_t       intmax_t;
 #define SIZE_WIDTH __SIZE_WIDTH__
 
 #define SIG_ATOMIC_WIDTH __SIG_ATOMIC_WIDTH__
+
+__END_DECLS
 
 #endif /* _STDINT_H */

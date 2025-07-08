@@ -65,6 +65,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+__BEGIN_DECLS
+
 #ifndef _PATH_HEQUIV
 # define	_PATH_HEQUIV	"/system/etc/hosts.equiv"
 #endif
@@ -196,8 +198,6 @@ struct addrinfo {
 #define	SCOPE_DELIMITER	'%'
 
 #define IPPORT_RESERVED 1024
-
-__BEGIN_DECLS
 
 int getaddrinfo(const char* _Nullable __node, const char* _Nullable __service, const struct addrinfo* _Nullable __hints, struct addrinfo* _Nullable * _Nonnull __result);
 void freeaddrinfo(struct addrinfo* _Nullable __ptr);

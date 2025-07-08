@@ -31,6 +31,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 #define _POSIX_VERSION 200809L
 #define _POSIX2_VERSION _POSIX_VERSION
 #define _XOPEN_VERSION 700
@@ -176,5 +178,7 @@
 #define _XOPEN_IOV_MAX              16
 #define _XOPEN_NAME_MAX             255
 #define _XOPEN_PATH_MAX             1024
+
+__END_DECLS
 
 #endif

@@ -38,9 +38,9 @@
 
 #include <linux/msg.h>
 
-#define msqid_ds msqid64_ds
-
 __BEGIN_DECLS
+
+#define msqid_ds msqid64_ds
 
 typedef __kernel_ulong_t msgqnum_t;
 typedef __kernel_ulong_t msglen_t;

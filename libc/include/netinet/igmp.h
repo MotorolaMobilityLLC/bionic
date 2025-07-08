@@ -38,6 +38,8 @@
 
 #include <linux/igmp.h>
 
+__BEGIN_DECLS
+
 /**
  * The uapi type is called `igmphdr`,
  * doesn't have the `igmp_` prefix on each field,
@@ -54,3 +56,5 @@ struct igmp {
 
 /** Commonly-used BSD synonym for the Linux constant. */
 #define IGMP_MEMBERSHIP_QUERY IGMP_HOST_MEMBERSHIP_QUERY
+
+__END_DECLS

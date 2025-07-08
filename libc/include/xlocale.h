@@ -40,6 +40,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /* If we just use void* in the typedef, the compiler exposes that in error messages. */
 struct __locale_t;
 
@@ -47,3 +49,5 @@ struct __locale_t;
  * The `locale_t` type that represents a locale.
  */
 typedef struct __locale_t* locale_t;
+
+__END_DECLS

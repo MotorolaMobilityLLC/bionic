@@ -34,6 +34,8 @@
 
 #include <linux/udp.h>
 
+__BEGIN_DECLS
+
 struct udphdr {
     __extension__ union {
         struct /* BSD names */ {
@@ -50,5 +52,7 @@ struct udphdr {
         };
     };
 };
+
+__END_DECLS
 
 #endif /* _NETINET_UDP_H */

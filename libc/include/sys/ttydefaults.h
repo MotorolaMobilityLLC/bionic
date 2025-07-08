@@ -44,6 +44,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /*
  * Defaults on "first" open.
  */
@@ -79,5 +81,7 @@
 #define	CBRK		CEOL
 #define CRPRNT		CREPRINT
 #define	CFLUSH		CDISCARD
+
+__END_DECLS
 
 #endif /* !_SYS_TTYDEFAULTS_H_ */

@@ -38,6 +38,8 @@
 #include <pthread.h>
 #include <time.h>
 
+__BEGIN_DECLS
+
 #define ONCE_FLAG_INIT PTHREAD_ONCE_INIT
 #define TSS_DTOR_ITERATIONS PTHREAD_DESTRUCTOR_ITERATIONS
 
@@ -77,8 +79,6 @@ enum {
 # undef thread_local
 # define thread_local _Thread_local
 #endif
-
-__BEGIN_DECLS
 
 #if __ANDROID_API__ >= 30
 // This file is implemented as static inlines before API level 30.

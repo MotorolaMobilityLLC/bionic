@@ -35,6 +35,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /** Combines `major` and `minor` into a device number. */
 #define makedev(__major, __minor) \
   ( \
@@ -49,3 +51,5 @@
 /** Extracts the minor part of a device number. */
 #define minor(__dev) \
   ((unsigned) ((((__dev) >> 12) & 0xffffff00) | ((__dev) & 0xff)))
+
+__END_DECLS

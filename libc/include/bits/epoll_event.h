@@ -36,6 +36,8 @@
 #include <sys/cdefs.h>
 #include <stdint.h>
 
+__BEGIN_DECLS
+
 /** The union of possible data types for an `epoll_event`. */
 typedef union epoll_data {
   void* ptr;
@@ -53,3 +55,5 @@ struct epoll_event {
 __packed
 #endif
 ;
+
+__END_DECLS

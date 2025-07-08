@@ -39,6 +39,8 @@
 
 #include <bits/pthread_types.h>
 
+__BEGIN_DECLS
+
 /* gids, uids, and pids are all 32-bit. */
 typedef __kernel_gid32_t __gid_t;
 typedef __gid_t gid_t;
@@ -147,5 +149,7 @@ typedef uint16_t u_int16_t;
 typedef uint8_t  u_int8_t;
 /** BSD synonym for uint64_t that's always exposed by historical accident. */
 typedef uint64_t u_int64_t;
+
+__END_DECLS
 
 #endif

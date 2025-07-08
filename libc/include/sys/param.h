@@ -39,6 +39,8 @@
 #include <limits.h>
 #include <linux/param.h>
 
+__BEGIN_DECLS
+
 /** The unit of `st_blocks` in `struct stat`. */
 #define DEV_BSIZE 512
 
@@ -73,3 +75,5 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 /** Returns the greater of its two arguments. */
 #define MAX(a,b) (((a)>(b))?(a):(b))
+
+__END_DECLS

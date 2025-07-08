@@ -37,6 +37,8 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+__BEGIN_DECLS
+
 /*
  * Miscellaneous internetwork
  * definitions for kernel.
@@ -54,5 +56,7 @@ typedef u_int16_t n_short;		/* short as received from the net */
 typedef u_int32_t n_long;		/* long as received from the net */
 
 typedef u_int32_t n_time;		/* ms since 00:00 GMT, byte rev */
+
+__END_DECLS
 
 #endif /* !_NETINET_IN_SYSTM_H_ */

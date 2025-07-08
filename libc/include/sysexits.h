@@ -44,6 +44,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 /** Successful termination. */
 #define EX_OK  0
 
@@ -163,3 +165,5 @@
 
 /** Maximum listed value. */
 #define EX__MAX  78
+
+__END_DECLS

@@ -34,6 +34,8 @@
 #include <linux/signal.h>
 #include <sys/types.h>
 
+__BEGIN_DECLS
+
 /**
  * The highest kernel-supported signal number, plus one.
  *
@@ -184,3 +186,5 @@ struct sigaction64 {
 };
 
 #endif
+
+__END_DECLS

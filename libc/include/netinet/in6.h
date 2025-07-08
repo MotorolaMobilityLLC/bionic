@@ -33,6 +33,8 @@
 
 #include <linux/in6.h>
 
+__BEGIN_DECLS
+
 #define IN6_IS_ADDR_UNSPECIFIED(a) \
   ((((a)->s6_addr32[0]) == 0) && \
    (((a)->s6_addr32[1]) == 0) && \
@@ -100,5 +102,7 @@
 #define IN6ADDR_LOOPBACK_INIT {{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}}}
 
 #define ipv6mr_interface ipv6mr_ifindex
+
+__END_DECLS
 
 #endif /* _NETINET_IN6_H */

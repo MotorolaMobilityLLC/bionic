@@ -22,6 +22,8 @@
 #include <sys/cdefs.h>
 #include <stdint.h>
 
+__BEGIN_DECLS
+
 #ifdef __LP64__
 #define __PRI_64_prefix  "l"
 #define __PRI_PTR_prefix "l"
@@ -325,8 +327,6 @@ typedef struct {
 	intmax_t quot;		/* quotient */
 	intmax_t rem;		/* remainder */
 } imaxdiv_t;
-
-__BEGIN_DECLS
 
 /**
  * Returns the absolute value where possible.

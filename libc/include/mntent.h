@@ -34,6 +34,8 @@
 #include <stdio.h>
 #include <paths.h>  /* for _PATH_MOUNTED */
 
+__BEGIN_DECLS
+
 #define MOUNTED _PATH_MOUNTED
 
 #define MNTTYPE_IGNORE "ignore"
@@ -55,8 +57,6 @@ struct mntent {
   int mnt_freq;
   int mnt_passno;
 };
-
-__BEGIN_DECLS
 
 int endmntent(FILE* _Nullable __fp);
 struct mntent* _Nullable getmntent(FILE* _Nonnull __fp);

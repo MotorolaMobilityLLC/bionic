@@ -37,6 +37,8 @@
 
 #include <linux/wait.h>
 
+__BEGIN_DECLS
+
 /** Returns the exit status from a process for which `WIFEXITED` is true. */
 #define WEXITSTATUS(__status) (((__status) & 0xff00) >> 8)
 
@@ -66,3 +68,5 @@
 
 /** Constructs a status value for a process stopped by the given signal. */
 #define W_STOPCODE(__signal_number) ((__signal_number) << 8 | 0x7f)
+
+__END_DECLS

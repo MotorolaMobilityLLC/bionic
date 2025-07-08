@@ -34,11 +34,11 @@
 #include <sys/socket.h>
 #include <linux/if.h>
 
+__BEGIN_DECLS
+
 #ifndef IF_NAMESIZE
 #define IF_NAMESIZE IFNAMSIZ
 #endif
-
-__BEGIN_DECLS
 
 struct if_nameindex {
   unsigned if_index;

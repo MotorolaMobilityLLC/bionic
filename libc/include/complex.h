@@ -31,6 +31,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 #ifdef __GNUC__
 #define	_Complex_I	((float _Complex)1.0i)
 #endif
@@ -48,8 +50,6 @@ _Static_assert(__generic(_Complex_I, float _Complex, 1, 0),
 #define	CMPLXF(x, y)	((float complex){ x, y })
 #define	CMPLXL(x, y)	((long double complex){ x, y })
 #endif
-
-__BEGIN_DECLS
 
 /* 7.3.5 Trigonometric functions */
 /* 7.3.5.1 The cacos functions */

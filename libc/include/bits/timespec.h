@@ -36,6 +36,8 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+__BEGIN_DECLS
+
 /*
  * This file is used to include timespec definition without introducing the whole
  * <linux/time.h>, <sys/time.h> or <time.h>.
@@ -50,3 +52,5 @@ struct timespec {
   long tv_nsec;
 };
 #endif
+
+__END_DECLS

@@ -36,6 +36,8 @@
 #include <sys/cdefs.h>
 #include <xlocale.h>
 
+__BEGIN_DECLS
+
 /* All the functions in this file are trivial, being but a single
  * instruction on most architectures. For that reason, we inline them by
  * default. This macro is meant for internal use only, so that we can
@@ -67,8 +69,6 @@
 #define _CTYPE_A (_CTYPE_L|_CTYPE_U)
 /** Internal implementation detail. Do not use. */
 #define _CTYPE_N _CTYPE_D
-
-__BEGIN_DECLS
 
 /** Internal implementation detail. Do not use. */
 extern const char* _ctype_;
