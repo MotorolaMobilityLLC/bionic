@@ -35,12 +35,12 @@ in_addr_t inet_addr(const char* cp) {
 int inet_aton(const char* cp, in_addr* addr) {
   ErrnoRestorer errno_restorer;
 
-  unsigned long parts[4];
+  unsigned long long parts[4];
   size_t i;
   for (i = 0; i < 4; ++i) {
     char* end;
     errno = 0;
-    parts[i] = strtoul(cp, &end, 0);
+    parts[i] = strtoull(cp, &end, 0);
     if (errno != 0 || end == cp || (*end != '.' && *end != '\0')) return 0;
     if (*end == '\0') break;
     cp = end + 1;
