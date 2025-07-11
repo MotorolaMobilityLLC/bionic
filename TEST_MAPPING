@@ -110,6 +110,10 @@
       "options": [
        {
          "include-filter": "android.app.cts.service.ServiceTest"
+       },
+       {
+        // Flaky
+        "exclude-filter": "android.app.cts.service.ServiceTest#testActivityServiceBindingLru"
        }
      ]
     }
