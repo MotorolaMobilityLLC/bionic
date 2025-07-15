@@ -83,7 +83,7 @@ void vsyslog(int priority, const char* fmt, va_list args) {
   int n = vsnprintf(log_line, sizeof(log_line), fmt, args);
   if (n < 0) return;
 
-  async_safe_format_log(android_log_priority, log_tag, "%s", log_line);
+  async_safe_write_log(android_log_priority, log_tag, log_line);
   if ((syslog_options & LOG_PERROR) != 0) {
     bool have_newline =
         (n > 0 && n < static_cast<int>(sizeof(log_line)) && log_line[n - 1] == '\n');
