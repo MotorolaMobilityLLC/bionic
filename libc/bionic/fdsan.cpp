@@ -50,7 +50,6 @@
 #include "pthread_internal.h"
 
 extern "C" int __close(int fd);
-pid_t __get_cached_pid();
 
 static constexpr const char* kFdsanPropertyName = "debug.fdsan";
 
