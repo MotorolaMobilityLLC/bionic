@@ -26,15 +26,11 @@
  * SUCH DAMAGE.
  */
 
-#include <errno.h>
 #include <signal.h>
-#include <unistd.h>
-#include <sys/syscall.h>
 
+#include "private/bionic_inline_raise.h"
+
+// Reuse inline_raise() to minimize uninteresting stack frames in unwinds.
 int raise(int sig) {
-  // Protect ourselves against stale cached PID/TID values by fetching them via syscall.
-  // http://b/37769298
-  pid_t pid = syscall(__NR_getpid);
-  pid_t tid = syscall(__NR_gettid);
-  return tgkill(pid, tid, sig);
+  return inline_raise(sig);
 }
