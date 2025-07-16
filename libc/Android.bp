@@ -553,7 +553,6 @@ cc_library_static {
         "upstream-openbsd/lib/libc/string/strspn.c",
         "upstream-openbsd/lib/libc/string/strtok.c",
         "upstream-openbsd/lib/libc/string/strxfrm.c",
-        "upstream-openbsd/lib/libc/string/wcslcpy.c",
         "upstream-openbsd/lib/libc/string/wcswidth.c",
 
         // These files are originally from OpenBSD,
