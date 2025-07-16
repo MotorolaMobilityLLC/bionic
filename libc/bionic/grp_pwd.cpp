@@ -240,7 +240,7 @@ static bool is_valid_app_id(id_t, bool) {
 }
 #endif  // if defined(__ANDROID__)
 
-// This provides an iterater for app_ids within the first user's app id's.
+// This provides an iterator for app_ids within the first user's app id's.
 static id_t get_next_app_id(id_t current_id, bool is_group) {
   auto ranges_size = is_group ? arraysize(group_ranges) : arraysize(user_ranges);
   auto ranges = is_group ? group_ranges : user_ranges;
