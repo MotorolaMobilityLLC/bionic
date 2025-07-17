@@ -354,20 +354,7 @@ void ElfReader::LabelCompatVma() {
   }
 }
 
-void ElfReader::Setup16KiBAppCompat() {
-  if (!should_use_16kib_app_compat_) {
-    return;
-  }
-
-  ElfW(Addr) rx_rw_boundary;  // Permission boundary for compat mode
-  if (!IsEligibleForRXRWAppCompat(&rx_rw_boundary)) {
-    const std::string layout = elf_layout(phdr_table_, phdr_num_);
-
-    DL_WARN("\"%s\": RX|RW compat loading failed: load segments [%s]", name_.c_str(),
-            layout.c_str());
-    return;
-  }
-
+void ElfReader::SetupRXRWAppCompat(ElfW(Addr) rx_rw_boundary) {
   // Adjust the load_bias to position the RX|RW boundary on a page boundary
   load_bias_ += perm_boundary_offset(rx_rw_boundary);
 
@@ -377,6 +364,27 @@ void ElfReader::Setup16KiBAppCompat() {
 
   CHECK(rw_start % getpagesize() == 0);
   CHECK(rw_size % getpagesize() == 0);
+
+  // Compat RELRO (RX) region (.text, .data.relro, ...)
+  compat_relro_size_ = load_size_ - rw_size;
+  compat_relro_start_ = reinterpret_cast<ElfW(Addr)>(load_start_);
+}
+
+void ElfReader::Setup16KiBAppCompat() {
+  if (!should_use_16kib_app_compat_) {
+    return;
+  }
+
+  ElfW(Addr) rx_rw_boundary;  // Permission boundary for RX|RW compat mode
+  if (IsEligibleForRXRWAppCompat(&rx_rw_boundary)) {
+    SetupRXRWAppCompat(rx_rw_boundary);
+  } else {
+    const std::string layout = elf_layout(phdr_table_, phdr_num_);
+
+    DL_WARN("\"%s\": RX|RW compat loading failed: load segments [%s]", name_.c_str(),
+            layout.c_str());
+    return;
+  }
 
   LabelCompatVma();
 }
