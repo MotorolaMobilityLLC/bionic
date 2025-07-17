@@ -88,7 +88,7 @@ class ElfReader {
   void DropPaddingPages(const ElfW(Phdr)* phdr, uint64_t seg_file_end);
   [[nodiscard]] bool MapBssSection(const ElfW(Phdr)* phdr, ElfW(Addr) seg_page_end,
                                    ElfW(Addr) seg_file_end);
-  [[nodiscard]] bool IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr);
+  [[nodiscard]] bool IsEligibleForRXRWAppCompat(ElfW(Addr)* vaddr);
   [[nodiscard]] bool HasAtMostOneRelroSegment(const ElfW(Phdr)** relro_phdr);
   void FixMinAlignFor16KiB();
   [[nodiscard]] bool Setup16KiBAppCompat(std::string* error);

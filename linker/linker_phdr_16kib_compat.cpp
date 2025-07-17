@@ -123,15 +123,15 @@ bool ElfReader::HasAtMostOneRelroSegment(const ElfW(Phdr)** relro_phdr) {
  * a 16KiB page boundary; since a single page cannot share multiple
  * permissions.
  *
- * IsEligibleFor16KiBAppCompat() identifies compatible ELFs and populates @vaddr
+ * IsEligibleForRXRWAppCompat() identifies compatible ELFs and populates @vaddr
  * with the boundary between RX|RW portions.
  *
  * Returns true if the ELF can be loaded in compat mode, else false.
  */
-bool ElfReader::IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr) {
+bool ElfReader::IsEligibleForRXRWAppCompat(ElfW(Addr)* vaddr) {
   const ElfW(Phdr)* relro_phdr = nullptr;
   if (!HasAtMostOneRelroSegment(&relro_phdr)) {
-    DL_WARN("\"%s\": Compat loading failed: Multiple RELRO segments found", name_.c_str());
+    DL_WARN("\"%s\": RX|RW compat loading failed: Multiple RELRO segments found", name_.c_str());
     return false;
   }
 
@@ -155,7 +155,7 @@ bool ElfReader::IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr) {
       }
 
       if (last_rw && last_rw != prev) {
-        DL_WARN("\"%s\": Compat loading failed: ELF contains non-adjacent RW segments",
+        DL_WARN("\"%s\": RX|RW compat loading failed: ELF contains non-adjacent RW segments",
                 name_.c_str());
         return false;
       }
@@ -165,9 +165,10 @@ bool ElfReader::IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr) {
       if (!last_rx || last_rx > last_rw) {
         last_rx = curr;
       } else  {
-        DL_WARN("\"%s\": Compat loading failed: ELF contains RX segments "
-                "separated by RW segments",
-                name_.c_str());
+        DL_WARN(
+            "\"%s\": RX|RW compat loading failed: ELF contains RX segments "
+            "separated by RW segments",
+            name_.c_str());
         return false;
       }
     }
@@ -180,14 +181,14 @@ bool ElfReader::IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr) {
 
   // The RELRO segment is present, it must be the prefix of the first RW segment.
   if (!segment_contains_prefix(first_rw, relro_phdr)) {
-    DL_WARN("\"%s\": Compat loading failed: RELRO is not in the first RW segment",
+    DL_WARN("\"%s\": RX|RW compat loading failed: RELRO is not in the first RW segment",
             name_.c_str());
     return false;
   }
 
   uint64_t end;
   if (__builtin_add_overflow(relro_phdr->p_vaddr, relro_phdr->p_memsz, &end)) {
-    DL_WARN("\"%s\": Compat loading failed: relro vaddr + memsz overflowed", name_.c_str());
+    DL_WARN("\"%s\": RX|RW compat loading failed: relro vaddr + memsz overflowed", name_.c_str());
     return false;
   }
 
@@ -196,7 +197,8 @@ bool ElfReader::IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr) {
 }
 
 /*
- * Returns the offset/shift needed to align @vaddr to a page boundary.
+ * Returns the offset/shift needed to align @vaddr to a page boundary
+ * for RX|RW compat loading.
  */
 static inline ElfW(Addr) perm_boundary_offset(const ElfW(Addr) addr) {
   ElfW(Addr) offset = page_offset(addr);
