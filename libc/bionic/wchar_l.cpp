@@ -29,14 +29,6 @@
 #include <wchar.h>
 #include <xlocale.h>
 
-int wcscasecmp_l(const wchar_t* ws1, const wchar_t* ws2, locale_t) {
-  return wcscasecmp(ws1, ws2);
-}
-
-int wcsncasecmp_l(const wchar_t* ws1, const wchar_t* ws2, size_t n, locale_t) {
-  return wcsncasecmp(ws1, ws2, n);
-}
-
 int wcscoll_l(const wchar_t* ws1, const wchar_t* ws2, locale_t) {
   return wcscoll(ws1, ws2);
 }
