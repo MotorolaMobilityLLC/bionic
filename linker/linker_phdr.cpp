@@ -987,7 +987,7 @@ bool ElfReader::LoadSegments() {
     return false;
   }
 
-  Setup16KiBAppCompat();
+  if (!Setup16KiBAppCompat()) return false;
 
   for (size_t i = 0; i < phdr_num_; ++i) {
     const ElfW(Phdr)* phdr = &phdr_table_[i];

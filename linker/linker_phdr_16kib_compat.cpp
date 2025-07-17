@@ -370,23 +370,36 @@ void ElfReader::SetupRXRWAppCompat(ElfW(Addr) rx_rw_boundary) {
   compat_relro_start_ = reinterpret_cast<ElfW(Addr)>(load_start_);
 }
 
-void ElfReader::Setup16KiBAppCompat() {
+bool ElfReader::SetupRWXAppCompat() {
+  // Warn and fallback to RWX mapping
+  const std::string layout = elf_layout(phdr_table_, phdr_num_);
+  DL_WARN("\"%s\": RX|RW compat loading failed, falling back to RWX compat: load segments [%s]",
+          name_.c_str(), layout.c_str());
+
+  // There is no RELRO protection in this mode
+  CHECK(!compat_relro_start_);
+  CHECK(!compat_relro_size_);
+
+  // Make the reserved mapping RWX; the ELF contents will be read
+  // into it, instead of mapped over it.
+  return mprotect(load_start_, load_size_, PROT_READ | PROT_WRITE | PROT_EXEC) != -1;
+}
+
+bool ElfReader::Setup16KiBAppCompat() {
   if (!should_use_16kib_app_compat_) {
-    return;
+    return true;
   }
 
   ElfW(Addr) rx_rw_boundary;  // Permission boundary for RX|RW compat mode
   if (IsEligibleForRXRWAppCompat(&rx_rw_boundary)) {
     SetupRXRWAppCompat(rx_rw_boundary);
-  } else {
-    const std::string layout = elf_layout(phdr_table_, phdr_num_);
-
-    DL_WARN("\"%s\": RX|RW compat loading failed: load segments [%s]", name_.c_str(),
-            layout.c_str());
-    return;
+  } else if (!SetupRWXAppCompat()) {
+    DL_ERR_AND_LOG("\"%s\": mprotect failed to setup RWX app compat: %m", name_.c_str());
+    return false;
   }
 
   LabelCompatVma();
+  return true;
 }
 
 bool ElfReader::CompatMapSegment(size_t seg_idx, size_t len) {

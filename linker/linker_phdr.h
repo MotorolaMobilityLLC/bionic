@@ -93,7 +93,8 @@ class ElfReader {
   void FixMinAlignFor16KiB();
   void LabelCompatVma();
   void SetupRXRWAppCompat(ElfW(Addr) rx_rw_boundary);
-  void Setup16KiBAppCompat();
+  [[nodiscard]] bool SetupRWXAppCompat();
+  [[nodiscard]] bool Setup16KiBAppCompat();
   [[nodiscard]] bool LoadSegments();
   [[nodiscard]] bool FindPhdr();
   [[nodiscard]] bool FindGnuPropertySection();
