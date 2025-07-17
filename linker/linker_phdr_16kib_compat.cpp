@@ -340,17 +340,18 @@ static inline std::string elf_layout(const ElfW(Phdr)* phdr_table, size_t phdr_c
                          [](std::string a, std::string b) { return std::move(a) + "," + b; });
 }
 
-bool ElfReader::Setup16KiBAppCompat(std::string* error) {
+void ElfReader::Setup16KiBAppCompat() {
   if (!should_use_16kib_app_compat_) {
-    return true;
+    return;
   }
 
-  ElfW(Addr) rx_rw_boundary;  // Permission bounadry for compat mode
-  if (!IsEligibleFor16KiBAppCompat(&rx_rw_boundary)) {
+  ElfW(Addr) rx_rw_boundary;  // Permission boundary for compat mode
+  if (!IsEligibleForRXRWAppCompat(&rx_rw_boundary)) {
     const std::string layout = elf_layout(phdr_table_, phdr_num_);
-    *error = android::base::StringPrintf("\"%s\" 16K app compat failed: load segments: [%s]",
-                                         name_.c_str(), layout.c_str());
-    return false;
+
+    DL_WARN("\"%s\": RX|RW compat loading failed: load segments [%s]", name_.c_str(),
+            layout.c_str());
+    return;
   }
 
   // Adjust the load_bias to position the RX|RW boundary on a page boundary
@@ -378,8 +379,6 @@ bool ElfReader::Setup16KiBAppCompat(std::string* error) {
   if (prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, load_start_, load_size_, vma_name_buffer) != 0) {
     DL_WARN("Failed to rename 16KiB compat segment: %m");
   }
-
-  return true;
 }
 
 bool ElfReader::CompatMapSegment(size_t seg_idx, size_t len) {
