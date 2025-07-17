@@ -16,7 +16,6 @@
 
 #include <pthread.h>
 #include <semaphore.h>
-#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 
