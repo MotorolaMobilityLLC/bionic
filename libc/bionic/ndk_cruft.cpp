@@ -387,11 +387,6 @@ int putw(int value, FILE* fp) {
     return fwrite(&value, sizeof(value), 1, fp) == 1 ? 0 : EOF;
 }
 
-// One of the many syscall stubs that ILP32 leaked.
-pid_t __getpid() {
-  return getpid();
-}
-
 } // extern "C"
 
 #endif // !defined (__LP64__)

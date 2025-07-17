@@ -121,7 +121,7 @@ __pwritev64v2:pwritev2(int, const struct iovec*, int, long, long, int) all
 __close:close(int)  all
 close_range(unsigned int, unsigned int, int) all
 copy_file_range(int, off64_t*, int, off64_t*, size_t, unsigned int) all
-getpid()  all
+__getpid:getpid()  all
 memfd_create(const char*, unsigned) all
 munmap(void*, size_t)  all
 msync(const void*, size_t, int)    all
