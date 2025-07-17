@@ -987,10 +987,7 @@ bool ElfReader::LoadSegments() {
     return false;
   }
 
-  if (std::string error; !Setup16KiBAppCompat(&error)) {
-    DL_ERR_AND_LOG("%s", error.c_str());
-    return false;
-  }
+  if (!Setup16KiBAppCompat()) return false;
 
   for (size_t i = 0; i < phdr_num_; ++i) {
     const ElfW(Phdr)* phdr = &phdr_table_[i];

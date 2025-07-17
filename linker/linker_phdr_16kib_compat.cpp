@@ -123,15 +123,15 @@ bool ElfReader::HasAtMostOneRelroSegment(const ElfW(Phdr)** relro_phdr) {
  * a 16KiB page boundary; since a single page cannot share multiple
  * permissions.
  *
- * IsEligibleFor16KiBAppCompat() identifies compatible ELFs and populates @vaddr
+ * IsEligibleForRXRWAppCompat() identifies compatible ELFs and populates @vaddr
  * with the boundary between RX|RW portions.
  *
  * Returns true if the ELF can be loaded in compat mode, else false.
  */
-bool ElfReader::IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr) {
+bool ElfReader::IsEligibleForRXRWAppCompat(ElfW(Addr)* vaddr) {
   const ElfW(Phdr)* relro_phdr = nullptr;
   if (!HasAtMostOneRelroSegment(&relro_phdr)) {
-    DL_WARN("\"%s\": Compat loading failed: Multiple RELRO segments found", name_.c_str());
+    DL_WARN("\"%s\": RX|RW compat loading failed: Multiple RELRO segments found", name_.c_str());
     return false;
   }
 
@@ -155,7 +155,7 @@ bool ElfReader::IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr) {
       }
 
       if (last_rw && last_rw != prev) {
-        DL_WARN("\"%s\": Compat loading failed: ELF contains non-adjacent RW segments",
+        DL_WARN("\"%s\": RX|RW compat loading failed: ELF contains non-adjacent RW segments",
                 name_.c_str());
         return false;
       }
@@ -165,9 +165,10 @@ bool ElfReader::IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr) {
       if (!last_rx || last_rx > last_rw) {
         last_rx = curr;
       } else  {
-        DL_WARN("\"%s\": Compat loading failed: ELF contains RX segments "
-                "separated by RW segments",
-                name_.c_str());
+        DL_WARN(
+            "\"%s\": RX|RW compat loading failed: ELF contains RX segments "
+            "separated by RW segments",
+            name_.c_str());
         return false;
       }
     }
@@ -180,14 +181,14 @@ bool ElfReader::IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr) {
 
   // The RELRO segment is present, it must be the prefix of the first RW segment.
   if (!segment_contains_prefix(first_rw, relro_phdr)) {
-    DL_WARN("\"%s\": Compat loading failed: RELRO is not in the first RW segment",
+    DL_WARN("\"%s\": RX|RW compat loading failed: RELRO is not in the first RW segment",
             name_.c_str());
     return false;
   }
 
   uint64_t end;
   if (__builtin_add_overflow(relro_phdr->p_vaddr, relro_phdr->p_memsz, &end)) {
-    DL_WARN("\"%s\": Compat loading failed: relro vaddr + memsz overflowed", name_.c_str());
+    DL_WARN("\"%s\": RX|RW compat loading failed: relro vaddr + memsz overflowed", name_.c_str());
     return false;
   }
 
@@ -196,7 +197,8 @@ bool ElfReader::IsEligibleFor16KiBAppCompat(ElfW(Addr)* vaddr) {
 }
 
 /*
- * Returns the offset/shift needed to align @vaddr to a page boundary.
+ * Returns the offset/shift needed to align @vaddr to a page boundary
+ * for RX|RW compat loading.
  */
 static inline ElfW(Addr) perm_boundary_offset(const ElfW(Addr) addr) {
   ElfW(Addr) offset = page_offset(addr);
@@ -338,19 +340,21 @@ static inline std::string elf_layout(const ElfW(Phdr)* phdr_table, size_t phdr_c
                          [](std::string a, std::string b) { return std::move(a) + "," + b; });
 }
 
-bool ElfReader::Setup16KiBAppCompat(std::string* error) {
-  if (!should_use_16kib_app_compat_) {
-    return true;
+void ElfReader::LabelCompatVma() {
+  // Label the ELF VMA, since compat mode uses anonymous mappings, and some applications may rely on
+  // them having their name set to the ELF's path.
+  // Since kernel 5.10 it is safe to use non-global storage for the VMA name because it will be
+  // copied into the kernel. 16KiB pages require a minimum kernel version of 6.1 so we can safely
+  // use a stack-allocated buffer here.
+  char vma_name_buffer[kVmaNameLimit] = {};
+  format_left_truncated_vma_anon_name(vma_name_buffer, sizeof(vma_name_buffer),
+                                      "16k:", name_.c_str(), "");
+  if (prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, load_start_, load_size_, vma_name_buffer) != 0) {
+    DL_WARN("\"%s\": Failed to rename 16KiB compat segment: %m", name_.c_str());
   }
+}
 
-  ElfW(Addr) rx_rw_boundary;  // Permission bounadry for compat mode
-  if (!IsEligibleFor16KiBAppCompat(&rx_rw_boundary)) {
-    const std::string layout = elf_layout(phdr_table_, phdr_num_);
-    *error = android::base::StringPrintf("\"%s\" 16K app compat failed: load segments: [%s]",
-                                         name_.c_str(), layout.c_str());
-    return false;
-  }
-
+void ElfReader::SetupRXRWAppCompat(ElfW(Addr) rx_rw_boundary) {
   // Adjust the load_bias to position the RX|RW boundary on a page boundary
   load_bias_ += perm_boundary_offset(rx_rw_boundary);
 
@@ -362,21 +366,39 @@ bool ElfReader::Setup16KiBAppCompat(std::string* error) {
   CHECK(rw_size % getpagesize() == 0);
 
   // Compat RELRO (RX) region (.text, .data.relro, ...)
-  compat_relro_start_ = reinterpret_cast<ElfW(Addr)>(load_start_);
   compat_relro_size_ = load_size_ - rw_size;
+  compat_relro_start_ = reinterpret_cast<ElfW(Addr)>(load_start_);
+}
 
-  // Label the ELF VMA, since compat mode uses anonymous mappings, and some applications may rely on
-  // them having their name set to the ELF's path.
-  // Since kernel 5.10 it is safe to use non-global storage for the VMA name because it will be
-  // copied into the kernel. 16KiB pages require a minimum kernel version of 6.1 so we can safely
-  // use a stack-allocated buffer here.
-  char vma_name_buffer[kVmaNameLimit] = {};
-  format_left_truncated_vma_anon_name(vma_name_buffer, sizeof(vma_name_buffer),
-                                      "16k:", name_.c_str(), "");
-  if (prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, load_start_, load_size_, vma_name_buffer) != 0) {
-    DL_WARN("Failed to rename 16KiB compat segment: %m");
+bool ElfReader::SetupRWXAppCompat() {
+  // Warn and fallback to RWX mapping
+  const std::string layout = elf_layout(phdr_table_, phdr_num_);
+  DL_WARN("\"%s\": RX|RW compat loading failed, falling back to RWX compat: load segments [%s]",
+          name_.c_str(), layout.c_str());
+
+  // There is no RELRO protection in this mode
+  CHECK(!compat_relro_start_);
+  CHECK(!compat_relro_size_);
+
+  // Make the reserved mapping RWX; the ELF contents will be read
+  // into it, instead of mapped over it.
+  return mprotect(load_start_, load_size_, PROT_READ | PROT_WRITE | PROT_EXEC) != -1;
+}
+
+bool ElfReader::Setup16KiBAppCompat() {
+  if (!should_use_16kib_app_compat_) {
+    return true;
   }
 
+  ElfW(Addr) rx_rw_boundary;  // Permission boundary for RX|RW compat mode
+  if (IsEligibleForRXRWAppCompat(&rx_rw_boundary)) {
+    SetupRXRWAppCompat(rx_rw_boundary);
+  } else if (!SetupRWXAppCompat()) {
+    DL_ERR_AND_LOG("\"%s\": mprotect failed to setup RWX app compat: %m", name_.c_str());
+    return false;
+  }
+
+  LabelCompatVma();
   return true;
 }
 
