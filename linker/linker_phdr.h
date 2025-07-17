@@ -91,6 +91,7 @@ class ElfReader {
   [[nodiscard]] bool IsEligibleForRXRWAppCompat(ElfW(Addr)* vaddr);
   [[nodiscard]] bool HasAtMostOneRelroSegment(const ElfW(Phdr)** relro_phdr);
   void FixMinAlignFor16KiB();
+  void LabelCompatVma();
   void Setup16KiBAppCompat();
   [[nodiscard]] bool LoadSegments();
   [[nodiscard]] bool FindPhdr();

@@ -340,6 +340,20 @@ static inline std::string elf_layout(const ElfW(Phdr)* phdr_table, size_t phdr_c
                          [](std::string a, std::string b) { return std::move(a) + "," + b; });
 }
 
+void ElfReader::LabelCompatVma() {
+  // Label the ELF VMA, since compat mode uses anonymous mappings, and some applications may rely on
+  // them having their name set to the ELF's path.
+  // Since kernel 5.10 it is safe to use non-global storage for the VMA name because it will be
+  // copied into the kernel. 16KiB pages require a minimum kernel version of 6.1 so we can safely
+  // use a stack-allocated buffer here.
+  char vma_name_buffer[kVmaNameLimit] = {};
+  format_left_truncated_vma_anon_name(vma_name_buffer, sizeof(vma_name_buffer),
+                                      "16k:", name_.c_str(), "");
+  if (prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, load_start_, load_size_, vma_name_buffer) != 0) {
+    DL_WARN("\"%s\": Failed to rename 16KiB compat segment: %m", name_.c_str());
+  }
+}
+
 void ElfReader::Setup16KiBAppCompat() {
   if (!should_use_16kib_app_compat_) {
     return;
@@ -364,21 +378,7 @@ void ElfReader::Setup16KiBAppCompat() {
   CHECK(rw_start % getpagesize() == 0);
   CHECK(rw_size % getpagesize() == 0);
 
-  // Compat RELRO (RX) region (.text, .data.relro, ...)
-  compat_relro_start_ = reinterpret_cast<ElfW(Addr)>(load_start_);
-  compat_relro_size_ = load_size_ - rw_size;
-
-  // Label the ELF VMA, since compat mode uses anonymous mappings, and some applications may rely on
-  // them having their name set to the ELF's path.
-  // Since kernel 5.10 it is safe to use non-global storage for the VMA name because it will be
-  // copied into the kernel. 16KiB pages require a minimum kernel version of 6.1 so we can safely
-  // use a stack-allocated buffer here.
-  char vma_name_buffer[kVmaNameLimit] = {};
-  format_left_truncated_vma_anon_name(vma_name_buffer, sizeof(vma_name_buffer),
-                                      "16k:", name_.c_str(), "");
-  if (prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, load_start_, load_size_, vma_name_buffer) != 0) {
-    DL_WARN("Failed to rename 16KiB compat segment: %m");
-  }
+  LabelCompatVma();
 }
 
 bool ElfReader::CompatMapSegment(size_t seg_idx, size_t len) {
