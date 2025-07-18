@@ -540,7 +540,6 @@ cc_library_static {
         "upstream-openbsd/lib/libc/stdlib/setenv.c",
         "upstream-openbsd/lib/libc/stdlib/tfind.c",
         "upstream-openbsd/lib/libc/stdlib/tsearch.c",
-        "upstream-openbsd/lib/libc/string/memccpy.c",
         "upstream-openbsd/lib/libc/string/strcasecmp.c",
         "upstream-openbsd/lib/libc/string/strcasestr.c",
         "upstream-openbsd/lib/libc/string/strcoll.c",
