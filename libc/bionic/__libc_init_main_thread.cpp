@@ -38,6 +38,7 @@
 #include "private/bionic_ssp.h"
 #include "pthread_internal.h"
 
+extern "C" pid_t __getpid();
 extern "C" int __set_tid_address(int* tid_address);
 
 // Declared in "private/bionic_ssp.h".
@@ -78,7 +79,7 @@ extern "C" void __libc_init_main_thread_early(const KernelArgumentBlock& args,
   __init_tcb(temp_tcb, &main_thread);
   __init_tcb_dtv(temp_tcb);
   __set_tls(&temp_tcb->tls_slot(0));
-  main_thread.tid = getpid();
+  main_thread.tid = __getpid();
   main_thread.set_cached_pid(main_thread.tid);
   main_thread.stack_top = reinterpret_cast<uintptr_t>(args.argv);
   main_thread.stack_bottom = 0;

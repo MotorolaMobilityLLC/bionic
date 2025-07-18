@@ -859,6 +859,7 @@ cc_library_static {
         "bionic/getloadavg.cpp",
         "bionic/getpagesize.cpp",
         "bionic/getpgrp.cpp",
+        "bionic/getpid.cpp",
         "bionic/getpriority.cpp",
         "bionic/gettid.cpp",
         "bionic/get_device_api_level.cpp",
