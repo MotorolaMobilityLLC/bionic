@@ -50,19 +50,41 @@ __BEGIN_DECLS
 /** A historical name for NGROUPS_MAX. Use NGROUPS_MAX in new code. */
 #define NGROUPS NGROUPS_MAX
 
-#define MAXSYMLINKS 8
+/**
+ * The maximum number of symbolic links the kernel will traverse in one path
+ * lookup before failing with ELOOP.
+ *
+ * This is hard-coded to 40 in Linux in "include/linux/namei.h" but not
+ * exported in any uapi header.
+ */
+#define MAXSYMLINKS 40
 
 #ifndef howmany
+/**
+ * howmany(3) returns the number of elements of size y needed to hold x.
+ *
+ * Note that this macro may evaluate its arguments more than once.
+ */
 #define howmany(x, y)   (((x)+((y)-1))/(y))
 #endif
+
+/**
+ * [roundup(3)](https://man7.org/linux/man-pages/man3/roundup.3.html)
+ * returns x rounded up to the smallest multiple of y not less than x.
+ *
+ * Note that this macro may evaluate its arguments more than once.
+ */
 #define roundup(x, y)   ((((x)+((y)-1))/(y))*(y))
 
 /**
- * Returns true if the binary representation of the argument is all zeros
- * or has exactly one bit set. Contrary to the macro name, this macro
- * DOES NOT determine if the provided value is a power of 2. In particular,
- * this function falsely returns true for powerof2(0) and some negative
- * numbers.
+ * [powerof2(3)](https://man7.org/linux/man-pages/man3/roundup.3.html)
+ * returns true if x is zero or has exactly one bit set.
+ *
+ * Contrary to the macro name, this macro DOES NOT determine if the provided
+ * value is a power of 2. In particular, this function falsely returns true for
+ * powerof2(0) and some negative numbers.
+ *
+ * See also stdc_has_single_bit() in <stdbit.h>.
  */
 #define powerof2(x)                                               \
   ({                                                              \
@@ -71,9 +93,28 @@ __BEGIN_DECLS
     __builtin_add_overflow(_x, -1, &_x2) ? 1 : ((_x2 & _x) == 0); \
   })
 
-/** Returns the lesser of its two arguments. */
-#define MIN(a,b) (((a)<(b))?(a):(b))
-/** Returns the greater of its two arguments. */
-#define MAX(a,b) (((a)>(b))?(a):(b))
+/**
+ * [MIN(3)](https://man7.org/linux/man-pages/man3/MIN.3.html)
+ * returns the lesser of its two arguments.
+ *
+ * Note that this macro may evaluate its arguments more than once,
+ * and cannot be fixed because statement expressions are not allowed at file
+ * scope but this macro is.
+ *
+ * See also fmin()/fminf()/fminl() for floating point types.
+ */
+#define MIN(a, b) (((a)<(b))?(a):(b))
+
+/**
+ * [MAX(3)](https://man7.org/linux/man-pages/man3/MAX.3.html)
+ * returns the greater of its two arguments.
+ *
+ * Note that this macro may evaluate its arguments more than once,
+ * and cannot be fixed because statement expressions are not allowed at file
+ * scope but this macro is.
+ *
+ * See also fmax()/fmaxf()/fmaxl() for floating point types.
+ */
+#define MAX(a, b) (((a)>(b))?(a):(b))
 
 __END_DECLS
