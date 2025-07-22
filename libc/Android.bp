@@ -1052,13 +1052,6 @@ cc_library_static {
                 "arch-arm/cortex-a55/string/memcpy.S",
 
                 "arch-arm/generic/string/memcmp.S",
-                "arch-arm/generic/string/memmove.S",
-                "arch-arm/generic/string/memset.S",
-                "arch-arm/generic/string/stpcpy.c",
-                "arch-arm/generic/string/strcat.c",
-                "arch-arm/generic/string/strcmp.S",
-                "arch-arm/generic/string/strcpy.S",
-                "arch-arm/generic/string/strlen.c",
 
                 "arch-arm/krait/string/memcpy.S",
                 "arch-arm/krait/string/memset.S",
