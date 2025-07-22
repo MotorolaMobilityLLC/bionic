@@ -86,6 +86,11 @@ TEST(STRINGS_TEST, strcasecmp) {
   ASSERT_GT(strcasecmp("hello2", "hello1"), 0);
 }
 
+TEST(STRINGS_TEST, strcasecmp_sign) {
+  ASSERT_LT(strcasecmp("\xfe", "\xff"), 0);
+  ASSERT_GT(strcasecmp("\xff", "\xfe"), 0);
+}
+
 TEST(STRINGS_TEST, strcasecmp_l) {
   locale_t l = newlocale(LC_ALL, "C", nullptr);
   ASSERT_EQ(0, strcasecmp_l("hello", "HELLO", l));
@@ -99,6 +104,11 @@ TEST(STRINGS_TEST, strncasecmp) {
   ASSERT_EQ(0, strncasecmp("abcXX", "ABCYY", 3));
   ASSERT_LT(strncasecmp("hello1", "hello2", 6), 0);
   ASSERT_GT(strncasecmp("hello2", "hello1", 6), 0);
+}
+
+TEST(STRINGS_TEST, strncasecmp_sign) {
+  ASSERT_LT(strncasecmp("\xfe", "\xff", 1), 0);
+  ASSERT_GT(strncasecmp("\xff", "\xfe", 1), 0);
 }
 
 TEST(STRINGS_TEST, strncasecmp_l) {
