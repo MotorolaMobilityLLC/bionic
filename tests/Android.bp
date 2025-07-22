@@ -41,7 +41,7 @@ cc_defaults {
         android: {
             header_libs: ["bionic_libc_platform_headers"],
             shared_libs: ["libdl_android"],
-         },
+        },
         linux_bionic: {
             header_libs: ["bionic_libc_platform_headers"],
         },
@@ -98,242 +98,141 @@ cc_defaults {
 filegroup {
     name: "bionic_prebuilt_test_elf_files_arm64",
     srcs: [
-        "prebuilt-elf-files/arm64/*.so",
+        "prebuilt-elf-files/*.so",
+        "prebuilt-elf-files/arm64/libtest_invalid-local-tls.so",
     ],
 }
 
-cc_prebuilt_test_library_shared {
+genrule_defaults {
+    name: "gen_invalid_lib_defaults",
+    tools: ["gen_invalid_elf"],
+    srcs: [":libtest_empty"],
+}
+
+cc_defaults {
+    name: "invalid_lib_defaults",
+    strip: {
+        none: true,
+    },
+    check_elf_files: false,
+    relative_install_path: "bionic-loader-test-libs/prebuilt-elf-files",
+}
+
+cc_genrule {
+    name: "gen_invalid-rwx_load_segment",
+    defaults: ["gen_invalid_lib_defaults"],
+    cmd: "$(location gen_invalid_elf) --ref-elf=$(location :libtest_empty) --output=$(out) --invalid-type=rwx_load_segment",
+    out: ["libtest_invalid-rwx_load_segment.so"],
+}
+
+cc_prebuilt_library_shared {
     name: "libtest_invalid-rw_load_segment",
-    strip: {
-        none: true,
-    },
-    check_elf_files: false,
-    relative_install_path: "bionic-loader-test-libs/prebuilt-elf-files",
-    arch: {
-        arm: {
-            srcs: ["prebuilt-elf-files/arm/libtest_invalid-rw_load_segment.so"],
-        },
-        arm64: {
-            srcs: ["prebuilt-elf-files/arm64/libtest_invalid-rw_load_segment.so"],
-        },
-        riscv64: {
-            srcs: ["prebuilt-elf-files/riscv64/libtest_invalid-rw_load_segment.so"],
-        },
-        x86: {
-            srcs: ["prebuilt-elf-files/x86/libtest_invalid-rw_load_segment.so"],
-        },
-        x86_64: {
-            srcs: ["prebuilt-elf-files/x86_64/libtest_invalid-rw_load_segment.so"],
-        },
-    },
+    defaults: ["invalid_lib_defaults"],
+    srcs: [":gen_invalid-rwx_load_segment"],
 }
 
-cc_prebuilt_test_library_shared {
+cc_genrule {
+    name: "gen_invalid-unaligned_shdr_offset",
+    defaults: ["gen_invalid_lib_defaults"],
+    cmd: "$(location gen_invalid_elf) --ref-elf=$(location :libtest_empty) --output=$(out) --invalid-type=unaligned_shdr_offset",
+    out: ["libtest_invalid-unaligned_shdr_offset.so"],
+}
+
+cc_prebuilt_library_shared {
     name: "libtest_invalid-unaligned_shdr_offset",
-    strip: {
-        none: true,
-    },
-    check_elf_files: false,
-    relative_install_path: "bionic-loader-test-libs/prebuilt-elf-files",
-    arch: {
-        arm: {
-            srcs: ["prebuilt-elf-files/arm/libtest_invalid-unaligned_shdr_offset.so"],
-        },
-        arm64: {
-            srcs: ["prebuilt-elf-files/arm64/libtest_invalid-unaligned_shdr_offset.so"],
-        },
-        riscv64: {
-            srcs: ["prebuilt-elf-files/riscv64/libtest_invalid-unaligned_shdr_offset.so"],
-        },
-        x86: {
-            srcs: ["prebuilt-elf-files/x86/libtest_invalid-unaligned_shdr_offset.so"],
-        },
-        x86_64: {
-            srcs: ["prebuilt-elf-files/x86_64/libtest_invalid-unaligned_shdr_offset.so"],
-        },
-    },
+    defaults: ["invalid_lib_defaults"],
+    srcs: [":gen_invalid-unaligned_shdr_offset"],
 }
 
-cc_prebuilt_test_library_shared {
+cc_genrule {
+    name: "gen_invalid-zero_shentsize",
+    defaults: ["gen_invalid_lib_defaults"],
+    cmd: "$(location gen_invalid_elf) --ref-elf=$(location :libtest_empty) --output=$(out) --invalid-type=zero_shentsize",
+    out: ["libtest_invalid-zero_shentsize.so"],
+}
+
+cc_prebuilt_library_shared {
     name: "libtest_invalid-zero_shentsize",
-    strip: {
-        none: true,
-    },
-    check_elf_files: false,
-    relative_install_path: "bionic-loader-test-libs/prebuilt-elf-files",
-    arch: {
-        arm: {
-            srcs: ["prebuilt-elf-files/arm/libtest_invalid-zero_shentsize.so"],
-        },
-        arm64: {
-            srcs: ["prebuilt-elf-files/arm64/libtest_invalid-zero_shentsize.so"],
-        },
-        riscv64: {
-            srcs: ["prebuilt-elf-files/riscv64/libtest_invalid-zero_shentsize.so"],
-        },
-        x86: {
-            srcs: ["prebuilt-elf-files/x86/libtest_invalid-zero_shentsize.so"],
-        },
-        x86_64: {
-            srcs: ["prebuilt-elf-files/x86_64/libtest_invalid-zero_shentsize.so"],
-        },
-    },
+    defaults: ["invalid_lib_defaults"],
+    srcs: [":gen_invalid-zero_shentsize"],
 }
 
-cc_prebuilt_test_library_shared {
+cc_genrule {
+    name: "gen_invalid-zero_shstrndx",
+    defaults: ["gen_invalid_lib_defaults"],
+    cmd: "$(location gen_invalid_elf) --ref-elf=$(location :libtest_empty) --output=$(out) --invalid-type=zero_shstrndx",
+    out: ["libtest_invalid-zero_shstrndx.so"],
+}
+
+cc_prebuilt_library_shared {
     name: "libtest_invalid-zero_shstrndx",
-    strip: {
-        none: true,
-    },
-    check_elf_files: false,
-    relative_install_path: "bionic-loader-test-libs/prebuilt-elf-files",
-    arch: {
-        arm: {
-            srcs: ["prebuilt-elf-files/arm/libtest_invalid-zero_shstrndx.so"],
-        },
-        arm64: {
-            srcs: ["prebuilt-elf-files/arm64/libtest_invalid-zero_shstrndx.so"],
-        },
-        riscv64: {
-            srcs: ["prebuilt-elf-files/riscv64/libtest_invalid-zero_shstrndx.so"],
-        },
-        x86: {
-            srcs: ["prebuilt-elf-files/x86/libtest_invalid-zero_shstrndx.so"],
-        },
-        x86_64: {
-            srcs: ["prebuilt-elf-files/x86_64/libtest_invalid-zero_shstrndx.so"],
-        },
-    },
+    defaults: ["invalid_lib_defaults"],
+    srcs: [":gen_invalid-zero_shstrndx"],
 }
 
-cc_prebuilt_test_library_shared {
+cc_genrule {
+    name: "gen_invalid-empty_shdr_table",
+    defaults: ["gen_invalid_lib_defaults"],
+    cmd: "$(location gen_invalid_elf) --ref-elf=$(location :libtest_empty) --output=$(out) --invalid-type=empty_shdr_table",
+    out: ["libtest_invalid-empty_shdr_table.so"],
+}
+
+cc_prebuilt_library_shared {
     name: "libtest_invalid-empty_shdr_table",
-    strip: {
-        none: true,
-    },
-    check_elf_files: false,
-    relative_install_path: "bionic-loader-test-libs/prebuilt-elf-files",
-    arch: {
-        arm: {
-            srcs: ["prebuilt-elf-files/arm/libtest_invalid-empty_shdr_table.so"],
-        },
-        arm64: {
-            srcs: ["prebuilt-elf-files/arm64/libtest_invalid-empty_shdr_table.so"],
-        },
-        riscv64: {
-            srcs: ["prebuilt-elf-files/riscv64/libtest_invalid-empty_shdr_table.so"],
-        },
-        x86: {
-            srcs: ["prebuilt-elf-files/x86/libtest_invalid-empty_shdr_table.so"],
-        },
-        x86_64: {
-            srcs: ["prebuilt-elf-files/x86_64/libtest_invalid-empty_shdr_table.so"],
-        },
-    },
+    defaults: ["invalid_lib_defaults"],
+    srcs: [":gen_invalid-empty_shdr_table"],
 }
 
-cc_prebuilt_test_library_shared {
+cc_genrule {
+    name: "gen_invalid-zero_shdr_table_offset",
+    defaults: ["gen_invalid_lib_defaults"],
+    cmd: "$(location gen_invalid_elf) --ref-elf=$(location :libtest_empty) --output=$(out) --invalid-type=zero_shdr_table_offset",
+    out: ["libtest_invalid-zero_shdr_table_offset.so"],
+}
+
+cc_prebuilt_library_shared {
     name: "libtest_invalid-zero_shdr_table_offset",
-    strip: {
-        none: true,
-    },
-    check_elf_files: false,
-    relative_install_path: "bionic-loader-test-libs/prebuilt-elf-files",
-    arch: {
-        arm: {
-            srcs: ["prebuilt-elf-files/arm/libtest_invalid-zero_shdr_table_offset.so"],
-        },
-        arm64: {
-            srcs: ["prebuilt-elf-files/arm64/libtest_invalid-zero_shdr_table_offset.so"],
-        },
-        riscv64: {
-            srcs: ["prebuilt-elf-files/riscv64/libtest_invalid-zero_shdr_table_offset.so"],
-        },
-        x86: {
-            srcs: ["prebuilt-elf-files/x86/libtest_invalid-zero_shdr_table_offset.so"],
-        },
-        x86_64: {
-            srcs: ["prebuilt-elf-files/x86_64/libtest_invalid-zero_shdr_table_offset.so"],
-        },
-    },
+    defaults: ["invalid_lib_defaults"],
+    srcs: [":gen_invalid-zero_shdr_table_offset"],
 }
 
-cc_prebuilt_test_library_shared {
+cc_genrule {
+    name: "gen_invalid-zero_shdr_table_content",
+    defaults: ["gen_invalid_lib_defaults"],
+    cmd: "$(location gen_invalid_elf) --ref-elf=$(location :libtest_empty) --output=$(out) --invalid-type=zero_shdr_table_content",
+    out: ["libtest_invalid-zero_shdr_table_content.so"],
+}
+
+cc_prebuilt_library_shared {
     name: "libtest_invalid-zero_shdr_table_content",
-    strip: {
-        none: true,
-    },
-    check_elf_files: false,
-    relative_install_path: "bionic-loader-test-libs/prebuilt-elf-files",
-    arch: {
-        arm: {
-            srcs: ["prebuilt-elf-files/arm/libtest_invalid-zero_shdr_table_content.so"],
-        },
-        arm64: {
-            srcs: ["prebuilt-elf-files/arm64/libtest_invalid-zero_shdr_table_content.so"],
-        },
-        riscv64: {
-            srcs: ["prebuilt-elf-files/riscv64/libtest_invalid-zero_shdr_table_content.so"],
-        },
-        x86: {
-            srcs: ["prebuilt-elf-files/x86/libtest_invalid-zero_shdr_table_content.so"],
-        },
-        x86_64: {
-            srcs: ["prebuilt-elf-files/x86_64/libtest_invalid-zero_shdr_table_content.so"],
-        },
-    },
+    defaults: ["invalid_lib_defaults"],
+    srcs: [":gen_invalid-zero_shdr_table_content"],
 }
 
-cc_prebuilt_test_library_shared {
+cc_genrule {
+    name: "gen_invalid-textrels",
+    defaults: ["gen_invalid_lib_defaults"],
+    cmd: "$(location gen_invalid_elf) --ref-elf=$(location :libtest_empty) --output=$(out) --invalid-type=textrels",
+    out: ["libtest_invalid-textrels.so"],
+}
+
+cc_prebuilt_library_shared {
     name: "libtest_invalid-textrels",
-    strip: {
-        none: true,
-    },
-    check_elf_files: false,
-    relative_install_path: "bionic-loader-test-libs/prebuilt-elf-files",
-    arch: {
-        arm: {
-            srcs: ["prebuilt-elf-files/arm/libtest_invalid-textrels.so"],
-        },
-        arm64: {
-            srcs: ["prebuilt-elf-files/arm64/libtest_invalid-textrels.so"],
-        },
-        riscv64: {
-            srcs: ["prebuilt-elf-files/riscv64/libtest_invalid-textrels.so"],
-        },
-        x86: {
-            srcs: ["prebuilt-elf-files/x86/libtest_invalid-textrels.so"],
-        },
-        x86_64: {
-            srcs: ["prebuilt-elf-files/x86_64/libtest_invalid-textrels.so"],
-        },
-    },
+    defaults: ["invalid_lib_defaults"],
+    srcs: [":gen_invalid-textrels"],
 }
 
-cc_prebuilt_test_library_shared {
+cc_genrule {
+    name: "gen_invalid-textrels2",
+    defaults: ["gen_invalid_lib_defaults"],
+    cmd: "$(location gen_invalid_elf) --ref-elf=$(location :libtest_empty) --output=$(out) --invalid-type=textrels2",
+    out: ["libtest_invalid-textrels2.so"],
+}
+
+cc_prebuilt_library_shared {
     name: "libtest_invalid-textrels2",
-    strip: {
-        none: true,
-    },
-    check_elf_files: false,
-    relative_install_path: "bionic-loader-test-libs/prebuilt-elf-files",
-    arch: {
-        arm: {
-            srcs: ["prebuilt-elf-files/arm/libtest_invalid-textrels2.so"],
-        },
-        arm64: {
-            srcs: ["prebuilt-elf-files/arm64/libtest_invalid-textrels2.so"],
-        },
-        riscv64: {
-            srcs: ["prebuilt-elf-files/riscv64/libtest_invalid-textrels2.so"],
-        },
-        x86: {
-            srcs: ["prebuilt-elf-files/x86/libtest_invalid-textrels2.so"],
-        },
-        x86_64: {
-            srcs: ["prebuilt-elf-files/x86_64/libtest_invalid-textrels2.so"],
-        },
-    },
+    defaults: ["invalid_lib_defaults"],
+    srcs: [":gen_invalid-textrels2"],
 }
 
 cc_prebuilt_test_library_shared {
