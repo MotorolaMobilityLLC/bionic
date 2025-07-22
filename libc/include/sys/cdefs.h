@@ -50,6 +50,7 @@
 #define __END_DECLS
 #endif
 
+/** Adds an alias for a symbol that's defined in the same .o file. */
 #define __strong_alias(alias, sym) \
     __asm__(".global " #alias "\n" \
             #alias " = " #sym);
