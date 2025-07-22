@@ -149,7 +149,7 @@ literal:
 
       case 'D': /* compat */
         flags |= LONG;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 'd':
         c = CT_INT;
         base = 10;
@@ -162,7 +162,7 @@ literal:
 
       case 'O': /* compat */
         flags |= LONG;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 'o':
         c = CT_INT;
         flags |= UNSIGNED;
@@ -559,7 +559,7 @@ literal:
                 goto ok;
               }
               // No? Fall through and see if it's a hex digit instead then...
-              __BIONIC_FALLTHROUGH;
+              [[fallthrough]];
             case '1':
             case '2':
             case '3':

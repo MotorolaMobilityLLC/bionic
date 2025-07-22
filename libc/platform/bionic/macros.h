@@ -58,14 +58,6 @@ char (&ArraySizeHelper(T (&array)[N]))[N];  // NOLINT(readability/casting)
 
 #define arraysize(array) (sizeof(ArraySizeHelper(array)))
 
-// Used to inform clang's -Wimplicit-fallthrough that a fallthrough is intended. There's no way to
-// silence (or enable, apparently) -Wimplicit-fallthrough in C yet.
-#ifdef __cplusplus
-#define __BIONIC_FALLTHROUGH [[clang::fallthrough]]
-#else
-#define __BIONIC_FALLTHROUGH
-#endif
-
 static inline uintptr_t untag_address(uintptr_t p) {
 #if defined(__aarch64__)
   return p & ((1ULL << 56) - 1);
