@@ -29,10 +29,12 @@
 #include <string.h>
 #include <xlocale.h>
 
-int strcoll_l(const char* s1, const char* s2, locale_t) {
-  return strcoll(s1, s2);
+int strcoll(const char* lhs, const char* rhs) {
+  return strcmp(lhs, rhs);
 }
+__strong_alias(strcoll_l, strcoll);
 
-size_t strxfrm_l(char* dst, const char* src, size_t n, locale_t) {
-  return strxfrm(dst, src, n);
+size_t strxfrm(char* dst, const char* src, size_t n) {
+  return strlcpy(dst, src, n);
 }
+__strong_alias(strxfrm_l, strxfrm);

@@ -1361,3 +1361,47 @@ TEST(wchar, wctob) {
   // so this is rejected rather than seen as 0x66 ('f').
   ASSERT_EQ(EOF, wctob(0x666));
 }
+
+TEST(wchar, wcscoll_smoke) {
+  ASSERT_TRUE(wcscoll(L"aab", L"aac") < 0);
+  ASSERT_TRUE(wcscoll(L"aab", L"aab") == 0);
+  ASSERT_TRUE(wcscoll(L"aac", L"aab") > 0);
+}
+
+TEST(wchar, strcoll_l_smoke) {
+  // bionic just forwards to wcscoll(3).
+  ASSERT_TRUE(wcscoll_l(L"aab", L"aac", LC_GLOBAL_LOCALE) < 0);
+  ASSERT_TRUE(wcscoll_l(L"aab", L"aab", LC_GLOBAL_LOCALE) == 0);
+  ASSERT_TRUE(wcscoll_l(L"aac", L"aab", LC_GLOBAL_LOCALE) > 0);
+}
+
+TEST(wchar, wcsxfrm_smoke) {
+  const wchar_t* src1 = L"aab";
+  wchar_t dst1[16] = {};
+  // Dry run.
+  ASSERT_EQ(wcsxfrm(dst1, src1, 0), 3U);
+  ASSERT_STREQ(dst1, L"");
+  // Really do it.
+  ASSERT_EQ(wcsxfrm(dst1, src1, sizeof(dst1)/sizeof(wchar_t)), 3U);
+
+  const wchar_t* src2 = L"aac";
+  wchar_t dst2[16] = {};
+  // Dry run.
+  ASSERT_EQ(wcsxfrm(dst2, src2, 0), 3U);
+  ASSERT_STREQ(dst2, L"");
+  // Really do it.
+  ASSERT_EQ(wcsxfrm(dst2, src2, sizeof(dst2)/sizeof(wchar_t)), 3U);
+
+  // The "transform" of two different strings should cause different outputs.
+  ASSERT_TRUE(wcscmp(dst1, dst2) < 0);
+}
+
+TEST(wchar, strxfrm_l_smoke) {
+  // bionic just forwards to wcsxfrm(3), so this is a subset of the
+  // strxfrm test.
+  const wchar_t* src1 = L"aab";
+  wchar_t dst1[16] = {};
+  ASSERT_EQ(wcsxfrm_l(dst1, src1, 0, LC_GLOBAL_LOCALE), 3U);
+  ASSERT_STREQ(dst1, L"");
+  ASSERT_EQ(wcsxfrm_l(dst1, src1, sizeof(dst1)/sizeof(wchar_t), LC_GLOBAL_LOCALE), 3U);
+}

@@ -29,10 +29,12 @@
 #include <wchar.h>
 #include <xlocale.h>
 
-int wcscoll_l(const wchar_t* ws1, const wchar_t* ws2, locale_t) {
-  return wcscoll(ws1, ws2);
+int wcscoll(const wchar_t* lhs, const wchar_t* rhs) {
+  return wcscmp(lhs, rhs);
 }
+__strong_alias(wcscoll_l, wcscoll);
 
-size_t wcsxfrm_l(wchar_t* dst, const wchar_t* src, size_t n, locale_t) {
-  return wcsxfrm(dst, src, n);
+size_t wcsxfrm(wchar_t* dst, const wchar_t* src, size_t n) {
+  return wcslcpy(dst, src, n);
 }
+__strong_alias(wcsxfrm_l, wcsxfrm);
