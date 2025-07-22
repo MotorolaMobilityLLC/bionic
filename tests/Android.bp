@@ -472,6 +472,7 @@ cc_test_library {
         "stdalign_test.cpp",
         "stdarg_test.cpp",
         "stdatomic_test.cpp",
+        "stdbit_test.cpp",
         "stdbool_test.c",
         "stdint_test.cpp",
         "stdio_nofortify_test.cpp",
