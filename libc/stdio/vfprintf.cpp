@@ -209,7 +209,7 @@ int FUNCTION_NAME(FILE* fp, const CHAR_TYPE* fmt0, va_list ap) {
         if (width >= 0) goto rflag;
         if (width == INT_MIN) goto overflow;
         width = -width;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case '-':
         flags |= LADJUST;
         goto rflag;
@@ -314,7 +314,7 @@ int FUNCTION_NAME(FILE* fp, const CHAR_TYPE* fmt0, va_list ap) {
         goto nosign;
       case 'C':
         flags |= LONGINT;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 'c':
         if (flags & LONGINT) {
           mbstate_t mbs;
@@ -336,7 +336,7 @@ int FUNCTION_NAME(FILE* fp, const CHAR_TYPE* fmt0, va_list ap) {
         break;
       case 'D':
         flags |= LONGINT;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 'd':
       case 'i':
         _umax = SARG();
@@ -481,7 +481,7 @@ signed_decimal:
         goto string;
       case 'O':
         flags |= LONGINT;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 'o':
         _umax = UARG();
         base = OCT;
@@ -501,7 +501,7 @@ signed_decimal:
         goto nosign;
       case 'S':
         flags |= LONGINT;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 's':
         if (flags & LONGINT) {
           wchar_t* wcp;
@@ -534,7 +534,7 @@ signed_decimal:
         break;
       case 'U':
         flags |= LONGINT;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 'u':
         _umax = UARG();
         base = DEC;

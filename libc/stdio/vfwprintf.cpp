@@ -212,7 +212,7 @@ int FUNCTION_NAME(FILE* fp, const CHAR_TYPE* fmt0, va_list ap) {
         if (width >= 0) goto rflag;
         if (width == INT_MIN) goto overflow;
         width = -width;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case '-':
         flags |= LADJUST;
         goto rflag;
@@ -317,7 +317,7 @@ int FUNCTION_NAME(FILE* fp, const CHAR_TYPE* fmt0, va_list ap) {
         goto nosign;
       case 'C':
         flags |= LONGINT;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 'c':
         if (flags & LONGINT)
           *(cp = buf) = (wchar_t)GETARG(wint_t);
@@ -328,7 +328,7 @@ int FUNCTION_NAME(FILE* fp, const CHAR_TYPE* fmt0, va_list ap) {
         break;
       case 'D':
         flags |= LONGINT;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 'd':
       case 'i':
         _umax = SARG();
@@ -470,7 +470,7 @@ signed_decimal:
         print_utf8(strerror_r(caller_errno, reinterpret_cast<char*>(buf), sizeof(buf)), prec);
       case 'O':
         flags |= LONGINT;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 'o':
         _umax = UARG();
         base = OCT;
@@ -490,7 +490,7 @@ signed_decimal:
         goto nosign;
       case 'S':
         flags |= LONGINT;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 's':
         if (flags & LONGINT) {
           if ((cp = GETARG(wchar_t*)) == nullptr) cp = const_cast<wchar_t*>(L"(null)");
@@ -512,7 +512,7 @@ signed_decimal:
         break;
       case 'U':
         flags |= LONGINT;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 'u':
         _umax = UARG();
         base = DEC;

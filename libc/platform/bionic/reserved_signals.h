@@ -82,7 +82,7 @@ static inline __always_inline sigset64_t filter_reserved_signals(sigset64_t sigs
   int (*unblock)(sigset64_t*, int);
   switch (how) {
     case SIG_BLOCK:
-      __BIONIC_FALLTHROUGH;
+      [[fallthrough]];
     case SIG_SETMASK:
       block = sigaddset64;
       unblock = sigdelset64;

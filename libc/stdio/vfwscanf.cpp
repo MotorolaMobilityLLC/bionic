@@ -194,7 +194,7 @@ int __vfwscanf(FILE* __restrict fp, const wchar_t* __restrict fmt, __va_list ap)
 
       case 'D': /* compat */
         flags |= LONG;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 'd':
         c = CT_INT;
         base = 10;
@@ -207,7 +207,7 @@ int __vfwscanf(FILE* __restrict fp, const wchar_t* __restrict fmt, __va_list ap)
 
       case 'O': /* compat */
         flags |= LONG;
-        __BIONIC_FALLTHROUGH;
+        [[fallthrough]];
       case 'o':
         c = CT_INT;
         flags |= UNSIGNED;
@@ -465,7 +465,7 @@ int __vfwscanf(FILE* __restrict fp, const wchar_t* __restrict fmt, __va_list ap)
                 goto ok;
               }
               // No? Fall through and see if it's a hex digit instead then...
-              __BIONIC_FALLTHROUGH;
+              [[fallthrough]];
             case '1':
             case '2':
             case '3':
