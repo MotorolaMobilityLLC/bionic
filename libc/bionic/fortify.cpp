@@ -231,10 +231,10 @@ ssize_t __sendto_chk(int socket, const void* buf, size_t len, size_t buflen,
 
 // Runtime implementation of __builtin____stpcpy_chk (used directly by compiler, not in headers)..
 extern "C" char* __stpcpy_chk(char* dst, const char* src, size_t dst_len) {
-  // TODO: optimize so we don't scan src twice.
   size_t src_len = strlen(src) + 1;
   __check_buffer_access("stpcpy", "write into", src_len, dst_len);
-  return stpcpy(dst, src);
+  // stpcpy() returns a pointer to the NUL, but mempcpy() returns a pointer _past_ the last byte.
+  return static_cast<char*>(mempcpy(dst, src, src_len)) - 1;
 }
 
 // Runtime implementation of __builtin____stpncpy_chk (used directly by compiler, not in headers).
