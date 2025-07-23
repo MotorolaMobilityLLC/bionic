@@ -73,7 +73,7 @@ void* _Nonnull memset(void* _Nonnull const s __pass_object_size0, int c, size_t 
         __diagnose_as_builtin(__builtin_memset, 1, 2, 3)
         __overloadable
         /* If you're a user who wants this warning to go away: use `(&memset)(foo, bar, baz)`. */
-        __clang_warning_if(c && !n, "'memset' will set 0 bytes; maybe the arguments got flipped?") {
+        __clang_warning_if(!n, "'memset' will set 0 bytes; maybe the arguments got flipped?") {
 /* hwasan intercepts memset() but not the _chk variant. */
 #if __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED && !__has_feature(hwaddress_sanitizer)
     return __builtin___memset_chk(s, c, n, __bos0(s));
