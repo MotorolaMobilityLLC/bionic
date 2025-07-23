@@ -20,19 +20,8 @@ license {
     ],
 }
 
-cc_library {
-    name: "libm",
-    defaults: [
-        "linux_bionic_supported",
-        "bug_24465209_workaround",
-    ],
-    ramdisk_available: true,
-    vendor_ramdisk_available: true,
-    recovery_available: true,
-    static_ndk_lib: true,
-
-    whole_static_libs: ["libarm-optimized-routines-math"],
-
+filegroup {
+    name: "libm_common_sources",
     srcs: [
         "upstream-freebsd/lib/msun/bsdsrc/b_tgamma.c",
         "upstream-freebsd/lib/msun/src/catrig.c",
@@ -187,108 +176,222 @@ cc_library {
         "builtins.cpp",
         "signbit.cpp",
     ],
+}
+
+filegroup {
+    name: "libm_lp64_sources",
+    srcs: [
+        "upstream-freebsd/lib/msun/src/catrigl.c",
+        "upstream-freebsd/lib/msun/src/e_acosl.c",
+        "upstream-freebsd/lib/msun/src/e_acoshl.c",
+        "upstream-freebsd/lib/msun/src/e_asinl.c",
+        "upstream-freebsd/lib/msun/src/e_atan2l.c",
+        "upstream-freebsd/lib/msun/src/e_atanhl.c",
+        "upstream-freebsd/lib/msun/src/e_fmodl.c",
+        "upstream-freebsd/lib/msun/src/e_hypotl.c",
+        "upstream-freebsd/lib/msun/src/e_lgammal.c",
+        "upstream-freebsd/lib/msun/src/e_remainderl.c",
+        "upstream-freebsd/lib/msun/src/e_sqrtl.c",
+        "upstream-freebsd/lib/msun/src/s_asinhl.c",
+        "upstream-freebsd/lib/msun/src/s_atanl.c",
+        "upstream-freebsd/lib/msun/src/s_cbrtl.c",
+        "upstream-freebsd/lib/msun/src/s_ceill.c",
+        "upstream-freebsd/lib/msun/src/s_clogl.c",
+        "upstream-freebsd/lib/msun/src/e_coshl.c",
+        "upstream-freebsd/lib/msun/src/s_cosl.c",
+        "upstream-freebsd/lib/msun/src/s_csqrtl.c",
+        "upstream-freebsd/lib/msun/src/s_floorl.c",
+        "upstream-freebsd/lib/msun/src/s_fmal.c",
+        "upstream-freebsd/lib/msun/src/s_fmaxl.c",
+        "upstream-freebsd/lib/msun/src/s_fminl.c",
+        "upstream-freebsd/lib/msun/src/s_modfl.c",
+        "upstream-freebsd/lib/msun/src/s_frexpl.c",
+        "upstream-freebsd/lib/msun/src/s_ilogbl.c",
+        "upstream-freebsd/lib/msun/src/s_llrintl.c",
+        "upstream-freebsd/lib/msun/src/s_llroundl.c",
+        "upstream-freebsd/lib/msun/src/s_logbl.c",
+        "upstream-freebsd/lib/msun/src/s_lrintl.c",
+        "upstream-freebsd/lib/msun/src/s_lroundl.c",
+        "upstream-freebsd/lib/msun/src/s_nextafterl.c",
+        "upstream-freebsd/lib/msun/src/s_nexttoward.c",
+        "upstream-freebsd/lib/msun/src/s_nexttowardf.c",
+        "upstream-freebsd/lib/msun/src/s_remquol.c",
+        "upstream-freebsd/lib/msun/src/s_rintl.c",
+        "upstream-freebsd/lib/msun/src/s_roundl.c",
+        "upstream-freebsd/lib/msun/src/s_scalbnl.c",
+        "upstream-freebsd/lib/msun/src/s_sincosl.c",
+        "upstream-freebsd/lib/msun/src/e_sinhl.c",
+        "upstream-freebsd/lib/msun/src/s_sinl.c",
+        "upstream-freebsd/lib/msun/src/s_tanhl.c",
+        "upstream-freebsd/lib/msun/src/s_tanl.c",
+        "upstream-freebsd/lib/msun/src/s_truncl.c",
+
+        "upstream-freebsd/lib/msun/ld128/invtrig.c",
+        "upstream-freebsd/lib/msun/ld128/e_lgammal_r.c",
+        "upstream-freebsd/lib/msun/ld128/e_powl.c",
+        "upstream-freebsd/lib/msun/ld128/k_cosl.c",
+        "upstream-freebsd/lib/msun/ld128/k_sinl.c",
+        "upstream-freebsd/lib/msun/ld128/k_tanl.c",
+        "upstream-freebsd/lib/msun/ld128/s_erfl.c",
+        "upstream-freebsd/lib/msun/ld128/s_exp2l.c",
+        "upstream-freebsd/lib/msun/ld128/s_expl.c",
+        "upstream-freebsd/lib/msun/ld128/s_logl.c",
+        "upstream-freebsd/lib/msun/ld128/s_nanl.c",
+    ],
+}
+
+filegroup {
+    name: "libm_arm_sources",
+    srcs: [
+        "fenv-arm.c",
+
+        // Even armv8 arm32 doesn't have instructions for these.
+        "upstream-freebsd/lib/msun/src/s_llrint.c",
+        "upstream-freebsd/lib/msun/src/s_llrintf.c",
+        "upstream-freebsd/lib/msun/src/s_lrint.c",
+        "upstream-freebsd/lib/msun/src/s_lrintf.c",
+        "upstream-freebsd/lib/msun/src/s_llround.c",
+        "upstream-freebsd/lib/msun/src/s_llroundf.c",
+        "upstream-freebsd/lib/msun/src/s_lround.c",
+        "upstream-freebsd/lib/msun/src/s_lroundf.c",
+    ],
+}
+
+filegroup {
+    name: "libm_arm_soft_ceil_floor_sources",
+    srcs: [
+        "upstream-freebsd/lib/msun/src/s_ceil.c",
+        "upstream-freebsd/lib/msun/src/s_ceilf.c",
+        "upstream-freebsd/lib/msun/src/s_floor.c",
+        "upstream-freebsd/lib/msun/src/s_floorf.c",
+        "upstream-freebsd/lib/msun/src/s_fma.c",
+        "upstream-freebsd/lib/msun/src/s_fmaf.c",
+        "upstream-freebsd/lib/msun/src/s_fmax.c",
+        "upstream-freebsd/lib/msun/src/s_fmaxf.c",
+        "upstream-freebsd/lib/msun/src/s_fmin.c",
+        "upstream-freebsd/lib/msun/src/s_fminf.c",
+        "upstream-freebsd/lib/msun/src/s_rint.c",
+        "upstream-freebsd/lib/msun/src/s_rintf.c",
+        "upstream-freebsd/lib/msun/src/s_round.c",
+        "upstream-freebsd/lib/msun/src/s_roundf.c",
+        "upstream-freebsd/lib/msun/src/s_trunc.c",
+        "upstream-freebsd/lib/msun/src/s_truncf.c",
+    ],
+}
+
+filegroup {
+    name: "libm_arm64_sources",
+    srcs: [
+        "fenv-arm64.c",
+    ],
+}
+
+filegroup {
+    name: "libm_riscv64_sources",
+    srcs: [
+        "fenv-riscv64.c",
+    ],
+}
+
+filegroup {
+    name: "libm_x86_sources",
+    srcs: [
+        "fenv-x86.c",
+
+        // These require x86-64-v3.
+        "upstream-freebsd/lib/msun/src/s_fma.c",
+        "upstream-freebsd/lib/msun/src/s_fmaf.c",
+
+        // https://github.com/llvm/llvm-project/issues/140252
+        "upstream-freebsd/lib/msun/src/s_round.c",
+        "upstream-freebsd/lib/msun/src/s_roundf.c",
+
+        // There are no x86-64 instructions for these.
+        "upstream-freebsd/lib/msun/src/s_llround.c",
+        "upstream-freebsd/lib/msun/src/s_llroundf.c",
+        "upstream-freebsd/lib/msun/src/s_lround.c",
+        "upstream-freebsd/lib/msun/src/s_lroundf.c",
+    ],
+}
+
+filegroup {
+    name: "libm_x86_64_sources",
+    srcs: [
+        "fenv-x86_64.c",
+
+        // These require x86-64-v3.
+        "upstream-freebsd/lib/msun/src/s_fma.c",
+        "upstream-freebsd/lib/msun/src/s_fmaf.c",
+
+        // https://github.com/llvm/llvm-project/issues/140252
+        "upstream-freebsd/lib/msun/src/s_round.c",
+        "upstream-freebsd/lib/msun/src/s_roundf.c",
+
+        // There are no x86-64 instructions for these.
+        "upstream-freebsd/lib/msun/src/s_llround.c",
+        "upstream-freebsd/lib/msun/src/s_llroundf.c",
+        "upstream-freebsd/lib/msun/src/s_lround.c",
+        "upstream-freebsd/lib/msun/src/s_lroundf.c",
+    ],
+}
+
+cc_library_headers {
+    name: "libm_headers",
+    defaults: ["linux_bionic_supported"],
 
     multilib: {
         lib64: {
-            srcs: [
-                "upstream-freebsd/lib/msun/src/catrigl.c",
-                "upstream-freebsd/lib/msun/src/e_acosl.c",
-                "upstream-freebsd/lib/msun/src/e_acoshl.c",
-                "upstream-freebsd/lib/msun/src/e_asinl.c",
-                "upstream-freebsd/lib/msun/src/e_atan2l.c",
-                "upstream-freebsd/lib/msun/src/e_atanhl.c",
-                "upstream-freebsd/lib/msun/src/e_fmodl.c",
-                "upstream-freebsd/lib/msun/src/e_hypotl.c",
-                "upstream-freebsd/lib/msun/src/e_lgammal.c",
-                "upstream-freebsd/lib/msun/src/e_remainderl.c",
-                "upstream-freebsd/lib/msun/src/e_sqrtl.c",
-                "upstream-freebsd/lib/msun/src/s_asinhl.c",
-                "upstream-freebsd/lib/msun/src/s_atanl.c",
-                "upstream-freebsd/lib/msun/src/s_cbrtl.c",
-                "upstream-freebsd/lib/msun/src/s_ceill.c",
-                "upstream-freebsd/lib/msun/src/s_clogl.c",
-                "upstream-freebsd/lib/msun/src/e_coshl.c",
-                "upstream-freebsd/lib/msun/src/s_cosl.c",
-                "upstream-freebsd/lib/msun/src/s_csqrtl.c",
-                "upstream-freebsd/lib/msun/src/s_floorl.c",
-                "upstream-freebsd/lib/msun/src/s_fmal.c",
-                "upstream-freebsd/lib/msun/src/s_fmaxl.c",
-                "upstream-freebsd/lib/msun/src/s_fminl.c",
-                "upstream-freebsd/lib/msun/src/s_modfl.c",
-                "upstream-freebsd/lib/msun/src/s_frexpl.c",
-                "upstream-freebsd/lib/msun/src/s_ilogbl.c",
-                "upstream-freebsd/lib/msun/src/s_llrintl.c",
-                "upstream-freebsd/lib/msun/src/s_llroundl.c",
-                "upstream-freebsd/lib/msun/src/s_logbl.c",
-                "upstream-freebsd/lib/msun/src/s_lrintl.c",
-                "upstream-freebsd/lib/msun/src/s_lroundl.c",
-                "upstream-freebsd/lib/msun/src/s_nextafterl.c",
-                "upstream-freebsd/lib/msun/src/s_nexttoward.c",
-                "upstream-freebsd/lib/msun/src/s_nexttowardf.c",
-                "upstream-freebsd/lib/msun/src/s_remquol.c",
-                "upstream-freebsd/lib/msun/src/s_rintl.c",
-                "upstream-freebsd/lib/msun/src/s_roundl.c",
-                "upstream-freebsd/lib/msun/src/s_scalbnl.c",
-                "upstream-freebsd/lib/msun/src/s_sincosl.c",
-                "upstream-freebsd/lib/msun/src/e_sinhl.c",
-                "upstream-freebsd/lib/msun/src/s_sinl.c",
-                "upstream-freebsd/lib/msun/src/s_tanhl.c",
-                "upstream-freebsd/lib/msun/src/s_tanl.c",
-                "upstream-freebsd/lib/msun/src/s_truncl.c",
+            export_include_dirs: ["upstream-freebsd/lib/msun/ld128/"],
+        },
+    },
 
-                "upstream-freebsd/lib/msun/ld128/invtrig.c",
-                "upstream-freebsd/lib/msun/ld128/e_lgammal_r.c",
-                "upstream-freebsd/lib/msun/ld128/e_powl.c",
-                "upstream-freebsd/lib/msun/ld128/k_cosl.c",
-                "upstream-freebsd/lib/msun/ld128/k_sinl.c",
-                "upstream-freebsd/lib/msun/ld128/k_tanl.c",
-                "upstream-freebsd/lib/msun/ld128/s_erfl.c",
-                "upstream-freebsd/lib/msun/ld128/s_exp2l.c",
-                "upstream-freebsd/lib/msun/ld128/s_expl.c",
-                "upstream-freebsd/lib/msun/ld128/s_logl.c",
-                "upstream-freebsd/lib/msun/ld128/s_nanl.c",
-            ],
-            local_include_dirs: ["upstream-freebsd/lib/msun/ld128/"],
+    export_include_dirs: [
+        "upstream-freebsd/android/include/",
+        "upstream-freebsd/lib/msun/src/",
+    ],
+
+    target: {
+        bionic: {
+            system_shared_libs: ["libc"],
+        },
+    },
+    stl: "none",
+    native_bridge_supported: true,
+    apex_available: [
+        "com.android.runtime",
+    ],
+}
+
+cc_defaults {
+    name: "libm_defaults",
+    defaults: [
+        "linux_bionic_supported",
+        "bug_24465209_workaround",
+    ],
+    ramdisk_available: true,
+    vendor_ramdisk_available: true,
+    recovery_available: true,
+    static_ndk_lib: true,
+
+    whole_static_libs: ["libarm-optimized-routines-math"],
+    header_libs: ["libm_headers"],
+
+    srcs: [":libm_common_sources"],
+
+    multilib: {
+        lib64: {
+            srcs: [":libm_lp64_sources"],
         },
     },
 
     arch: {
         arm: {
-            srcs: [
-                "fenv-arm.c",
-
-                // Even armv8 arm32 doesn't have instructions for these.
-                "upstream-freebsd/lib/msun/src/s_llrint.c",
-                "upstream-freebsd/lib/msun/src/s_llrintf.c",
-                "upstream-freebsd/lib/msun/src/s_lrint.c",
-                "upstream-freebsd/lib/msun/src/s_lrintf.c",
-                "upstream-freebsd/lib/msun/src/s_llround.c",
-                "upstream-freebsd/lib/msun/src/s_llroundf.c",
-                "upstream-freebsd/lib/msun/src/s_lround.c",
-                "upstream-freebsd/lib/msun/src/s_lroundf.c",
-            ],
+            srcs: [":libm_arm_sources"],
             soft_ceil_floor: {
                 // armv7 arm32 has no instructions to implement these as
                 // builtins, so we build the portable implementations for armv7,
                 // because the NDK still supports armv7.
-                srcs: [
-                    "upstream-freebsd/lib/msun/src/s_ceil.c",
-                    "upstream-freebsd/lib/msun/src/s_ceilf.c",
-                    "upstream-freebsd/lib/msun/src/s_floor.c",
-                    "upstream-freebsd/lib/msun/src/s_floorf.c",
-                    "upstream-freebsd/lib/msun/src/s_fma.c",
-                    "upstream-freebsd/lib/msun/src/s_fmaf.c",
-                    "upstream-freebsd/lib/msun/src/s_fmax.c",
-                    "upstream-freebsd/lib/msun/src/s_fmaxf.c",
-                    "upstream-freebsd/lib/msun/src/s_fmin.c",
-                    "upstream-freebsd/lib/msun/src/s_fminf.c",
-                    "upstream-freebsd/lib/msun/src/s_rint.c",
-                    "upstream-freebsd/lib/msun/src/s_rintf.c",
-                    "upstream-freebsd/lib/msun/src/s_round.c",
-                    "upstream-freebsd/lib/msun/src/s_roundf.c",
-                    "upstream-freebsd/lib/msun/src/s_trunc.c",
-                    "upstream-freebsd/lib/msun/src/s_truncf.c",
-                ],
+                srcs: [":libm_arm_soft_ceil_floor_sources"],
             },
             instruction_set: "arm",
             version_script: ":libm.arm.map",
@@ -302,37 +405,17 @@ cc_library {
         },
 
         arm64: {
-            srcs: [
-                "fenv-arm64.c",
-            ],
+            srcs: [":libm_arm64_sources"],
             version_script: ":libm.arm64.map",
         },
 
         riscv64: {
-            srcs: [
-                "fenv-riscv64.c",
-            ],
+            srcs: [":libm_riscv64_sources"],
             version_script: ":libm.riscv64.map",
         },
 
         x86: {
-            srcs: [
-                "fenv-x86.c",
-
-                // These require x86-64-v3.
-                "upstream-freebsd/lib/msun/src/s_fma.c",
-                "upstream-freebsd/lib/msun/src/s_fmaf.c",
-
-                // https://github.com/llvm/llvm-project/issues/140252
-                "upstream-freebsd/lib/msun/src/s_round.c",
-                "upstream-freebsd/lib/msun/src/s_roundf.c",
-
-                // There are no x86-64 instructions for these.
-                "upstream-freebsd/lib/msun/src/s_llround.c",
-                "upstream-freebsd/lib/msun/src/s_llroundf.c",
-                "upstream-freebsd/lib/msun/src/s_lround.c",
-                "upstream-freebsd/lib/msun/src/s_lroundf.c",
-            ],
+            srcs: [":libm_x86_sources"],
             // The x86 ABI doesn't include this, which is needed for the
             // roundss/roundsd instructions that we've used since API level 23,
             // originally by hand-written assembler but later via intrinsics.
@@ -341,31 +424,10 @@ cc_library {
         },
 
         x86_64: {
-            srcs: [
-                "fenv-x86_64.c",
-
-                // These require x86-64-v3.
-                "upstream-freebsd/lib/msun/src/s_fma.c",
-                "upstream-freebsd/lib/msun/src/s_fmaf.c",
-
-                // https://github.com/llvm/llvm-project/issues/140252
-                "upstream-freebsd/lib/msun/src/s_round.c",
-                "upstream-freebsd/lib/msun/src/s_roundf.c",
-
-                // There are no x86-64 instructions for these.
-                "upstream-freebsd/lib/msun/src/s_llround.c",
-                "upstream-freebsd/lib/msun/src/s_llroundf.c",
-                "upstream-freebsd/lib/msun/src/s_lround.c",
-                "upstream-freebsd/lib/msun/src/s_lroundf.c",
-            ],
+            srcs: [":libm_x86_64_sources"],
             version_script: ":libm.x86_64.map",
         },
     },
-
-    local_include_dirs: [
-        "upstream-freebsd/android/include/",
-        "upstream-freebsd/lib/msun/src/",
-    ],
 
     cflags: [
         "-include freebsd-compat.h",
@@ -386,7 +448,11 @@ cc_library {
         "-Wl,--Bsymbolic-functions",
     ],
 
-    include_dirs: ["bionic/libc"],
+    include_dirs: [
+        "bionic/libm",
+        "bionic/libc",
+    ],
+
     target: {
         bionic: {
             system_shared_libs: ["libc"],
@@ -400,6 +466,26 @@ cc_library {
     stl: "none",
     native_bridge_supported: true,
 
+    apex_available: [
+        "com.android.runtime",
+    ],
+
+    lto: {
+        never: true,
+    },
+}
+
+cc_library {
+    name: "libm",
+    defaults: ["libm_defaults"],
+    target: {
+        native_bridge: {
+            shared: {
+                installable: false,
+            },
+        },
+    },
+
     stubs: {
         symbol_file: "libm.map.txt",
         versions: [
@@ -410,14 +496,6 @@ cc_library {
 
     llndk: {
         symbol_file: "libm.map.txt",
-    },
-
-    apex_available: [
-        "com.android.runtime",
-    ],
-
-    lto: {
-        never: true,
     },
 }
 
