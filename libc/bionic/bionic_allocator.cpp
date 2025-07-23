@@ -28,6 +28,7 @@
 
 #include "private/bionic_allocator.h"
 
+#include <stdbit.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -41,7 +42,6 @@
 #include <async_safe/CHECK.h>
 
 #include "platform/bionic/page.h"
-#include "platform/bionic/macros.h"
 
 //
 // BionicAllocator is a general purpose allocator designed to provide the same
@@ -315,9 +315,7 @@ void* BionicAllocator::memalign(size_t align, size_t size) {
   // enough for ELF TLS.
   align = MIN(align, page_size());
   align = MAX(align, 16);
-  if (!powerof2(align)) {
-    align = BIONIC_ROUND_UP_POWER_OF_2(align);
-  }
+  align = stdc_bit_ceil(align);
   size = MAX(size, align);
   return alloc_impl(align, size);
 }

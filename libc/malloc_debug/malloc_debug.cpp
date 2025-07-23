@@ -39,6 +39,7 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
+#include <bit>
 #include <mutex>
 #include <vector>
 
@@ -751,9 +752,7 @@ void* debug_memalign(size_t alignment, size_t bytes) {
   void* pointer;
   if (g_debug->HeaderEnabled()) {
     // Make the alignment a power of two.
-    if (!powerof2(alignment)) {
-      alignment = BIONIC_ROUND_UP_POWER_OF_2(alignment);
-    }
+    alignment = std::bit_ceil(alignment);
     // Force the alignment to at least MINIMUM_ALIGNMENT_BYTES to guarantee
     // that the header is aligned properly.
     if (alignment < MINIMUM_ALIGNMENT_BYTES) {
