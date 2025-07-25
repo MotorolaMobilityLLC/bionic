@@ -507,6 +507,18 @@ static void expect_ids(T ids, bool is_group) {
       EXPECT_STREQ(getpwuid(AID_UPDATE_ENGINE_LOG)->pw_name, "update_engine_log");
     }
   }
+  // AID_AP_FIRMWARE (1097) was added in API level 37, but "trunk stable" means
+  // that the 2025Q{1,2} builds are tested with the _previous_ release's CTS.
+  if (android::base::GetIntProperty("ro.build.version.sdk", 0) == 36) {
+#if !defined(AID_AP_FIRMWARE)
+#define AID_AP_FIRMWARE 1097
+#endif
+    ids.erase(AID_AP_FIRMWARE);
+    expected_ids.erase(AID_AP_FIRMWARE);
+    if (getpwuid(AID_AP_FIRMWARE)) {
+      EXPECT_STREQ(getpwuid(AID_AP_FIRMWARE)->pw_name, "ap_firmware");
+    }
+  }
 
   EXPECT_EQ(expected_ids, ids) << return_differences();
 }
