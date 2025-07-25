@@ -483,10 +483,9 @@ extern "C" char* __STRCAT_CHK(char* dst, const char* src, size_t dst_buf_size) {
 
 // Runtime implementation of __builtin____strcpy_chk (used directly by compiler, not in headers).
 extern "C" char* __STRCPY_CHK(char* dst, const char* src, size_t dst_len) {
-  // TODO: optimize so we don't scan src twice.
   size_t src_len = strlen(src) + 1;
   __check_buffer_access("strcpy", "write into", src_len, dst_len);
-  return strcpy(dst, src);
+  return static_cast<char*>(memcpy(dst, src, src_len));
 }
 
 // Runtime implementation of __mempcpy_chk (used directly by compiler, not in headers).
