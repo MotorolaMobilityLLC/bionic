@@ -30,11 +30,11 @@
 
 #include <async_safe/CHECK.h>
 #include <async_safe/log.h>
+#include <stdbit.h>
 #include <string.h>
 #include <sys/param.h>
 #include <unistd.h>
 
-#include "platform/bionic/macros.h"
 #include "platform/bionic/page.h"
 #include "private/ScopedRWLock.h"
 #include "private/ScopedSignalBlocker.h"
@@ -289,10 +289,7 @@ static inline size_t dtv_size_in_bytes(size_t module_count) {
 // The lock on TlsModules must be held.
 static size_t calculate_new_dtv_count() {
   size_t loaded_cnt = __libc_shared_globals()->tls_modules.module_count;
-  size_t bytes = dtv_size_in_bytes(MAX(1, loaded_cnt));
-  if (!powerof2(bytes)) {
-    bytes = BIONIC_ROUND_UP_POWER_OF_2(bytes);
-  }
+  size_t bytes = stdc_bit_ceil(dtv_size_in_bytes(MAX(1, loaded_cnt)));
   return (bytes - sizeof(TlsDtv)) / sizeof(void*);
 }
 

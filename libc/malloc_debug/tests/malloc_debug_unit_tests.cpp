@@ -26,6 +26,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <bit>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -517,16 +518,13 @@ TEST_F(MallocDebugTest, front_guard) {
   memset(pointer, 0xff, 100);
   debug_free(pointer);
 
-  // Loop through a bunch alignments.
+  // Loop through a bunch of alignments.
   for (size_t alignment = 1; alignment <= 256; alignment++) {
     pointer = reinterpret_cast<uint8_t*>(debug_memalign(alignment, 100));
     ASSERT_TRUE(pointer != nullptr);
     ASSERT_TRUE(memcmp(buffer.data(), &pointer[-buffer.size()], buffer.size()) == 0)
         << ShowDiffs(buffer.data(), &pointer[-buffer.size()], buffer.size());
-    size_t alignment_mask = alignment - 1;
-    if (!powerof2(alignment)) {
-      alignment_mask = BIONIC_ROUND_UP_POWER_OF_2(alignment) - 1;
-    }
+    size_t alignment_mask = std::bit_ceil(alignment) - 1;
     ASSERT_EQ(0U, reinterpret_cast<uintptr_t>(pointer) & alignment_mask);
     memset(pointer, 0xff, 100);
     debug_free(pointer);
@@ -614,17 +612,14 @@ TEST_F(MallocDebugTest, rear_guard) {
   memset(pointer, 0xff, 100);
   debug_free(pointer);
 
-  // Loop through a bunch alignments.
+  // Loop through a bunch of alignments.
   for (size_t alignment = 1; alignment <= 256; alignment++) {
     pointer = reinterpret_cast<uint8_t*>(debug_memalign(alignment, 100));
     ASSERT_TRUE(pointer != nullptr);
     ASSERT_EQ(100U, debug_malloc_usable_size(pointer));
     ASSERT_TRUE(memcmp(buffer.data(), &pointer[100], buffer.size()) == 0)
         << ShowDiffs(buffer.data(), &pointer[100], buffer.size());
-    size_t alignment_mask = alignment - 1;
-    if (!powerof2(alignment)) {
-      alignment_mask = BIONIC_ROUND_UP_POWER_OF_2(alignment) - 1;
-    }
+    size_t alignment_mask = std::bit_ceil(alignment) - 1;
     ASSERT_EQ(0U, reinterpret_cast<uintptr_t>(pointer) & alignment_mask)
         << "Failed at alignment " << alignment << " mask " << alignment_mask;
     memset(pointer, 0xff, 100);
