@@ -23,7 +23,8 @@
 #include <async_safe/log.h>
 
 static const char* syslog_log_tag = nullptr;
-static int syslog_priority_mask = 0xff;
+// The "mask" is of _enabled_ log priorities, and defaults to all.
+static int syslog_priority_mask = LOG_UPTO(LOG_DEBUG);
 static int syslog_options = 0;
 
 void closelog() {
