@@ -128,7 +128,11 @@ TEST(stdbit, stdc_first_leading_zero_forwarding) {
   EXPECT_EQ(8u, stdc_first_leading_zero_uc(0xfffffffffffffffeull));
   EXPECT_EQ(16u, stdc_first_leading_zero_us(0xfffffffffffffffeull));
   EXPECT_EQ(32u, stdc_first_leading_zero_ui(0xfffffffffffffffeull));
+#if defined(__LP64__)
   EXPECT_EQ(64u, stdc_first_leading_zero_ul(0xfffffffffffffffeull));
+#else
+  EXPECT_EQ(32u, stdc_first_leading_zero_ul(0xfffffffffffffffeull));
+#endif
   EXPECT_EQ(64u, stdc_first_leading_zero_ull(0xfffffffffffffffeull));
 }
 
@@ -284,9 +288,9 @@ TEST(stdbit, stdc_bit_floor_forwarding) {
   EXPECT_EQ(0x0000000000008000ull, stdc_bit_floor_us(0x8000000080008080ull));
   EXPECT_EQ(0x0000000080000000ull, stdc_bit_floor_ui(0x8000000080008080ull));
 #if defined(__LP64__)
-  EXPECT_EQ(0x8000000000000000ull, stdc_bit_floor_ull(0x8000000080008080ull));
+  EXPECT_EQ(0x8000000000000000ull, stdc_bit_floor_ul(0x8000000080008080ull));
 #else
-  EXPECT_EQ(0x0000000080000000ull, stdc_bit_floor_ull(0x8000000080008080ull));
+  EXPECT_EQ(0x0000000080000000ull, stdc_bit_floor_ul(0x8000000080008080ull));
 #endif
   EXPECT_EQ(0x8000000000000000ull, stdc_bit_floor_ull(0x8000000080008080ull));
 }
@@ -314,9 +318,9 @@ TEST(stdbit, stdc_bit_ceil_forwarding) {
   EXPECT_EQ(0x0000000000008000ull, stdc_bit_ceil_us(0x8000000080007fffull));
   EXPECT_EQ(0x0000000080000000ull, stdc_bit_ceil_ui(0x800000007fffffffull));
 #if defined(__LP64__)
-  EXPECT_EQ(0x8000000000000000ull, stdc_bit_ceil_ull(0x7fffffffffffffffull));
+  EXPECT_EQ(0x8000000000000000ull, stdc_bit_ceil_ul(0x7fffffffffffffffull));
 #else
-  EXPECT_EQ(0x0000000080000000ull, stdc_bit_ceil_ull(0x800000007fffffffull));
+  EXPECT_EQ(0x0000000080000000ull, stdc_bit_ceil_ul(0x800000007fffffffull));
 #endif
   EXPECT_EQ(0x8000000000000000ull, stdc_bit_ceil_ull(0x7fffffffffffffffull));
 }
