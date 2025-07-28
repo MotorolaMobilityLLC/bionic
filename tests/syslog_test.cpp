@@ -36,6 +36,29 @@
 
 #include "utils.h"
 
+TEST(syslog, setlogmask) {
+  // The default should include all log priorities.
+  EXPECT_EQ(LOG_UPTO(LOG_DEBUG), setlogmask(0));
+}
+
+TEST(syslog, setlogmask_works) {
+  ExecTestHelper eth;
+  eth.Run(
+      [&]() {
+        setlogmask(LOG_MASK(LOG_INFO));
+        openlog("foo", LOG_PERROR, LOG_AUTH);
+        dprintf(STDERR_FILENO, "<");
+        syslog(LOG_INFO, "a");
+        dprintf(STDERR_FILENO, ">\n");
+        dprintf(STDERR_FILENO, "<");
+        syslog(LOG_DEBUG, "b");
+        dprintf(STDERR_FILENO, ">\n");
+        closelog();
+        exit(0);
+      },
+      0, "<foo: a\n>\n<>\n");
+}
+
 TEST(syslog, syslog_percent_m) {
   ExecTestHelper eth;
   eth.Run(
