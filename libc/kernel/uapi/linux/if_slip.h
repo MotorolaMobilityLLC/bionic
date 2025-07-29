@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef __LINUX_SLIP_H
-#define __LINUX_SLIP_H
+#ifndef _UAPI__LINUX_SLIP_H
+#define _UAPI__LINUX_SLIP_H
 #define SL_MODE_SLIP 0
 #define SL_MODE_CSLIP 1
 #define SL_MODE_KISS 4

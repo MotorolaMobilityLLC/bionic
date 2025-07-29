@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef __LINUX_IF_PACKET_H
-#define __LINUX_IF_PACKET_H
+#ifndef _UAPI__LINUX_IF_PACKET_H
+#define _UAPI__LINUX_IF_PACKET_H
 #include <asm/byteorder.h>
 #include <linux/types.h>
 struct sockaddr_pkt {

@@ -6,6 +6,8 @@
  */
 #ifndef _UAPI_LINUX_VT_H
 #define _UAPI_LINUX_VT_H
+#include <linux/ioctl.h>
+#include <linux/types.h>
 #define MIN_NR_CONSOLES 1
 #define MAX_NR_CONSOLES 63
 #define VT_OPENQRY 0x5600
@@ -67,4 +69,11 @@ struct vt_setactivate {
   struct vt_mode mode;
 };
 #define VT_SETACTIVATE 0x560F
+struct vt_consizecsrpos {
+  __u16 con_rows;
+  __u16 con_cols;
+  __u16 csr_row;
+  __u16 csr_col;
+};
+#define VT_GETCONSIZECSRPOS _IOR('V', 0x10, struct vt_consizecsrpos)
 #endif

@@ -957,36 +957,39 @@ enum ethtool_link_mode_bit_indices {
 #define RXH_XFRM_SYM_XOR (1 << 0)
 #define RXH_XFRM_SYM_OR_XOR (1 << 1)
 #define RXH_XFRM_NO_CHANGE 0xff
-#define TCP_V4_FLOW 0x01
-#define UDP_V4_FLOW 0x02
-#define SCTP_V4_FLOW 0x03
-#define AH_ESP_V4_FLOW 0x04
-#define TCP_V6_FLOW 0x05
-#define UDP_V6_FLOW 0x06
-#define SCTP_V6_FLOW 0x07
-#define AH_ESP_V6_FLOW 0x08
-#define AH_V4_FLOW 0x09
-#define ESP_V4_FLOW 0x0a
-#define AH_V6_FLOW 0x0b
-#define ESP_V6_FLOW 0x0c
-#define IPV4_USER_FLOW 0x0d
-#define IP_USER_FLOW IPV4_USER_FLOW
-#define IPV6_USER_FLOW 0x0e
-#define IPV4_FLOW 0x10
-#define IPV6_FLOW 0x11
-#define ETHER_FLOW 0x12
-#define GTPU_V4_FLOW 0x13
-#define GTPU_V6_FLOW 0x14
-#define GTPC_V4_FLOW 0x15
-#define GTPC_V6_FLOW 0x16
-#define GTPC_TEID_V4_FLOW 0x17
-#define GTPC_TEID_V6_FLOW 0x18
-#define GTPU_EH_V4_FLOW 0x19
-#define GTPU_EH_V6_FLOW 0x1a
-#define GTPU_UL_V4_FLOW 0x1b
-#define GTPU_UL_V6_FLOW 0x1c
-#define GTPU_DL_V4_FLOW 0x1d
-#define GTPU_DL_V6_FLOW 0x1e
+enum {
+  TCP_V4_FLOW = 0x01,
+  UDP_V4_FLOW = 0x02,
+  SCTP_V4_FLOW = 0x03,
+  AH_ESP_V4_FLOW = 0x04,
+  TCP_V6_FLOW = 0x05,
+  UDP_V6_FLOW = 0x06,
+  SCTP_V6_FLOW = 0x07,
+  AH_ESP_V6_FLOW = 0x08,
+  AH_V4_FLOW = 0x09,
+  ESP_V4_FLOW = 0x0a,
+  AH_V6_FLOW = 0x0b,
+  ESP_V6_FLOW = 0x0c,
+  IPV4_USER_FLOW = 0x0d,
+  IP_USER_FLOW = IPV4_USER_FLOW,
+  IPV6_USER_FLOW = 0x0e,
+  IPV4_FLOW = 0x10,
+  IPV6_FLOW = 0x11,
+  ETHER_FLOW = 0x12,
+  GTPU_V4_FLOW = 0x13,
+  GTPU_V6_FLOW = 0x14,
+  GTPC_V4_FLOW = 0x15,
+  GTPC_V6_FLOW = 0x16,
+  GTPC_TEID_V4_FLOW = 0x17,
+  GTPC_TEID_V6_FLOW = 0x18,
+  GTPU_EH_V4_FLOW = 0x19,
+  GTPU_EH_V6_FLOW = 0x1a,
+  GTPU_UL_V4_FLOW = 0x1b,
+  GTPU_UL_V6_FLOW = 0x1c,
+  GTPU_DL_V4_FLOW = 0x1d,
+  GTPU_DL_V6_FLOW = 0x1e,
+  __FLOW_TYPE_COUNT,
+};
 #define FLOW_EXT 0x80000000
 #define FLOW_MAC_EXT 0x40000000
 #define FLOW_RSS 0x20000000

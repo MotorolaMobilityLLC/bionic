@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef __LINUX_PKT_CLS_H
-#define __LINUX_PKT_CLS_H
+#ifndef _UAPI__LINUX_PKT_CLS_H
+#define _UAPI__LINUX_PKT_CLS_H
 #include <linux/types.h>
 #include <linux/pkt_sched.h>
 #define TC_COOKIE_MAX_SIZE 16
@@ -514,6 +514,7 @@ enum {
   __TCA_FLOWER_KEY_CFM_OPT_MAX,
 };
 #define TCA_FLOWER_KEY_CFM_OPT_MAX (__TCA_FLOWER_KEY_CFM_OPT_MAX - 1)
+#define TCA_FLOWER_KEY_CFM_MAX (__TCA_FLOWER_KEY_CFM_OPT_MAX - 1)
 #define TCA_FLOWER_MASK_FLAGS_RANGE (1 << 0)
 struct tc_matchall_pcnt {
   __u64 rhit;

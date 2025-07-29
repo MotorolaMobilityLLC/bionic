@@ -26,6 +26,7 @@ struct sockaddr_rxrpc {
 #define RXRPC_MIN_SECURITY_LEVEL 4
 #define RXRPC_UPGRADEABLE_SERVICE 5
 #define RXRPC_SUPPORTED_CMSG 6
+#define RXRPC_MANAGE_RESPONSE 7
 enum rxrpc_cmsg_type {
   RXRPC_USER_CALL_ID = 1,
   RXRPC_ABORT = 2,
@@ -39,6 +40,11 @@ enum rxrpc_cmsg_type {
   RXRPC_TX_LENGTH = 12,
   RXRPC_SET_CALL_TIMEOUT = 13,
   RXRPC_CHARGE_ACCEPT = 14,
+  RXRPC_OOB_ID = 15,
+  RXRPC_CHALLENGED = 16,
+  RXRPC_RESPOND = 17,
+  RXRPC_RESPONDED = 18,
+  RXRPC_RESP_RXGK_APPDATA = 19,
   RXRPC__SUPPORTED
 };
 #define RXRPC_SECURITY_PLAIN 0
@@ -48,6 +54,7 @@ enum rxrpc_cmsg_type {
 #define RXRPC_SECURITY_RXKAD 2
 #define RXRPC_SECURITY_RXGK 4
 #define RXRPC_SECURITY_RXK5 5
+#define RXRPC_SECURITY_YFS_RXGK 6
 #define RX_CALL_DEAD - 1
 #define RX_INVALID_OPERATION - 2
 #define RX_CALL_TIMEOUT - 3
@@ -77,4 +84,24 @@ enum rxrpc_cmsg_type {
 #define RXKADSEALEDINCON 19270410
 #define RXKADDATALEN 19270411
 #define RXKADILLEGALLEVEL 19270412
+#define RXGK_INCONSISTENCY 1233242880
+#define RXGK_PACKETSHORT 1233242881
+#define RXGK_BADCHALLENGE 1233242882
+#define RXGK_SEALEDINCON 1233242883
+#define RXGK_NOTAUTH 1233242884
+#define RXGK_EXPIRED 1233242885
+#define RXGK_BADLEVEL 1233242886
+#define RXGK_BADKEYNO 1233242887
+#define RXGK_NOTRXGK 1233242888
+#define RXGK_UNSUPPORTED 1233242889
+#define RXGK_GSSERROR 1233242890
+struct rxrpc_challenge {
+  __u16 service_id;
+  __u8 security_index;
+  __u8 pad;
+};
+struct rxgk_challenge {
+  struct rxrpc_challenge base;
+  __u32 enctype;
+};
 #endif

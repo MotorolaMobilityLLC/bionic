@@ -336,6 +336,8 @@ enum kfd_smi_event {
   KFD_SMI_EVENT_QUEUE_EVICTION = 9,
   KFD_SMI_EVENT_QUEUE_RESTORE = 10,
   KFD_SMI_EVENT_UNMAP_FROM_GPU = 11,
+  KFD_SMI_EVENT_PROCESS_START = 12,
+  KFD_SMI_EVENT_PROCESS_END = 13,
   KFD_SMI_EVENT_ALL_PROCESS = 64
 };
 enum KFD_MIGRATE_TRIGGERS {
@@ -373,6 +375,7 @@ struct kfd_ioctl_smi_events_args {
 #define KFD_EVENT_FMT_QUEUE_EVICTION(ns,pid,node,evict_trigger) "%lld -%d %x %d\n", (ns), (pid), (node), (evict_trigger)
 #define KFD_EVENT_FMT_QUEUE_RESTORE(ns,pid,node,rescheduled) "%lld -%d %x %c\n", (ns), (pid), (node), (rescheduled)
 #define KFD_EVENT_FMT_UNMAP_FROM_GPU(ns,pid,addr,size,node,unmap_trigger) "%lld -%d @%lx(%lx) %x %d\n", (ns), (pid), (addr), (size), (node), (unmap_trigger)
+#define KFD_EVENT_FMT_PROCESS(pid,task_name) "%x %s\n", (pid), (task_name)
 enum kfd_criu_op {
   KFD_CRIU_OP_PROCESS_INFO,
   KFD_CRIU_OP_CHECKPOINT,

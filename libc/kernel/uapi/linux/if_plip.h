@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef _LINUX_IF_PLIP_H
-#define _LINUX_IF_PLIP_H
+#ifndef _UAPI_LINUX_IF_PLIP_H
+#define _UAPI_LINUX_IF_PLIP_H
 #include <linux/sockios.h>
 #define SIOCDEVPLIP SIOCDEVPRIVATE
 struct plipconf {

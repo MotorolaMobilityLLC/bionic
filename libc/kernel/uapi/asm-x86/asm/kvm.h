@@ -344,6 +344,7 @@ struct kvm_sync_regs {
 #define KVM_X86_QUIRK_MWAIT_NEVER_UD_FAULTS (1 << 6)
 #define KVM_X86_QUIRK_SLOT_ZAP_ALL (1 << 7)
 #define KVM_X86_QUIRK_STUFF_FEATURE_MSRS (1 << 8)
+#define KVM_X86_QUIRK_IGNORE_GUEST_PAT (1 << 9)
 #define KVM_STATE_NESTED_FORMAT_VMX 0
 #define KVM_STATE_NESTED_FORMAT_SVM 1
 #define KVM_STATE_NESTED_GUEST_MODE 0x00000001
@@ -659,6 +660,7 @@ struct kvm_sev_snp_launch_start {
   __u8 pad0[6];
   __u64 pad1[4];
 };
+#define KVM_SEV_PAGE_TYPE_INVALID 0x0
 #define KVM_SEV_SNP_PAGE_TYPE_NORMAL 0x1
 #define KVM_SEV_SNP_PAGE_TYPE_ZERO 0x3
 #define KVM_SEV_SNP_PAGE_TYPE_UNMEASURED 0x4
@@ -713,4 +715,44 @@ struct kvm_hyperv_eventfd {
 #define KVM_X86_SEV_ES_VM 3
 #define KVM_X86_SNP_VM 4
 #define KVM_X86_TDX_VM 5
+enum kvm_tdx_cmd_id {
+  KVM_TDX_CAPABILITIES = 0,
+  KVM_TDX_INIT_VM,
+  KVM_TDX_INIT_VCPU,
+  KVM_TDX_INIT_MEM_REGION,
+  KVM_TDX_FINALIZE_VM,
+  KVM_TDX_GET_CPUID,
+  KVM_TDX_CMD_NR_MAX,
+};
+struct kvm_tdx_cmd {
+  __u32 id;
+  __u32 flags;
+  __u64 data;
+  __u64 hw_error;
+};
+struct kvm_tdx_capabilities {
+  __u64 supported_attrs;
+  __u64 supported_xfam;
+  __u64 kernel_tdvmcallinfo_1_r11;
+  __u64 user_tdvmcallinfo_1_r11;
+  __u64 kernel_tdvmcallinfo_1_r12;
+  __u64 user_tdvmcallinfo_1_r12;
+  __u64 reserved[250];
+  struct kvm_cpuid2 cpuid;
+};
+struct kvm_tdx_init_vm {
+  __u64 attributes;
+  __u64 xfam;
+  __u64 mrconfigid[6];
+  __u64 mrowner[6];
+  __u64 mrownerconfig[6];
+  __u64 reserved[12];
+  struct kvm_cpuid2 cpuid;
+};
+#define KVM_TDX_MEASURE_MEMORY_REGION _BITULL(0)
+struct kvm_tdx_init_mem_region {
+  __u64 source_addr;
+  __u64 gpa;
+  __u64 nr_pages;
+};
 #endif

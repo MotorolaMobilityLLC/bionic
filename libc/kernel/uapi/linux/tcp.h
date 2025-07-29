@@ -109,6 +109,7 @@ enum tcp_fastopen_client_fail {
 #define TCPI_OPT_ECN_SEEN 16
 #define TCPI_OPT_SYN_DATA 32
 #define TCPI_OPT_USEC_TS 64
+#define TCPI_OPT_TFO_CHILD 128
 enum tcp_ca_state {
   TCP_CA_Open = 0,
 #define TCPF_CA_Open (1 << TCP_CA_Open)

@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef _IF_X25_H
-#define _IF_X25_H
+#ifndef _UAPI_IF_X25_H
+#define _UAPI_IF_X25_H
 #include <linux/types.h>
 #define X25_IFACE_DATA 0x00
 #define X25_IFACE_CONNECT 0x01

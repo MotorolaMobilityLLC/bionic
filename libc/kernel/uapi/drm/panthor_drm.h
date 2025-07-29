@@ -28,6 +28,7 @@ enum drm_panthor_ioctl_id {
   DRM_PANTHOR_GROUP_GET_STATE,
   DRM_PANTHOR_TILER_HEAP_CREATE,
   DRM_PANTHOR_TILER_HEAP_DESTROY,
+  DRM_PANTHOR_BO_SET_LABEL,
 };
 struct drm_panthor_obj_array {
   __u32 stride;
@@ -233,6 +234,11 @@ struct drm_panthor_tiler_heap_destroy {
   __u32 handle;
   __u32 pad;
 };
+struct drm_panthor_bo_set_label {
+  __u32 handle;
+  __u32 pad;
+  __u64 label;
+};
 #define DRM_IOCTL_PANTHOR(__access,__id,__type) DRM_IO ##__access(DRM_COMMAND_BASE + DRM_PANTHOR_ ##__id, struct drm_panthor_ ##__type)
 enum {
   DRM_IOCTL_PANTHOR_DEV_QUERY = DRM_IOCTL_PANTHOR(WR, DEV_QUERY, dev_query),
@@ -248,6 +254,7 @@ enum {
   DRM_IOCTL_PANTHOR_GROUP_GET_STATE = DRM_IOCTL_PANTHOR(WR, GROUP_GET_STATE, group_get_state),
   DRM_IOCTL_PANTHOR_TILER_HEAP_CREATE = DRM_IOCTL_PANTHOR(WR, TILER_HEAP_CREATE, tiler_heap_create),
   DRM_IOCTL_PANTHOR_TILER_HEAP_DESTROY = DRM_IOCTL_PANTHOR(WR, TILER_HEAP_DESTROY, tiler_heap_destroy),
+  DRM_IOCTL_PANTHOR_BO_SET_LABEL = DRM_IOCTL_PANTHOR(WR, BO_SET_LABEL, bo_set_label),
 };
 #ifdef __cplusplus
 }

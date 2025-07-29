@@ -99,6 +99,7 @@
 #define SO_DEVMEM_DONTNEED 80
 #define SCM_TS_OPT_ID 81
 #define SO_RCVPRIORITY 82
+#define SO_PASSRIGHTS 83
 #if __BITS_PER_LONG == 64 || defined(__x86_64__) && defined(__ILP32__)
 #define SO_TIMESTAMP SO_TIMESTAMP_OLD
 #define SO_TIMESTAMPNS SO_TIMESTAMPNS_OLD

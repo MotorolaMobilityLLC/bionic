@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef _LINUX_IF_HIPPI_H
-#define _LINUX_IF_HIPPI_H
+#ifndef _UAPI_LINUX_IF_HIPPI_H
+#define _UAPI_LINUX_IF_HIPPI_H
 #include <linux/types.h>
 #include <asm/byteorder.h>
 #define HIPPI_ALEN 6

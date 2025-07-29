@@ -51,9 +51,10 @@ enum v4l2_buf_type {
   V4L2_BUF_TYPE_META_OUTPUT = 14,
   V4L2_BUF_TYPE_PRIVATE = 0x80,
 };
+#define V4L2_TYPE_IS_VALID(type) ((type) >= V4L2_BUF_TYPE_VIDEO_CAPTURE && (type) <= V4L2_BUF_TYPE_META_OUTPUT)
 #define V4L2_TYPE_IS_MULTIPLANAR(type) ((type) == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE || (type) == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)
-#define V4L2_TYPE_IS_OUTPUT(type) ((type) == V4L2_BUF_TYPE_VIDEO_OUTPUT || (type) == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE || (type) == V4L2_BUF_TYPE_VIDEO_OVERLAY || (type) == V4L2_BUF_TYPE_VIDEO_OUTPUT_OVERLAY || (type) == V4L2_BUF_TYPE_VBI_OUTPUT || (type) == V4L2_BUF_TYPE_SLICED_VBI_OUTPUT || (type) == V4L2_BUF_TYPE_SDR_OUTPUT || (type) == V4L2_BUF_TYPE_META_OUTPUT)
-#define V4L2_TYPE_IS_CAPTURE(type) (! V4L2_TYPE_IS_OUTPUT(type))
+#define V4L2_TYPE_IS_OUTPUT(type) ((type) == V4L2_BUF_TYPE_VIDEO_OUTPUT || (type) == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE || (type) == V4L2_BUF_TYPE_VIDEO_OUTPUT_OVERLAY || (type) == V4L2_BUF_TYPE_VBI_OUTPUT || (type) == V4L2_BUF_TYPE_SLICED_VBI_OUTPUT || (type) == V4L2_BUF_TYPE_SDR_OUTPUT || (type) == V4L2_BUF_TYPE_META_OUTPUT)
+#define V4L2_TYPE_IS_CAPTURE(type) (V4L2_TYPE_IS_VALID(type) && ! V4L2_TYPE_IS_OUTPUT(type))
 enum v4l2_tuner_type {
   V4L2_TUNER_RADIO = 1,
   V4L2_TUNER_ANALOG_TV = 2,
@@ -280,8 +281,10 @@ struct v4l2_pix_format {
 #define V4L2_PIX_FMT_Y216 v4l2_fourcc('Y', '2', '1', '6')
 #define V4L2_PIX_FMT_NV12 v4l2_fourcc('N', 'V', '1', '2')
 #define V4L2_PIX_FMT_NV21 v4l2_fourcc('N', 'V', '2', '1')
+#define V4L2_PIX_FMT_NV15 v4l2_fourcc('N', 'V', '1', '5')
 #define V4L2_PIX_FMT_NV16 v4l2_fourcc('N', 'V', '1', '6')
 #define V4L2_PIX_FMT_NV61 v4l2_fourcc('N', 'V', '6', '1')
+#define V4L2_PIX_FMT_NV20 v4l2_fourcc('N', 'V', '2', '0')
 #define V4L2_PIX_FMT_NV24 v4l2_fourcc('N', 'V', '2', '4')
 #define V4L2_PIX_FMT_NV42 v4l2_fourcc('N', 'V', '4', '2')
 #define V4L2_PIX_FMT_P010 v4l2_fourcc('P', '0', '1', '0')
@@ -459,6 +462,8 @@ struct v4l2_pix_format {
 #define V4L2_META_FMT_RK_ISP1_PARAMS v4l2_fourcc('R', 'K', '1', 'P')
 #define V4L2_META_FMT_RK_ISP1_STAT_3A v4l2_fourcc('R', 'K', '1', 'S')
 #define V4L2_META_FMT_RK_ISP1_EXT_PARAMS v4l2_fourcc('R', 'K', '1', 'E')
+#define V4L2_META_FMT_C3ISP_PARAMS v4l2_fourcc('C', '3', 'P', 'M')
+#define V4L2_META_FMT_C3ISP_STATS v4l2_fourcc('C', '3', 'S', 'T')
 #define V4L2_META_FMT_RPI_BE_CFG v4l2_fourcc('R', 'P', 'B', 'C')
 #define V4L2_META_FMT_RPI_FE_CFG v4l2_fourcc('R', 'P', 'F', 'C')
 #define V4L2_META_FMT_RPI_FE_STATS v4l2_fourcc('R', 'P', 'F', 'S')
