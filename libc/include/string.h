@@ -111,7 +111,24 @@ char* _Nullable strdup(const char* _Nonnull __s);
 
 char* _Nullable strstr(const char* _Nonnull __haystack, const char* _Nonnull __needle) __attribute_pure__;
 char* _Nullable strcasestr(const char* _Nonnull __haystack, const char* _Nonnull __needle) __attribute_pure__;
+
+/**
+ * [strtok(3)](https://man7.org/linux/man-pages/man3/strtok.3.html)
+ * extracts non-empty tokens from strings.
+ *
+ * Code on Android should use strtok_r() instead,
+ * since strtok() isn't thread-safe.
+ *
+ * See strsep() if you want empty tokens returned too.
+ */
 char* _Nullable strtok(char* _Nullable __s, const char* _Nonnull __delimiter);
+
+/**
+ * [strtok_r(3)](https://man7.org/linux/man-pages/man3/strtok_r.3.html)
+ * extracts non-empty tokens from strings.
+ *
+ * See strsep() if you want empty tokens returned too.
+ */
 char* _Nullable strtok_r(char* _Nullable __s, const char* _Nonnull __delimiter, char* _Nonnull * _Nonnull __pos_ptr);
 
 /**
@@ -188,9 +205,37 @@ char* _Nonnull strncpy(char* _Nonnull __dst, const char* _Nonnull __src, size_t 
 size_t strlcat(char* _Nonnull __dst, const char* _Nonnull __src, size_t __n);
 size_t strlcpy(char* _Nonnull __dst, const char* _Nonnull __src, size_t __n);
 
+/**
+ * [strcspn(3)](https://man7.org/linux/man-pages/man3/strcspn.3.html)
+ * returns the length of the prefix containing only characters _not_ in
+ * the reject set.
+ */
 size_t strcspn(const char* _Nonnull __s, const char* _Nonnull __reject) __attribute_pure__;
+
+/**
+ * [strpbrk(3)](https://man7.org/linux/man-pages/man3/strpbrk.3.html)
+ * returns a pointer to the first character in the string that's
+ * in the accept set, or null.
+ *
+ * See strspn() if you want an index instead.
+ */
 char* _Nullable strpbrk(const char* _Nonnull __s, const char* _Nonnull __accept) __attribute_pure__;
+
+/**
+ * [strsep(3)](https://man7.org/linux/man-pages/man3/strsep.3.html)
+ * extracts tokens (including empty ones) from strings.
+ *
+ * See strtok_r() if you don't want empty tokens.
+ */
 char* _Nullable strsep(char* _Nullable * _Nonnull __s_ptr, const char* _Nonnull __delimiter);
+
+/**
+ * [strspn(3)](https://man7.org/linux/man-pages/man3/strspn.3.html)
+ * returns the length of the prefix containing only characters in
+ * the accept set.
+ *
+ * See strpbrk() if you want a pointer instead.
+ */
 size_t strspn(const char* _Nonnull __s, const char* _Nonnull __accept);
 
 /**
