@@ -205,10 +205,14 @@ size_t strspn(const char* _Nonnull __s, const char* _Nonnull __accept);
  */
 char* _Nonnull strsignal(int __signal);
 
+/** Equivalent to strcmp() on Android. */
 int strcoll(const char* _Nonnull __lhs, const char* _Nonnull __rhs) __attribute_pure__;
-size_t strxfrm(char* __BIONIC_COMPLICATED_NULLNESS __dst, const char* _Nonnull __src, size_t __n);
-
+/** Equivalent to strcmp() on Android. */
 int strcoll_l(const char* _Nonnull __lhs, const char* _Nonnull __rhs, locale_t _Nonnull __l) __attribute_pure__;
+
+/** Equivalent to strlcpy() on Android. */
+size_t strxfrm(char* __BIONIC_COMPLICATED_NULLNESS __dst, const char* _Nonnull __src, size_t __n);
+/** Equivalent to strlcpy() on Android. */
 size_t strxfrm_l(char* __BIONIC_COMPLICATED_NULLNESS __dst, const char* _Nonnull __src, size_t __n, locale_t _Nonnull __l);
 
 /*
