@@ -1701,3 +1701,72 @@ TEST(STRING_TEST, strerrorname_np) {
   GTEST_SKIP() << "strerrorname_np not available";
 #endif
 }
+
+TEST(STRING_TEST, strpbrk) {
+  EXPECT_EQ(nullptr, strpbrk("hello", ""));
+  EXPECT_STREQ("hello", strpbrk("hello", "ehl"));
+  EXPECT_STREQ("llo", strpbrk("hello", "l"));
+  EXPECT_STREQ(" world", strpbrk("hello world", "\t "));
+}
+
+TEST(STRING_TEST, strspn) {
+  EXPECT_EQ(0u, strspn("hello", ""));
+  EXPECT_EQ(4u, strspn("hello", "ehl"));
+  EXPECT_EQ(5u, strspn("hello", "ehlo"));
+  EXPECT_EQ(5u, strspn("hello world", "abcdefghijklmnopqrstuvwxyz"));
+}
+
+TEST(STRING_TEST, strcspn) {
+  EXPECT_EQ(5u, strcspn("hello", ""));
+  EXPECT_EQ(0u, strcspn("hello", "ehl"));
+  EXPECT_EQ(5u, strcspn("hello", "abc"));
+  EXPECT_EQ(5u, strcspn("hello world", " "));
+}
+
+TEST(STRING_TEST, strsep) {
+  char* p = nullptr;
+  EXPECT_EQ(nullptr, strsep(&p, ":"));
+
+  // Unlike strtok(), strsep() _does_ return empty strings.
+  char str[] = ":hello:world:::foo:";
+  p = str;
+  EXPECT_STREQ("", strsep(&p, ":"));
+  EXPECT_STREQ("hello", strsep(&p, ":"));
+  EXPECT_STREQ("world", strsep(&p, ":"));
+  EXPECT_STREQ("", strsep(&p, ":"));
+  EXPECT_STREQ("", strsep(&p, ":"));
+  EXPECT_STREQ("foo", strsep(&p, ":"));
+  EXPECT_STREQ("", strsep(&p, ":"));
+}
+
+TEST(STRING_TEST, strtok) {
+  char empty[] = "";
+  EXPECT_EQ(nullptr, strtok(empty, ":"));
+
+  char only_delimiters[] = ":::";
+  EXPECT_EQ(nullptr, strtok(only_delimiters, ":"));
+
+  // Unlike strsep(), strtok() doesn't return empty strings.
+  char str[] = ":hello:world:::foo:";
+  EXPECT_STREQ("hello", strtok(str, ":"));
+  EXPECT_STREQ("world", strtok(nullptr, ":"));
+  EXPECT_STREQ("foo", strtok(nullptr, ":"));
+  EXPECT_STREQ(nullptr, strtok(nullptr, ":"));
+}
+
+TEST(STRING_TEST, strtok_r) {
+  char* p;
+
+  char empty[] = "";
+  EXPECT_EQ(nullptr, strtok_r(empty, ":", &p));
+
+  char only_delimiters[] = ":::";
+  EXPECT_EQ(nullptr, strtok_r(only_delimiters, ":", &p));
+
+  // Unlike strsep(), strtok_r() doesn't return empty strings.
+  char str[] = ":hello:world:::foo:";
+  EXPECT_STREQ("hello", strtok_r(str, ":", &p));
+  EXPECT_STREQ("world", strtok_r(nullptr, ":", &p));
+  EXPECT_STREQ("foo", strtok_r(nullptr, ":", &p));
+  EXPECT_STREQ(nullptr, strtok_r(nullptr, ":", &p));
+}
