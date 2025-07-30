@@ -1405,4 +1405,6 @@ TEST(wchar, wcstok) {
   EXPECT_STREQ(L"world", wcstok(nullptr, L":", &p));
   EXPECT_STREQ(L"foo", wcstok(nullptr, L":", &p));
   EXPECT_STREQ(nullptr, wcstok(nullptr, L":", &p));
+  // Repeated calls after the first nullptr keep returning nullptr.
+  EXPECT_STREQ(nullptr, wcstok(nullptr, L":", &p));
 }
