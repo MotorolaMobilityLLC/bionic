@@ -121,7 +121,8 @@ char* _Nullable strcasestr(const char* _Nonnull __haystack, const char* _Nonnull
  *
  * See strsep() if you want empty tokens returned too.
  */
-char* _Nullable strtok(char* _Nullable __s, const char* _Nonnull __delimiter);
+char* _Nullable strtok(char* _Nullable __s, const char* _Nonnull __delimiter)
+    __attribute__((__deprecated__("strtok() is not thread-safe; use strtok_r() instead")));
 
 /**
  * [strtok_r(3)](https://man7.org/linux/man-pages/man3/strtok_r.3.html)
