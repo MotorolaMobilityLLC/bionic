@@ -1219,18 +1219,6 @@ TEST(wchar, wcscasecmp) {
   ASSERT_TRUE(wcscasecmp(L"hell", L"HELLO") < 0);
 }
 
-TEST(wchar, wcscspn) {
-  ASSERT_EQ(0U, wcscspn(L"hello world", L"abcdefghijklmnopqrstuvwxyz"));
-  ASSERT_EQ(5U, wcscspn(L"hello world", L" "));
-  ASSERT_EQ(11U, wcscspn(L"hello world", L"!"));
-}
-
-TEST(wchar, wcsspn) {
-  ASSERT_EQ(0U, wcsspn(L"hello world", L"!"));
-  ASSERT_EQ(5U, wcsspn(L"hello world", L"abcdefghijklmnopqrstuvwxyz"));
-  ASSERT_EQ(11U, wcsspn(L"hello world", L"abcdefghijklmnopqrstuvwxyz "));
-}
-
 TEST(wchar, wcsdup) {
   wchar_t* s = wcsdup(L"hello");
   ASSERT_STREQ(s, L"hello");
@@ -1279,31 +1267,6 @@ TEST(wchar, wcsnlen) {
   ASSERT_EQ(2U, wcsnlen(L"hello", 2));
   ASSERT_EQ(5U, wcsnlen(L"hello", 5));
   ASSERT_EQ(5U, wcsnlen(L"hello", 666));
-}
-
-TEST(wchar, wcspbrk) {
-  const wchar_t* s = L"hello, world!";
-  ASSERT_EQ(nullptr, wcspbrk(s, L"-"));
-  ASSERT_EQ(s, wcspbrk(s, L"abch"));
-  ASSERT_EQ(s + 2, wcspbrk(s, L"l"));
-  ASSERT_EQ(s + 5, wcspbrk(s, L",. !"));
-}
-
-TEST(wchar, wcstok) {
-  wchar_t s[] = L"this is\ta\nstring";
-  wchar_t* p;
-  ASSERT_EQ(s, wcstok(s, L"\t\n ", &p));
-  ASSERT_STREQ(s, L"this");
-  ASSERT_STREQ(p, L"is\ta\nstring");
-  ASSERT_EQ(s + 5, wcstok(nullptr, L"\t\n ", &p));
-  ASSERT_STREQ(s + 5, L"is");
-  ASSERT_STREQ(p, L"a\nstring");
-  ASSERT_EQ(s + 8, wcstok(nullptr, L"\t\n ", &p));
-  ASSERT_STREQ(s + 8, L"a");
-  ASSERT_STREQ(p, L"string");
-  ASSERT_EQ(s + 10, wcstok(nullptr, L"\t\n ", &p));
-  ASSERT_STREQ(s + 10, L"string");
-  ASSERT_EQ(nullptr, p);
 }
 
 TEST(wchar, wmemchr) {
@@ -1404,4 +1367,42 @@ TEST(wchar, strxfrm_l_smoke) {
   ASSERT_EQ(wcsxfrm_l(dst1, src1, 0, LC_GLOBAL_LOCALE), 3U);
   ASSERT_STREQ(dst1, L"");
   ASSERT_EQ(wcsxfrm_l(dst1, src1, sizeof(dst1)/sizeof(wchar_t), LC_GLOBAL_LOCALE), 3U);
+}
+
+TEST(wchar, wcspbrk) {
+  EXPECT_EQ(nullptr, wcspbrk(L"hello", L""));
+  EXPECT_STREQ(L"hello", wcspbrk(L"hello", L"ehl"));
+  EXPECT_STREQ(L"llo", wcspbrk(L"hello", L"l"));
+  EXPECT_STREQ(L" world", wcspbrk(L"hello world", L"\t "));
+}
+
+TEST(wchar, wcsspn) {
+  EXPECT_EQ(0u, wcsspn(L"hello", L""));
+  EXPECT_EQ(4u, wcsspn(L"hello", L"ehl"));
+  EXPECT_EQ(5u, wcsspn(L"hello", L"ehlo"));
+  EXPECT_EQ(5u, wcsspn(L"hello world", L"abcdefghijklmnopqrstuvwxyz"));
+}
+
+TEST(wchar, wcscspn) {
+  EXPECT_EQ(5u, wcscspn(L"hello", L""));
+  EXPECT_EQ(0u, wcscspn(L"hello", L"ehl"));
+  EXPECT_EQ(5u, wcscspn(L"hello", L"abc"));
+  EXPECT_EQ(5u, wcscspn(L"hello world", L" "));
+}
+
+TEST(wchar, wcstok) {
+  wchar_t* p;
+
+  wchar_t empty[] = L"";
+  EXPECT_EQ(nullptr, wcstok(empty, L":", &p));
+
+  wchar_t only_delimiters[] = L":::";
+  EXPECT_EQ(nullptr, wcstok(only_delimiters, L":", &p));
+
+  // wcstok() doesn't return empty strings.
+  wchar_t str[] = L":hello:world:::foo:";
+  EXPECT_STREQ(L"hello", wcstok(str, L":", &p));
+  EXPECT_STREQ(L"world", wcstok(nullptr, L":", &p));
+  EXPECT_STREQ(L"foo", wcstok(nullptr, L":", &p));
+  EXPECT_STREQ(nullptr, wcstok(nullptr, L":", &p));
 }
