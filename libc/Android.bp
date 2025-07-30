@@ -379,7 +379,6 @@ cc_library_static {
         "upstream-freebsd/lib/libc/stdlib/hsearch_r.c",
         "upstream-freebsd/lib/libc/stdlib/quick_exit.c",
         "upstream-freebsd/lib/libc/string/wcsdup.c",
-        "upstream-freebsd/lib/libc/string/wcstok.c",
     ],
 
     cflags: [
