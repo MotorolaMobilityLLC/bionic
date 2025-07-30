@@ -675,6 +675,7 @@ enum {
   BPF_F_PSEUDO_HDR = (1ULL << 4),
   BPF_F_MARK_MANGLED_0 = (1ULL << 5),
   BPF_F_MARK_ENFORCE = (1ULL << 6),
+  BPF_F_IPV6 = (1ULL << 7),
 };
 enum {
   BPF_F_TUNINFO_IPV6 = (1ULL << 0),
@@ -1132,6 +1133,7 @@ struct bpf_link_info {
           __u32 name_len;
           __u32 offset;
           __u64 cookie;
+          __u64 ref_ctr_offset;
         } uprobe;
         struct {
           __aligned_u64 func_name;

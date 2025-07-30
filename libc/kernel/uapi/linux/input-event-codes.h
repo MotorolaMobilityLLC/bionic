@@ -753,7 +753,8 @@
 #define SW_MUTE_DEVICE 0x0e
 #define SW_PEN_INSERTED 0x0f
 #define SW_MACHINE_COVER 0x10
-#define SW_MAX 0x10
+#define SW_USB_INSERT 0x11
+#define SW_MAX 0x11
 #define SW_CNT (SW_MAX + 1)
 #define MSC_SERIAL 0x00
 #define MSC_PULSELED 0x01

@@ -60,6 +60,7 @@ struct io_uring_sqe {
     __u32 futex_flags;
     __u32 install_fd_flags;
     __u32 nop_flags;
+    __u32 pipe_flags;
   };
   __u64 user_data;
   union {
@@ -75,6 +76,10 @@ struct io_uring_sqe {
     struct {
       __u16 addr_len;
       __u16 __pad3[1];
+    };
+    struct {
+      __u8 write_stream;
+      __u8 __pad4[3];
     };
   };
   union {
@@ -197,6 +202,7 @@ enum io_uring_op {
   IORING_OP_EPOLL_WAIT,
   IORING_OP_READV_FIXED,
   IORING_OP_WRITEV_FIXED,
+  IORING_OP_PIPE,
   IORING_OP_LAST,
 };
 #define IORING_URING_CMD_FIXED (1U << 0)
@@ -573,12 +579,15 @@ struct io_uring_zcrx_offsets {
   __u32 __resv2;
   __u64 __resv[2];
 };
+enum io_uring_zcrx_area_flags {
+  IORING_ZCRX_AREA_DMABUF = 1,
+};
 struct io_uring_zcrx_area_reg {
   __u64 addr;
   __u64 len;
   __u64 rq_area_token;
   __u32 flags;
-  __u32 __resv1;
+  __u32 dmabuf_fd;
   __u64 __resv2[2];
 };
 struct io_uring_zcrx_ifq_reg {

@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef __NET_DROPMON_H
-#define __NET_DROPMON_H
+#ifndef _UAPI__NET_DROPMON_H
+#define _UAPI__NET_DROPMON_H
 #include <linux/types.h>
 #include <linux/netlink.h>
 struct net_dm_drop_point {

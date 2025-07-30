@@ -26,6 +26,9 @@ extern "C" {
 #define DRM_AMDGPU_VM 0x13
 #define DRM_AMDGPU_FENCE_TO_HANDLE 0x14
 #define DRM_AMDGPU_SCHED 0x15
+#define DRM_AMDGPU_USERQ 0x16
+#define DRM_AMDGPU_USERQ_SIGNAL 0x17
+#define DRM_AMDGPU_USERQ_WAIT 0x18
 #define DRM_IOCTL_AMDGPU_GEM_CREATE DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_GEM_CREATE, union drm_amdgpu_gem_create)
 #define DRM_IOCTL_AMDGPU_GEM_MMAP DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_GEM_MMAP, union drm_amdgpu_gem_mmap)
 #define DRM_IOCTL_AMDGPU_CTX DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_CTX, union drm_amdgpu_ctx)
@@ -42,6 +45,9 @@ extern "C" {
 #define DRM_IOCTL_AMDGPU_VM DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_VM, union drm_amdgpu_vm)
 #define DRM_IOCTL_AMDGPU_FENCE_TO_HANDLE DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_FENCE_TO_HANDLE, union drm_amdgpu_fence_to_handle)
 #define DRM_IOCTL_AMDGPU_SCHED DRM_IOW(DRM_COMMAND_BASE + DRM_AMDGPU_SCHED, union drm_amdgpu_sched)
+#define DRM_IOCTL_AMDGPU_USERQ DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_USERQ, union drm_amdgpu_userq)
+#define DRM_IOCTL_AMDGPU_USERQ_SIGNAL DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_USERQ_SIGNAL, struct drm_amdgpu_userq_signal)
+#define DRM_IOCTL_AMDGPU_USERQ_WAIT DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_USERQ_WAIT, struct drm_amdgpu_userq_wait)
 #define AMDGPU_GEM_DOMAIN_CPU 0x1
 #define AMDGPU_GEM_DOMAIN_GTT 0x2
 #define AMDGPU_GEM_DOMAIN_VRAM 0x4
@@ -154,6 +160,76 @@ union drm_amdgpu_ctx_out {
 union drm_amdgpu_ctx {
   struct drm_amdgpu_ctx_in in;
   union drm_amdgpu_ctx_out out;
+};
+#define AMDGPU_USERQ_OP_CREATE 1
+#define AMDGPU_USERQ_OP_FREE 2
+#define AMDGPU_USERQ_CREATE_FLAGS_QUEUE_PRIORITY_MASK 0x3
+#define AMDGPU_USERQ_CREATE_FLAGS_QUEUE_PRIORITY_SHIFT 0
+#define AMDGPU_USERQ_CREATE_FLAGS_QUEUE_PRIORITY_NORMAL_LOW 0
+#define AMDGPU_USERQ_CREATE_FLAGS_QUEUE_PRIORITY_LOW 1
+#define AMDGPU_USERQ_CREATE_FLAGS_QUEUE_PRIORITY_NORMAL_HIGH 2
+#define AMDGPU_USERQ_CREATE_FLAGS_QUEUE_PRIORITY_HIGH 3
+#define AMDGPU_USERQ_CREATE_FLAGS_QUEUE_SECURE (1 << 2)
+struct drm_amdgpu_userq_in {
+  __u32 op;
+  __u32 queue_id;
+  __u32 ip_type;
+  __u32 doorbell_handle;
+  __u32 doorbell_offset;
+  __u32 flags;
+  __u64 queue_va;
+  __u64 queue_size;
+  __u64 rptr_va;
+  __u64 wptr_va;
+  __u64 mqd;
+  __u64 mqd_size;
+};
+struct drm_amdgpu_userq_out {
+  __u32 queue_id;
+  __u32 _pad;
+};
+union drm_amdgpu_userq {
+  struct drm_amdgpu_userq_in in;
+  struct drm_amdgpu_userq_out out;
+};
+struct drm_amdgpu_userq_mqd_gfx11 {
+  __u64 shadow_va;
+  __u64 csa_va;
+};
+struct drm_amdgpu_userq_mqd_sdma_gfx11 {
+  __u64 csa_va;
+};
+struct drm_amdgpu_userq_mqd_compute_gfx11 {
+  __u64 eop_va;
+};
+struct drm_amdgpu_userq_signal {
+  __u32 queue_id;
+  __u32 pad;
+  __u64 syncobj_handles;
+  __u64 num_syncobj_handles;
+  __u64 bo_read_handles;
+  __u64 bo_write_handles;
+  __u32 num_bo_read_handles;
+  __u32 num_bo_write_handles;
+};
+struct drm_amdgpu_userq_fence_info {
+  __u64 va;
+  __u64 value;
+};
+struct drm_amdgpu_userq_wait {
+  __u32 waitq_id;
+  __u32 pad;
+  __u64 syncobj_handles;
+  __u64 syncobj_timeline_handles;
+  __u64 syncobj_timeline_points;
+  __u64 bo_read_handles;
+  __u64 bo_write_handles;
+  __u16 num_syncobj_timeline_handles;
+  __u16 num_fences;
+  __u32 num_syncobj_handles;
+  __u32 num_bo_read_handles;
+  __u32 num_bo_write_handles;
+  __u64 out_fences;
 };
 #define AMDGPU_VM_OP_RESERVE_VMID 1
 #define AMDGPU_VM_OP_UNRESERVE_VMID 2
@@ -335,6 +411,10 @@ struct drm_amdgpu_gem_va {
   __u64 va_address;
   __u64 offset_in_bo;
   __u64 map_size;
+  __u64 vm_timeline_point;
+  __u32 vm_timeline_syncobj_out;
+  __u32 num_syncobj_handles;
+  __u64 input_fence_syncobj_handles;
 };
 #define AMDGPU_HW_IP_GFX 0
 #define AMDGPU_HW_IP_COMPUTE 1
@@ -531,6 +611,7 @@ struct drm_amdgpu_cs_chunk_cp_gfx_shadow {
 #define AMDGPU_INFO_VIDEO_CAPS_ENCODE 1
 #define AMDGPU_INFO_MAX_IBS 0x22
 #define AMDGPU_INFO_GPUVM_FAULT 0x23
+#define AMDGPU_INFO_UQ_FW_AREAS 0x24
 #define AMDGPU_INFO_MMR_SE_INDEX_SHIFT 0
 #define AMDGPU_INFO_MMR_SE_INDEX_MASK 0xff
 #define AMDGPU_INFO_MMR_SH_INDEX_SHIFT 8
@@ -624,6 +705,7 @@ struct drm_amdgpu_info_vbios {
 #define AMDGPU_VRAM_TYPE_DDR5 10
 #define AMDGPU_VRAM_TYPE_LPDDR4 11
 #define AMDGPU_VRAM_TYPE_LPDDR5 12
+#define AMDGPU_VRAM_TYPE_HBM3E 13
 struct drm_amdgpu_info_device {
   __u32 device_id;
   __u32 chip_rev;
@@ -688,6 +770,8 @@ struct drm_amdgpu_info_device {
   __u32 shadow_alignment;
   __u32 csa_size;
   __u32 csa_alignment;
+  __u32 userq_ip_mask;
+  __u32 pad;
 };
 struct drm_amdgpu_info_hw_ip {
   __u32 hw_ip_version_major;
@@ -697,6 +781,17 @@ struct drm_amdgpu_info_hw_ip {
   __u32 ib_size_alignment;
   __u32 available_rings;
   __u32 ip_discovery_version;
+};
+struct drm_amdgpu_info_uq_fw_areas_gfx {
+  __u32 shadow_size;
+  __u32 shadow_alignment;
+  __u32 csa_size;
+  __u32 csa_alignment;
+};
+struct drm_amdgpu_info_uq_fw_areas {
+  union {
+    struct drm_amdgpu_info_uq_fw_areas_gfx gfx;
+  };
 };
 struct drm_amdgpu_info_num_handles {
   __u32 uvd_max_handles;
@@ -745,6 +840,17 @@ struct drm_amdgpu_info_gpuvm_fault {
   __u64 addr;
   __u32 status;
   __u32 vmhub;
+};
+struct drm_amdgpu_info_uq_metadata_gfx {
+  __u32 shadow_size;
+  __u32 shadow_alignment;
+  __u32 csa_size;
+  __u32 csa_alignment;
+};
+struct drm_amdgpu_info_uq_metadata {
+  union {
+    struct drm_amdgpu_info_uq_metadata_gfx gfx;
+  };
 };
 #define AMDGPU_FAMILY_UNKNOWN 0
 #define AMDGPU_FAMILY_SI 110

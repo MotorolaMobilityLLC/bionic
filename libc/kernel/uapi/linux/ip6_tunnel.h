@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef _IP6_TUNNEL_H
-#define _IP6_TUNNEL_H
+#ifndef _UAPI_IP6_TUNNEL_H
+#define _UAPI_IP6_TUNNEL_H
 #include <linux/types.h>
 #include <linux/if.h>
 #include <linux/in6.h>

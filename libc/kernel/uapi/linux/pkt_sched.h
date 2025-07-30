@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef __LINUX_PKT_SCHED_H
-#define __LINUX_PKT_SCHED_H
+#ifndef _UAPI__LINUX_PKT_SCHED_H
+#define _UAPI__LINUX_PKT_SCHED_H
 #include <linux/const.h>
 #include <linux/types.h>
 #define TC_PRIO_BESTEFFORT 0
@@ -867,6 +867,7 @@ enum {
   TCA_TAPRIO_ATTR_SCHED_SINGLE_ENTRY,
   TCA_TAPRIO_ATTR_SCHED_CLOCKID,
   TCA_TAPRIO_PAD,
+  TCA_TAPRIO_ATTR_PAD = TCA_TAPRIO_PAD,
   TCA_TAPRIO_ATTR_ADMIN_SCHED,
   TCA_TAPRIO_ATTR_SCHED_CYCLE_TIME,
   TCA_TAPRIO_ATTR_SCHED_CYCLE_TIME_EXTENSION,

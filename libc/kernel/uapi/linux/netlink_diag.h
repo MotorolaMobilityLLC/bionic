@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef __NETLINK_DIAG_H__
-#define __NETLINK_DIAG_H__
+#ifndef _UAPI__NETLINK_DIAG_H__
+#define _UAPI__NETLINK_DIAG_H__
 #include <linux/types.h>
 struct netlink_diag_req {
   __u8 sdiag_family;

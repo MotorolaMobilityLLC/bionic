@@ -33,4 +33,5 @@ struct tiocl_selection {
 #define TIOCL_BLANKSCREEN 14
 #define TIOCL_BLANKEDSCREEN 15
 #define TIOCL_GETKMSGREDIRECT 17
+#define TIOCL_GETBRACKETEDPASTE 18
 #endif

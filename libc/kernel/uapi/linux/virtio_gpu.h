@@ -194,7 +194,9 @@ struct virtio_gpu_cmd_submit {
 };
 #define VIRTIO_GPU_CAPSET_VIRGL 1
 #define VIRTIO_GPU_CAPSET_VIRGL2 2
+#define VIRTIO_GPU_CAPSET_GFXSTREAM_VULKAN 3
 #define VIRTIO_GPU_CAPSET_VENUS 4
+#define VIRTIO_GPU_CAPSET_CROSS_DOMAIN 5
 #define VIRTIO_GPU_CAPSET_DRM 6
 struct virtio_gpu_get_capset_info {
   struct virtio_gpu_ctrl_hdr hdr;

@@ -44,13 +44,15 @@ struct seccomp_metadata {
   __u64 flags;
 };
 #define PTRACE_GET_SYSCALL_INFO 0x420e
+#define PTRACE_SET_SYSCALL_INFO 0x4212
 #define PTRACE_SYSCALL_INFO_NONE 0
 #define PTRACE_SYSCALL_INFO_ENTRY 1
 #define PTRACE_SYSCALL_INFO_EXIT 2
 #define PTRACE_SYSCALL_INFO_SECCOMP 3
 struct ptrace_syscall_info {
   __u8 op;
-  __u8 pad[3];
+  __u8 reserved;
+  __u16 flags;
   __u32 arch;
   __u64 instruction_pointer;
   __u64 stack_pointer;
@@ -67,6 +69,7 @@ struct ptrace_syscall_info {
       __u64 nr;
       __u64 args[6];
       __u32 ret_data;
+      __u32 reserved2;
     } seccomp;
   };
 };

@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef _NET_TIMESTAMPING_H
-#define _NET_TIMESTAMPING_H
+#ifndef _UAPI_NET_TIMESTAMPING_H
+#define _UAPI_NET_TIMESTAMPING_H
 #include <linux/types.h>
 #include <linux/socket.h>
 enum hwtstamp_provider_qualifier {

@@ -43,9 +43,11 @@
 #define FUTEX2_SIZE_U32 0x02
 #define FUTEX2_SIZE_U64 0x03
 #define FUTEX2_NUMA 0x04
+#define FUTEX2_MPOL 0x08
 #define FUTEX2_PRIVATE FUTEX_PRIVATE_FLAG
 #define FUTEX2_SIZE_MASK 0x03
 #define FUTEX_32 FUTEX2_SIZE_U32
+#define FUTEX_NO_NODE (- 1)
 #define FUTEX_WAITV_MAX 128
 struct futex_waitv {
   __u64 val;

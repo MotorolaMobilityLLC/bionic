@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef __LINUX_FIB_RULES_H
-#define __LINUX_FIB_RULES_H
+#ifndef _UAPI__LINUX_FIB_RULES_H
+#define _UAPI__LINUX_FIB_RULES_H
 #include <linux/types.h>
 #include <linux/rtnetlink.h>
 #define FIB_RULE_PERMANENT 0x00000001

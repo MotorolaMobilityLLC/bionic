@@ -4,8 +4,8 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef _LINUX_IF_ARCNET_H
-#define _LINUX_IF_ARCNET_H
+#ifndef _UAPI_LINUX_IF_ARCNET_H
+#define _UAPI_LINUX_IF_ARCNET_H
 #include <linux/types.h>
 #include <linux/if_ether.h>
 #define ARC_P_IP 212
