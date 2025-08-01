@@ -1751,9 +1751,11 @@ TEST(STRING_TEST, strtok) {
   EXPECT_STREQ("hello", strtok(str, ":"));
   EXPECT_STREQ("world", strtok(nullptr, ":"));
   EXPECT_STREQ("foo", strtok(nullptr, ":"));
-  EXPECT_STREQ(nullptr, strtok(nullptr, ":"));
+  EXPECT_EQ(nullptr, strtok(nullptr, ":"));
   // Repeated calls after the first nullptr keep returning nullptr.
-  EXPECT_STREQ(nullptr, strtok(nullptr, ":"));
+  for (size_t i = 0; i < 1024; ++i) {
+    EXPECT_EQ(nullptr, strtok(nullptr, ":"));
+  }
 }
 
 TEST(STRING_TEST, strtok_r) {
@@ -1770,7 +1772,10 @@ TEST(STRING_TEST, strtok_r) {
   EXPECT_STREQ("hello", strtok_r(str, ":", &p));
   EXPECT_STREQ("world", strtok_r(nullptr, ":", &p));
   EXPECT_STREQ("foo", strtok_r(nullptr, ":", &p));
-  EXPECT_STREQ(nullptr, strtok_r(nullptr, ":", &p));
+  EXPECT_EQ(nullptr, strtok_r(nullptr, ":", &p));
   // Repeated calls after the first nullptr keep returning nullptr.
-  EXPECT_STREQ(nullptr, strtok_r(nullptr, ":", &p));
+  for (size_t i = 0; i < 1024; ++i) {
+    EXPECT_EQ(nullptr, p);
+    EXPECT_EQ(nullptr, strtok_r(nullptr, ":", &p));
+  }
 }
