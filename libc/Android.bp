@@ -536,7 +536,6 @@ cc_library_static {
         "upstream-openbsd/lib/libc/stdlib/tfind.c",
         "upstream-openbsd/lib/libc/stdlib/tsearch.c",
         "upstream-openbsd/lib/libc/string/strcasestr.c",
-        "upstream-openbsd/lib/libc/string/strcspn.c",
         "upstream-openbsd/lib/libc/string/strdup.c",
         "upstream-openbsd/lib/libc/string/strndup.c",
         "upstream-openbsd/lib/libc/string/strpbrk.c",
