@@ -540,7 +540,6 @@ cc_library_static {
         "upstream-openbsd/lib/libc/string/strndup.c",
         "upstream-openbsd/lib/libc/string/strpbrk.c",
         "upstream-openbsd/lib/libc/string/strsep.c",
-        "upstream-openbsd/lib/libc/string/strspn.c",
         "upstream-openbsd/lib/libc/string/strtok.c",
         "upstream-openbsd/lib/libc/string/wcswidth.c",
 
