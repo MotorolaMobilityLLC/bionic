@@ -49,17 +49,24 @@ char* if_indextoname(unsigned ifindex, char* ifname) {
   if (s.get() == -1) return nullptr;
 
   ifreq ifr = {.ifr_ifindex = static_cast<int>(ifindex)};
-  return (ioctl(s.get(), SIOCGIFNAME, &ifr) == -1) ? nullptr
-                                                   : strncpy(ifname, ifr.ifr_name, IFNAMSIZ);
+  if (ioctl(s.get(), SIOCGIFNAME, &ifr) == -1) return nullptr;
+
+  strcpy(ifname, ifr.ifr_name);
+  return ifname;
 }
 
 unsigned if_nametoindex(const char* ifname) {
+  ifreq ifr = {};
+
+  if (strlen(ifname) >= sizeof(ifr.ifr_name)) {
+    errno = ENODEV;
+    return 0;
+  }
+  strcpy(ifr.ifr_name, ifname);
+
   ScopedFd s(socket(AF_INET, SOCK_DGRAM|SOCK_CLOEXEC, 0));
   if (s.get() == -1) return 0;
 
-  ifreq ifr = {};
-  strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-  ifr.ifr_name[IFNAMSIZ - 1] = 0;
   return (ioctl(s.get(), SIOCGIFINDEX, &ifr) == -1) ? 0 : ifr.ifr_ifindex;
 }
 

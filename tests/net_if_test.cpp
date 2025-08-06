@@ -32,8 +32,17 @@ TEST(net_if, if_nametoindex_if_indextoname) {
 }
 
 TEST(net_if, if_nametoindex_fail) {
-  unsigned index = if_nametoindex("this-interface-does-not-exist");
+  unsigned index = if_nametoindex("does-not-exist");
   ASSERT_EQ(0U, index);
+}
+
+TEST(net_if, if_nametoindex_too_long) {
+  // We have 16 bytes, but one of them needs to be the '\0'.
+  EXPECT_EQ(16, IFNAMSIZ);
+  const char* name = "01234567890123456";
+  unsigned index = if_nametoindex(name);
+  EXPECT_EQ(0U, index);
+  EXPECT_EQ(ENODEV, errno);
 }
 
 TEST(net_if, if_nameindex) {

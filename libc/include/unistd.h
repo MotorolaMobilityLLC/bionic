@@ -394,12 +394,38 @@ unsigned int alarm(unsigned int __seconds);
 unsigned int sleep(unsigned int __seconds);
 int usleep(useconds_t __microseconds);
 
+#if __BIONIC_AVAILABILITY_GUARD(26)
+/**
+ * [getdomainname(2)](https://man7.org/linux/man-pages/man2/getdomainname.2.html)
+ * copies the system's domain name into the supplied buffer.
+ *
+ * A buffer of size SYS_NMLN from <sys/utsname.h> is guaranteed large enough,
+ * because this is just a wrapper for uname().
+ *
+ * Returns 0 on success, and returns -1 and sets `errno` on failure.
+ */
+int getdomainname(char* _Nonnull __buf, size_t __buf_size) __INTRODUCED_IN(26);
+#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+
+#if __BIONIC_AVAILABILITY_GUARD(26)
+int setdomainname(const char* _Nonnull __name, size_t __n) __INTRODUCED_IN(26);
+#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+
+/**
+ * [gethostname(2)](https://man7.org/linux/man-pages/man2/gethostname.2.html)
+ * copies the system's host name into the supplied buffer.
+ *
+ * Contrary to POSIX, this implementation fails if the buffer is too small.
+ * A buffer of size SYS_NMLN from <sys/utsname.h> is guaranteed large enough,
+ * because this is just a wrapper for uname().
+ *
+ * Returns 0 on success, and returns -1 and sets `errno` on failure.
+ */
 int gethostname(char* _Nonnull _buf, size_t __buf_size);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int sethostname(const char* _Nonnull __name, size_t __n) __INTRODUCED_IN(23);
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
-
 
 int brk(void* _Nonnull __addr);
 void* _Nullable sbrk(ptrdiff_t __increment);
@@ -441,15 +467,6 @@ int tcsetpgrp(int __fd, pid_t __pid);
         _rc = (exp);                       \
     } while (_rc == -1 && errno == EINTR); \
     _rc; })
-
-
-#if __BIONIC_AVAILABILITY_GUARD(26)
-int getdomainname(char* _Nonnull __buf, size_t __buf_size) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
-#if __BIONIC_AVAILABILITY_GUARD(26)
-int setdomainname(const char* _Nonnull __name, size_t __n) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
-
 
 /**
  * [copy_file_range(2)](https://man7.org/linux/man-pages/man2/copy_file_range.2.html) copies
