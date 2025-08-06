@@ -1737,6 +1737,11 @@ TEST(STRING_TEST, strsep) {
   EXPECT_STREQ("", strsep(&p, ":"));
   EXPECT_STREQ("foo", strsep(&p, ":"));
   EXPECT_STREQ("", strsep(&p, ":"));
+  EXPECT_EQ(nullptr, strsep(&p, ":"));
+  // Repeated calls after the first nullptr keep returning nullptr.
+  for (size_t i = 0; i < 1024; ++i) {
+    EXPECT_EQ(nullptr, strsep(&p, ":"));
+  }
 }
 
 TEST(STRING_TEST, strtok) {
