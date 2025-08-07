@@ -1,4 +1,4 @@
-/* $OpenBSD: res_random.c,v 1.23 2015/10/05 02:57:16 guenther Exp $ */
+/* $OpenBSD: res_random.c,v 1.27 2024/09/03 18:21:55 op Exp $ */
 
 /*
  * Copyright 1997 Niels Provos <provos@physnet.uni-hamburg.de>
@@ -51,7 +51,7 @@
  * The transaction id is determined by:
  * id[n] = seed xor (g^X[n] mod n)
  *
- * Effectivly the id is restricted to the lower 15 bits, thus
+ * Effectively the id is restricted to the lower 15 bits, thus
  * yielding two different cycles by toggling the msb on and off.
  * This avoids reuse issues caused by reseeding.
  *
@@ -70,7 +70,7 @@
 
 #include "thread_private.h"
 
-#define RU_OUT  	180	/* Time after wich will be reseeded */
+#define RU_OUT  	180	/* Time after which will be reseeded */
 #define RU_MAX		30000	/* Uniq cycle, avoid blackjack prediction */
 #define RU_GEN		2	/* Starting generator */
 #define RU_N		32749	/* RU_N-1 = 2*2*3*2729 */
@@ -219,7 +219,7 @@ res_initid(void)
 	if (ru_prf != NULL)
 		arc4random_buf(ru_prf, sizeof(*ru_prf));
 
-	clock_gettime(CLOCK_MONOTONIC, &ts);
+	WRAP(clock_gettime)(CLOCK_MONOTONIC, &ts);
 	ru_reseed = ts.tv_sec + RU_OUT;
 	ru_msb = ru_msb == 0x8000 ? 0 : 0x8000; 
 }
@@ -230,12 +230,12 @@ __res_randomid(void)
 	struct timespec ts;
 	pid_t pid;
 	u_int r;
-	_THREAD_PRIVATE_MUTEX(random);
+	static void *randomid_mutex;
 
-	clock_gettime(CLOCK_MONOTONIC, &ts);
+	WRAP(clock_gettime)(CLOCK_MONOTONIC, &ts);
 	pid = getpid();
 
-	_THREAD_PRIVATE_MUTEX_LOCK(random);
+	_MUTEX_LOCK(&randomid_mutex);
 
 	if (ru_counter >= RU_MAX || ts.tv_sec > ru_reseed || pid != ru_pid) {
 		res_initid();
@@ -248,7 +248,7 @@ __res_randomid(void)
 
 	r = permute15(ru_seed ^ pmod(ru_g, ru_seed2 + ru_x, RU_N)) | ru_msb;
 
-	_THREAD_PRIVATE_MUTEX_UNLOCK(random);
+	_MUTEX_UNLOCK(&randomid_mutex);
 
 	return (r);
 }

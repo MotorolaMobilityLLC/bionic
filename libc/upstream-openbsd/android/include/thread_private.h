@@ -17,15 +17,8 @@
 #pragma once
 
 #include <pthread.h>
-#include <time.h>
 
-// An internal OpenBSD interface, used by res_randomid() only.
-#define __MUTEX_NAME(name) __CONCAT(__libc_mutex_,name)
-#define _THREAD_PRIVATE_MUTEX(name) static pthread_mutex_t __MUTEX_NAME(name) = PTHREAD_MUTEX_INITIALIZER
-#define _THREAD_PRIVATE_MUTEX_LOCK(name) pthread_mutex_lock(&__MUTEX_NAME(name))
-#define _THREAD_PRIVATE_MUTEX_UNLOCK(name) pthread_mutex_unlock(&__MUTEX_NAME(name))
-
-// An internal OpenBSD interface, used by gdtoa only.
+// An internal OpenBSD interface, used by gdtoa and res_random.c.
 // Note that these aren't exactly the usual OpenBSD ones which lazy-initialize!
 #define _MUTEX_LOCK(l) pthread_mutex_lock((pthread_mutex_t*) l)
 #define _MUTEX_UNLOCK(l) pthread_mutex_unlock((pthread_mutex_t*) l)
