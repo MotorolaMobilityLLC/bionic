@@ -161,111 +161,191 @@ libc/
     # See 'Updating tzdata' later.
 ```
 
+## Adding a new function
+
+### Should I?
+
+The first question you should ask is "should I add this function?".
+The answer is usually "no".
+
+The answer is "yes" if the function is part of ISO C or POSIX.
+
+The answer is "probably" if the function is in glibc and musl _and_ the BSDs
+(including iOS/macOS).
+
+The answer is "probably not" if the function differs in API or behavior between
+them (ABI doesn't matter).
+
+The answer is "maybe" if the function has three/four distinct users in
+different unrelated projects, and there isn't a more specific higher-level
+library that would make more sense as the place to add the function.
+
+### How?
+
+Adding a function usually involves:
+
+1. Find the right header file to work in by looking up the official
+   specification. The POSIX documentation on
+   [opengroup.org](https://pubs.opengroup.org/onlinepubs/9799919799/functions/contents.html)
+   is the canonical source (though this may lag behind the most recent ISO C).
+   This documentation will also be useful in later steps such as writing tests.
+1. Add constants (and perhaps types) to the appropriate header file.
+   Note that you should check to see whether the constants are already in
+   kernel uapi header files, in which case you just need to make sure that
+   the appropriate header file in libc/include/ `#include`s the relevant
+   `linux/` file or files.
+1. Add function declarations to the appropriate header file. Don't forget
+   to include the appropriate `__INTRODUCED_IN()`, with the right API level
+   for the first release your system call wrapper will be in. See
+   libc/include/android/api_level.h for the API levels.
+   If the header file doesn't exist, copy all of libc/include/sys/sysinfo.h
+   into your new file --- it's a good short example to start from.
+
+   Note also our style for naming arguments: always use two leading
+   underscores (so developers are free to use any of the unadorned names as
+   macros without breaking things), avoid abbreviations, and ideally try to
+   use the same name as an existing system call (to reduce the amount of
+   English vocabulary required by people who just want to use the function
+   signatures). If there's a similar function already in the C library,
+   check what names it already used. Finally, prefer the `void*` orthography we
+   use over the `void *` you'll see on man7.org, and don't forget to include
+   nullability annotations for any pointers.
+1. Add basic documentation to the header file. Again, the existing
+   libc/include/sys/sysinfo.h is a good short example that shows the
+   expected style.
+
+   Most of the detail should actually be left to the man7.org page, with
+   only a brief one-sentence explanation (usually based on the description
+   in the NAME section of the man page) in our documentation. Always
+   include the return value/error reporting details (you can find out
+   what the system call returns from the RETURN VALUE of the man page),
+   but try to match the wording and style wording from _our_ existing
+   documentation; we're trying to minimize the number of English words
+   that readers need to understand by using the exact same wording where
+   possible).
+
+   Explicitly say which version of Android the function was added to in
+   the documentation because the documentation generation tool doesn't yet
+   understand `__INTRODUCED_IN()`.
+
+   Explicitly call out any Android-specific changes/additions/limitations
+   because they won't be on the man7.org page.
+1. Add the function name to the correct section in libc/libc.map.txt (or
+   the corresponding map file for libm or libdl).
+   If you don't add your function to the map, it won't be exported.
+   Adding the function to the map adds an implicit build-time check that your
+   function is defined for all supported architectures.
+
+   Any new function should include an `# introduced=` matching the
+   `__INTRODUCED_IN()` from the header. For several versions of Android we
+   created separate sections (such as `LIBC_Q`) to make it a little more
+   obvious in places like nm(1) output which version of Android is required.
+   Theoretically this also gave us the option of having multiple versions of
+   the same symbol with different behavior. Other OSes use this for backward
+   compatibility but we tend to use API level checks within the implementation
+   instead. When marketing moved back to numbers, and then when the alphabet
+   wrapped, this started to look like less of a good idea. The move to "2025Q4"
+   style releases made this even less convincing, so we've gone back to just
+   adding new symbols unversioned (but with the `# introduced=` annotation).
+1. Add a basic test. Don't try to test everything; concentrate on just testing
+   the code that's actually in *bionic*, not all the functionality that's
+   implemented in the kernel. At one end of the spectrum, for string routines
+   that's everything; at the other, for simple syscalls, that's just the
+   auto-generated argument and return value marshalling.
+
+   Add a test in the right file in tests/. We have one file per header, so if
+   your system call is exposed in <unistd.h>, for example, your test would go
+   in tests/unistd_test.cpp.
+
+   A trivial test that deliberately supplies an invalid argument helps check
+   that we're generating the right symbol and have the right declaration in
+   the header file, and that the change to libc.map.txt from step 5 is
+   correct. (For system calls, you can use strace(1) manually to confirm that
+   the correct system call is being made.)
+
+   For testing the *kernel* side of things, we should prefer to rely on
+   https://github.com/linux-test-project/ltp for kernel testing, but you'll
+   want to check that external/ltp/ does contain tests for the syscall you're
+   adding. Also check that external/ltp/ is using the libc wrapper for the
+   syscall rather than calling it "directly" via syscall(3)!
+
+   One common exception is for known kernel bugs where we sometimes have an
+   explicit test where the failure message says what SHA to cherrypick.
+   This has become less useful with the move to GKI kernels.
+1. Implement the function. Similar to tests, we typically try to have one
+   file per header, so a function from <sys/foo.h> would normally go in
+   sys_foo.cpp. The more complicated the implementation, the more likely it
+   warrants its own file.
+
+   Trivial system call wrappers are a special case covered in the next section.
 
 ## Adding libc wrappers for system calls
 
+### Should I?
+
 The first question you should ask is "should I add a libc wrapper for
-this system call?". The answer is usually "no".
+this system call?". The decision tree is similar to "adding a new function"
+above, but somewhat stricter because for system calls you can always just use
+[syscall(2)](https://man7.org/linux/man-pages/man2/syscall.2.html) instead.
 
-The answer is "yes" if the system call is part of the POSIX standard.
+### How?
 
-The answer is probably "yes" if the system call has a wrapper in at
-least one other C library (typically glibc/musl or Apple's libc).
+Adding a system call usually involves following all the steps from
+"adding a new function" above, with a couple of small differences:
 
-The answer may be "yes" if the system call has three/four distinct
-users in different projects, and there isn't a more specific higher-level
-library that would make more sense as the place to add the wrapper.
+1. For Linux system calls that aren't in POSIX, you can find the right header
+   file to work in by looking up your system call in the system call index on
+   [man7.org](https://man7.org/linux/man-pages/dir_section_2.html).
+   (If there's no header file given, or an explicit "glibc provides no wrapper",
+   see the points above about whether we should really be adding this or not!)
+1. To implement a trivial system call wrapper -- one where a caller could just
+   use syscall(3) with no extra logic, simply add an entry (or entries,
+   in some cases) to SYSCALLS.TXT.
 
-In all other cases, you should use
-[syscall(3)](https://man7.org/linux/man-pages/man2/syscall.2.html) instead.
+   See SYSCALLS.TXT itself for documentation on the format.
 
-Adding a system call usually involves:
+   Some trivial system call wrappers are still harder than others. The most
+   common problem is a 64-bit argument such as `off64_t` (a *pointer* to a
+   64-bit argument is fine, since pointers are always the "natural" size for
+   the architecture regardless of the size of the thing they point to).
+   Whenever you have a function that takes `off_t` or `off64_t`, you'll need to
+   consider whether you actually need a foo() and a foo64(), and whether they
+   will use the same underlying system call or are implemented as two different
+   system calls. It's usually easiest to find a similar system call and copy
+   and paste from that. You'll definitely need to test both on 32-bit and
+   64-bit. (These special cases warrant more testing than the easy cases,
+   even if only manual testing with strace. Sadly it isn't always feasible to
+   write a working test for the interesting cases -- offsets larger than 2GiB,
+   say -- so you may end up just writing a "meaningless" program whose only
+   purpose is to give you patterns to look for when run under strace(1).)
 
-  1. Add an entry (or entries, in some cases) to SYSCALLS.TXT.
-     See SYSCALLS.TXT itself for documentation on the format.
-     See also the notes below for how to deal with tricky cases like `off_t`.
-  2. Find the right header file to work in by looking up your system call
-     on [man7.org](https://man7.org/linux/man-pages/dir_section_2.html).
-     (If there's no header file given, see the points above about whether we
-     should really be adding this or not!)
-  3. Add constants (and perhaps types) to the appropriate header file.
-     Note that you should check to see whether the constants are already in
-     kernel uapi header files, in which case you just need to make sure that
-     the appropriate header file in libc/include/ `#include`s the relevant
-     `linux/` file or files.
-  4. Add function declarations to the appropriate header file. Don't forget
-     to include the appropriate `__INTRODUCED_IN()`, with the right API level
-     for the first release your system call wrapper will be in. See
-     libc/include/android/api_level.h for the API levels.
-     If the header file doesn't exist, copy all of libc/include/sys/sysinfo.h
-     into your new file --- it's a good short example to start from.
+  In some cases the syscall you're adding a wrapper for will be new enough
+  that it's not available on all supported kernels. In that case you'll need
+  to consider two extra issues:
 
-     Note also our style for naming arguments: always use two leading
-     underscores (so developers are free to use any of the unadorned names as
-     macros without breaking things), avoid abbreviations, and ideally try to
-     use the same name as an existing system call (to reduce the amount of
-     English vocabulary required by people who just want to use the function
-     signatures). If there's a similar function already in the C library,
-     check what names it's used. Finally, prefer the `void*` orthography we
-     use over the `void *` you'll see on man7.org.)
-  5. Add basic documentation to the header file. Again, the existing
-     libc/include/sys/sysinfo.h is a good short example that shows the
-     expected style.
+  1. Think about what the fallback behavior should be. There are two main
+     choices: fail clearly (usually with -1 and errno set to ENOSYS),
+     or have a "best effort" fallback implementation. When deciding between
+     these two options, always consider (a) how hard it is for us to maintain
+     the other implementation, (b) how hard it is for developers to maintain
+     their own implementation (bearing in mind that they won't be able to use
+     anything from bionic until their target API level is high enough), and
+     (c) any security implications. As an example of the last point, we didn't
+     offer fallback implementations for things like accept4() with SOCK_CLOEXEC
+     because there's no non-racy way to do that, meaning that a developer might
+     write code that _looks_ secure but which we make insecure at runtime by
+     pretending to have done what they asked for -- atomic setting of the
+     SOCK_CLOEXEC flag on the returned fd -- but not actually doing it.
 
-     Most of the detail should actually be left to the man7.org page, with
-     only a brief one-sentence explanation (usually based on the description
-     in the NAME section of the man page) in our documentation. Always
-     include the return value/error reporting details (you can find out
-     what the system call returns from the RETURN VALUE of the man page),
-     but try to match the wording and style wording from _our_ existing
-     documentation; we're trying to minimize the amount of English readers
-     need to understand by using the exact same wording where possible).
-     Explicitly say which version of Android the function was added to in
-     the documentation because the documentation generation tool doesn't yet
-     understand `__INTRODUCED_IN()`.
+  1. Make sure that you've written your unit tests so they don't fail when
+     run on devices with old (but still supported kernels). Search for ENOSYS
+     in the tests to find existing examples of the common idiom for this.
 
-     Explicitly call out any Android-specific changes/additions/limitations
-     because they won't be on the man7.org page.
-  6. Add the function name to the correct section in libc/libc.map.txt; it'll
-     be near the end of the file. You may need to add a new section if you're
-     the first to add a system call to this version of Android.
-  7. Add a basic test. Don't try to test everything; concentrate on just testing
-     the code that's actually in *bionic*, not all the functionality that's
-     implemented in the kernel. For simple syscalls, that's just the
-     auto-generated argument and return value marshalling.
+  See https://source.android.com/docs/core/architecture/kernel/android-common#feature-and-launch-kernels
+  for details of what kernels are considered supported.
 
-     Add a test in the right file in tests/. We have one file per header, so if
-     your system call is exposed in <unistd.h>, for example, your test would go
-     in tests/unistd_test.cpp.
-
-     A trivial test that deliberately supplies an invalid argument helps check
-     that we're generating the right symbol and have the right declaration in
-     the header file, and that the change to libc.map.txt from step 5 is
-     correct. (You can use strace(1) manually to confirm that the correct
-     system call is being made.)
-
-     For testing the *kernel* side of things, we should prefer to rely on
-     https://github.com/linux-test-project/ltp for kernel testing, but you'll
-     want to check that external/ltp does contain tests for the syscall you're
-     adding. Also check that external/ltp is using the libc wrapper for the
-     syscall rather than calling it "directly" via syscall(3)!
-
-Some system calls are harder than others. The most common problem is a 64-bit
-argument such as `off64_t` (a *pointer* to a 64-bit argument is fine, since
-pointers are always the "natural" size for the architecture regardless of the
-size of the thing they point to). Whenever you have a function that takes
-`off_t` or `off64_t`, you'll need to consider whether you actually need a foo()
-and a foo64(), and whether they will use the same underlying system call or are
-implemented as two different system calls. It's usually easiest to find a
-similar system call and copy and paste from that. You'll definitely need to test
-both on 32-bit and 64-bit. (These special cases warrant more testing than the
-easy cases, even if only manual testing with strace. Sadly it isn't always
-feasible to write a working test for the interesting cases -- offsets larger
-than 2GiB, say -- so you may end up just writing a "meaningless" program whose
-only purpose is to give you patterns to look for when run under strace(1).)
-
-A general example of adding a system call:
-https://android-review.googlesource.com/c/platform/bionic/+/2073827
+  You can see a general example of adding a trivial system call wrapper here:
+  https://android-review.googlesource.com/c/platform/bionic/+/2073827
 
 ### Debugging tips
 
