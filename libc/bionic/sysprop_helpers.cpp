@@ -32,10 +32,15 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sys/system_properties.h"
+#include <sys/system_properties.h>
+
+#include <async_safe/CHECK.h>
 
 static bool get_property_value(const char* property_name, char* dest, size_t dest_size) {
-  assert(property_name && dest && dest_size != 0);
+  CHECK(property_name);
+  CHECK(dest);
+  CHECK(dest_size != 0);
+
   const prop_info* prop = __system_property_find(property_name);
   if (!prop) return false;
 
@@ -50,7 +55,7 @@ static bool get_property_value(const char* property_name, char* dest, size_t des
       prop,
       [](void* cookie, const char* /* name */, const char* value, uint32_t /* serial */) {
         auto* cb_cookie = reinterpret_cast<PropCbCookie*>(cookie);
-        strncpy(cb_cookie->dest, value, cb_cookie->size);
+        strlcpy(cb_cookie->dest, value, cb_cookie->size);
       },
       &cb_cookie);
   return *dest != '\0';
@@ -61,8 +66,7 @@ bool get_config_from_env_or_sysprops(const char* env_var_name, const char* const
                                      size_t options_size) {
   const char* env = getenv(env_var_name);
   if (env && *env != '\0') {
-    strncpy(options, env, options_size);
-    options[options_size - 1] = '\0';  // Ensure null-termination.
+    strlcpy(options, env, options_size);
     return true;
   }
 
