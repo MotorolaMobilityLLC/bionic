@@ -843,7 +843,6 @@ cc_library_static {
         "bionic/ftw.cpp",
         "bionic/futimens.cpp",
         "bionic/getcwd.cpp",
-        "bionic/getdomainname.cpp",
         "bionic/getentropy.cpp",
         "bionic/gethostname.cpp",
         "bionic/getloadavg.cpp",

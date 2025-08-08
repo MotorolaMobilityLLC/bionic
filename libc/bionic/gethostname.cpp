@@ -31,16 +31,24 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 
-int gethostname(char* buf, size_t n) {
-  utsname name = {};
-  uname(&name);
-
-  size_t name_length = static_cast<size_t>(strlen(name.nodename) + 1);
+static inline int __safe_name_copy(char* dst, size_t n, const char* src, int too_long_errno) {
+  size_t name_length = static_cast<size_t>(strlen(src) + 1);
   if (name_length > n) {
-    errno = ENAMETOOLONG;
+    errno = too_long_errno;
     return -1;
   }
-
-  memcpy(buf, name.nodename, name_length);
+  memcpy(dst, src, name_length);
   return 0;
+}
+
+int gethostname(char* buf, size_t n) {
+  utsname uts = {};
+  if (uname(&uts) == -1) return -1;
+  return __safe_name_copy(buf, n, uts.nodename, ENAMETOOLONG);
+}
+
+int getdomainname(char* buf, size_t n) {
+  utsname uts = {};
+  if (uname(&uts) == -1) return -1;
+  return __safe_name_copy(buf, n, uts.domainname, EINVAL);
 }
