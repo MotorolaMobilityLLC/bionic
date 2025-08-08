@@ -23,7 +23,14 @@
 // This doesn't entirely work because gtest also (transitively) pulls in <atomic>.
 // It's not clear there's a good fix for this,
 // other than switching to a non-C++ unit test framework for bionic.
+// Bionic has <stdatomic.h>, which includes <bits/stdatomic.h>, but GCC and
+// Clang only provide <stdatomic.h>, so only include <bits/stdatomic.h> when it
+// exists. That is, include <bits/stdatomic.h> for bionic but not for glibc.
+#if __has_include(<bits/stdatomic.h>)
 #include <bits/stdatomic.h>
+#else
+#include <stdatomic.h>
+#endif
 
 #include <pthread.h>
 #include <stdint.h>
