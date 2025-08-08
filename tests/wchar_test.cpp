@@ -1410,4 +1410,13 @@ TEST(wchar, wcstok) {
     EXPECT_EQ(nullptr, p);
     EXPECT_EQ(nullptr, wcstok(nullptr, L":", &p));
   }
+
+  // Some existing implementations have a separate return path for this.
+  wchar_t non_empty_at_end[] = L"hello:world";
+  EXPECT_STREQ(L"hello", wcstok(non_empty_at_end, L":", &p));
+  EXPECT_STREQ(L"world", wcstok(nullptr, L":", &p));
+  for (size_t i = 0; i < 1024; ++i) {
+    EXPECT_EQ(nullptr, p);
+    EXPECT_EQ(nullptr, wcstok(nullptr, L":", &p));
+  }
 }

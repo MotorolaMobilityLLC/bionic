@@ -1742,6 +1742,15 @@ TEST(STRING_TEST, strsep) {
   for (size_t i = 0; i < 1024; ++i) {
     EXPECT_EQ(nullptr, strsep(&p, ":"));
   }
+
+  // Some existing implementations have a separate return path for this.
+  char non_empty_at_end[] = "hello:world";
+  p = non_empty_at_end;
+  EXPECT_STREQ("hello", strsep(&p, ":"));
+  EXPECT_STREQ("world", strsep(&p, ":"));
+  for (size_t i = 0; i < 1024; ++i) {
+    EXPECT_EQ(nullptr, strsep(&p, ":"));
+  }
 }
 
 TEST(STRING_TEST, strtok) {
@@ -1758,6 +1767,14 @@ TEST(STRING_TEST, strtok) {
   EXPECT_STREQ("foo", strtok(nullptr, ":"));
   EXPECT_EQ(nullptr, strtok(nullptr, ":"));
   // Repeated calls after the first nullptr keep returning nullptr.
+  for (size_t i = 0; i < 1024; ++i) {
+    EXPECT_EQ(nullptr, strtok(nullptr, ":"));
+  }
+
+  // Some existing implementations have a separate return path for this.
+  char non_empty_at_end[] = "hello:world";
+  EXPECT_STREQ("hello", strtok(non_empty_at_end, ":"));
+  EXPECT_STREQ("world", strtok(nullptr, ":"));
   for (size_t i = 0; i < 1024; ++i) {
     EXPECT_EQ(nullptr, strtok(nullptr, ":"));
   }
@@ -1779,6 +1796,15 @@ TEST(STRING_TEST, strtok_r) {
   EXPECT_STREQ("foo", strtok_r(nullptr, ":", &p));
   EXPECT_EQ(nullptr, strtok_r(nullptr, ":", &p));
   // Repeated calls after the first nullptr keep returning nullptr.
+  for (size_t i = 0; i < 1024; ++i) {
+    EXPECT_EQ(nullptr, p);
+    EXPECT_EQ(nullptr, strtok_r(nullptr, ":", &p));
+  }
+
+  // Some existing implementations have a separate return path for this.
+  char non_empty_at_end[] = "hello:world";
+  EXPECT_STREQ("hello", strtok_r(non_empty_at_end, ":", &p));
+  EXPECT_STREQ("world", strtok_r(nullptr, ":", &p));
   for (size_t i = 0; i < 1024; ++i) {
     EXPECT_EQ(nullptr, p);
     EXPECT_EQ(nullptr, strtok_r(nullptr, ":", &p));
