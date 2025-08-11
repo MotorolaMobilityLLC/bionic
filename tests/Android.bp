@@ -235,6 +235,36 @@ cc_prebuilt_library_shared {
     srcs: [":gen_invalid-textrels2"],
 }
 
+cc_genrule {
+    name: "gen_invalid-rw_rx_rw_load_segments",
+    tools: ["gen_invalid_elf"],
+    // Force the segment alignment to 4KiB
+    srcs: [":libtest_elf_max_page_size_4kib"],
+    out: ["libtest_invalid-load_segments_rw_rx_rw.so"],
+    cmd: "$(location gen_invalid_elf) --ref-elf=$(location :libtest_elf_max_page_size_4kib) --output=$(out) --invalid-type=load_segments_rw_rx_rw",
+}
+
+cc_prebuilt_library_shared {
+    name: "libtest_invalid-rw_rx_rw_load_segments",
+    defaults: ["invalid_lib_defaults"],
+    srcs: [":gen_invalid-rw_rx_rw_load_segments"],
+}
+
+cc_genrule {
+    name: "gen_invalid-rx_rw_rx_load_segments",
+    tools: ["gen_invalid_elf"],
+    // Force the segment alignment to 4KiB
+    srcs: [":libtest_elf_max_page_size_4kib"],
+    out: ["libtest_invalid-load_segments_rx_rw_rx.so"],
+    cmd: "$(location gen_invalid_elf) --ref-elf=$(location :libtest_elf_max_page_size_4kib) --output=$(out) --invalid-type=load_segments_rx_rw_rx",
+}
+
+cc_prebuilt_library_shared {
+    name: "libtest_invalid-rx_rw_rx_load_segments",
+    defaults: ["invalid_lib_defaults"],
+    srcs: [":gen_invalid-rx_rw_rx_load_segments"],
+}
+
 cc_prebuilt_test_library_shared {
     name: "libtest_invalid-local-tls",
     strip: {
@@ -940,6 +970,8 @@ cc_defaults {
         "libtest_invalid-empty_shdr_table",
         "libtest_invalid-local-tls",
         "libtest_invalid-rw_load_segment",
+        "libtest_invalid-rw_rx_rw_load_segments",
+        "libtest_invalid-rx_rw_rx_load_segments",
         "libtest_invalid-textrels",
         "libtest_invalid-textrels2",
         "libtest_invalid-unaligned_shdr_offset",
