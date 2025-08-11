@@ -44,7 +44,6 @@
 #define ASSERT_SUBSTR(needle, haystack) \
     ASSERT_PRED_FORMAT2(::testing::IsSubstring, needle, haystack)
 
-
 static bool g_called = false;
 extern "C" void DlSymTestFunction() {
   g_called = true;
@@ -1579,6 +1578,10 @@ TEST(dlext, compat_elf_hash_and_relocation_tables) {
 }
 
 #endif //  defined(__arm__)
+
+static inline std::string GetPrebuiltElfDir() {
+  return GetTestLibRoot() + "/prebuilt-elf-files";
+}
 
 TEST(dlfcn, dlopen_invalid_rw_load_segment) {
   const std::string libpath = GetPrebuiltElfDir() + "/libtest_invalid-rw_load_segment.so";

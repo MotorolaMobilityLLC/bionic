@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _BIONIC_TESTS_GTEST_GLOBALS_H
-#define _BIONIC_TESTS_GTEST_GLOBALS_H
+#pragma once
 
 #include <string>
 
 std::string GetTestLibRoot();
-
-inline std::string GetPrebuiltElfDir() {
-  return GetTestLibRoot() + "/prebuilt-elf-files";
-}
-
-#endif  // _BIONIC_TESTS_GTEST_GLOBALS_H
