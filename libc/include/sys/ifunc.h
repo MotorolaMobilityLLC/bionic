@@ -30,6 +30,9 @@
 
 #include <sys/cdefs.h>
 
+#include <stddef.h>
+#include <stdint.h>
+
 /**
  * @file sys/ifunc.h
  * @brief Declarations used for ifunc resolvers. Currently only meaningful for arm64.
@@ -40,18 +43,43 @@ __BEGIN_DECLS
 #if defined(__aarch64__)
 
 /**
+ * Helper function that returns the given AT_HWCAP if available, 0 otherwise.
+ *
+ * The first argument is which hwcap: 1 for AT_HWCAP, 2 for AT_HWCAP2, and so on.
+ * The second argument is the first argument passed to your ifunc resolver;
+ * it's unused, but there for glibc source compatibility.
+ * The third argument is the second argument passed to your ifunc resolver.
+ *
+ * TODO: should this call getauxval() for < api level 30?
+ */
+static __inline unsigned long __ifunc_hwcap(size_t __which, uint64_t __unused __ifunc_arg0, uint64_t* __ifunc_arg1) {
+  return (__which > 0) && (__which < __ifunc_arg1[0] / sizeof(uint64_t)) ? __ifunc_arg1[__which] : 0;
+}
+
+/**
  * Provides information about hardware capabilities to arm64 ifunc resolvers.
+ *
+ * New code should use __ifunc_hwcap() rather than interpreting ifunc arguments
+ * directly.
+ *
+ * See https://github.com/ARM-software/abi-aa/blob/main/sysvabi64/sysvabi64.rst#gnu-indirect-functions
+ * for more information.
  *
  * Prior to API level 30, arm64 ifunc resolvers are passed no arguments.
  *
  * Starting with API level 30, arm64 ifunc resolvers are passed two arguments.
- * The first is a uint64_t whose value is equal to getauxval(AT_HWCAP) | _IFUNC_ARG_HWCAP.
- * The second is a pointer to a data structure of this type.
+ * The first is a uint64_t whose value is equal to `getauxval(AT_HWCAP) | _IFUNC_ARG_HWCAP`.
+ * The second is a pointer to an `__ifunc_arg_t`.
  *
  * Code that wishes to be compatible with API levels before 30 must call getauxval() itself.
  */
 typedef struct __ifunc_arg_t {
-  /** Set to sizeof(__ifunc_arg_t). */
+  /**
+   * Used to determine which subset of fields are actually available
+   * on the device the ifunc is being run on.
+   *
+   * New code should use the __ifunc_hwcap() helper which takes care of this.
+   */
   unsigned long _size;
 
   /** Set to getauxval(AT_HWCAP). */
@@ -59,6 +87,12 @@ typedef struct __ifunc_arg_t {
 
   /** Set to getauxval(AT_HWCAP2). */
   unsigned long _hwcap2;
+
+  /** Unsafe to access without checking `_size`; use __ifunc_hwcap(). */
+  unsigned long _hwcap3;
+
+  /** Unsafe to access without checking `_size`; use __ifunc_hwcap(). */
+  unsigned long _hwcap4;
 } __ifunc_arg_t;
 
 /**

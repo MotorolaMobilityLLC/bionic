@@ -48,8 +48,11 @@ ElfW(Addr) __bionic_call_ifunc_resolver(ElfW(Addr) resolver_addr) {
     arg._size = sizeof(__ifunc_arg_t);
     arg._hwcap = getauxval(AT_HWCAP);
     arg._hwcap2 = getauxval(AT_HWCAP2);
+    arg._hwcap3 = getauxval(AT_HWCAP3);
+    arg._hwcap4 = getauxval(AT_HWCAP4);
   }
-  return reinterpret_cast<ifunc_resolver_t>(resolver_addr)(arg._hwcap | _IFUNC_ARG_HWCAP, &arg);
+  ifunc_resolver_t resolver = reinterpret_cast<ifunc_resolver_t>(resolver_addr);
+  return resolver(arg._hwcap | _IFUNC_ARG_HWCAP, &arg);
 #elif defined(__arm__)
   typedef ElfW(Addr) (*ifunc_resolver_t)(unsigned long);
   static unsigned long hwcap = getauxval(AT_HWCAP);
