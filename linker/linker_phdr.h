@@ -152,6 +152,9 @@ class ElfReader {
   // Use app compat mode when loading 4KiB max-page-size ELFs on 16KiB page-size devices?
   bool should_use_16kib_app_compat_ = false;
 
+  // Should fail hard on 16KiB related dlopen() errors?
+  bool dlopen_16kib_err_is_fatal_ = false;
+
   // RELRO region for 16KiB compat loading
   ElfW(Addr) compat_relro_start_ = 0;
   ElfW(Addr) compat_relro_size_ = 0;

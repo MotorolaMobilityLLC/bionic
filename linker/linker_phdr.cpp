@@ -46,12 +46,16 @@
 #include "linker_soinfo.h"
 #include "linker_utils.h"
 
+#include "private/CFIShadow.h"  // For kLibraryAlignment
 #include "private/bionic_asm_note.h"
-#include "private/CFIShadow.h" // For kLibraryAlignment
+#include "private/bionic_inline_raise.h"
 #include "private/elf_note.h"
 
 #include <android-base/file.h>
+#include <android-base/parsebool.h>
 #include <android-base/properties.h>
+#include <android-base/stringprintf.h>
+#include <android/set_abort_message.h>
 
 static int GetTargetElfMachine() {
 #if defined(__arm__)
@@ -184,12 +188,21 @@ bool ElfReader::Read(const char* name, int fd, off64_t file_offset, off64_t file
   }
 
   if (kPageSize == 16 * 1024 && min_align_ < kPageSize) {
-    // This prop needs to be read on 16KiB devices for each ELF where min_align_ is less than 16KiB.
-    // It cannot be cached since the developer may toggle app compat on/off.
-    // This check will be removed once app compat is made the default on 16KiB devices.
+    // This prop needs to be read on 16KiB devices for each ELF where min_align_ is less than
+    // 16KiB. It cannot be cached since the developer may toggle app compat on/off. This check will
+    // be removed once app compat is made the default on 16KiB devices.
+    auto compat_prop_val =
+        ::android::base::GetProperty("bionic.linker.16kb.app_compat.enabled", "false");
+
+    using ::android::base::ParseBool;
+    using ::android::base::ParseBoolResult;
+
     should_use_16kib_app_compat_ =
-        ::android::base::GetBoolProperty("bionic.linker.16kb.app_compat.enabled", false) ||
-        get_16kb_appcompat_mode();
+        ParseBool(compat_prop_val) == ParseBoolResult::kTrue || get_16kb_appcompat_mode();
+
+    if (compat_prop_val == "fatal") {
+      dlopen_16kib_err_is_fatal_ = true;
+    }
   }
 
   return did_read_;
@@ -982,8 +995,17 @@ bool ElfReader::LoadSegments() {
   // Apps may rely on undefined behavior here on 4 KB systems,
   // which is the norm before this change is introduced
   if (kPageSize >= 16384 && min_align_ < kPageSize && !should_use_16kib_app_compat_) {
-    DL_ERR_AND_LOG("\"%s\" program alignment (%zu) cannot be smaller than system page size (%zu)",
-                   name_.c_str(), min_align_, kPageSize);
+    std::string err_msg = android::base::StringPrintf(
+        "\"%s\" program alignment (%zu) cannot be smaller than system page size (%zu)",
+        name_.c_str(), min_align_, kPageSize);
+
+    DL_ERR_AND_LOG("%s", err_msg.c_str());
+
+    if (dlopen_16kib_err_is_fatal_) {
+      android_set_abort_message(err_msg.c_str());
+      inline_raise(SIGABRT);
+    }
+
     return false;
   }
 
