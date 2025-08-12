@@ -16,28 +16,29 @@
 
 #include <gtest/gtest.h>
 
-#include "DoNotOptimize.h"
 #include "utils.h"
 
 #include <fenv.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
 
+#include <android-base/test_utils.h>
+
 static void TestRounding(float expectation1, float expectation2) {
   // Volatile to prevent compile-time evaluation.
   volatile float f = 1.968750f;
   volatile float m = 0x1.0p23f;
   float x;
-  DoNotOptimize(x = f + m);
+  android::base::DoNotOptimize(x = f + m);
   ASSERT_FLOAT_EQ(expectation1, x);
-  DoNotOptimize(x = x - m);
+  android::base::DoNotOptimize(x = x - m);
   ASSERT_EQ(expectation2, x);
 }
 
 static void DivideByZero() {
   // Volatile to prevent compile-time evaluation.
   volatile float zero = 0.0f;
-  DoNotOptimize(123.0f / zero);
+  android::base::DoNotOptimize(123.0f / zero);
 }
 
 TEST(fenv, fesetround_fegetround_FE_TONEAREST) {

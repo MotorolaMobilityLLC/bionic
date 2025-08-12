@@ -66,7 +66,6 @@
 #include <android-base/file.h>
 #include <android-base/test_utils.h>
 
-#include "DoNotOptimize.h"
 #include "utils.h"
 
 #if defined(__BIONIC__)
@@ -476,7 +475,7 @@ TEST(malloc, DISABLED_alloc_after_fork) {
       while (!stop) {
         for (size_t size = kMinAllocationSize; size <= kMaxAllocationSize; size <<= 1) {
           void* ptr;
-          DoNotOptimize(ptr = malloc(size));
+          android::base::DoNotOptimize(ptr = malloc(size));
           free(ptr);
         }
       }
@@ -490,7 +489,7 @@ TEST(malloc, DISABLED_alloc_after_fork) {
     if ((pid = fork()) == 0) {
       for (size_t size = kMinAllocationSize; size <= kMaxAllocationSize; size <<= 1) {
         void* ptr;
-        DoNotOptimize(ptr = malloc(size));
+        android::base::DoNotOptimize(ptr = malloc(size));
         ASSERT_TRUE(ptr != nullptr);
         // Make sure we can touch all of the allocation.
         memset(ptr, 0x1, size);
