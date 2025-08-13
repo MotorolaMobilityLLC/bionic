@@ -97,8 +97,27 @@ TEST(ifunc, hwcap) {
   EXPECT_EQ(getauxval(AT_HWCAP) | _IFUNC_ARG_HWCAP, g_hwcap);
 
   EXPECT_EQ(sizeof(__ifunc_arg_t), g_arg._size);
+  EXPECT_EQ(5 * sizeof(uint64_t), g_arg._size);
+
+  // Test the fields.
   EXPECT_EQ(getauxval(AT_HWCAP), g_arg._hwcap);
   EXPECT_EQ(getauxval(AT_HWCAP2), g_arg._hwcap2);
+  EXPECT_EQ(getauxval(AT_HWCAP3), g_arg._hwcap3);
+  EXPECT_EQ(getauxval(AT_HWCAP4), g_arg._hwcap4);
+
+  // (Real users should just declare their ifunc resolver with the appropriate
+  // type, but we're deliberately trying to test all the options.)
+  uint64_t* raw_arg = reinterpret_cast<uint64_t*>(&g_arg);
+
+  // Test the helper function.
+  EXPECT_EQ(getauxval(AT_HWCAP), __ifunc_hwcap(1, g_hwcap, raw_arg));
+  EXPECT_EQ(getauxval(AT_HWCAP2), __ifunc_hwcap(2, g_hwcap, raw_arg));
+  EXPECT_EQ(getauxval(AT_HWCAP3), __ifunc_hwcap(3, g_hwcap, raw_arg));
+  EXPECT_EQ(getauxval(AT_HWCAP4), __ifunc_hwcap(4, g_hwcap, raw_arg));
+
+  // Test helper function edge cases.
+  EXPECT_EQ(0u, __ifunc_hwcap(-1, g_hwcap, raw_arg));
+  EXPECT_EQ(0u, __ifunc_hwcap(5, g_hwcap, raw_arg));
 #elif defined(__arm__)
   EXPECT_EQ(getauxval(AT_HWCAP), g_hwcap);
 #elif defined(__riscv)
