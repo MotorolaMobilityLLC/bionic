@@ -26,7 +26,6 @@
  * SUCH DAMAGE.
  */
 
-#include <cxxabi.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <signal.h>
@@ -49,6 +48,7 @@
 #include <android-base/stringprintf.h>
 #include <android-base/thread_annotations.h>
 #include <platform/bionic/macros.h>
+#include <unwindstack/Demangle.h>
 
 #include "Config.h"
 #include "DebugData.h"
@@ -619,16 +619,9 @@ void PointerData::DumpLiveToFile(int fd) {
         if (frame.function_name.empty()) {
           dprintf(fd, " \"\" 0}");
         } else {
-          char* demangled_name =
-              abi::__cxa_demangle(frame.function_name.c_str(), nullptr, nullptr, nullptr);
-          const char* name;
-          if (demangled_name != nullptr) {
-            name = demangled_name;
-          } else {
-            name = frame.function_name.c_str();
-          }
-          dprintf(fd, " \"%s\" %" PRIx64 "}", name, frame.function_offset);
-          free(demangled_name);
+          dprintf(fd, " \"%s\" %" PRIx64 "}",
+                  unwindstack::DemangleNameIfNeeded(frame.function_name).c_str(),
+                  frame.function_offset);
         }
       }
       dprintf(fd, "\n");

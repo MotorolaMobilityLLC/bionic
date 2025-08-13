@@ -25,8 +25,9 @@ cc_library_static {
     stl: "libc++_static",
 
     whole_static_libs: [
-        "libbase",
         "libasync_safe",
+        "libbase",
+        "libunwindstack_demangle",
     ],
 
     include_dirs: ["bionic/libc"],

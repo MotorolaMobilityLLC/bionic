@@ -26,7 +26,6 @@
  * SUCH DAMAGE.
  */
 
-#include <cxxabi.h>
 #include <inttypes.h>
 #include <pthread.h>
 #include <stdint.h>
@@ -38,6 +37,7 @@
 
 #include <android-base/stringprintf.h>
 #include <unwindstack/AndroidUnwinder.h>
+#include <unwindstack/Demangle.h>
 #include <unwindstack/Unwinder.h>
 
 #include "UnwindBacktrace.h"
@@ -88,14 +88,7 @@ void UnwindLog(const std::vector<unwindstack::FrameData>& frame_info) {
 
     if (!info->function_name.empty()) {
       line += " (";
-      char* demangled_name =
-          abi::__cxa_demangle(info->function_name.c_str(), nullptr, nullptr, nullptr);
-      if (demangled_name != nullptr) {
-        line += demangled_name;
-        free(demangled_name);
-      } else {
-        line += info->function_name;
-      }
+      line += unwindstack::DemangleNameIfNeeded(info->function_name);
       if (info->function_offset != 0) {
         line += "+" + std::to_string(info->function_offset);
       }

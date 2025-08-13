@@ -26,7 +26,6 @@
  * SUCH DAMAGE.
  */
 
-#include <cxxabi.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <inttypes.h>
@@ -40,6 +39,8 @@
 #include "MapData.h"
 #include "backtrace.h"
 #include "debug_log.h"
+
+#include <unwindstack/Demangle.h>
 
 #if defined(__LP64__)
 #define PAD_PTR "016" PRIxPTR
@@ -154,18 +155,10 @@ std::string backtrace_string(const uintptr_t* frames, size_t frame_count) {
 
     char buf[1024];
     if (symbol != nullptr) {
-      char* demangled_name = abi::__cxa_demangle(symbol, nullptr, nullptr, nullptr);
-      const char* name;
-      if (demangled_name != nullptr) {
-        name = demangled_name;
-      } else {
-        name = symbol;
-      }
-      async_safe_format_buffer(buf, sizeof(buf),
-                               "          #%02zd  pc %" PAD_PTR "  %s%s (%s+%" PRIuPTR ")\n",
-                               frame_num, rel_pc, soname, offset_buf, name,
-                               frames[frame_num] - offset);
-      free(demangled_name);
+      async_safe_format_buffer(
+          buf, sizeof(buf), "          #%02zd  pc %" PAD_PTR "  %s%s (%s+%" PRIuPTR ")\n",
+          frame_num, rel_pc, soname, offset_buf, unwindstack::DemangleNameIfNeeded(symbol).c_str(),
+          frames[frame_num] - offset);
     } else {
       async_safe_format_buffer(buf, sizeof(buf), "          #%02zd  pc %" PAD_PTR "  %s%s\n",
                                frame_num, rel_pc, soname, offset_buf);
