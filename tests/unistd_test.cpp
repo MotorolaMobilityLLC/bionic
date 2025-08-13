@@ -16,7 +16,6 @@
 
 #include <gtest/gtest.h>
 
-#include "DoNotOptimize.h"
 #include "SignalUtils.h"
 #include "sme_utils.h"
 #include "utils.h"
@@ -40,6 +39,7 @@
 #include <android-base/file.h>
 #include <android-base/silent_death_test.h>
 #include <android-base/strings.h>
+#include <android-base/test_utils.h>
 
 #include "private/get_cpu_count_from_string.h"
 
@@ -703,7 +703,7 @@ TEST(UNISTD_TEST, gettid_works_after_pthread_create) {
 __attribute__((noinline)) static void HwasanVforkTestChild() {
   // Allocate a tagged region on stack and leave it there.
   char x[10000];
-  DoNotOptimize(x);
+  android::base::DoNotOptimize(x);
   _exit(0);
 }
 
@@ -712,7 +712,7 @@ __attribute__((noinline)) static void HwasanReadMemory(const char* p, size_t siz
   // tag in [p, p+size).
   char z;
   for (size_t i = 0; i < size; ++i) {
-    DoNotOptimize(z = p[i]);
+    android::base::DoNotOptimize(z = p[i]);
   }
 }
 
@@ -720,7 +720,7 @@ __attribute__((noinline, no_sanitize("hwaddress"))) static void HwasanVforkTestP
   // Allocate a region on stack, but don't tag it (see the function attribute).
   // This depends on unallocated stack space at current function entry being untagged.
   char x[10000];
-  DoNotOptimize(x);
+  android::base::DoNotOptimize(x);
   // Verify that contents of x[] are untagged.
   HwasanReadMemory(x, sizeof(x));
 }

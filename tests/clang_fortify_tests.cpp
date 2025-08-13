@@ -92,7 +92,7 @@
 
 #include <array>
 
-#include "DoNotOptimize.h"
+#include <android-base/test_utils.h>
 
 #ifndef COMPILATION_TESTS
 #include <android-base/silent_death_test.h>
@@ -156,7 +156,7 @@ FORTIFY_TEST(strlen) {
     for (char& c : contents) {
       c ^= always_zero;
     }
-    DoNotOptimize(strlen(&contents.front()));
+    android::base::DoNotOptimize(strlen(&contents.front()));
   };
 
   EXPECT_NO_DEATH(run_strlen_with_contents({'f', 'o', '\0'}));

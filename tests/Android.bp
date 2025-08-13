@@ -1396,6 +1396,7 @@ cc_defaults {
         "-Wformat-nonliteral",
         "-U_FORTIFY_SOURCE",
     ],
+    header_libs: ["libbase_headers"],
     srcs: ["clang_fortify_tests.cpp"],
 }
 

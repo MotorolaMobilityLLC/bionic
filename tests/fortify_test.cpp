@@ -28,8 +28,7 @@
 #include <time.h>
 
 #include <android-base/silent_death_test.h>
-
-#include "DoNotOptimize.h"
+#include <android-base/test_utils.h>
 
 #if defined(__BIONIC__)
 #define ASSERT_FORTIFY(expr) ASSERT_EXIT(expr, testing::KilledBySignal(SIGABRT), "FORTIFY")
@@ -508,7 +507,7 @@ TEST_F(DEATHTEST, memmove_fortified) {
   char buf[20];
   strcpy(buf, "0123456789");
   volatile size_t n = 10;
-  ASSERT_FORTIFY_OR_HWASAN(DoNotOptimize(memmove(buf + 11, buf, n)));
+  ASSERT_FORTIFY_OR_HWASAN(android::base::DoNotOptimize(memmove(buf + 11, buf, n)));
 }
 
 TEST_F(DEATHTEST, memcpy_fortified) {
@@ -516,13 +515,13 @@ TEST_F(DEATHTEST, memcpy_fortified) {
   char bufb[10];
   strcpy(bufa, "012345678");
   volatile size_t n = 11;
-  ASSERT_FORTIFY_OR_HWASAN(DoNotOptimize(memcpy(bufb, bufa, n)));
+  ASSERT_FORTIFY_OR_HWASAN(android::base::DoNotOptimize(memcpy(bufb, bufa, n)));
 }
 
 TEST_F(DEATHTEST, memset_fortified) {
   char buf[10];
   volatile size_t n = 11;
-  ASSERT_FORTIFY_OR_HWASAN(DoNotOptimize(memset(buf, 0, n)));
+  ASSERT_FORTIFY_OR_HWASAN(android::base::DoNotOptimize(memset(buf, 0, n)));
 }
 
 TEST_F(DEATHTEST, stpncpy_fortified) {
