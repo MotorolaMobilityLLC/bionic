@@ -96,3 +96,12 @@ int wcwidth(wchar_t wc) {
 
   return 0;
 }
+
+int wcswidth(const wchar_t* wcs, size_t n) {
+  int result = 0, width;
+  for (size_t i = 0; i < n && wcs[i] != L'\0'; ++i) {
+    if ((width = wcwidth(wcs[i])) == -1) return -1;
+    result += width;
+  }
+  return result;
+}
