@@ -3040,7 +3040,7 @@ TEST_F(MallocDebugTest, log_allocator_stats_on_signal) {
   debug_free(pointer);
 
   ASSERT_STREQ("", getFakeLogBuf().c_str());
-  if (!running_with_hwasan()) {
+  if (!android::base::running_with_hwasan()) {
     // Do an exact match because the mallopt should not fail in normal operation.
     ASSERT_STREQ("4 malloc_debug Logging allocator stats...\n", getFakeLogPrint().c_str());
   } else {
@@ -3059,7 +3059,7 @@ TEST_F(MallocDebugTest, log_allocator_stats_on_exit) {
   debug_finalize();
 
   ASSERT_STREQ("", getFakeLogBuf().c_str());
-  if (!running_with_hwasan()) {
+  if (!android::base::running_with_hwasan()) {
     // Do an exact match because the mallopt should not fail in normal operation.
     ASSERT_STREQ("4 malloc_debug Logging allocator stats...\n", getFakeLogPrint().c_str());
   } else {

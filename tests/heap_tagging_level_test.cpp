@@ -58,9 +58,7 @@ TEST_F(heap_tagging_level_DeathTest, tagged_pointer_dies) {
   if (mte_supported()) {
     GTEST_SKIP() << "Tagged pointers are not used on MTE hardware.";
   }
-  if (running_with_hwasan()) {
-    GTEST_SKIP() << "Tagged heap pointers feature is disabled under HWASan.";
-  }
+  SKIP_WITH_HWASAN << "Tagged heap pointers feature is disabled under HWASan.";
 
   void *x = malloc(1);
 
@@ -152,9 +150,7 @@ TEST(heap_tagging_level, sync_async_bad_accesses_die) {
 
 TEST(heap_tagging_level, none_pointers_untagged) {
 #if defined(__BIONIC__)
-  if (running_with_hwasan()) {
-    GTEST_SKIP() << "HWASan is unaffected by heap tagging level.";
-  }
+  SKIP_WITH_HWASAN << "HWASan is unaffected by heap tagging level.";
   EXPECT_TRUE(SetHeapTaggingLevel(M_HEAP_TAGGING_LEVEL_NONE));
   std::unique_ptr<int[]> p = std::make_unique<int[]>(4);
   EXPECT_EQ(untag_address(p.get()), p.get());
@@ -171,7 +167,7 @@ TEST(heap_tagging_level, tagging_level_transitions) {
 
   EXPECT_FALSE(SetHeapTaggingLevel(static_cast<HeapTaggingLevel>(12345)));
 
-  if (running_with_hwasan()) {
+  if (android::base::running_with_hwasan()) {
     // NONE -> ...
     EXPECT_FALSE(SetHeapTaggingLevel(M_HEAP_TAGGING_LEVEL_TBI));
     EXPECT_FALSE(SetHeapTaggingLevel(M_HEAP_TAGGING_LEVEL_ASYNC));
