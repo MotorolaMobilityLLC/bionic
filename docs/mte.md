@@ -75,7 +75,12 @@ with the libc of the process we are starting.
 
 `__libc_init_mte` figures out the appropriate MTE level that is requested by
 the process, calls `prctl` to request this from the kernel, and stores data in
-`__libc_shared_globals` which gets picked up later to enable MTE in scudo.
+`__libc_shared_globals` which gets picked up in [SetDefaultTaggingLevel]
+to disable stack trace collection in scudo for ASYNC mode. Scudo decides whether
+to use MTE or not in [Allocator::init] when it is first initialized, depending
+on whether MTE is on for the process. Bionic calls
+`scudo_malloc_disable_memory_tagging` in [SetHeapTaggingLevel] if MTE is later
+disabled using mallopt.
 
 It also does work related to stack tagging and permissive mode, which will be
 detailed later.
@@ -242,3 +247,6 @@ and [in init] we set `BIONIC_MEMTAG_UPGRADE_SECS`, which gets handled by
 [in init]: https://cs.android.com/android/platform/superproject/main/+/main:system/core/init/service.cpp?q=f:system%2Fcore%2Finit%2Fservice.cpp%20should_upgrade_mte
 [crashes in ASYNC mode]: https://cs.android.com/android/platform/superproject/main/+/main:system/core/debuggerd/handler/debuggerd_handler.cpp;l=799?q=BIONIC_SIGNAL_ART_PROFILER
 [libc startup]: https://cs.android.com/android/platform/superproject/main/+/main:bionic/libc/bionic/libc_init_mte.cpp?q=BIONIC_MEMTAG_UPGRADE_SECS
+[SetDefaultHeapTaggingLevel]: https://cs.android.com/android/platform/superproject/main/+/main:bionic/libc/bionic/heap_tagging.cpp?q=f:bionic%20symbol:SetDefaultHeapTaggingLevel%20f:cpp$&ss=android%2Fplatform%2Fsuperproject%2Fmain
+[Allocator::init]: https://github.com/llvm/llvm-project/blob/ef962752d9fee02fe1e626dc92206eb0457e2aa3/compiler-rt/lib/scudo/standalone/combined.h#L175
+[SetHeapTaggingLevel]: https://cs.android.com/android/platform/superproject/main/+/main:bionic/libc/bionic/heap_tagging.cpp?q=f:bionic%20symbol:SetHeapTaggingLevel%20f:heap_tagging.cpp$&ss=android%2Fplatform%2Fsuperproject%2Fmain
