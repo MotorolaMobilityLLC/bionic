@@ -31,11 +31,14 @@
 #include <sstream>
 #include <string>
 
+#include <android-base/file.h>
+#include <android-base/unique_fd.h>
 #include <gtest/gtest.h>
 
 #include "linker.h"
 #include "linker_globals.h"
 #include "linker_note_gnu_property.h"
+#include "linker_phdr.h"
 #include "platform/bionic/macros.h"
 
 #define SONAME "test_so"
@@ -427,6 +430,42 @@ TEST(note_gnu_property, no_platform_support) {
   PHDR_WITH_NOTE_GNU_PROPERTY(prop.data());
   ASSERT_NO_ERROR_MSG();
   test_bti_not_supported(note);
+
+  g_platform_properties.bti_supported = bti_supported_orig;
+#else
+  GTEST_SKIP() << "BTI is not supported on this architecture.";
+#endif
+}
+
+using ::android::base::GetExecutableDirectory;
+using ::android::base::unique_fd;
+
+// Test that .note.gnu.property is properly loaded from a binary with a non-zero image base.
+TEST(note_gnu_property, find_gnu_property_offset_image_base) {
+#if defined(__aarch64__)
+  std::string path = GetExecutableDirectory() + "/note_gnu_property.so";
+
+  unique_fd fd{TEMP_FAILURE_RETRY(open(path.c_str(), O_RDONLY | O_CLOEXEC))};
+  ASSERT_GE(fd.get(), 0) << "Failed to open " << path << ": " << strerror(errno);
+
+  struct stat file_stat;
+  ASSERT_NE(TEMP_FAILURE_RETRY(fstat(fd.get(), &file_stat)), -1)
+      << "Failed to stat " << path << ": " << strerror(errno);
+
+  ElfReader elf_reader;
+  ASSERT_TRUE(elf_reader.Read(path.c_str(), fd.get(), 0, file_stat.st_size))
+      << "Failed to read ELF file";
+
+  // Load the binary as if BTI isn't supported so that we can run on any CPU.
+  auto bti_supported_orig = g_platform_properties.bti_supported;
+  g_platform_properties.bti_supported = false;
+
+  address_space_params address_space;
+  EXPECT_TRUE(elf_reader.Load(&address_space)) << "Failed to load ELF file";
+
+  // IsBTICompatible() checks for g_platform_properties.bti_supported.
+  g_platform_properties.bti_supported = true;
+  EXPECT_TRUE(elf_reader.note_gnu_property()->IsBTICompatible()) << "Binary is not BTI-compatible";
 
   g_platform_properties.bti_supported = bti_supported_orig;
 #else
