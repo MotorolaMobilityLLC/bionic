@@ -232,9 +232,9 @@ static ExecutableInfo get_executable_info(const char* arg_path) {
   // Stat "/proc/self/exe" instead of executable_path because
   // the executable could be unlinked by this point and it should
   // not cause a crash (see http://b/31084669)
-  if (TEMP_FAILURE_RETRY(stat(exe_path, &result.file_stat) == -1)) {
+  if (TEMP_FAILURE_RETRY(stat(exe_path, &result.file_stat)) == -1) {
     // Fallback to argv[0] for the case where /proc isn't available
-    if (TEMP_FAILURE_RETRY(stat(arg_path, &result.file_stat) == -1)) {
+    if (TEMP_FAILURE_RETRY(stat(arg_path, &result.file_stat)) == -1) {
       async_safe_fatal("unable to stat either \"/proc/self/exe\" or \"%s\": %m", arg_path);
     }
     exe_path = arg_path;
