@@ -305,23 +305,27 @@ int SystemProperties::Update(prop_info* pi, const char* value, unsigned int len)
   if (have_override) {
     memcpy(override_pa->dirty_backup_area(), override_pi->value, old_len + 1);
   }
-  atomic_thread_fence(memory_order_release);
   serial |= 1;
-  atomic_store_explicit(&pi->serial, serial, memory_order_relaxed);
+  atomic_store_explicit(&pi->serial, serial, memory_order_release);
+  atomic_thread_fence(memory_order_release);  // Order preceding store w.r.t. strlcpy.
   strlcpy(pi->value, value, len + 1);
+  // TODO: Eventually replace the above with something like atomic_store_per_byte_memcpy from
+  // wg21.link/p1478 . This is needed for the preceding memcpy and the reader-side copies as well.
+  // In general, memcpy uses near atomic_thread_fence() are suspect.
   if (have_override) {
     atomic_store_explicit(&override_pi->serial, serial, memory_order_relaxed);
     strlcpy(override_pi->value, value, len + 1);
   }
   // Now the primary value property area is up-to-date. Let readers know that they should
   // look at the property value instead of the backup area.
-  atomic_thread_fence(memory_order_release);
   int new_serial = (len << 24) | ((serial + 1) & 0xffffff);
-  atomic_store_explicit(&pi->serial, new_serial, memory_order_relaxed);
+  atomic_store_explicit(&pi->serial, new_serial, memory_order_release);
   if (have_override) {
     atomic_store_explicit(&override_pi->serial, new_serial, memory_order_relaxed);
   }
-  __futex_wake(&pi->serial, INT32_MAX);  // Fence by side effect
+  // Implicitly includes a fence to ensure the serial number update becomes visible before
+  // we reuse the backup area the next time.
+  __futex_wake(&pi->serial, INT32_MAX);
   atomic_store_explicit(serial_pa->serial(),
                         atomic_load_explicit(serial_pa->serial(), memory_order_relaxed) + 1,
                         memory_order_release);
