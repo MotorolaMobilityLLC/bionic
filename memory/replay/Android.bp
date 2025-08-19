@@ -61,8 +61,15 @@ cc_library_static {
     defaults: ["memory_replay_flag_defaults"],
 
     export_include_dirs: ["include"],
-    shared_libs: ["libbase"],
-    srcs: ["MemoryTrace.cpp"],
+    shared_libs: [
+        "libbase",
+        "libziparchive",
+    ],
+    srcs: [
+        "File.cpp",
+        "MemoryTrace.cpp",
+        "TraceInfo.cpp",
+    ],
 
     apex_available: [
         "//apex_available:platform",
@@ -76,7 +83,6 @@ cc_library_static {
 
     srcs: [
         "Alloc.cpp",
-        "File.cpp",
         "NativeInfo.cpp",
         "Pointers.cpp",
         "Thread.cpp",
