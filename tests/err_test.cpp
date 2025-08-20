@@ -66,21 +66,21 @@ TEST(err, errx_null_format) {
 }
 
 TEST(err, warn) {
-  CapturedStderr cap;
+  android::base::CapturedStderr cap;
   errno = 0;
   warn("x%c", 'y');
   ASSERT_EQ(cap.str(), name() + ": xy: Success\n");
 }
 
 TEST(err, warn_errno) {
-  CapturedStderr cap;
+  android::base::CapturedStderr cap;
   errno = EINVAL;
   warn("x%c", 'y');
   ASSERT_EQ(cap.str(), name() + ": xy: Invalid argument\n");
 }
 
 TEST(err, warnx) {
-  CapturedStderr cap;
+  android::base::CapturedStderr cap;
   errno = EINVAL;
   warnx("x%c", 'y');
   ASSERT_EQ(cap.str(), name() + ": xy\n");
