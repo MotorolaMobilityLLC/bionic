@@ -86,5 +86,5 @@ TEST(HwasanTest, MAYBE_DlopenAbsolutePath) {
 }
 
 TEST(HwasanTest, IsRunningWithHWasan) {
-  EXPECT_TRUE(running_with_hwasan());
+  EXPECT_TRUE(android::base::running_with_hwasan());
 }
