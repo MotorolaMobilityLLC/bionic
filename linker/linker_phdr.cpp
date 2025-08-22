@@ -599,13 +599,13 @@ static void* ReserveWithAlignmentPadding(size_t size, size_t mapping_align, size
     return mmap_ptr;
   }
 
+#if defined(__LP64__)
   // Minimum alignment of shared library gap. For efficiency, this should match the second level
   // page size of the platform.
-#if defined(__LP64__)
   constexpr size_t kGapAlignment = 2 * 1024 * 1024;
-#endif
   // Maximum gap size, in the units of kGapAlignment.
   constexpr size_t kMaxGapUnits = 32;
+#endif
   // Allocate enough space so that the end of the desired region aligned up is still inside the
   // mapping.
   size_t mmap_size = __builtin_align_up(size, mapping_align) + mapping_align - page_size();
