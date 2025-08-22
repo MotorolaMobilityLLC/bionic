@@ -215,6 +215,7 @@ cc_library_static {
 // -ffreestanding.
 
 cc_library_static {
+    name: "libc_bootstrap",
 
     srcs: [
         "bionic/__libc_init_main_thread.cpp",
@@ -237,7 +238,6 @@ cc_library_static {
         "-fno-stack-protector",
         "-ffreestanding",
     ],
-    name: "libc_bootstrap",
 }
 
 filegroup {
@@ -278,6 +278,7 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
+    name: "libc_tzcode",
 
     defaults: ["libc_defaults"],
     srcs: [
@@ -320,7 +321,6 @@ cc_library_static {
         "tzcode/",
         "upstream-freebsd/android/include",
     ],
-    name: "libc_tzcode",
 }
 
 // ========================================================
@@ -328,6 +328,7 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
+    name: "libc_dns",
 
     defaults: ["libc_defaults"],
     srcs: [
@@ -351,8 +352,6 @@ cc_library_static {
         "upstream-netbsd/lib/libc/include",
         "upstream-netbsd/android/include",
     ],
-
-    name: "libc_dns",
 }
 
 // ========================================================
@@ -370,6 +369,7 @@ cc_library_static {
 }
 
 cc_library_static {
+    name: "libc_freebsd",
     defaults: ["libc_defaults"],
     srcs: [
         "upstream-freebsd/lib/libc/stdlib/getopt_long.c",
@@ -390,11 +390,10 @@ cc_library_static {
     local_include_dirs: [
         "upstream-freebsd/android/include",
     ],
-
-    name: "libc_freebsd",
 }
 
 cc_library_static {
+    name: "libc_freebsd_large_stack",
     defaults: ["libc_defaults"],
     srcs: [
         "upstream-freebsd/lib/libc/gen/glob.c",
@@ -409,8 +408,6 @@ cc_library_static {
     local_include_dirs: [
         "upstream-freebsd/android/include",
     ],
-
-    name: "libc_freebsd_large_stack",
 }
 
 // ========================================================
@@ -421,7 +418,7 @@ cc_library_static {
 // automatically included.
 
 cc_library_static {
-
+    name: "libc_netbsd",
     defaults: ["libc_defaults"],
     srcs: [
         "upstream-netbsd/common/lib/libc/stdlib/random.c",
@@ -460,8 +457,6 @@ cc_library_static {
         "upstream-netbsd/android/include",
         "upstream-netbsd/lib/libc/include",
     ],
-
-    name: "libc_netbsd",
 }
 
 // ========================================================
@@ -471,6 +466,7 @@ cc_library_static {
 // These files are built with the openbsd-compat.h header file
 // automatically included.
 cc_library_static {
+    name: "libc_openbsd",
     defaults: ["libc_defaults"],
     srcs: [
         "upstream-openbsd/lib/libc/crypt/arc4random.c",
@@ -589,8 +585,6 @@ cc_library_static {
         "upstream-openbsd/lib/libc/include/",
         "upstream-openbsd/lib/libc/stdio/",
     ],
-
-    name: "libc_openbsd",
 }
 
 cc_library_static {
@@ -619,6 +613,7 @@ cc_library_static {
 // automatically included.
 
 cc_library_static {
+    name: "libc_gdtoa",
     defaults: ["libc_defaults"],
     srcs: [
         "upstream-openbsd/android/gdtoa_support.cpp",
@@ -656,8 +651,6 @@ cc_library_static {
         "upstream-openbsd/android/include",
         "upstream-openbsd/lib/libc/include",
     ],
-
-    name: "libc_gdtoa",
 }
 
 // ========================================================
@@ -665,10 +658,9 @@ cc_library_static {
 // implementation details
 // ========================================================
 cc_library_static {
+    name: "libc_fortify",
     defaults: ["libc_defaults"],
     srcs: ["bionic/fortify.cpp"],
-
-    name: "libc_fortify",
 
     // Disable FORTIFY for the compilation of these, so we don't end up having
     // FORTIFY silently call itself.
@@ -766,6 +758,7 @@ cc_rustlibs_for_make {
 // ========================================================
 
 cc_library_static {
+    name: "libc_bionic",
     defaults: ["libc_defaults"],
     srcs: [
         "bionic/NetdClientDispatch.cpp",
@@ -1153,7 +1146,6 @@ cc_library_static {
 
     cppflags: ["-Wold-style-cast"],
     include_dirs: ["bionic/libstdc++/include"],
-    name: "libc_bionic",
 }
 
 genrule {
@@ -1209,6 +1201,7 @@ genrule {
 }
 
 cc_library_static {
+    name: "libc_syscalls",
     defaults: ["libc_defaults"],
     srcs: ["bionic/__set_errno.cpp"],
     arch: {
@@ -1228,7 +1221,6 @@ cc_library_static {
             srcs: [":syscalls-x86_64"],
         },
     },
-    name: "libc_syscalls",
 }
 
 // ========================================================
@@ -1239,13 +1231,13 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
+    name: "libc_aeabi",
     defaults: ["libc_defaults"],
     arch: {
         arm: {
             srcs: ["arch-arm/bionic/__aeabi.c"],
         },
     },
-    name: "libc_aeabi",
     cflags: ["-fno-builtin"],
 }
 
@@ -1254,8 +1246,8 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
-    defaults: ["libc_defaults"],
     name: "libc_common",
+    defaults: ["libc_defaults"],
 
     whole_static_libs: [
         "libarm-optimized-routines-string",
@@ -1334,8 +1326,8 @@ cc_library_static {
 // libc_common_static.a For static binaries.
 // ========================================================
 cc_library_static {
-    defaults: ["libc_defaults"],
     name: "libc_common_static",
+    defaults: ["libc_defaults"],
 
     whole_static_libs: [
         "libc_common",
@@ -1347,8 +1339,8 @@ cc_library_static {
 // libc_common_shared.a For shared libraries.
 // ========================================================
 cc_library_static {
-    defaults: ["libc_defaults"],
     name: "libc_common_shared",
+    defaults: ["libc_defaults"],
 
     whole_static_libs: [
         "libc_common",
@@ -1434,13 +1426,13 @@ filegroup {
 // libc.a + libc.so
 // ========================================================
 cc_defaults {
+    name: "libc_library_defaults",
     defaults: [
         "libc_defaults",
         "libc_native_allocator_defaults",
         "bug_24465209_workaround",
         "keep_symbols",
     ],
-    name: "libc_library_defaults",
     product_variables: {
         platform_sdk_version: {
             asflags: ["-DPLATFORM_SDK_VERSION=%d"],
@@ -1780,6 +1772,7 @@ cc_library_headers {
 // ========================================================
 
 cc_library {
+    name: "libstdc++",
     defaults: [
         "libc_defaults",
         "bug_24465209_workaround",
@@ -1790,7 +1783,6 @@ cc_library {
         "bionic/__cxa_pure_virtual.cpp",
         "bionic/new.cpp",
     ],
-    name: "libstdc++",
     static_ndk_lib: true,
     static_libs: ["libasync_safe"],
     apex_available: [

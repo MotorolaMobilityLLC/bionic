@@ -435,6 +435,7 @@ cc_defaults {
 }
 
 cc_library {
+    name: "ld-android",
     srcs: ["ld_android.cpp"],
     cflags: [
         "-Wall",
@@ -444,7 +445,6 @@ cc_library {
     ],
     stl: "none",
 
-    name: "ld-android",
     defaults: [
         "linux_bionic_supported",
         "linker_version_script_overlay",
@@ -509,7 +509,7 @@ cc_test {
         "linker_mapped_file_fragment.cpp",
         "linker_sdk_versions.cpp",
         "linker_dlwarning.cpp",
-        "linker_phdr_16kib_compat.cpp"
+        "linker_phdr_16kib_compat.cpp",
     ],
 
     static_libs: [

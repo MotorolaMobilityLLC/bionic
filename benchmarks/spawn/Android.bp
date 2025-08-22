@@ -116,27 +116,27 @@ cc_defaults {
 }
 
 cc_binary {
-    defaults: ["bionic_spawn_benchmark_binary"],
     name: "bench_cxa_atexit",
+    defaults: ["bionic_spawn_benchmark_binary"],
     srcs: ["bench_cxa_atexit.cpp"],
 }
 
 cc_binary {
-    defaults: ["bionic_spawn_benchmark_binary"],
     name: "bench_noop",
+    defaults: ["bionic_spawn_benchmark_binary"],
     srcs: ["noop.cpp"],
 }
 
 cc_binary {
-    defaults: ["bionic_spawn_benchmark_binary"],
     name: "bench_noop_nostl",
+    defaults: ["bionic_spawn_benchmark_binary"],
     srcs: ["noop.cpp"],
     stl: "none",
 }
 
 cc_binary {
-    defaults: ["bionic_spawn_benchmark_binary"],
     name: "bench_noop_static",
+    defaults: ["bionic_spawn_benchmark_binary"],
     srcs: ["noop.cpp"],
     static_executable: true,
     stl: "libc++_static",
