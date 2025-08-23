@@ -615,9 +615,9 @@ static void* ReserveWithAlignmentPadding(size_t size, size_t mapping_align, size
     return nullptr;
   }
   size_t gap_size = 0;
+#if defined(__LP64__)
   size_t first_byte = reinterpret_cast<size_t>(__builtin_align_up(mmap_ptr, mapping_align));
   size_t last_byte = reinterpret_cast<size_t>(__builtin_align_down(mmap_ptr + mmap_size, mapping_align) - 1);
-#if defined(__LP64__)
   if (first_byte / kGapAlignment != last_byte / kGapAlignment) {
     // This library crosses a 2MB boundary and will fragment a new huge page.
     // Lets take advantage of that and insert a random number of inaccessible huge pages before that
