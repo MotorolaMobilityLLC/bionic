@@ -484,6 +484,62 @@ TEST(time, strptime_P_p) {
   EXPECT_EQ(0, tm.tm_hour);
 }
 
+TEST(time, strptime_s) {
+  setenv("TZ", "UTC", 1);
+
+  struct tm tm;
+
+  // 0 + 1 --- trivial.
+  tm = {};
+  ASSERT_EQ('\0', *strptime("1", "%s", &tm));
+  EXPECT_EQ(70, tm.tm_year);
+  EXPECT_EQ(0, tm.tm_mon);
+  EXPECT_EQ(1, tm.tm_mday);
+  EXPECT_EQ(0, tm.tm_hour);
+  EXPECT_EQ(0, tm.tm_min);
+  EXPECT_EQ(1, tm.tm_sec);
+
+  // INT32_MAX (aka "time_t max" for ILP32).
+  tm = {};
+  ASSERT_EQ('\0', *strptime("2147483647", "%s", &tm));
+  EXPECT_EQ(138, tm.tm_year);
+  EXPECT_EQ(0, tm.tm_mon);
+  EXPECT_EQ(19, tm.tm_mday);
+  EXPECT_EQ(3, tm.tm_hour);
+  EXPECT_EQ(14, tm.tm_min);
+  EXPECT_EQ(7, tm.tm_sec);
+
+  // INT32_MAX + 1 (aka overflow for ILP32).
+  // This should be easy to detect because it'll be negative.
+  tm = {};
+#if defined(__LP64__)
+  ASSERT_EQ('\0', *strptime("2147483648", "%s", &tm));
+#else
+  ASSERT_EQ(nullptr, strptime("2147483648", "%s", &tm));
+#endif
+
+  // This wraps to 1 as an int32_t.
+  tm = {};
+#if defined(__LP64__)
+  ASSERT_EQ('\0', *strptime("4294967297", "%s", &tm));
+  EXPECT_EQ(206, tm.tm_year);
+  EXPECT_EQ(1, tm.tm_mon);
+  EXPECT_EQ(7, tm.tm_mday);
+  EXPECT_EQ(6, tm.tm_hour);
+  EXPECT_EQ(28, tm.tm_min);
+  EXPECT_EQ(17, tm.tm_sec);
+#else
+  ASSERT_EQ(nullptr, strptime("4294967297", "%s", &tm));
+#endif
+
+  // INT64_MAX (aka "time_t max" for LP64).
+  // This actually fails for LP64 too...
+  // ...but in localtime_r() because the year is too large.
+  // (Wolfram Alpha says this is 21 times the age of the universe!)
+  tm = {};
+  ASSERT_EQ(nullptr, strptime("9223372036854775807", "%s", &tm));
+}
+
 TEST(time, strptime_u) {
   setenv("TZ", "UTC", 1);
 
