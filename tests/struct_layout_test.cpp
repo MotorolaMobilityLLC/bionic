@@ -72,7 +72,7 @@ void tests(CheckSize check_size, CheckOffset check_offset) {
   CHECK_OFFSET(bionic_tls, group, 3768);
   CHECK_OFFSET(bionic_tls, passwd, 3856);
   CHECK_OFFSET(bionic_tls, fdtrack_disabled, 4008);
-  CHECK_OFFSET(bionic_tls, bionic_systrace_disabled, 4009);
+  CHECK_OFFSET(bionic_tls, bionic_systrace_enabled, 4009);
   CHECK_OFFSET(bionic_tls, padding, 4010);
 #else
   CHECK_SIZE(pthread_internal_t, 712);
@@ -117,7 +117,7 @@ void tests(CheckSize check_size, CheckOffset check_offset) {
   CHECK_OFFSET(bionic_tls, group, 2704);
   CHECK_OFFSET(bionic_tls, passwd, 2764);
   CHECK_OFFSET(bionic_tls, fdtrack_disabled, 2888);
-  CHECK_OFFSET(bionic_tls, bionic_systrace_disabled, 2889);
+  CHECK_OFFSET(bionic_tls, bionic_systrace_enabled, 2889);
   CHECK_OFFSET(bionic_tls, padding, 2890);
 #endif  // __LP64__
 #undef CHECK_SIZE

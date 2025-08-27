@@ -202,6 +202,9 @@ __attribute__((no_sanitize("memtag"))) __noreturn static void __real_libc_init(
   __libc_init_mte_late();
 #endif
 
+  // Wait until everything is initialized before enabled systracing.
+  __get_bionic_tls().bionic_systrace_enabled = true;
+
   exit(slingshot(args.argc, args.argv, args.envp));
 }
 

@@ -120,6 +120,9 @@ static void __libc_preinit_impl() {
   __libc_shared_globals()->set_target_sdk_version_hook = __libc_set_target_sdk_version;
 
   netdClientInit();
+
+  // Wait until everything is initialized before enabled systracing.
+  __get_bionic_tls().bionic_systrace_enabled = true;
 }
 
 // We flag the __libc_preinit function as a constructor to ensure that
