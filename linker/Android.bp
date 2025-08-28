@@ -474,6 +474,7 @@ cc_library {
 cc_test {
     name: "linker-unit-tests",
     test_suites: ["device-tests"],
+    isolated: true,
 
     cflags: [
         "-g",
