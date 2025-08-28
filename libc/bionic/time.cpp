@@ -49,6 +49,7 @@ char* asctime_r(const tm* tm, char* buf) {
   const char* day = pick(tm->tm_wday, 7, "SunMonTueWedThuFriSat");
   const char* mon = pick(tm->tm_mon, 12, "JanFebMarAprMayJunJulAugSepOctNovDec");
 
+  // This format string is specified by ISO C.
   char tmp_buf[26];
   int n = snprintf(tmp_buf, 26, "%.3s %.3s%3d %.2d:%.2d:%.2d %d\n", day, mon,
                    tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, 1900 + tm->tm_year);
