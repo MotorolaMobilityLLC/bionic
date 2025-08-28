@@ -28,6 +28,53 @@
 
 #include <time.h>
 
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+
+char* asctime(const tm* tm) {
+  static char buf[128];
+  return asctime_r(tm, buf);
+}
+
+char* asctime_r(const tm* tm, char* buf) {
+  if (tm == nullptr) {
+    errno = EINVAL;
+    return strcpy(buf, "??? ??? ?? ??:??:?? ????\n");
+  }
+
+  auto pick = [](unsigned n, unsigned max, const char* s) {
+    return (n < max) ? s + 3*n : "???";
+  };
+  const char* day = pick(tm->tm_wday, 7, "SunMonTueWedThuFriSat");
+  const char* mon = pick(tm->tm_mon, 12, "JanFebMarAprMayJunJulAugSepOctNovDec");
+
+  char tmp_buf[26];
+  int n = snprintf(tmp_buf, 26, "%.3s %.3s%3d %.2d:%.2d:%.2d %d\n", day, mon,
+                   tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, 1900 + tm->tm_year);
+  if (n > 25) {
+    errno = EOVERFLOW;
+    return nullptr;
+  }
+  strcpy(buf, tmp_buf);
+  return buf;
+}
+
+char* ctime(const time_t* tp) {
+  static char buf[128];
+  return ctime_r(tp, buf);
+}
+
+char* ctime_r(const time_t* tp, char* buf) {
+  struct tm tm;
+  if (localtime_r(tp, &tm) == nullptr) return nullptr;
+  return asctime_r(&tm, buf);
+}
+
+double difftime(time_t t1, time_t t0) {
+  return t1 - t0;
+}
+
 int timespec_get(timespec* ts, int base) {
   return (clock_gettime(base - 1, ts) != -1) ? base : 0;
 }

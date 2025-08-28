@@ -141,11 +141,11 @@ char* _Nullable asctime_r(const struct tm* _Nonnull __tm, char* _Nonnull __buf);
 
 /**
  * [difftime(3)](https://man7.org/linux/man-pages/man3/difftime.3.html) returns
- * the difference between two times.
+ * the difference between two times, equivalent to (time1 - time0).
  *
  * Returns the difference in seconds.
  */
-double difftime(time_t __lhs, time_t __rhs);
+double difftime(time_t __time1, time_t __time0);
 
 /**
  * [mktime(3)](https://man7.org/linux/man-pages/man3/mktime.3p.html) converts

@@ -1197,15 +1197,61 @@ TEST(time, bug_31339449) {
 }
 
 TEST(time, asctime) {
-  const struct tm tm = {};
+  const tm tm = {};
   ASSERT_STREQ("Sun Jan  0 00:00:00 1900\n", asctime(&tm));
 }
 
 TEST(time, asctime_r) {
-  const struct tm tm = {};
+  const tm tm = {};
   char buf[256];
   ASSERT_EQ(buf, asctime_r(&tm, buf));
   ASSERT_STREQ("Sun Jan  0 00:00:00 1900\n", buf);
+}
+
+TEST(time, asctime_nullptr) {
+  tm* smuggled_null = nullptr;
+  char buf[256];
+  // I'd argue that the glibc behavior is more reasonable,
+  // but traditionally we've had the BSD behavior.
+  errno = 0;
+#if defined(__GLIBC__)
+  ASSERT_EQ(nullptr, asctime_r(smuggled_null, buf));
+#else
+  ASSERT_EQ(buf, asctime_r(smuggled_null, buf));
+  ASSERT_STREQ("??? ??? ?? ??:??:?? ????\n", buf);
+#endif
+  ASSERT_ERRNO(EINVAL);
+}
+
+TEST(time, asctime_bad_wday) {
+  // This is undefined behavior, but our traditional behavior is to substitute "???".
+  tm tm = { .tm_wday = -1 };
+  char buf[256];
+  ASSERT_EQ(buf, asctime_r(&tm, buf));
+  ASSERT_STREQ("??? Jan  0 00:00:00 1900\n", buf);
+  tm.tm_wday = 7;
+  ASSERT_EQ(buf, asctime_r(&tm, buf));
+  ASSERT_STREQ("??? Jan  0 00:00:00 1900\n", buf);
+}
+
+TEST(time, asctime_bad_mon) {
+  // This is undefined behavior, but our traditional behavior is to substitute "???".
+  tm tm = { .tm_mon = -1 };
+  char buf[256];
+  ASSERT_EQ(buf, asctime_r(&tm, buf));
+  ASSERT_STREQ("Sun ???  0 00:00:00 1900\n", buf);
+  tm.tm_mon = 12;
+  ASSERT_EQ(buf, asctime_r(&tm, buf));
+  ASSERT_STREQ("Sun ???  0 00:00:00 1900\n", buf);
+}
+
+TEST(time, asctime_bad_year) {
+  // This is undefined behavior, but our traditional behavior is to return NULL/EOVERFLOW.
+  tm tm = { .tm_year = 99999 };
+  char buf[256];
+  errno = 0;
+  ASSERT_EQ(nullptr, asctime_r(&tm, buf));
+  ASSERT_ERRNO(EOVERFLOW);
 }
 
 TEST(time, ctime) {
