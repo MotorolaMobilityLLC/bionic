@@ -632,11 +632,19 @@ epoch_to_tm(const unsigned char **buf, struct tm *tm)
 	char *ep;
 
 	errno = 0;
+#if defined(__LP64__)
 	secs = strtoll(*buf, &ep, 10);
+#else
+	secs = strtol(*buf, &ep, 10);
+#endif
 	if (*buf == (unsigned char *)ep)
 		goto done;
 	if (secs < 0 ||
+#if defined(__LP64__)
 	    secs == LLONG_MAX && errno == ERANGE)
+#else
+	    secs == LONG_MAX && errno == ERANGE)
+#endif
 		goto done;
 	if (localtime_r(&secs, tm) == NULL)
 		goto done;
