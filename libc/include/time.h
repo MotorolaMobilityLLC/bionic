@@ -119,7 +119,7 @@ int nanosleep(const struct timespec* _Nonnull __duration, struct timespec* _Null
 
 /**
  * [asctime(3)](https://man7.org/linux/man-pages/man3/asctime.3p.html) formats
- * the time `tm` as a string.
+ * the time `tm` as a string of the form "Thu Aug  1 12:34:56 2025\n".
  *
  * Returns a pointer to a string on success, and returns NULL on failure.
  *
@@ -131,13 +131,43 @@ char* _Nullable asctime(const struct tm* _Nonnull __tm);
 
 /**
  * [asctime_r(3)](https://man7.org/linux/man-pages/man3/asctime_r.3p.html) formats
- * the time `tm` as a string in the given buffer `buf`.
+ * the time `tm` as a string of the form "Thu Aug  1 12:34:56 2025\n"
+ * in the given buffer `buf`.
+ *
+ * For realistic times (those with 4 digit years),
+ * the buffer should be 26 bytes long.
  *
  * Returns a pointer to a string on success, and returns NULL on failure.
  *
  * New code should prefer strftime().
  */
 char* _Nullable asctime_r(const struct tm* _Nonnull __tm, char* _Nonnull __buf);
+
+/**
+ * [ctime(3)](https://man7.org/linux/man-pages/man3/ctime.3p.html) formats
+ * the time `tm` as a string of the form "Thu Aug  1 12:34:56 2025\n".
+ *
+ * Returns a pointer to a string on success, and returns NULL on failure.
+ *
+ * That string will be overwritten by later calls to this function.
+ *
+ * New code should prefer strftime().
+ */
+char* _Nullable ctime(const time_t* _Nonnull __t);
+
+/**
+ * [ctime_r(3)](https://man7.org/linux/man-pages/man3/ctime_r.3p.html) formats
+ * the time `tm` as a string of the form "Thu Aug  1 12:34:56 2025\n"
+ * in the given buffer `buf`.
+ *
+ * For realistic times (those with 4 digit years),
+ * the buffer should be 26 bytes long.
+ *
+ * Returns a pointer to a string on success, and returns NULL on failure.
+ *
+ * New code should prefer strftime().
+ */
+char* _Nullable ctime_r(const time_t* _Nonnull __t, char* _Nonnull __buf);
 
 /**
  * [difftime(3)](https://man7.org/linux/man-pages/man3/difftime.3.html) returns
@@ -266,28 +296,6 @@ size_t strftime(char* _Nonnull __buf, size_t __n, const char* _Nonnull __fmt, co
  * Equivalent to strftime() on Android where only C/POSIX locales are available.
  */
 size_t strftime_l(char* _Nonnull __buf, size_t __n, const char* _Nonnull __fmt, const struct tm* _Nullable __tm, locale_t _Nonnull __l) __strftimelike(3);
-
-/**
- * [ctime(3)](https://man7.org/linux/man-pages/man3/ctime.3p.html) formats
- * the time `tm` as a string.
- *
- * Returns a pointer to a string on success, and returns NULL on failure.
- *
- * That string will be overwritten by later calls to this function.
- *
- * New code should prefer strftime().
- */
-char* _Nullable ctime(const time_t* _Nonnull __t);
-
-/**
- * [ctime_r(3)](https://man7.org/linux/man-pages/man3/ctime_r.3p.html) formats
- * the time `tm` as a string in the given buffer `buf`.
- *
- * Returns a pointer to a string on success, and returns NULL on failure.
- *
- * New code should prefer strftime().
- */
-char* _Nullable ctime_r(const time_t* _Nonnull __t, char* _Nonnull __buf);
 
 /**
  * [tzset(3)](https://man7.org/linux/man-pages/man3/tzset.3.html) tells
