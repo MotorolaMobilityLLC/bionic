@@ -41,9 +41,6 @@
 #include "linker_phdr.h"
 #include "platform/bionic/macros.h"
 
-using ::android::base::GetExecutableDirectory;
-using ::android::base::unique_fd;
-
 #define SONAME "test_so"
 
 static char error_buffer[1024];
@@ -439,6 +436,9 @@ TEST(note_gnu_property, no_platform_support) {
   GTEST_SKIP() << "BTI is not supported on this architecture.";
 #endif
 }
+
+using ::android::base::GetExecutableDirectory;
+using ::android::base::unique_fd;
 
 // Test that .note.gnu.property is properly loaded from a binary with a non-zero image base.
 TEST(note_gnu_property, find_gnu_property_offset_image_base) {
