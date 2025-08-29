@@ -72,7 +72,6 @@ class ElfReader {
   bool should_use_16kib_app_compat() const { return should_use_16kib_app_compat_; }
   ElfW(Addr) compat_relro_start() const { return compat_relro_start_; }
   ElfW(Addr) compat_relro_size() const { return compat_relro_size_; }
-  const GnuPropertySection* note_gnu_property() const { return &note_gnu_property_; }
 
  private:
   [[nodiscard]] bool ReadElfHeader();

@@ -1715,7 +1715,7 @@ bool ElfReader::FindPhdr() {
 // It is not considered an error if such section is missing.
 bool ElfReader::FindGnuPropertySection() {
 #if defined(__aarch64__)
-  note_gnu_property_ = GnuPropertySection(phdr_table_, phdr_num_, load_bias_, name_.c_str());
+  note_gnu_property_ = GnuPropertySection(phdr_table_, phdr_num_, load_start(), name_.c_str());
 #endif
   return true;
 }
