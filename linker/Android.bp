@@ -511,6 +511,7 @@ cc_test {
         "linker_sdk_versions.cpp",
         "linker_dlwarning.cpp",
         "linker_phdr_16kib_compat.cpp",
+        "linker_transparent_hugepage_support.cpp",
     ],
 
     static_libs: [
@@ -524,6 +525,7 @@ cc_test {
         "crt_pad_segment_disabled",
         "crt_pad_segment_enabled",
         "no_crt_pad_segment",
+        "note_gnu_property",
     ],
 
     arch: {

@@ -37,3 +37,19 @@ cc_library_shared {
     srcs: ["hello_world.c"],
     no_crt_pad_segment: true,
 }
+
+cc_library_shared {
+    name: "note_gnu_property",
+    srcs: ["hello_world.c"],
+    arch: {
+        arm64: {
+            cflags: ["-mbranch-protection=bti"],
+            ldflags: [
+                "-Wl,--image-base=0x10000",
+                "-Wl,-zbti-report=error",
+            ],
+        },
+    },
+    nocrt: true,
+    no_crt_pad_segment: true,
+}
