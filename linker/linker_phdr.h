@@ -186,7 +186,8 @@ int phdr_table_protect_gnu_relro(const ElfW(Phdr)* phdr_table, size_t phdr_count
                                  ElfW(Addr) load_bias, bool should_pad_segments);
 
 int phdr_table_protect_16kib_app_compat_code(ElfW(Addr) start, ElfW(Addr) size,
-                                             bool should_16kib_app_compat_use_rwx);
+                                             bool should_16kib_app_compat_use_rwx,
+                                             const GnuPropertySection* note_gnu_property = nullptr);
 
 int phdr_table_serialize_gnu_relro(const ElfW(Phdr)* phdr_table, size_t phdr_count,
                                    ElfW(Addr) load_bias, int fd, size_t* file_offset);

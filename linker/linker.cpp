@@ -3475,8 +3475,10 @@ bool soinfo::protect_16kib_app_compat_code() {
     return true;
   }
 
+  auto note_gnu_property = GnuPropertySection(this);
   if (phdr_table_protect_16kib_app_compat_code(compat_code_start_, compat_code_size_,
-                                               should_16kib_app_compat_use_rwx_) < 0) {
+                                               should_16kib_app_compat_use_rwx_,
+                                               &note_gnu_property) < 0) {
     DL_ERR("failed to set execute permission for compat loaded binary \"%s\": %s", get_realpath(),
            strerror(errno));
     return false;

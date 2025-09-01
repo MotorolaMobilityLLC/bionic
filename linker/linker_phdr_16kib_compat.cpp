@@ -476,17 +476,24 @@ void ElfReader::FixMinAlignFor16KiB() {
  * 16KiB compat mode.
  *
  * Input:
- *   start                           -> start address of the compat code region.
- *   size                            -> size of the compat code region in bytes.
- *   should_16kib_app_compat_use_rwx -> use RWX or RX permission.
+ *   start                            -> start address of the compat code region.
+ *   size                             -> size of the compat code region in bytes.
+ *   should_16kib_app_compat_use_rwx  -> use RWX or RX permission.
+ *   note_gnu_property                -> AArch64-only: use PROT_BTI if the ELF is BTI-compatible.
  * Return:
  *   0 on success, -1 on failure (error code in errno).
  */
 int phdr_table_protect_16kib_app_compat_code(ElfW(Addr) start, ElfW(Addr) size,
-                                             bool should_16kib_app_compat_use_rwx) {
+                                             bool should_16kib_app_compat_use_rwx,
+                                             const GnuPropertySection* note_gnu_property __unused) {
   int prot = PROT_READ | PROT_EXEC;
   if (should_16kib_app_compat_use_rwx) {
     prot |= PROT_WRITE;
   }
+#ifdef __aarch64__
+  if (note_gnu_property != nullptr && note_gnu_property->IsBTICompatible()) {
+    prot |= PROT_BTI;
+  }
+#endif
   return mprotect(reinterpret_cast<void*>(start), size, prot);
 }

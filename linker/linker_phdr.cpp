@@ -1091,7 +1091,7 @@ bool ElfReader::LoadSegments() {
  */
 static int _phdr_table_set_load_prot(const ElfW(Phdr)* phdr_table, size_t phdr_count,
                                      ElfW(Addr) load_bias, int extra_prot_flags,
-                                     bool should_pad_segments, bool should_use_16kib_app_compat) {
+                                     bool should_pad_segments) {
   for (size_t i = 0; i < phdr_count; ++i) {
     const ElfW(Phdr)* phdr = &phdr_table[i];
 
@@ -1102,7 +1102,7 @@ static int _phdr_table_set_load_prot(const ElfW(Phdr)* phdr_table, size_t phdr_c
     ElfW(Addr) p_memsz = phdr->p_memsz;
     ElfW(Addr) p_filesz = phdr->p_filesz;
     _extend_load_segment_vma(phdr_table, phdr_count, i, &p_memsz, &p_filesz, should_pad_segments,
-                             should_use_16kib_app_compat);
+                             /*should_use_16kib_app_compat=*/false);
 
     ElfW(Addr) seg_page_start = page_start(phdr->p_vaddr + load_bias);
     ElfW(Addr) seg_page_end = page_end(phdr->p_vaddr + p_memsz + load_bias);
@@ -1150,14 +1150,18 @@ int phdr_table_protect_segments(const ElfW(Phdr)* phdr_table, size_t phdr_count,
                                 ElfW(Addr) load_bias, bool should_pad_segments,
                                 bool should_use_16kib_app_compat,
                                 const GnuPropertySection* prop __unused) {
+  // Segment permissions are handled separately in 16KiB compatibility mode.
+  if (should_use_16kib_app_compat) {
+    return 0;
+  }
+
   int prot = 0;
 #if defined(__aarch64__)
   if ((prop != nullptr) && prop->IsBTICompatible()) {
     prot |= PROT_BTI;
   }
 #endif
-  return _phdr_table_set_load_prot(phdr_table, phdr_count, load_bias, prot, should_pad_segments,
-                                   should_use_16kib_app_compat);
+  return _phdr_table_set_load_prot(phdr_table, phdr_count, load_bias, prot, should_pad_segments);
 }
 
 static bool segment_needs_memtag_globals_remapping(const ElfW(Phdr) * phdr) {
@@ -1307,8 +1311,15 @@ void format_left_truncated_vma_anon_name(char* buffer, size_t buffer_size, const
 int phdr_table_unprotect_segments(const ElfW(Phdr)* phdr_table, size_t phdr_count,
                                   ElfW(Addr) load_bias, bool should_pad_segments,
                                   bool should_use_16kib_app_compat) {
+  // Segment permissions are handled separately in 16KiB compatibility mode. Also in this case
+  // binaries are mapped entirely RW until relro protection is applied, so they don't need to be
+  // unprotected before performing dynamic relocations.
+  if (should_use_16kib_app_compat) {
+    return 0;
+  }
+
   return _phdr_table_set_load_prot(phdr_table, phdr_count, load_bias, PROT_WRITE,
-                                   should_pad_segments, should_use_16kib_app_compat);
+                                   should_pad_segments);
 }
 
 static inline void _extend_gnu_relro_prot_end(const ElfW(Phdr)* relro_phdr,
