@@ -254,6 +254,7 @@ struct soinfo {
   bool link_image(const SymbolLookupList& lookup_list, soinfo* local_group_root,
                   const android_dlextinfo* extinfo, size_t* relro_fd_offset);
   bool protect_relro();
+  bool protect_16kib_app_compat_code();
 
   void tag_globals(bool deterministic_memtag_globals);
   ElfW(Addr) apply_memtag_if_mte_globals(ElfW(Addr) sym_addr) const;
@@ -406,11 +407,16 @@ struct soinfo {
   }
   bool should_use_16kib_app_compat() const { return should_use_16kib_app_compat_; }
 
-  void set_compat_relro_start(ElfW(Addr) start) { compat_relro_start_ = start; }
-  ElfW(Addr) compat_relro_start() const { return compat_relro_start_; }
+  void set_should_16kib_app_compat_use_rwx(bool should_16kib_app_compat_use_rwx) {
+    should_16kib_app_compat_use_rwx_ = should_16kib_app_compat_use_rwx;
+  }
+  bool should_16kib_app_compat_use_rwx() const { return should_16kib_app_compat_use_rwx_; }
 
-  void set_compat_relro_size(ElfW(Addr) size) { compat_relro_size_ = size; }
-  ElfW(Addr) compat_relro_size() const { return compat_relro_start_; }
+  void set_compat_code_start(ElfW(Addr) start) { compat_code_start_ = start; }
+  ElfW(Addr) compat_code_start() const { return compat_code_start_; }
+
+  void set_compat_code_size(ElfW(Addr) size) { compat_code_size_ = size; }
+  ElfW(Addr) compat_code_size() const { return compat_code_size_; }
 
  private:
   bool is_image_linked() const;
@@ -503,9 +509,14 @@ struct soinfo {
   // Use app compat mode when loading 4KiB max-page-size ELFs on 16KiB page-size devices?
   bool should_use_16kib_app_compat_ = false;
 
-  // RELRO region for 16KiB compat loading
-  ElfW(Addr) compat_relro_start_ = 0;
-  ElfW(Addr) compat_relro_size_ = 0;
+  // Map ELF segments RWX in app compat mode?
+  bool should_16kib_app_compat_use_rwx_ = false;
+
+  // Region that needs execute permission for 16KiB compat loading.
+  // RX|RW compat mode: Contains code and GNU RELRO sections.
+  // RWX compat mode: Contains the whole ELF.
+  ElfW(Addr) compat_code_start_ = 0;
+  ElfW(Addr) compat_code_size_ = 0;
 };
 
 // This function is used by dlvsym() to calculate hash of sym_ver
