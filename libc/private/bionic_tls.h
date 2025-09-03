@@ -142,7 +142,7 @@ struct bionic_tls {
   passwd_state_t passwd;
 
   char fdtrack_disabled;
-  char bionic_systrace_disabled;
+  char bionic_systrace_enabled;
   char padding[2];
 
   // Initialize the main thread's final object using its bootstrap object.
