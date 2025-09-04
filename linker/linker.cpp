@@ -645,9 +645,10 @@ class LoadTask {
     si_->set_gap_size(elf_reader.gap_size());
     si_->set_should_pad_segments(elf_reader.should_pad_segments());
     si_->set_should_use_16kib_app_compat(elf_reader.should_use_16kib_app_compat());
+    si_->set_should_16kib_app_compat_use_rwx(elf_reader.should_16kib_app_compat_use_rwx());
     if (si_->should_use_16kib_app_compat()) {
-      si_->set_compat_relro_start(elf_reader.compat_relro_start());
-      si_->set_compat_relro_size(elf_reader.compat_relro_size());
+      si_->set_compat_code_start(elf_reader.compat_code_start());
+      si_->set_compat_code_size(elf_reader.compat_code_size());
     }
 
     return true;
@@ -3422,6 +3423,12 @@ bool soinfo::link_image(const SymbolLookupList& lookup_list, soinfo* local_group
     return false;
   }
 
+  // Now that we've finished linking we can apply execute permission to code segments in compat
+  // loaded binaries, and remove write permission from .text and GNU RELRO in RX|RW compat mode.
+  if (!protect_16kib_app_compat_code()) {
+    return false;
+  }
+
   if (should_tag_memtag_globals()) {
     std::list<std::string>* vma_names_ptr = vma_names();
     // should_tag_memtag_globals -> __aarch64__ -> vma_names() != nullptr
@@ -3452,18 +3459,31 @@ bool soinfo::link_image(const SymbolLookupList& lookup_list, soinfo* local_group
 
 bool soinfo::protect_relro() {
   if (should_use_16kib_app_compat_) {
-    if (phdr_table_protect_gnu_relro_16kib_compat(compat_relro_start_, compat_relro_size_) < 0) {
-      DL_ERR("can't enable COMPAT GNU RELRO protection for \"%s\": %s", get_realpath(),
-             strerror(errno));
-      return false;
-    }
-  } else {
-    if (phdr_table_protect_gnu_relro(phdr, phnum, load_bias, should_pad_segments_,
-                                     should_use_16kib_app_compat_) < 0) {
-      DL_ERR("can't enable GNU RELRO protection for \"%s\": %m", get_realpath());
-      return false;
-    }
+    return true;
   }
+
+  if (phdr_table_protect_gnu_relro(phdr, phnum, load_bias, should_pad_segments_) < 0) {
+    DL_ERR("can't enable GNU RELRO protection for \"%s\": %m", get_realpath());
+    return false;
+  }
+
+  return true;
+}
+
+bool soinfo::protect_16kib_app_compat_code() {
+  if (!should_use_16kib_app_compat_) {
+    return true;
+  }
+
+  auto note_gnu_property = GnuPropertySection(this);
+  if (phdr_table_protect_16kib_app_compat_code(compat_code_start_, compat_code_size_,
+                                               should_16kib_app_compat_use_rwx_,
+                                               &note_gnu_property) < 0) {
+    DL_ERR("failed to set execute permission for compat loaded binary \"%s\": %s", get_realpath(),
+           strerror(errno));
+    return false;
+  }
+
   return true;
 }
 
