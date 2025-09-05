@@ -2016,8 +2016,7 @@ cc_library_static {
     cflags: [
         "-Wall",
         "-Werror",
-    ],
-    asflags: [
+
         "-DBIONIC_RUST_BAREMETAL",
     ],
     srcs: [
