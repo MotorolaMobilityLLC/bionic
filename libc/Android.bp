@@ -2019,6 +2019,9 @@ cc_library_static {
 
         "-DBIONIC_RUST_BAREMETAL",
     ],
+    asflags: [
+        "-DBIONIC_RUST_BAREMETAL",
+    ],
     srcs: [
         "bionic/fortify.cpp",
         "bionic/strtol.cpp",
