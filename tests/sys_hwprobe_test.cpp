@@ -106,6 +106,7 @@ TEST(sys_hwprobe, __riscv_hwprobe_extensions) {
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_IMA_FD) != 0);
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_IMA_C) != 0);
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_IMA_V) != 0);
+  EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_EXT_ZACAS) != 0);
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_EXT_ZBA) != 0);
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_EXT_ZBB) != 0);
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_EXT_ZBS) != 0);
