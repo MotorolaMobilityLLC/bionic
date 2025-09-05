@@ -18,6 +18,7 @@
 
 #include <ifaddrs.h>
 
+#include <arpa/inet.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <net/ethernet.h>
@@ -32,6 +33,7 @@
 
 #include <algorithm>
 #include <map>
+#include <sstream>
 #include <thread>
 #include <vector>
 
@@ -114,8 +116,19 @@ TEST(ifaddrs, getifaddrs_interfaces) {
                                   sys_class_net.begin()));
 }
 
+static std::string ToString(const std::set<in_addr_t>& set) {
+  std::stringstream ss;
+  ss << "{";
+  for (auto it = set.begin(); it != set.end(); ++it) {
+    struct in_addr addr{*it};
+    ss << " " << inet_ntoa(addr);
+  }
+  ss << " }";
+  return ss.str();
+}
+
 static void CheckAddressIsInSet(const std::string& if_name, bool unicast,
-                                const std::set<in_addr_t>& addrs) {
+                                const std::set<in_addr_t>& getifaddrs_addrs) {
   ifreq ifr = {.ifr_addr.sa_family = AF_INET};
   if_name.copy(ifr.ifr_name, IFNAMSIZ - 1);
 
@@ -133,9 +146,13 @@ static void CheckAddressIsInSet(const std::string& if_name, bool unicast,
   close(fd);
 
   sockaddr_in* sock = reinterpret_cast<sockaddr_in*>(&ifr.ifr_addr);
-  in_addr_t addr = sock->sin_addr.s_addr;
+  in_addr_t ioctl_addr = sock->sin_addr.s_addr;
 
-  EXPECT_TRUE(addrs.contains(addr)) << if_name << ' ' << std::hex << ntohl(addr);
+  EXPECT_TRUE(getifaddrs_addrs.contains(ioctl_addr))
+      << if_name << ' ' << unicast << ' '
+      << std::hex << ntohl(ioctl_addr) << std::dec
+      << " not in "
+      << ToString(getifaddrs_addrs);
 }
 
 TEST(ifaddrs, getifaddrs_INET) {
