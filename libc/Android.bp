@@ -2063,7 +2063,6 @@ cc_library_static {
     whole_static_libs: [
         "//external/llvm-libc:llvmlibc",
         "libarm-optimized-routines-mem",
-        "libc_netbsd",
     ],
     system_shared_libs: [],
     nocrt: true,
