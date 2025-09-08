@@ -182,12 +182,12 @@ static void run_linker_config_smoke_test(SmokeTestType type) {
   // read config
   const Config* config = nullptr;
   std::string error_msg;
-  ASSERT_TRUE(Config::read_binary_config(tmp_file.path,
-                                         executable_path.c_str(),
-                                         type == SmokeTestType::Asan,
-                                         type == SmokeTestType::Hwasan,
-                                         &config,
-                                         &error_msg)) << error_msg;
+  ASSERT_TRUE(Config::read_config_for_binary(tmp_file.path,
+                                             executable_path.c_str(),
+                                             type == SmokeTestType::Asan,
+                                             type == SmokeTestType::Hwasan,
+                                             &config,
+                                             &error_msg)) << error_msg;
   ASSERT_TRUE(config != nullptr);
   ASSERT_TRUE(error_msg.empty());
 
@@ -296,12 +296,12 @@ TEST(linker_config, ns_link_shared_libs_invalid_settings) {
 
   const Config* config = nullptr;
   std::string error_msg;
-  ASSERT_FALSE(Config::read_binary_config(tmp_file.path,
-                                          executable_path.c_str(),
-                                          false,
-                                          false,
-                                          &config,
-                                          &error_msg));
+  ASSERT_FALSE(Config::read_config_for_binary(tmp_file.path,
+                                              executable_path.c_str(),
+                                              false,
+                                              false,
+                                              &config,
+                                              &error_msg));
   ASSERT_TRUE(config == nullptr);
   ASSERT_EQ(std::string(tmp_file.path) + ":6: "
             "error: both shared_libs and allow_all_shared_libs are set for default->system link.",
@@ -342,12 +342,12 @@ TEST(linker_config, dir_path_resolve) {
   const Config* config = nullptr;
   std::string error_msg;
 
-  ASSERT_TRUE(Config::read_binary_config(tmp_file.path,
-                                         executable_path.c_str(),
-                                         false,
-                                         false,
-                                         &config,
-                                         &error_msg)) << error_msg;
+  ASSERT_TRUE(Config::read_config_for_binary(tmp_file.path,
+                                             executable_path.c_str(),
+                                             false,
+                                             false,
+                                             &config,
+                                             &error_msg)) << error_msg;
 
   ASSERT_TRUE(config != nullptr) << error_msg;
   ASSERT_TRUE(error_msg.empty()) << error_msg;

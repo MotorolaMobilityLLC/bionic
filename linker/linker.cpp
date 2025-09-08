@@ -3672,8 +3672,8 @@ std::vector<android_namespace_t*> init_default_namespaces(const char* executable
     LD_DEBUG(any, "[ Reading linker config \"%s\" ]", ld_config_file_path.c_str());
     ScopedTrace trace(("linker config " + ld_config_file_path).c_str());
     std::string error_msg;
-    if (!Config::read_binary_config(ld_config_file_path.c_str(), executable_path, g_is_asan, g_is_hwasan,
-                                    &config, &error_msg)) {
+    if (!Config::read_config_for_binary(ld_config_file_path.c_str(), executable_path,
+                                        g_is_asan, g_is_hwasan, &config, &error_msg)) {
       if (!error_msg.empty()) {
         DL_WARN("Warning: couldn't read '%s' for '%s' (using default configuration instead): %s",
                 ld_config_file_path.c_str(), executable_path, error_msg.c_str());

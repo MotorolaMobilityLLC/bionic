@@ -163,12 +163,12 @@ class Config {
   // most one configuration.
   // Returns false in case of an error. If binary config was not found
   // sets *config = nullptr.
-  static bool read_binary_config(const char* ld_config_file_path,
-                                 const char* binary_realpath,
-                                 bool is_asan,
-                                 bool is_hwasan,
-                                 const Config** config,
-                                 std::string* error_msg);
+  static bool read_config_for_binary(const char* ld_config_file_path,
+                                     const char* binary_realpath,
+                                     bool is_asan,
+                                     bool is_hwasan,
+                                     const Config** config,
+                                     std::string* error_msg);
 
   static std::string get_vndk_version_string(const char delimiter);
  private:
