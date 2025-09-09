@@ -57,6 +57,11 @@
 #include "private/__bionic_get_shell_path.h"
 #include "private/bionic_fortify.h"
 
+// Check a FILE* isn't nullptr, so we can emit a clear diagnostic message
+// instead of just crashing with SIGSEGV.
+#define CHECK_FP(fp) \
+  if (fp == nullptr) __fortify_fatal("%s: null FILE*", __FUNCTION__)
+
 #define	NDYNAMIC 10		/* add ten more whenever necessary */
 
 #define PRINTF_IMPL(expr) \

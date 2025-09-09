@@ -38,10 +38,6 @@
 #include <stdbool.h>
 #include <wchar.h>
 
-#if defined(__cplusplus)  // Until we fork all of stdio...
-#include "private/bionic_fortify.h"
-#endif
-
 /*
  * Information local to this implementation of stdio,
  * in particular, macros and private variables.
@@ -253,11 +249,6 @@ extern void __sinit(void);  // Not actually implemented.
 
 size_t parsefloat(FILE*, char*, char*);
 size_t wparsefloat(FILE*, wchar_t*, wchar_t*);
-
-// Check a FILE* isn't nullptr, so we can emit a clear diagnostic message
-// instead of just crashing with SIGSEGV.
-#define CHECK_FP(fp) \
-  if (fp == nullptr) __fortify_fatal("%s: null FILE*", __FUNCTION__)
 
 /*
  * Floating point scanf/printf (input/output) definitions.

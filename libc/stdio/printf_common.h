@@ -50,6 +50,8 @@
 
 #include <platform/bionic/macros.h>
 
+#include "private/bionic_fortify.h"
+
 #include "fvwrite.h"
 #include "gdtoa.h"
 #include "local.h"
