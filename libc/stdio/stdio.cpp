@@ -230,6 +230,73 @@ extern "C" __LIBC_HIDDEN__ void __libc_stdio_cleanup(void) {
   _fwalk(__sflush);
 }
 
+/*
+ * Allocate a file buffer, or switch to unbuffered I/O.
+ * Per the ANSI C standard, ALL tty devices default to line buffered.
+ *
+ * As a side effect, we set __SOPT or __SNPT (en/dis-able fseek
+ * optimisation) right after the fstat() that finds the buffer size.
+ */
+void
+__smakebuf(FILE *fp)
+{
+	unsigned char *p;
+	int flags;
+	size_t size;
+	int couldbetty;
+
+	if (fp->_flags & __SNBF) {
+		fp->_bf._base = fp->_p = fp->_nbuf;
+		fp->_bf._size = 1;
+		return;
+	}
+	flags = __swhatbuf(fp, &size, &couldbetty);
+	if ((p = static_cast<unsigned char*>(malloc(size))) == NULL) {
+		fp->_flags |= __SNBF;
+		fp->_bf._base = fp->_p = fp->_nbuf;
+		fp->_bf._size = 1;
+		return;
+	}
+	flags |= __SMBF;
+	fp->_bf._base = fp->_p = p;
+	fp->_bf._size = size;
+	if (couldbetty && isatty(fp->_file))
+		flags |= __SLBF;
+	fp->_flags |= flags;
+}
+
+/*
+ * Internal routine to determine `proper' buffering for a file.
+ */
+int
+__swhatbuf(FILE *fp, size_t *bufsize, int *couldbetty)
+{
+	struct stat st;
+
+	if (fp->_file < 0 || fstat(fp->_file, &st) == -1) {
+		*couldbetty = 0;
+		*bufsize = BUFSIZ;
+		return (__SNPT);
+	}
+
+	/* could be a tty iff it is a character device */
+	*couldbetty = S_ISCHR(st.st_mode);
+	if (st.st_blksize == 0) {
+		*bufsize = BUFSIZ;
+		return (__SNPT);
+	}
+
+	/*
+	 * Optimise fseek() only if it is a regular file.  (The test for
+	 * __sseek is mainly paranoia.)  It is safe to set _blksize
+	 * unconditionally; it will only be used if __SOPT is also set.
+	 */
+	*bufsize = st.st_blksize;
+	fp->_blksize = st.st_blksize;
+	return ((st.st_mode & S_IFMT) == S_IFREG && fp->_seek == __sseek ?
+	    __SOPT : __SNPT);
+}
+
 static FILE* __FILE_init(FILE* fp, int fd, int flags) {
   if (fp == nullptr) return nullptr;
 
@@ -966,6 +1033,130 @@ void setbuffer(FILE* fp, char* buf, int size) {
 int setlinebuf(FILE* fp) {
   CHECK_FP(fp);
   return setvbuf(fp, nullptr, _IOLBF, 0);
+}
+
+/*
+ * Set one of the three kinds of buffering, optionally including
+ * a buffer.
+ */
+int
+setvbuf(FILE *fp, char *buf, int mode, size_t size)
+{
+	int ret, flags;
+	size_t iosize;
+	int ttyflag;
+
+	/*
+	 * Verify arguments.  The `int' limit on `size' is due to this
+	 * particular implementation.  Note, buf and size are ignored
+	 * when setting _IONBF.
+	 */
+	if (mode != _IONBF)
+		if ((mode != _IOFBF && mode != _IOLBF) || size > INT_MAX)
+			return (EOF);
+
+	/*
+	 * Write current buffer, if any.  Discard unread input (including
+	 * ungetc data), cancel line buffering, and free old buffer if
+	 * malloc()ed.  We also clear any eof condition, as if this were
+	 * a seek.
+	 */
+	FLOCKFILE(fp);
+	ret = 0;
+	(void)__sflush(fp);
+	if (HASUB(fp))
+		FREEUB(fp);
+	WCIO_FREE(fp);
+	fp->_r = fp->_lbfsize = 0;
+	flags = fp->_flags;
+	if (flags & __SMBF)
+		free(fp->_bf._base);
+	flags &= ~(__SLBF | __SNBF | __SMBF | __SOPT | __SNPT | __SEOF);
+
+	/* If setting unbuffered mode, skip all the hard work. */
+	if (mode == _IONBF)
+		goto nbf;
+
+	/*
+	 * Find optimal I/O size for seek optimization.  This also returns
+	 * a `tty flag' to suggest that we check isatty(fd), but we do not
+	 * care since our caller told us how to buffer.
+	 */
+	flags |= __swhatbuf(fp, &iosize, &ttyflag);
+	if (size == 0) {
+		buf = NULL;	/* force local allocation */
+		size = iosize;
+	}
+
+	/* Allocate buffer if needed. */
+	if (buf == NULL) {
+		if ((buf = static_cast<char*>(malloc(size))) == NULL) {
+			/*
+			 * Unable to honor user's request.  We will return
+			 * failure, but try again with file system size.
+			 */
+			ret = EOF;
+			if (size != iosize) {
+				size = iosize;
+				buf = static_cast<char*>(malloc(size));
+			}
+		}
+		if (buf == NULL) {
+			/* No luck; switch to unbuffered I/O. */
+nbf:
+			fp->_flags = flags | __SNBF;
+			fp->_w = 0;
+			fp->_bf._base = fp->_p = fp->_nbuf;
+			fp->_bf._size = 1;
+			FUNLOCKFILE(fp);
+			return (ret);
+		}
+		flags |= __SMBF;
+	}
+
+	/*
+	 * We're committed to buffering from here, so make sure we've
+	 * registered to flush buffers on exit.
+	 */
+	if (!__sdidinit)
+		__sinit();
+
+	/*
+	 * Kill any seek optimization if the buffer is not the
+	 * right size.
+	 *
+	 * SHOULD WE ALLOW MULTIPLES HERE (i.e., ok iff (size % iosize) == 0)?
+	 */
+	if (size != iosize)
+		flags |= __SNPT;
+
+	/*
+	 * Fix up the FILE fields, and set __cleanup for output flush on
+	 * exit (since we are buffered in some way).
+	 */
+	if (mode == _IOLBF)
+		flags |= __SLBF;
+	fp->_flags = flags;
+	fp->_bf._base = fp->_p = reinterpret_cast<unsigned char*>(buf);
+	fp->_bf._size = size;
+	/* fp->_lbfsize is still 0 */
+	if (flags & __SWR) {
+		/*
+		 * Begin or continue writing: see __swsetup().  Note
+		 * that __SNBF is impossible (it was handled earlier).
+		 */
+		if (flags & __SLBF) {
+			fp->_w = 0;
+			fp->_lbfsize = -fp->_bf._size;
+		} else
+			fp->_w = size;
+	} else {
+		/* begin/continue reading, or stay in intermediate state */
+		fp->_w = 0;
+	}
+	FUNLOCKFILE(fp);
+
+	return (ret);
 }
 
 int snprintf(char* s, size_t n, const char* fmt, ...) {
