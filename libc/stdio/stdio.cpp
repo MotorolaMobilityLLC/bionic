@@ -233,15 +233,12 @@ extern "C" __LIBC_HIDDEN__ void __libc_stdio_cleanup(void) {
 /*
  * Allocate a file buffer, or switch to unbuffered I/O.
  * Per the ANSI C standard, ALL tty devices default to line buffered.
- *
- * As a side effect, we set __SOPT or __SNPT (en/dis-able fseek
- * optimisation) right after the fstat() that finds the buffer size.
  */
 void
 __smakebuf(FILE *fp)
 {
 	unsigned char *p;
-	int flags;
+	int flags = 0;
 	size_t size;
 	int couldbetty;
 
@@ -250,7 +247,7 @@ __smakebuf(FILE *fp)
 		fp->_bf._size = 1;
 		return;
 	}
-	flags = __swhatbuf(fp, &size, &couldbetty);
+	__swhatbuf(fp, &size, &couldbetty);
 	if ((p = static_cast<unsigned char*>(malloc(size))) == NULL) {
 		fp->_flags |= __SNBF;
 		fp->_bf._base = fp->_p = fp->_nbuf;
@@ -268,33 +265,23 @@ __smakebuf(FILE *fp)
 /*
  * Internal routine to determine `proper' buffering for a file.
  */
-int
-__swhatbuf(FILE *fp, size_t *bufsize, int *couldbetty)
-{
+void __swhatbuf(FILE* fp, size_t* bufsize, int* couldbetty) {
 	struct stat st;
 
 	if (fp->_file < 0 || fstat(fp->_file, &st) == -1) {
 		*couldbetty = 0;
 		*bufsize = BUFSIZ;
-		return (__SNPT);
+		return;
 	}
 
 	/* could be a tty iff it is a character device */
 	*couldbetty = S_ISCHR(st.st_mode);
 	if (st.st_blksize == 0) {
 		*bufsize = BUFSIZ;
-		return (__SNPT);
+		return;
 	}
 
-	/*
-	 * Optimise fseek() only if it is a regular file.  (The test for
-	 * __sseek is mainly paranoia.)  It is safe to set _blksize
-	 * unconditionally; it will only be used if __SOPT is also set.
-	 */
 	*bufsize = st.st_blksize;
-	fp->_blksize = st.st_blksize;
-	return ((st.st_mode & S_IFMT) == S_IFREG && fp->_seek == __sseek ?
-	    __SOPT : __SNPT);
 }
 
 static FILE* __FILE_init(FILE* fp, int fd, int flags) {
@@ -1044,7 +1031,7 @@ setvbuf(FILE *fp, char *buf, int mode, size_t size)
 {
 	int ret, flags;
 	size_t iosize;
-	int ttyflag;
+	int ignored;
 
 	/*
 	 * Verify arguments.  The `int' limit on `size' is due to this
@@ -1071,18 +1058,24 @@ setvbuf(FILE *fp, char *buf, int mode, size_t size)
 	flags = fp->_flags;
 	if (flags & __SMBF)
 		free(fp->_bf._base);
-	flags &= ~(__SLBF | __SNBF | __SMBF | __SOPT | __SNPT | __SEOF);
+	flags &= ~(__SLBF | __SNBF | __SMBF | __SEOF);
 
 	/* If setting unbuffered mode, skip all the hard work. */
 	if (mode == _IONBF)
 		goto nbf;
 
 	/*
-	 * Find optimal I/O size for seek optimization.  This also returns
-	 * a `tty flag' to suggest that we check isatty(fd), but we do not
-	 * care since our caller told us how to buffer.
+   * Note that size == 0 is unspecified behavior:
+   *
+   * musl returns an error,
+   * glibc interprets it as "unbuffered",
+   * macOS' man page says it interprets it as "defer allocation" --
+   * the default if you hadn't called setvbuf() --
+   * but it actually seems to have the same BSD behavior we currently see here.
+   *
+   * TODO: investigate whether this whole "i/o size" thing is actually useful.
 	 */
-	flags |= __swhatbuf(fp, &iosize, &ttyflag);
+	__swhatbuf(fp, &iosize, &ignored);
 	if (size == 0) {
 		buf = NULL;	/* force local allocation */
 		size = iosize;
@@ -1120,15 +1113,6 @@ nbf:
 	 */
 	if (!__sdidinit)
 		__sinit();
-
-	/*
-	 * Kill any seek optimization if the buffer is not the
-	 * right size.
-	 *
-	 * SHOULD WE ALLOW MULTIPLES HERE (i.e., ok iff (size % iosize) == 0)?
-	 */
-	if (size != iosize)
-		flags |= __SNPT;
 
 	/*
 	 * Fix up the FILE fields, and set __cleanup for output flush on
