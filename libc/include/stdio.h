@@ -336,7 +336,15 @@ __nodiscard FILE* _Nullable open_memstream(char* _Nonnull * _Nonnull __ptr, size
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 int  asprintf(char* _Nullable * _Nonnull __s_ptr, const char* _Nonnull __fmt, ...) __printflike(2, 3);
+
+/**
+ * fgetln() is a less portable and harder to use variant of getline().
+ * In particular, fgetln() does not guarantee a terminating NUL byte.
+ *
+ * New code should use getline().
+ */
 char* _Nullable fgetln(FILE* _Nonnull __fp, size_t* _Nonnull __length_ptr);
+
 int fpurge(FILE* _Nonnull __fp);
 void setbuffer(FILE* _Nonnull __fp, char* _Nullable __buf, int __size);
 int setlinebuf(FILE* _Nonnull __fp);
