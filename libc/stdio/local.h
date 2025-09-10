@@ -87,10 +87,8 @@ struct __sFILE {
   /* separate buffer for fgetln() when line crosses buffer boundary */
   struct __sbuf _lb; /* buffer for fgetln() */
 
-  /* Unix stdio files get aligned to block boundaries on fseek() */
-  int _blksize; /* stat.st_blksize (may be != _bf._size) */
-
-  fpos_t _unused_0;  // This was the `_offset` field (see below).
+  int _unused_0;  // This was the `_blksize` field (see below).
+  fpos_t _unused_1;  // This was the `_offset` field (see below).
 };
 
 // Do not add/remove/change the size of any fields anywhere in this struct.
@@ -163,10 +161,8 @@ struct __sfileext {
 #define __SALC 0x4000  // Allocate string space dynamically.
 #define __SIGN 0x8000  // Ignore this file in _fwalk.
 
-// TODO: remove remaining references to these obsolete flags (see above).
+// TODO: remove remaining references to this obsolete flag (see above).
 #define __SMOD 0
-#define __SNPT 0
-#define __SOPT 0
 
 #define _EXT(fp) __BIONIC_CAST(reinterpret_cast, struct __sfileext*, (fp)->_ext._base)
 
@@ -205,7 +201,7 @@ __LIBC32_LEGACY_PUBLIC__ int _fwalk(int (*)(FILE*));
 
 off64_t __sseek64(void*, off64_t, int);
 int __sflush_locked(FILE*);
-int __swhatbuf(FILE*, size_t*, int*);
+void __swhatbuf(FILE*, size_t*, int*);
 wint_t __fgetwc_unlock(FILE*);
 wint_t __ungetwc(wint_t, FILE*);
 int __vfprintf(FILE*, const char*, va_list);
