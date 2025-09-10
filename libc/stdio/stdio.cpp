@@ -62,7 +62,7 @@
 #define CHECK_FP(fp) \
   if (fp == nullptr) __fortify_fatal("%s: null FILE*", __FUNCTION__)
 
-#define	NDYNAMIC 10		/* add ten more whenever necessary */
+#define NDYNAMIC 10  /* add ten more whenever necessary */
 
 #define PRINTF_IMPL(expr) \
     va_list ap; \
@@ -168,48 +168,48 @@ static inline void free_fgetln_buffer(FILE* fp) {
  * Find a free FILE for fopen et al.
  */
 FILE* __sfp(void) {
-	FILE *fp;
-	int n;
-	struct glue *g;
+  FILE *fp;
+  int n;
+  struct glue *g;
 
-	pthread_mutex_lock(&__stdio_mutex);
-	for (g = &__sglue; g != nullptr; g = g->next) {
-		for (fp = g->iobs, n = g->niobs; --n >= 0; fp++)
-			if (fp->_flags == 0)
-				goto found;
-	}
+  pthread_mutex_lock(&__stdio_mutex);
+  for (g = &__sglue; g != nullptr; g = g->next) {
+    for (fp = g->iobs, n = g->niobs; --n >= 0; fp++) {
+      if (fp->_flags == 0) goto found;
+    }
+  }
 
-	/* release lock while mallocing */
-	pthread_mutex_unlock(&__stdio_mutex);
-	if ((g = moreglue(NDYNAMIC)) == nullptr) return nullptr;
-	pthread_mutex_lock(&__stdio_mutex);
-	lastglue->next = g;
-	lastglue = g;
-	fp = g->iobs;
+  /* release lock while mallocing */
+  pthread_mutex_unlock(&__stdio_mutex);
+  if ((g = moreglue(NDYNAMIC)) == nullptr) return nullptr;
+  pthread_mutex_lock(&__stdio_mutex);
+  lastglue->next = g;
+  lastglue = g;
+  fp = g->iobs;
 found:
-	fp->_flags = 1;		/* reserve this slot; caller sets real flags */
-	pthread_mutex_unlock(&__stdio_mutex);
-	fp->_p = nullptr;		/* no current pointer */
-	fp->_w = 0;		/* nothing to read or write */
-	fp->_r = 0;
-	fp->_bf._base = nullptr;	/* no buffer */
-	fp->_bf._size = 0;
-	fp->_lbfsize = 0;	/* not line buffered */
-	fp->_file = -1;		/* no file */
+  fp->_flags = 1;  /* reserve this slot; caller sets real flags */
+  pthread_mutex_unlock(&__stdio_mutex);
+  fp->_p = nullptr;  /* no current pointer */
+  fp->_w = 0;  /* nothing to read or write */
+  fp->_r = 0;
+  fp->_bf._base = nullptr;  /* no buffer */
+  fp->_bf._size = 0;
+  fp->_lbfsize = 0;  /* not line buffered */
+  fp->_file = -1;  /* no file */
 
-	fp->_lb._base = nullptr;	/* no line buffer */
-	fp->_lb._size = 0;
+  fp->_lb._base = nullptr;  /* no line buffer */
+  fp->_lb._size = 0;
 
-	memset(_EXT(fp), 0, sizeof(struct __sfileext));
-	_EXT(fp)->_lock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-	_EXT(fp)->_caller_handles_locking = false;
+  memset(_EXT(fp), 0, sizeof(struct __sfileext));
+  _EXT(fp)->_lock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+  _EXT(fp)->_caller_handles_locking = false;
 
-	// Caller sets cookie, _read/_write etc.
-	// We explicitly clear _seek and _seek64 to prevent subtle bugs.
-	fp->_seek = nullptr;
-	_EXT(fp)->_seek64 = nullptr;
+  // Caller sets cookie, _read/_write etc.
+  // We explicitly clear _seek and _seek64 to prevent subtle bugs.
+  fp->_seek = nullptr;
+  _EXT(fp)->_seek64 = nullptr;
 
-	return fp;
+  return fp;
 }
 
 int _fwalk(int (*callback)(FILE*)) {
@@ -234,54 +234,50 @@ extern "C" __LIBC_HIDDEN__ void __libc_stdio_cleanup(void) {
  * Allocate a file buffer, or switch to unbuffered I/O.
  * Per the ANSI C standard, ALL tty devices default to line buffered.
  */
-void
-__smakebuf(FILE *fp)
-{
-	unsigned char *p;
-	int flags = 0;
-	size_t size;
-	int couldbetty;
+void __smakebuf(FILE* fp) {
+  unsigned char *p;
+  int flags = 0;
+  size_t size;
+  int couldbetty;
 
-	if (fp->_flags & __SNBF) {
-		fp->_bf._base = fp->_p = fp->_nbuf;
-		fp->_bf._size = 1;
-		return;
-	}
-	__swhatbuf(fp, &size, &couldbetty);
-	if ((p = static_cast<unsigned char*>(malloc(size))) == NULL) {
-		fp->_flags |= __SNBF;
-		fp->_bf._base = fp->_p = fp->_nbuf;
-		fp->_bf._size = 1;
-		return;
-	}
-	flags |= __SMBF;
-	fp->_bf._base = fp->_p = p;
-	fp->_bf._size = size;
-	if (couldbetty && isatty(fp->_file))
-		flags |= __SLBF;
-	fp->_flags |= flags;
+  if (fp->_flags & __SNBF) {
+    fp->_bf._base = fp->_p = fp->_nbuf;
+    fp->_bf._size = 1;
+    return;
+  }
+  __swhatbuf(fp, &size, &couldbetty);
+  if ((p = static_cast<unsigned char*>(malloc(size))) == NULL) {
+    fp->_flags |= __SNBF;
+    fp->_bf._base = fp->_p = fp->_nbuf;
+    fp->_bf._size = 1;
+    return;
+  }
+  flags |= __SMBF;
+  fp->_bf._base = fp->_p = p;
+  fp->_bf._size = size;
+  if (couldbetty && isatty(fp->_file)) flags |= __SLBF;
+  fp->_flags |= flags;
 }
 
 /*
  * Internal routine to determine `proper' buffering for a file.
  */
 void __swhatbuf(FILE* fp, size_t* bufsize, int* couldbetty) {
-	struct stat st;
+  struct stat st;
+  if (fp->_file < 0 || fstat(fp->_file, &st) == -1) {
+    *couldbetty = 0;
+    *bufsize = BUFSIZ;
+    return;
+  }
 
-	if (fp->_file < 0 || fstat(fp->_file, &st) == -1) {
-		*couldbetty = 0;
-		*bufsize = BUFSIZ;
-		return;
-	}
+  /* could be a tty iff it is a character device */
+  *couldbetty = S_ISCHR(st.st_mode);
+  if (st.st_blksize == 0) {
+    *bufsize = BUFSIZ;
+    return;
+  }
 
-	/* could be a tty iff it is a character device */
-	*couldbetty = S_ISCHR(st.st_mode);
-	if (st.st_blksize == 0) {
-		*bufsize = BUFSIZ;
-		return;
-	}
-
-	*bufsize = st.st_blksize;
+  *bufsize = st.st_blksize;
 }
 
 static FILE* __FILE_init(FILE* fp, int fd, int flags) {
@@ -679,7 +675,7 @@ int __fseeko64(FILE* fp, off64_t offset, int whence, int off_t_bits) {
   if (HASUB(fp)) FREEUB(fp);
   fp->_p = fp->_bf._base;
   fp->_r = 0;
-  /* fp->_w = 0; */	/* unnecessary (I think...) */
+  /* fp->_w = 0; */    /* unnecessary (I think...) */
   fp->_flags &= ~__SEOF;
   return 0;
 }
@@ -1026,45 +1022,40 @@ int setlinebuf(FILE* fp) {
  * Set one of the three kinds of buffering, optionally including
  * a buffer.
  */
-int
-setvbuf(FILE *fp, char *buf, int mode, size_t size)
-{
-	int ret, flags;
-	size_t iosize;
-	int ignored;
+int setvbuf(FILE* fp, char* buf, int mode, size_t size) {
+  int ret, flags;
+  size_t iosize;
+  int ignored;
 
-	/*
-	 * Verify arguments.  The `int' limit on `size' is due to this
-	 * particular implementation.  Note, buf and size are ignored
-	 * when setting _IONBF.
-	 */
-	if (mode != _IONBF)
-		if ((mode != _IOFBF && mode != _IOLBF) || size > INT_MAX)
-			return (EOF);
+  /*
+   * Verify arguments.  The `int' limit on `size' is due to this
+   * particular implementation.  Note, buf and size are ignored
+   * when setting _IONBF.
+   */
+  if (mode != _IONBF)
+    if ((mode != _IOFBF && mode != _IOLBF) || size > INT_MAX)
+      return (EOF);
 
-	/*
-	 * Write current buffer, if any.  Discard unread input (including
-	 * ungetc data), cancel line buffering, and free old buffer if
-	 * malloc()ed.  We also clear any eof condition, as if this were
-	 * a seek.
-	 */
-	FLOCKFILE(fp);
-	ret = 0;
-	(void)__sflush(fp);
-	if (HASUB(fp))
-		FREEUB(fp);
-	WCIO_FREE(fp);
-	fp->_r = fp->_lbfsize = 0;
-	flags = fp->_flags;
-	if (flags & __SMBF)
-		free(fp->_bf._base);
-	flags &= ~(__SLBF | __SNBF | __SMBF | __SEOF);
+  /*
+   * Write current buffer, if any.  Discard unread input (including
+   * ungetc data), cancel line buffering, and free old buffer if
+   * malloc()ed.  We also clear any eof condition, as if this were
+   * a seek.
+   */
+  FLOCKFILE(fp);
+  ret = 0;
+  (void)__sflush(fp);
+  if (HASUB(fp)) FREEUB(fp);
+  WCIO_FREE(fp);
+  fp->_r = fp->_lbfsize = 0;
+  flags = fp->_flags;
+  if (flags & __SMBF) free(fp->_bf._base);
+    flags &= ~(__SLBF | __SNBF | __SMBF | __SEOF);
 
-	/* If setting unbuffered mode, skip all the hard work. */
-	if (mode == _IONBF)
-		goto nbf;
+  /* If setting unbuffered mode, skip all the hard work. */
+  if (mode == _IONBF) goto nbf;
 
-	/*
+  /*
    * Note that size == 0 is unspecified behavior:
    *
    * musl returns an error,
@@ -1074,73 +1065,72 @@ setvbuf(FILE *fp, char *buf, int mode, size_t size)
    * but it actually seems to have the same BSD behavior we currently see here.
    *
    * TODO: investigate whether this whole "i/o size" thing is actually useful.
-	 */
-	__swhatbuf(fp, &iosize, &ignored);
-	if (size == 0) {
-		buf = NULL;	/* force local allocation */
-		size = iosize;
-	}
+   */
+  __swhatbuf(fp, &iosize, &ignored);
+  if (size == 0) {
+    buf = NULL; /* force local allocation */
+    size = iosize;
+  }
 
-	/* Allocate buffer if needed. */
-	if (buf == NULL) {
-		if ((buf = static_cast<char*>(malloc(size))) == NULL) {
-			/*
-			 * Unable to honor user's request.  We will return
-			 * failure, but try again with file system size.
-			 */
-			ret = EOF;
-			if (size != iosize) {
-				size = iosize;
-				buf = static_cast<char*>(malloc(size));
-			}
-		}
-		if (buf == NULL) {
-			/* No luck; switch to unbuffered I/O. */
+  /* Allocate buffer if needed. */
+  if (buf == NULL) {
+    if ((buf = static_cast<char*>(malloc(size))) == NULL) {
+      /*
+       * Unable to honor user's request.  We will return
+       * failure, but try again with file system size.
+       */
+      ret = EOF;
+      if (size != iosize) {
+        size = iosize;
+        buf = static_cast<char*>(malloc(size));
+      }
+    }
+    if (buf == NULL) {
+      /* No luck; switch to unbuffered I/O. */
 nbf:
-			fp->_flags = flags | __SNBF;
-			fp->_w = 0;
-			fp->_bf._base = fp->_p = fp->_nbuf;
-			fp->_bf._size = 1;
-			FUNLOCKFILE(fp);
-			return (ret);
-		}
-		flags |= __SMBF;
-	}
+      fp->_flags = flags | __SNBF;
+      fp->_w = 0;
+      fp->_bf._base = fp->_p = fp->_nbuf;
+      fp->_bf._size = 1;
+      FUNLOCKFILE(fp);
+      return (ret);
+    }
+    flags |= __SMBF;
+  }
 
-	/*
-	 * We're committed to buffering from here, so make sure we've
-	 * registered to flush buffers on exit.
-	 */
-	if (!__sdidinit)
-		__sinit();
+  /*
+   * We're committed to buffering from here, so make sure we've
+   * registered to flush buffers on exit.
+   */
+  if (!__sdidinit) __sinit();
 
-	/*
-	 * Fix up the FILE fields, and set __cleanup for output flush on
-	 * exit (since we are buffered in some way).
-	 */
-	if (mode == _IOLBF)
-		flags |= __SLBF;
-	fp->_flags = flags;
-	fp->_bf._base = fp->_p = reinterpret_cast<unsigned char*>(buf);
-	fp->_bf._size = size;
-	/* fp->_lbfsize is still 0 */
-	if (flags & __SWR) {
-		/*
-		 * Begin or continue writing: see __swsetup().  Note
-		 * that __SNBF is impossible (it was handled earlier).
-		 */
-		if (flags & __SLBF) {
-			fp->_w = 0;
-			fp->_lbfsize = -fp->_bf._size;
-		} else
-			fp->_w = size;
-	} else {
-		/* begin/continue reading, or stay in intermediate state */
-		fp->_w = 0;
-	}
-	FUNLOCKFILE(fp);
+  /*
+   * Fix up the FILE fields, and set __cleanup for output flush on
+   * exit (since we are buffered in some way).
+   */
+  if (mode == _IOLBF) flags |= __SLBF;
+  fp->_flags = flags;
+  fp->_bf._base = fp->_p = reinterpret_cast<unsigned char*>(buf);
+  fp->_bf._size = size;
+  /* fp->_lbfsize is still 0 */
+  if (flags & __SWR) {
+    /*
+     * Begin or continue writing: see __swsetup().  Note
+     * that __SNBF is impossible (it was handled earlier).
+     */
+    if (flags & __SLBF) {
+      fp->_w = 0;
+      fp->_lbfsize = -fp->_bf._size;
+    } else {
+      fp->_w = size;
+    }
+  } else {
+    /* begin/continue reading, or stay in intermediate state */
+    fp->_w = 0;
+  }
+  FUNLOCKFILE(fp);
 
-	return (ret);
+  return (ret);
 }
 
 int snprintf(char* s, size_t n, const char* fmt, ...) {
