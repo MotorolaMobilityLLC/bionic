@@ -37,28 +37,26 @@ static uint64_t g_tags;
 static int g_trace_marker_fd = -1;
 
 static bool should_trace() {
-  g_lock.lock();
+  LockGuard guard(g_lock);
   if (g_debug_atrace_tags_enableflags.DidChange()) {
     g_tags = strtoull(g_debug_atrace_tags_enableflags.Get(), nullptr, 0);
   }
-  g_lock.unlock();
-  return ((g_tags & ATRACE_TAG_BIONIC) != 0);
+  return g_tags & ATRACE_TAG_BIONIC;
 }
 
 static int get_trace_marker_fd() {
-  g_lock.lock();
+  LockGuard guard(g_lock);
   if (g_trace_marker_fd == -1) {
     g_trace_marker_fd = open("/sys/kernel/tracing/trace_marker", O_CLOEXEC | O_WRONLY);
     if (g_trace_marker_fd == -1) {
       g_trace_marker_fd = open("/sys/kernel/debug/tracing/trace_marker", O_CLOEXEC | O_WRONLY);
     }
   }
-  g_lock.unlock();
   return g_trace_marker_fd;
 }
 
-static void trace_begin_internal(const char* message) {
-  if (!should_trace()) {
+static void trace_begin_internal(const char* message, bool force_trace) {
+  if (!force_trace && !should_trace()) {
     return;
   }
 
@@ -78,7 +76,7 @@ static void trace_begin_internal(const char* message) {
   TEMP_FAILURE_RETRY(write(trace_marker_fd, buf, len));
 }
 
-void bionic_trace_begin(const char* message) {
+void bionic_trace_begin(const char* message, bool force_trace) {
   // Some functions called by trace_begin_internal() can call
   // bionic_trace_begin(). Prevent infinite recursion and non-recursive mutex
   // deadlock by using a flag in the thread local storage.
@@ -86,15 +84,16 @@ void bionic_trace_begin(const char* message) {
   if (!tls.bionic_systrace_enabled) {
     return;
   }
+
   tls.bionic_systrace_enabled = false;
 
-  trace_begin_internal(message);
+  trace_begin_internal(message, force_trace);
 
   tls.bionic_systrace_enabled = true;
 }
 
-static void trace_end_internal() {
-  if (!should_trace()) {
+static void trace_end_internal(bool force_trace) {
+  if (!force_trace && !should_trace()) {
     return;
   }
 
@@ -120,7 +119,7 @@ static void trace_end_internal() {
   TEMP_FAILURE_RETRY(write(trace_marker_fd, const_cast<const char*>(buf), 2));
 }
 
-void bionic_trace_end() {
+void bionic_trace_end(bool force_trace) {
   // Some functions called by trace_end_internal() can call
   // bionic_trace_begin(). Prevent infinite recursion and non-recursive mutex
   // deadlock by using a flag in the thread local storage.
@@ -128,15 +127,17 @@ void bionic_trace_end() {
   if (!tls.bionic_systrace_enabled) {
     return;
   }
+
   tls.bionic_systrace_enabled = false;
 
-  trace_end_internal();
+  trace_end_internal(force_trace);
 
   tls.bionic_systrace_enabled = true;
 }
 
 ScopedTrace::ScopedTrace(const char* message) : called_end_(false) {
-  bionic_trace_begin(message);
+  should_trace_ = should_trace();
+  if (should_trace_) bionic_trace_begin(message, /*force_trace*/ true);
 }
 
 ScopedTrace::~ScopedTrace() {
@@ -144,8 +145,8 @@ ScopedTrace::~ScopedTrace() {
 }
 
 void ScopedTrace::End() {
-  if (!called_end_) {
-    bionic_trace_end();
-    called_end_ = true;
-  }
+  if (!should_trace_ || called_end_) return;
+
+  bionic_trace_end(/*force_trace*/ true);
+  called_end_ = true;
 }
