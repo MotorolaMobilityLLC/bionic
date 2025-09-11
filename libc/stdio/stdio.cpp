@@ -1099,12 +1099,6 @@ nbf:
   }
 
   /*
-   * We're committed to buffering from here, so make sure we've
-   * registered to flush buffers on exit.
-   */
-  if (!__sdidinit) __sinit();
-
-  /*
    * Fix up the FILE fields, and set __cleanup for output flush on
    * exit (since we are buffered in some way).
    */
