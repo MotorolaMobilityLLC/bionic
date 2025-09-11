@@ -40,6 +40,7 @@
 #include <android-base/test_utils.h>
 #include <android-base/unique_fd.h>
 
+#include "android-base/stringprintf.h"
 #include "utils.h"
 
 // This #include is actually a test too. We have to duplicate the
@@ -261,16 +262,63 @@ TEST(STDIO_TEST, getdelim_directory) {
   fclose(fp);
 }
 
+TEST(STDIO_TEST, fgetln) {
+#if !defined(__GLIBC__)
+  FILE* fp = tmpfile();
+  ASSERT_TRUE(fp != nullptr);
+
+  std::vector<std::string> lines;
+  for (size_t i = 0; i < 5; ++i) {
+    lines.push_back(android::base::StringPrintf("This is test line %zu for fgetln()\n", i));
+  }
+
+  for (size_t i = 0; i < lines.size(); ++i) {
+    int rc = fprintf(fp, "%s", lines[i].c_str());
+    ASSERT_EQ(rc, static_cast<int>(lines[i].size()));
+  }
+
+  rewind(fp);
+
+  size_t i = 0;
+  char* line = nullptr;
+  size_t line_length;
+  while ((line = fgetln(fp, &line_length)) != nullptr) {
+    ASSERT_EQ(line_length, lines[i].size());
+    // "lines" aren't necessarily NUL-terminated, so we need to use memcmp().
+    ASSERT_EQ(0, memcmp(lines[i].c_str(), line, line_length));
+    ++i;
+  }
+  ASSERT_EQ(i, lines.size());
+
+  // The last read should have set the end-of-file indicator for the stream.
+  ASSERT_TRUE(feof(fp));
+  clearerr(fp);
+
+  // fgetln() returns nullptr but doesn't set errno if we're already at EOF.
+  // It should set the end-of-file indicator for the stream, though.
+  errno = 0;
+  ASSERT_EQ(fgetln(fp, &line_length), nullptr);
+  ASSERT_ERRNO(0);
+  ASSERT_TRUE(feof(fp));
+
+  fclose(fp);
+#else
+  GTEST_SKIP() << "no fgetln() in glibc";
+#endif
+}
+
 TEST(STDIO_TEST, getline) {
   FILE* fp = tmpfile();
   ASSERT_TRUE(fp != nullptr);
 
-  const char* line_written = "This is a test for getline\n";
-  const size_t line_count = 5;
+  std::vector<std::string> lines;
+  for (size_t i = 0; i < 5; ++i) {
+    lines.push_back(android::base::StringPrintf("This is test line %zu for getline()\n", i));
+  }
 
-  for (size_t i = 0; i < line_count; ++i) {
-    int rc = fprintf(fp, "%s", line_written);
-    ASSERT_EQ(rc, static_cast<int>(strlen(line_written)));
+  for (size_t i = 0; i < lines.size(); ++i) {
+    int rc = fprintf(fp, "%s", lines[i].c_str());
+    ASSERT_EQ(rc, static_cast<int>(lines[i].size()));
   }
 
   rewind(fp);
@@ -278,15 +326,15 @@ TEST(STDIO_TEST, getline) {
   char* line_read = nullptr;
   size_t allocated_length = 0;
 
-  size_t read_line_count = 0;
+  size_t i = 0;
   ssize_t read_char_count;
   while ((read_char_count = getline(&line_read, &allocated_length, fp)) != -1) {
-    ASSERT_EQ(read_char_count, static_cast<int>(strlen(line_written)));
-    ASSERT_GE(allocated_length, strlen(line_written));
-    ASSERT_STREQ(line_written, line_read);
-    ++read_line_count;
+    ASSERT_EQ(read_char_count, static_cast<int>(lines[i].size()));
+    ASSERT_GE(allocated_length, lines[i].size());
+    ASSERT_EQ(lines[i], line_read);
+    ++i;
   }
-  ASSERT_EQ(read_line_count, line_count);
+  ASSERT_EQ(i, lines.size());
 
   // The last read should have set the end-of-file indicator for the stream.
   ASSERT_TRUE(feof(fp));
