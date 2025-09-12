@@ -487,7 +487,6 @@ cc_library_static {
         "upstream-openbsd/lib/libc/net/inet_ntop.c",
         "upstream-openbsd/lib/libc/net/inet_pton.c",
         "upstream-openbsd/lib/libc/net/res_random.c",
-        "upstream-openbsd/lib/libc/stdio/fgetln.c",
         "upstream-openbsd/lib/libc/stdio/fgetwc.c",
         "upstream-openbsd/lib/libc/stdio/fgetws.c",
         "upstream-openbsd/lib/libc/stdio/flags.c",

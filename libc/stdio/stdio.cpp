@@ -812,6 +812,17 @@ int fgetc_unlocked(FILE* fp) {
   return getc_unlocked(fp);
 }
 
+char* fgetln(FILE* fp, size_t* length_ptr) {
+  CHECK_FP(fp);
+  ScopedFileLock sfl(fp);
+  // Implementing fgetln() in terms of getdelim() means lines are actually always NUL terminated.
+  // We could explicitly overwrite the NUL to be "bug compatible", but that seems silly?
+  ssize_t n = getdelim(reinterpret_cast<char**>(&fp->_lb._base), &fp->_lb._size, '\n', fp);
+  if (n <= 0) return nullptr;
+  *length_ptr = n;
+  return reinterpret_cast<char*>(fp->_lb._base);
+}
+
 char* fgets(char* buf, int n, FILE* fp) {
   CHECK_FP(fp);
   ScopedFileLock sfl(fp);
