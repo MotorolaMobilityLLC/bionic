@@ -55,11 +55,7 @@ static int get_trace_marker_fd() {
   return g_trace_marker_fd;
 }
 
-static void trace_begin_internal(const char* message, bool force_trace) {
-  if (!force_trace && !should_trace()) {
-    return;
-  }
-
+static void trace_begin_internal(const char* message) {
   int trace_marker_fd = get_trace_marker_fd();
   if (trace_marker_fd == -1) {
     return;
@@ -76,27 +72,21 @@ static void trace_begin_internal(const char* message, bool force_trace) {
   TEMP_FAILURE_RETRY(write(trace_marker_fd, buf, len));
 }
 
-void bionic_trace_begin(const char* message, bool force_trace) {
+void bionic_trace_begin(const char* message) {
   // Some functions called by trace_begin_internal() can call
   // bionic_trace_begin(). Prevent infinite recursion and non-recursive mutex
   // deadlock by using a flag in the thread local storage.
   bionic_tls& tls = __get_bionic_tls();
-  if (!tls.bionic_systrace_enabled) {
-    return;
-  }
+  if (!tls.bionic_systrace_enabled || !should_trace()) return;
 
   tls.bionic_systrace_enabled = false;
 
-  trace_begin_internal(message, force_trace);
+  trace_begin_internal(message);
 
   tls.bionic_systrace_enabled = true;
 }
 
-static void trace_end_internal(bool force_trace) {
-  if (!force_trace && !should_trace()) {
-    return;
-  }
-
+static void trace_end_internal() {
   int trace_marker_fd = get_trace_marker_fd();
   if (trace_marker_fd == -1) {
     return;
@@ -119,25 +109,30 @@ static void trace_end_internal(bool force_trace) {
   TEMP_FAILURE_RETRY(write(trace_marker_fd, const_cast<const char*>(buf), 2));
 }
 
-void bionic_trace_end(bool force_trace) {
+void bionic_trace_end() {
   // Some functions called by trace_end_internal() can call
   // bionic_trace_begin(). Prevent infinite recursion and non-recursive mutex
   // deadlock by using a flag in the thread local storage.
   bionic_tls& tls = __get_bionic_tls();
-  if (!tls.bionic_systrace_enabled) {
-    return;
-  }
+  if (!tls.bionic_systrace_enabled || !should_trace()) return;
 
   tls.bionic_systrace_enabled = false;
 
-  trace_end_internal(force_trace);
+  trace_end_internal();
 
   tls.bionic_systrace_enabled = true;
 }
 
 ScopedTrace::ScopedTrace(const char* message) : called_end_(false) {
-  should_trace_ = should_trace();
-  if (should_trace_) bionic_trace_begin(message, /*force_trace*/ true);
+  // Do not call should_trace if tracing is disabled, the call can crash if
+  // done during initialization.
+  bionic_tls& tls = __get_bionic_tls();
+  should_trace_ = tls.bionic_systrace_enabled && should_trace();
+  if (!should_trace_) return;
+
+  tls.bionic_systrace_enabled = false;
+  trace_begin_internal(message);
+  tls.bionic_systrace_enabled = true;
 }
 
 ScopedTrace::~ScopedTrace() {
@@ -147,6 +142,9 @@ ScopedTrace::~ScopedTrace() {
 void ScopedTrace::End() {
   if (!should_trace_ || called_end_) return;
 
-  bionic_trace_end(/*force_trace*/ true);
+  bionic_tls& tls = __get_bionic_tls();
+  tls.bionic_systrace_enabled = false;
+  trace_end_internal();
+  tls.bionic_systrace_enabled = true;
   called_end_ = true;
 }
