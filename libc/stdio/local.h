@@ -151,18 +151,15 @@ struct __sfileext {
 #define __SRW 0x0010   // Was opened for reading & writing.
 #define __SEOF 0x0020  // Found EOF.
 #define __SERR 0x0040  // Found error.
-#define __SMBF 0x0080  // `_buf` is from malloc.
+#define __SMBF 0x0080  // `_bf` is from malloc.
 // #define __SAPP 0x0100 --- historical (fdopen()ed in append mode).
 #define __SSTR 0x0200  // This is an sprintf/snprintf string.
 // #define __SOPT 0x0400 --- historical (do fseek() optimization).
 // #define __SNPT 0x0800 --- historical (do not do fseek() optimization).
 // #define __SOFF 0x1000 --- historical (set iff _offset is in fact correct).
-// #define __SMOD 0x2000 --- historical (set iff fgetln modified _p text).
+// #define __SMOD 0x2000 --- historical (set iff fgetln() returned _bf pointer).
 #define __SALC 0x4000  // Allocate string space dynamically.
 #define __SIGN 0x8000  // Ignore this file in _fwalk.
-
-// TODO: remove remaining references to this obsolete flag (see above).
-#define __SMOD 0
 
 #define _EXT(fp) __BIONIC_CAST(reinterpret_cast, struct __sfileext*, (fp)->_ext._base)
 
