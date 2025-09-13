@@ -110,6 +110,7 @@ _Static_assert(sizeof(struct __sFILE) == 84, "__sFILE changed size");
 /* minimal requirement of SUSv2 */
 #define WCIO_UNGETWC_BUFSIZE 1
 
+// TODO: this struct isn't useful on its own; inline directly into __sfileext.
 struct wchar_io_data {
   mbstate_t wcio_mbstate_in;
   mbstate_t wcio_mbstate_out;
@@ -117,7 +118,7 @@ struct wchar_io_data {
   wchar_t wcio_ungetwc_buf[WCIO_UNGETWC_BUFSIZE];
   size_t wcio_ungetwc_inbuf;
 
-  int wcio_mode; /* orientation */
+  int orientation;
 };
 
 struct __sfileext {
@@ -280,25 +281,25 @@ char* __hdtoa(double, const char*, int, int*, int*, char**);
 char* __hldtoa(long double, const char*, int, int*, int*, char**);
 char* __ldtoa(long double*, int, int, int*, int*, char**);
 
-#define WCIO_GET(fp) (_EXT(fp) ? &(_EXT(fp)->_wcio) : NULL)
+#define WCIO_GET(fp) (&(_EXT(fp)->_wcio))
 
 #define ORIENT_BYTES (-1)
 #define ORIENT_UNKNOWN 0
 #define ORIENT_CHARS 1
 
-#define _SET_ORIENTATION(fp, mode)                                              \
-  do {                                                                          \
-    struct wchar_io_data* _wcio = WCIO_GET(fp);                                 \
-    if (_wcio && _wcio->wcio_mode == ORIENT_UNKNOWN) _wcio->wcio_mode = (mode); \
+#define _SET_ORIENTATION(fp, mode) \
+  do { \
+    struct wchar_io_data* _wcio = WCIO_GET(fp); \
+    if (_wcio->orientation == ORIENT_UNKNOWN) { \
+      _wcio->orientation = (mode > 0) ? ORIENT_CHARS : ORIENT_BYTES; \
+     } \
   } while (0)
 
-#define WCIO_FREE(fp)                           \
-  do {                                          \
+#define WCIO_FREE(fp) \
+  do { \
     struct wchar_io_data* _wcio = WCIO_GET(fp); \
-    if (_wcio) {                                \
-      _wcio->wcio_mode = ORIENT_UNKNOWN;        \
-      _wcio->wcio_ungetwc_inbuf = 0;            \
-    }                                           \
+    _wcio->orientation = ORIENT_UNKNOWN; \
+    _wcio->wcio_ungetwc_inbuf = 0; \
   } while (0)
 
 __END_DECLS

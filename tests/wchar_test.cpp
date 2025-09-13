@@ -1420,3 +1420,55 @@ TEST(wchar, wcstok) {
     EXPECT_EQ(nullptr, wcstok(nullptr, L":", &p));
   }
 }
+
+TEST(wchar, fwide_byte) {
+  std::unique_ptr<FILE, decltype(&fclose)> fp(fopen("/proc/version", "re"), fclose);
+  // Unknown orientation.
+  EXPECT_EQ(0, fwide(fp.get(), 0));
+  // Getting a byte sets the orientation to bytes.
+  EXPECT_EQ('L', fgetc(fp.get()));
+  EXPECT_TRUE(fwide(fp.get(), 0) < 0);
+  // We don't prevent you from mixing and matching...
+  EXPECT_EQ(wint_t(L'i'), fgetwc(fp.get()));
+  // ...but fwide() remembers what you _first_ did.
+  EXPECT_TRUE(fwide(fp.get(), 0) < 0);
+}
+
+TEST(wchar, fwide_wide_char) {
+  std::unique_ptr<FILE, decltype(&fclose)> fp(fopen("/proc/version", "re"), fclose);
+  // Unknown orientation.
+  EXPECT_EQ(0, fwide(fp.get(), 0));
+  // Getting a wide character sets the orientation to wide.
+  EXPECT_EQ(wint_t(L'L'), fgetwc(fp.get()));
+  EXPECT_TRUE(fwide(fp.get(), 0) > 0);
+  // We don't prevent you from mixing and matching...
+  EXPECT_EQ('i', fgetc(fp.get()));
+  // ...but fwide() remembers what you _first_ did.
+  EXPECT_TRUE(fwide(fp.get(), 0) > 0);
+}
+
+TEST(wchar, fwide_set_byte) {
+  std::unique_ptr<FILE, decltype(&fclose)> fp(fopen("/proc/version", "re"), fclose);
+  // Unknown orientation.
+  EXPECT_EQ(0, fwide(fp.get(), 0));
+  // You can set it to what you want...
+  EXPECT_TRUE(fwide(fp.get(), -123) < 0);
+  // But only once...
+  EXPECT_TRUE(fwide(fp.get(), 123) < 0);
+  // And you can still use the stream however you like.
+  EXPECT_EQ('L', fgetc(fp.get()));
+  EXPECT_EQ(wint_t(L'i'), fgetwc(fp.get()));
+}
+
+TEST(wchar, fwide_set_wide_char) {
+  std::unique_ptr<FILE, decltype(&fclose)> fp(fopen("/proc/version", "re"), fclose);
+  // Unknown orientation.
+  EXPECT_EQ(0, fwide(fp.get(), 0));
+  // You can set it to what you want...
+  EXPECT_TRUE(fwide(fp.get(), 123) > 0);
+  // But only once...
+  EXPECT_TRUE(fwide(fp.get(), -123) > 0);
+  // And you can still use the stream however you like.
+  EXPECT_EQ('L', fgetc(fp.get()));
+  EXPECT_EQ(wint_t(L'i'), fgetwc(fp.get()));
+}

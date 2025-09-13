@@ -493,7 +493,6 @@ cc_library_static {
         "upstream-openbsd/lib/libc/stdio/fputwc.c",
         "upstream-openbsd/lib/libc/stdio/fputws.c",
         "upstream-openbsd/lib/libc/stdio/fvwrite.c",
-        "upstream-openbsd/lib/libc/stdio/fwide.c",
         "upstream-openbsd/lib/libc/stdio/getdelim.c",
         "upstream-openbsd/lib/libc/stdio/gets.c",
         "upstream-openbsd/lib/libc/stdio/mktemp.c",

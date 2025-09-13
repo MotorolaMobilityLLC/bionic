@@ -50,7 +50,27 @@ wint_t fgetwc(FILE* _Nonnull __fp);
 wchar_t* _Nullable fgetws(wchar_t* _Nonnull __buf, int __size, FILE* _Nonnull __fp);
 wint_t fputwc(wchar_t __wc, FILE* _Nonnull __fp);
 int fputws(const wchar_t* _Nonnull __s, FILE* _Nonnull __fp);
+
+/**
+ * [fwide(3)](https://www.man7.org/linux/man-pages/man3/fwide.3.html)
+ * gets/sets the orientation of a stream.
+ *
+ * Use a positive value to set wide character orientation,
+ * a negative value to set byte orientation,
+ * or 0 to leave the orientation unset if it hasn't already been set.
+ *
+ * ISO C says that byte operations "shall not" be applied to a wide character
+ * stream and vice versa, but Android -- and other BSD-derived stdio
+ * implementations -- do not enforce this.
+ * On Android orientation is largely meaningless, and only tells you whether
+ * the first operation on the stream was a byte or a wide character operation.
+ *
+ * Returns a positive value for a wide stream,
+ * a negative value for a byte stream,
+ * or 0 if the orientation has not yet been set.
+ */
 int fwide(FILE* _Nonnull __fp, int __mode);
+
 wint_t getwc(FILE* _Nonnull __fp);
 wint_t getwchar(void);
 int mbsinit(const mbstate_t* _Nullable __ps);

@@ -1449,6 +1449,13 @@ void funlockfile(FILE* fp) {
   pthread_mutex_unlock(&_EXT(fp)->_lock);
 }
 
+int fwide(FILE* fp, int mode) {
+  CHECK_FP(fp);
+  ScopedFileLock sfl(fp);
+  if (mode != 0) _SET_ORIENTATION(fp, mode);
+  return WCIO_GET(fp)->orientation;
+}
+
 namespace {
 
 namespace phony {
