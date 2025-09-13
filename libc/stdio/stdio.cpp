@@ -49,7 +49,6 @@
 
 #include <async_safe/log.h>
 
-#include "glue.h"
 #include "local.h"
 #include "private/ErrnoRestorer.h"
 #include "private/FdPath.h"
@@ -119,6 +118,14 @@ static uint64_t __get_file_tag(FILE* fp) {
                                         reinterpret_cast<uint64_t>(fp));
 }
 
+// The first few FILEs are statically allocated; others are dynamically
+// allocated and linked in via this glue structure.
+// TODO: replace this with an intrusive doubly-linked list of the FILE*s (via _EXT())
+struct glue {
+  struct glue* next;
+  int niobs;
+  FILE* iobs;
+};
 struct glue __sglue = { nullptr, 3, __sF };
 static struct glue* lastglue = &__sglue;
 

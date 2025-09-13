@@ -196,6 +196,9 @@ __LIBC32_LEGACY_PUBLIC__ fpos_t __sseek(void*, fpos_t, int);
 __LIBC32_LEGACY_PUBLIC__ int __sclose(void*);
 __LIBC32_LEGACY_PUBLIC__ int _fwalk(int (*)(FILE*));
 
+/* This was referenced by a couple of different pieces of middleware and the Crystax NDK. */
+__LIBC32_LEGACY_PUBLIC__ extern struct glue __sglue;
+
 off64_t __sseek64(void*, off64_t, int);
 int __sflush_locked(FILE*);
 void __swhatbuf(FILE*, size_t*, int*);
