@@ -12,7 +12,6 @@ socketpair(int, int, int, int*) x86
 connect(int, sockaddr*, socklen_t) x86
 sendto(int, const void*, size_t, int, const sockaddr*, socklen_t) x86
 recvfrom(int, void*, size_t, unsigned int, sockaddr*, socklen_t*) x86
-shutdown(int, int) x86
 setsockopt(int, int, int, const void*, socklen_t) x86
 getsockopt(int, int, int, void*, socklen_t*) x86
 recvmsg(int, msghdr*, unsigned int) x86
