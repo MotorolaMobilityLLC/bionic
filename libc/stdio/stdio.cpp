@@ -250,11 +250,6 @@ static int lflush(FILE* fp) {
 int __srefill(FILE* fp) {
   fp->_r = 0; /* largely a convenience for callers */
 
-#if !defined(__BIONIC__)
-  /* SysV does not make this test; take it out for compatibility */
-  if (fp->_flags & __SEOF) return (EOF);
-#endif
-
   /* if not already reading, have to be reading and writing */
   if ((fp->_flags & __SRD) == 0) {
     if ((fp->_flags & __SRW) == 0) {
