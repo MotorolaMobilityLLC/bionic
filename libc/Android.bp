@@ -970,7 +970,6 @@ cc_library_static {
         // TODO: finish cleanup.
         "stdio/fmemopen.cpp",
         "stdio/parsefloat.c",
-        "stdio/refill.c",
         "stdio/stdio.cpp",
         "stdio/stdio_ext.cpp",
         "stdio/vfscanf.cpp",
