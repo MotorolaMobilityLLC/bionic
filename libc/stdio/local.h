@@ -65,12 +65,16 @@ struct __sFILE {
   int _lbfsize;      /* 0 or -_bf._size, for inline putc */
 
   // Function pointers used by `funopen`.
-  // Note that `_seek` is ignored if `_seek64` (in __sfileext) is set.
-  // TODO: NetBSD has `funopen2` which corrects the `int`s to `size_t`s.
-  // TODO: glibc has `fopencookie` which passes the function pointers in a struct.
+  // TODO: NetBSD has `funopen2()` which corrects the `int`s to `size_t`s.
+  // TODO: glibc and FreeBSD have `fopencookie()` which pass the function
+  // pointers in a struct (and uses `size_t` rather than `int`).
   void* _cookie; /* cookie passed to io functions */
   int (*_close)(void*);
   int (*_read)(void*, char*, int);
+  // Note that `_seek` is ignored if `_seek64` (in __sfileext) is set.
+  // TODO: only FreeBSD uses fpos_t rather than off_t; since they're the same
+  // on any OS we care about (albeit not guaranteed by POSIX) it doesn't much
+  // matter, and FreeBSD is what iOS uses, so probably best to _not_ fix that.
   fpos_t (*_seek)(void*, fpos_t, int);
   int (*_write)(void*, const char*, int);
 
