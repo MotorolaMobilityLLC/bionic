@@ -236,13 +236,6 @@ extern "C" __LIBC_HIDDEN__ void __libc_stdio_cleanup(void) {
   _fwalk(__sflush);
 }
 
-static int lflush(FILE* fp) {
-  if ((fp->_flags & (__SLBF|__SWR)) == (__SLBF|__SWR)) {
-    return __sflush_locked(fp); /* ignored... */
-  }
-  return 0;
-}
-
 /*
  * Refill a stdio buffer.
  * Return EOF on eof or error, 0 otherwise.
@@ -283,18 +276,32 @@ int __srefill(FILE* fp) {
 
   if (fp->_bf._base == NULL) __smakebuf(fp);
 
-  /*
-   * Before reading from a line buffered or unbuffered file,
-   * flush all line buffered output files, per the ANSI C
-   * standard.
-   */
+  // If we're about to read from an unbuffered or line-buffered stream, what do we need to do?
+  //
+  // Everyone points to the ISO C standard, but disagree about how to interpret it.
+  // The two most important sentences are C23 5.1.2.3 paragraph 6 bullet 3 which says that
+  // "the intent ... is that unbuffered or line-buffered output appear as soon as possible,
+  // to ensure that prompting messages appear prior to a program waiting for input",
+  // and C23 7.23.3 paragraph 3 which qualifies the extended description of these behaviors with
+  // "Support for these characteristics is implementation-defined".
+  //
+  // In practice, BSD flushes all streams, glibc only flushes stdout, and musl flushes no streams.
+  //
+  // Being BSD-derived, bionic historically flushed all streams. This was never implemented in a
+  // completely thread-safe manner, and all attempts to fix that failed by introducing deadlocks.
+  // Upstream BSD even adds a __SIGN ("ignore") flag as a partial workaround, but that only covers
+  // the per-file locks' deadlocks, not deadlocks that would be caused by adding the missing locking
+  // of the _list_ of streams.
+  //
+  // Long term I think we should move to the musl model, but the simple safe choice is to behave
+  // like glibc and just flush stdout. (A transition glibc made in 2004, having had inherited BSD
+  // behavior before then.)
   if (fp->_flags & (__SLBF|__SNBF)) {
-    /* Ignore this file in _fwalk to avoid potential deadlock. */
-    fp->_flags |= __SIGN;
-    (void) _fwalk(lflush);
-    fp->_flags &= ~__SIGN;
+    // We use fflush() rather than __sflush() for stdout since we don't hold the stdout lock.
+    fflush(stdout);
 
-    /* Now flush this file without locking it. */
+    // Now flush _this_ file without locking it (because our caller should have either taken the
+    // lock or know it's in a context -- such as fread_unlocked() -- where the lock isn't needed).
     if ((fp->_flags & (__SLBF|__SWR)) == (__SLBF|__SWR)) __sflush(fp);
   }
   fp->_p = fp->_bf._base;
