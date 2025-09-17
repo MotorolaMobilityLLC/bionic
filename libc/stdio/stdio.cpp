@@ -223,7 +223,7 @@ int _fwalk(int (*callback)(FILE*)) {
   for (glue* g = &__sglue; g != nullptr; g = g->next) {
     FILE* fp = g->iobs;
     for (int n = g->niobs; --n >= 0; ++fp) {
-      if (fp->_flags != 0 && (fp->_flags & __SIGN) == 0) {
+      if (fp->_flags != 0) {
         result |= (*callback)(fp);
       }
     }
