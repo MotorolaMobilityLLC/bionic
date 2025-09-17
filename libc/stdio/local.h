@@ -164,7 +164,7 @@ struct __sfileext {
 // #define __SOFF 0x1000 --- historical (set iff _offset is in fact correct).
 // #define __SMOD 0x2000 --- historical (set iff fgetln() returned _bf pointer).
 #define __SALC 0x4000  // Allocate string space dynamically.
-#define __SIGN 0x8000  // Ignore this file in _fwalk.
+// #define __SIGN 0x8000  // historical (ignore this file in _fwalk()).
 
 #define _EXT(fp) __BIONIC_CAST(reinterpret_cast, struct __sfileext*, (fp)->_ext._base)
 
