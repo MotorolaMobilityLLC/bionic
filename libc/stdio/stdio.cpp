@@ -1304,6 +1304,17 @@ int vsprintf(char* s, const char* fmt, va_list ap) {
   return vsnprintf(s, SSIZE_MAX, fmt, ap);
 }
 
+int vsscanf(const char* s, const char* fmt, va_list ap) {
+  FILE f;
+  __sfileext fext;
+  _FILEEXT_SETUP(&f, &fext);
+  f._flags = __SRD;
+  f._bf._base = f._p = reinterpret_cast<unsigned char*>(const_cast<char*>(s));
+  f._bf._size = f._r = strlen(s);
+  f._read = [](void*, char*, int) { return 0; };
+  return __svfscanf(&f, fmt, ap);
+}
+
 int vwprintf(const wchar_t* fmt, va_list ap) {
   return vfwprintf(stdout, fmt, ap);
 }
