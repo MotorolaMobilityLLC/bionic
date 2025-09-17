@@ -1106,39 +1106,39 @@ TEST(signal, sme_tpidr2_clear) {
 #endif
 
 TEST(signal, psignal) {
-  CapturedStderr cap;
+  android::base::CapturedStderr cap;
   psignal(SIGINT, "a b c");
   ASSERT_EQ(cap.str(), "a b c: Interrupt\n");
 }
 
 TEST(signal, psignal_null) {
-  CapturedStderr cap;
+  android::base::CapturedStderr cap;
   psignal(SIGINT, nullptr);
   ASSERT_EQ(cap.str(), "Interrupt\n");
 }
 
 TEST(signal, psignal_empty) {
-  CapturedStderr cap;
+  android::base::CapturedStderr cap;
   psignal(SIGINT, "");
   ASSERT_EQ(cap.str(), "Interrupt\n");
 }
 
 TEST(signal, psiginfo) {
-  CapturedStderr cap;
+  android::base::CapturedStderr cap;
   siginfo_t si{.si_signo = SIGINT};
   psiginfo(&si, "a b c");
   ASSERT_EQ(cap.str(), "a b c: Interrupt\n");
 }
 
 TEST(signal, psiginfo_null) {
-  CapturedStderr cap;
+  android::base::CapturedStderr cap;
   siginfo_t si{.si_signo = SIGINT};
   psiginfo(&si, nullptr);
   ASSERT_EQ(cap.str(), "Interrupt\n");
 }
 
 TEST(signal, psiginfo_empty) {
-  CapturedStderr cap;
+  android::base::CapturedStderr cap;
   siginfo_t si{.si_signo = SIGINT};
   psiginfo(&si, "");
   ASSERT_EQ(cap.str(), "Interrupt\n");

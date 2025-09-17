@@ -2689,42 +2689,42 @@ TEST(STDIO_TEST, constants) {
 }
 
 TEST(STDIO_TEST, perror) {
-  CapturedStderr cap;
+  android::base::CapturedStderr cap;
   errno = EINVAL;
   perror("a b c");
   ASSERT_EQ(cap.str(), "a b c: Invalid argument\n");
 }
 
 TEST(STDIO_TEST, perror_null) {
-  CapturedStderr cap;
+  android::base::CapturedStderr cap;
   errno = EINVAL;
   perror(nullptr);
   ASSERT_EQ(cap.str(), "Invalid argument\n");
 }
 
 TEST(STDIO_TEST, perror_empty) {
-  CapturedStderr cap;
+  android::base::CapturedStderr cap;
   errno = EINVAL;
   perror("");
   ASSERT_EQ(cap.str(), "Invalid argument\n");
 }
 
 TEST(STDIO_TEST, puts) {
-  CapturedStdout cap;
+  android::base::CapturedStdout cap;
   puts("a b c");
   fflush(stdout);
   ASSERT_EQ(cap.str(), "a b c\n");
 }
 
 TEST(STDIO_TEST, putchar) {
-  CapturedStdout cap;
+  android::base::CapturedStdout cap;
   ASSERT_EQ(65, putchar('A'));
   fflush(stdout);
   ASSERT_EQ(cap.str(), "A");
 }
 
 TEST(STDIO_TEST, putchar_unlocked) {
-  CapturedStdout cap;
+  android::base::CapturedStdout cap;
   ASSERT_EQ(66, putchar_unlocked('B'));
   fflush(stdout);
   ASSERT_EQ(cap.str(), "B");
