@@ -104,8 +104,6 @@ FILE* stdin = &__sF[0];
 FILE* stdout = &__sF[1];
 FILE* stderr = &__sF[2];
 
-static pthread_mutex_t __stdio_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 static uint64_t __get_file_tag(FILE* fp) {
   // Don't use a tag for the standard streams.
   // They don't really own their file descriptors, because the values are well-known, and you're
@@ -126,6 +124,7 @@ struct glue {
   int niobs;
   FILE* iobs;
 };
+static pthread_mutex_t __sglue_mutex = PTHREAD_MUTEX_INITIALIZER;
 struct glue __sglue = { nullptr, 3, __sF };
 static struct glue* lastglue = &__sglue;
 
@@ -178,7 +177,7 @@ FILE* __sfp(void) {
   int n;
   struct glue *g;
 
-  pthread_mutex_lock(&__stdio_mutex);
+  pthread_mutex_lock(&__sglue_mutex);
   for (g = &__sglue; g != nullptr; g = g->next) {
     for (fp = g->iobs, n = g->niobs; --n >= 0; fp++) {
       if (fp->_flags == 0) goto found;
@@ -186,15 +185,15 @@ FILE* __sfp(void) {
   }
 
   /* release lock while mallocing */
-  pthread_mutex_unlock(&__stdio_mutex);
+  pthread_mutex_unlock(&__sglue_mutex);
   if ((g = moreglue(NDYNAMIC)) == nullptr) return nullptr;
-  pthread_mutex_lock(&__stdio_mutex);
+  pthread_mutex_lock(&__sglue_mutex);
   lastglue->next = g;
   lastglue = g;
   fp = g->iobs;
 found:
   fp->_flags = 1;  /* reserve this slot; caller sets real flags */
-  pthread_mutex_unlock(&__stdio_mutex);
+  pthread_mutex_unlock(&__sglue_mutex);
   fp->_p = nullptr;  /* no current pointer */
   fp->_w = 0;  /* nothing to read or write */
   fp->_r = 0;
@@ -219,6 +218,7 @@ found:
 }
 
 int _fwalk(int (*callback)(FILE*)) {
+  pthread_mutex_lock(&__sglue_mutex);
   int result = 0;
   for (glue* g = &__sglue; g != nullptr; g = g->next) {
     FILE* fp = g->iobs;
@@ -228,6 +228,7 @@ int _fwalk(int (*callback)(FILE*)) {
       }
     }
   }
+  pthread_mutex_unlock(&__sglue_mutex);
   return result;
 }
 
