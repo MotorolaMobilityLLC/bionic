@@ -1315,6 +1315,34 @@ int vsscanf(const char* s, const char* fmt, va_list ap) {
   return __svfscanf(&f, fmt, ap);
 }
 
+int vswscanf(const wchar_t* str, const wchar_t* fmt, va_list ap) {
+  // We convert the wide character string to multibyte, which __vfwscanf() will convert back to
+  // wide characters, but no-one really cares about the wchar_t stuff so this isn't worth improving.
+  size_t len = wcslen(str) * MB_CUR_MAX;
+  char* mbstr = static_cast<char*>(malloc(len + 1));
+  if (mbstr == nullptr) return EOF;
+
+  const wchar_t* strp = str;
+  mbstate_t mbs = {};
+  size_t mlen = wcsrtombs(mbstr, &strp, len, &mbs);
+  if (mlen == static_cast<size_t>(-1)) {
+    free(mbstr);
+    return EOF;
+  }
+  if (mlen == len) mbstr[len] = '\0';
+
+  FILE f;
+  struct __sfileext fext;
+  _FILEEXT_SETUP(&f, &fext);
+  f._flags = __SRD;
+  f._bf._base = f._p = reinterpret_cast<unsigned char*>(mbstr);
+  f._bf._size = f._r = mlen;
+  f._read = [](void*, char*, int) { return 0; };
+  int r = __vfwscanf(&f, fmt, ap);
+  free(mbstr);
+  return r;
+}
+
 int vwprintf(const wchar_t* fmt, va_list ap) {
   return vfwprintf(stdout, fmt, ap);
 }
