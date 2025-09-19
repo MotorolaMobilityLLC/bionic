@@ -164,9 +164,10 @@ static glue* moreglue(int n) {
 }
 
 static inline void free_fgetln_buffer(FILE* fp) {
-  if (__predict_false(fp->_lb._base != nullptr)) {
-    free(fp->_lb._base);
-    fp->_lb._base = nullptr;
+  if (__predict_false(fp->fgetln_buffer._base != nullptr)) {
+    free(fp->fgetln_buffer._base);
+    fp->fgetln_buffer._base = nullptr;
+    fp->fgetln_buffer._size = 0;
   }
 }
 
@@ -203,8 +204,7 @@ found:
   fp->_lbfsize = 0;  /* not line buffered */
   fp->_file = -1;  /* no file */
 
-  fp->_lb._base = nullptr;  /* no line buffer */
-  fp->_lb._size = 0;
+  fp->fgetln_buffer = {};
 
   memset(_EXT(fp), 0, sizeof(struct __sfileext));
   _EXT(fp)->_lock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
@@ -517,7 +517,6 @@ FILE* freopen(const char* file, const char* mode, FILE* fp) {
   _UB(fp)._size = 0;
   WCIO_FREE(fp);
   free_fgetln_buffer(fp);
-  fp->_lb._size = 0;
 
   if (fd < 0) { // Did not get it after all.
     fp->_flags = 0; // Release.
@@ -905,10 +904,11 @@ char* fgetln(FILE* fp, size_t* length_ptr) {
   ScopedFileLock sfl(fp);
   // Implementing fgetln() in terms of getdelim() means lines are actually always NUL terminated.
   // We could explicitly overwrite the NUL to be "bug compatible", but that seems silly?
-  ssize_t n = getdelim(reinterpret_cast<char**>(&fp->_lb._base), &fp->_lb._size, '\n', fp);
+  ssize_t n = getdelim(reinterpret_cast<char**>(&fp->fgetln_buffer._base),
+                       &fp->fgetln_buffer._size, '\n', fp);
   if (n <= 0) return nullptr;
   *length_ptr = n;
-  return reinterpret_cast<char*>(fp->_lb._base);
+  return reinterpret_cast<char*>(fp->fgetln_buffer._base);
 }
 
 char* fgets(char* buf, int n, FILE* fp) {

@@ -88,8 +88,7 @@ struct __sFILE {
   unsigned char _ubuf[3]; // Guarantee an ungetc() buffer.
   unsigned char _nbuf[1]; // Guarantee a getc() buffer.
 
-  /* separate buffer for fgetln() when line crosses buffer boundary */
-  struct __sbuf _lb; /* buffer for fgetln() */
+  struct __sbuf fgetln_buffer;
 
   int _unused_0;  // This was the `_blksize` field (see below).
   fpos_t _unused_1;  // This was the `_offset` field (see below).
