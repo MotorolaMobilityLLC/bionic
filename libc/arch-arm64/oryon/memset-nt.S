@@ -82,7 +82,7 @@ ENTRY(__memset_aarch64_nt)
 .Ltail15tiny:				/* Size is less than or equal to 15 bytes */
 /* Size < 16. Do 4x4 bytes wrire. Based on the size, adjust the offsets to cover full range of 1-15 bytes */
     cmp    count, 4			/* Check for Size < 4 bytes */
-    b.lo   .tiny_4B			/* Case : Size is less than 4 bytes */
+    b.lt   .tiny_4B			/* Case : Size is less than 4 bytes */
     add    tmp4, dst, count
     lsr    tmp1, count, 3
     sub    tmp2, tmp4, tmp1, lsl 2
@@ -112,7 +112,7 @@ ENTRY(__memset_aarch64_nt)
 .Lnot_short:
     cmp    count, #98304
     /* Use non-temporal instruction if count > 98304 (96KB) . Non Temporal Store is beneficial is size is greater that 96 KB*/
-    bgt    L(not_short_nt)
+    bgt    .Lnot_short_nt
     neg    tmp2, dst
     ands   tmp2, tmp2, #15
     b.eq   2f
@@ -164,9 +164,9 @@ ENTRY(__memset_aarch64_nt)
     add    dst, dst, #64
     subs   count, count, #64
     b.ge   1b
-    tst    count, #0x3f
     add    dst, dst, #16
-    b.ne   .Ltail_maybe_tiny
+    add    count, count, #64			/* Count is negative now as it is pre decreament in 2: Revert it to have exact count before branching to Ltail_maybe_tiny */
+    cbnz   count, .Ltail_maybe_tiny
     ret
 .Lzero_mem:
     mov    A_l, #0
