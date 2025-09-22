@@ -149,6 +149,6 @@ TEST(PageSize16KiBCompatTest_DeathTest, AppDlopenErrIsFatal) {
     GTEST_SKIP() << "This test is only applicable if dlopen() errors are fatal";
   }
 
-  ASSERT_DEATH(FatalDlError(),
-               ".*program alignment (.*) cannot be smaller than system page size.*");
+  ASSERT_EXIT(FatalDlError(), testing::KilledBySignal(SIGABRT),
+              ".*program alignment (.*) cannot be smaller than system page size.*");
 }
