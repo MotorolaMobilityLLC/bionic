@@ -1247,6 +1247,27 @@ int swscanf(const wchar_t* s, const wchar_t* fmt, ...) {
   PRINTF_IMPL(vswscanf(s, fmt, ap));
 }
 
+int vdprintf(int fd, const char* fmt, va_list ap) {
+  unsigned char buf[BUFSIZ] __attribute__((__uninitialized__));
+
+  FILE f;
+  struct __sfileext fext;
+  _FILEEXT_SETUP(&f, &fext);
+  f._bf._base = f._p = buf;
+  f._bf._size = f._w = sizeof(buf);
+  f._flags = __SWR;
+  f._file = -1;
+  f._cookie = &fd;
+  f._write = [](void* cookie, const char* buf, int n) -> int {
+    int* fd_ptr = static_cast<int*>(cookie);
+    return TEMP_FAILURE_RETRY(write(*fd_ptr, buf, n));
+  };
+
+  int byte_count = __vfprintf(&f, fmt, ap);
+  if (byte_count >= 0 && __sflush(&f)) return EOF;
+  return byte_count;
+}
+
 int vfprintf(FILE* fp, const char* fmt, va_list ap) {
   ScopedFileLock sfl(fp);
   return __vfprintf(fp, fmt, ap);
