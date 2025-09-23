@@ -48,7 +48,7 @@
 // 5      r15
 // 6      rsp
 // 7      pc
-// 8      sigflag/cookie  setjmp cookie in top 31 bits, signal mask flag in low bit
+// 8      sigflag/cookie  setjmp cookie in top 63 bits, signal mask flag in low bit
 // 9      sigmask         signal mask (includes rt signals as well)
 // 10     checksum        checksum of the core registers, to give better error messages.
 
