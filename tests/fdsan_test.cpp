@@ -33,9 +33,10 @@
 #include <android-base/silent_death_test.h>
 #include <android-base/unique_fd.h>
 
-#define EXPECT_FDSAN_DEATH(expression, regex)                                                \
-  EXPECT_DEATH((android_fdsan_set_error_level(ANDROID_FDSAN_ERROR_LEVEL_FATAL), expression), \
-               (regex))
+#define EXPECT_FDSAN_DEATH(expression, regex) \
+  EXPECT_EXIT((android_fdsan_set_error_level(ANDROID_FDSAN_ERROR_LEVEL_FATAL), expression), \
+              testing::KilledBySignal(SIGABRT), \
+              (regex))
 
 struct fdsan : public ::testing::Test {
   void SetUp() override {

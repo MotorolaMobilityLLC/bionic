@@ -357,5 +357,6 @@ TEST(fcntl, open_O_TMPFILE_mode) {
 }
 
 TEST_F(fcntl_DeathTest, fcntl_F_SETFD) {
-  EXPECT_DEATH(fcntl(0, F_SETFD, O_NONBLOCK), "only supports FD_CLOEXEC");
+  EXPECT_EXIT(fcntl(0, F_SETFD, O_NONBLOCK),
+              testing::KilledBySignal(SIGABRT), "only supports FD_CLOEXEC");
 }

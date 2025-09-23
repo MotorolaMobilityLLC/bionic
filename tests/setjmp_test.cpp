@@ -278,6 +278,8 @@ TEST_F(setjmp_DeathTest, setjmp_cookie) {
 
   // Wipe it out
   *sigflag &= 1;
+  // TODO: we can't make this EXPECT_EXIT() because all the implementations are wrong!
+  // TODO: we need to fix longjmp() to check the cookie _before_ corrupting sp + pc!
   EXPECT_DEATH(longjmp(jb, 0), "");
 }
 
@@ -289,7 +291,7 @@ TEST_F(setjmp_DeathTest, setjmp_cookie_checksum) {
     // Flip a bit.
     reinterpret_cast<long*>(jb)[1] ^= 1;
 
-    EXPECT_DEATH(longjmp(jb, 1), "checksum mismatch");
+    EXPECT_EXIT(longjmp(jb, 1), testing::KilledBySignal(SIGABRT), "checksum mismatch");
   } else {
     fprintf(stderr, "setjmp_cookie_checksum: longjmp succeeded?");
   }

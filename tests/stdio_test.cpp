@@ -506,7 +506,8 @@ TEST_F(STDIO_DEATHTEST, snprintf_n) {
   // http://b/14492135 and http://b/31832608.
   char buf[32];
   int i = 1234;
-  EXPECT_DEATH(snprintf(buf, sizeof(buf), "a %n b", &i), "%n not allowed on Android");
+  EXPECT_EXIT(snprintf(buf, sizeof(buf), "a %n b", &i),
+              testing::KilledBySignal(SIGABRT), "%n not allowed on Android");
 #pragma clang diagnostic pop
 #else
   GTEST_SKIP() << "glibc does allow %n";
@@ -520,7 +521,8 @@ TEST_F(STDIO_DEATHTEST, swprintf_n) {
   // http://b/14492135 and http://b/31832608.
   wchar_t buf[32];
   int i = 1234;
-  EXPECT_DEATH(swprintf(buf, sizeof(buf), L"a %n b", &i), "%n not allowed on Android");
+  EXPECT_EXIT(swprintf(buf, sizeof(buf), L"a %n b", &i),
+              testing::KilledBySignal(SIGABRT), "%n not allowed on Android");
 #pragma clang diagnostic pop
 #else
   GTEST_SKIP() << "glibc does allow %n";
@@ -3428,7 +3430,8 @@ TEST_F(STDIO_DEATHTEST, snprintf_invalid_w_width) {
 #pragma clang diagnostic ignored "-Wformat-invalid-specifier"
   char buf[BUFSIZ];
   int32_t a = 100;
-  EXPECT_DEATH(snprintf(buf, sizeof(buf), "%w20d", &a), "%w20 is unsupported");
+  EXPECT_EXIT(snprintf(buf, sizeof(buf), "%w20d", &a),
+              testing::KilledBySignal(SIGABRT), "%w20 is unsupported");
 #pragma clang diagnostic pop
 #else
   GTEST_SKIP() << "no %w in glibc";
@@ -3441,7 +3444,8 @@ TEST_F(STDIO_DEATHTEST, swprintf_invalid_w_width) {
 #pragma clang diagnostic ignored "-Wformat-invalid-specifier"
   wchar_t buf[BUFSIZ];
   int32_t a = 100;
-  EXPECT_DEATH(swprintf(buf, sizeof(buf), L"%w20d", &a), "%w20 is unsupported");
+  EXPECT_EXIT(swprintf(buf, sizeof(buf), L"%w20d", &a),
+              testing::KilledBySignal(SIGABRT), "%w20 is unsupported");
 #pragma clang diagnostic pop
 #else
   GTEST_SKIP() << "no %w in glibc";
@@ -3578,7 +3582,8 @@ TEST_F(STDIO_DEATHTEST, snprintf_invalid_wf_width) {
 #pragma clang diagnostic ignored "-Wformat-invalid-specifier"
   char buf[BUFSIZ];
   int_fast32_t a = 100;
-  EXPECT_DEATH(snprintf(buf, sizeof(buf), "%wf20d", &a), "%wf20 is unsupported");
+  EXPECT_EXIT(snprintf(buf, sizeof(buf), "%wf20d", &a),
+              testing::KilledBySignal(SIGABRT), "%wf20 is unsupported");
 #pragma clang diagnostic pop
 #else
   GTEST_SKIP() << "no %w in glibc";
@@ -3592,7 +3597,8 @@ TEST_F(STDIO_DEATHTEST, swprintf_invalid_wf_width) {
 #pragma clang diagnostic ignored "-Wformat-invalid-specifier"
   wchar_t buf[BUFSIZ];
   int_fast32_t a = 100;
-  EXPECT_DEATH(swprintf(buf, sizeof(buf), L"%wf20d", &a), "%wf20 is unsupported");
+  EXPECT_EXIT(swprintf(buf, sizeof(buf), L"%wf20d", &a),
+              testing::KilledBySignal(SIGABRT), "%wf20 is unsupported");
 #pragma clang diagnostic pop
 #else
   GTEST_SKIP() << "no %w in glibc";
@@ -3690,9 +3696,11 @@ TEST_F(STDIO_DEATHTEST, sscanf_invalid_w_or_wf_width) {
 #pragma clang diagnostic ignored "-Wformat"
 #pragma clang diagnostic ignored "-Wformat-invalid-specifier"
   int32_t a;
-  EXPECT_DEATH(sscanf("<100>", "<%w20d>", &a), "%w20 is unsupported");
+  EXPECT_EXIT(sscanf("<100>", "<%w20d>", &a),
+              testing::KilledBySignal(SIGABRT), "%w20 is unsupported");
   int_fast32_t fast_a;
-  EXPECT_DEATH(sscanf("<100>", "<%wf20d>", &fast_a), "%wf20 is unsupported");
+  EXPECT_EXIT(sscanf("<100>", "<%wf20d>", &fast_a),
+              testing::KilledBySignal(SIGABRT), "%wf20 is unsupported");
 #pragma clang diagnostic pop
 #else
   GTEST_SKIP() << "no %w in glibc";
@@ -3790,9 +3798,11 @@ TEST_F(STDIO_DEATHTEST, swscanf_invalid_w_or_wf_width) {
 #pragma clang diagnostic ignored "-Wformat"
 #pragma clang diagnostic ignored "-Wformat-invalid-specifier"
   int32_t a;
-  EXPECT_DEATH(swscanf(L"<100>", L"<%w20d>", &a), "%w20 is unsupported");
+  EXPECT_EXIT(swscanf(L"<100>", L"<%w20d>", &a),
+              testing::KilledBySignal(SIGABRT), "%w20 is unsupported");
   int_fast32_t fast_a;
-  EXPECT_DEATH(swscanf(L"<100>", L"<%wf20d>", &fast_a), "%wf20 is unsupported");
+  EXPECT_EXIT(swscanf(L"<100>", L"<%wf20d>", &fast_a),
+              testing::KilledBySignal(SIGABRT), "%wf20 is unsupported");
 #pragma clang diagnostic pop
 #else
   GTEST_SKIP() << "no %w in glibc";
