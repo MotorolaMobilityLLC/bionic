@@ -319,6 +319,16 @@ int __srefill(FILE* fp) {
   return 0;
 }
 
+// Handle getc() when the buffer ran out: refill then return the first new byte buffer.
+int __srget(FILE* fp) {
+  _SET_ORIENTATION(fp, -1);
+  if (__srefill(fp) == 0) {
+    fp->_r--;
+    return (*fp->_p++);
+  }
+  return EOF;
+}
+
 /*
  * Allocate a file buffer, or switch to unbuffered I/O.
  * Per the ANSI C standard, ALL tty devices default to line buffered.
