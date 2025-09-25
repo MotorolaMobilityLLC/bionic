@@ -559,8 +559,9 @@ TEST_F(pthread_DeathTest, pthread_setname_np__no_such_thread) {
   pthread_t dead_thread;
   MakeDeadThread(dead_thread);
 
-  EXPECT_DEATH(pthread_setname_np(dead_thread, "short 3"),
-               "invalid pthread_t (.*) passed to pthread_setname_np");
+  EXPECT_EXIT(pthread_setname_np(dead_thread, "short 3"),
+              testing::KilledBySignal(SIGABRT),
+              "invalid pthread_t (.*) passed to pthread_setname_np");
 }
 
 TEST_F(pthread_DeathTest, pthread_setname_np__null_thread) {
@@ -573,8 +574,9 @@ TEST_F(pthread_DeathTest, pthread_getname_np__no_such_thread) {
   MakeDeadThread(dead_thread);
 
   char name[64];
-  EXPECT_DEATH(pthread_getname_np(dead_thread, name, sizeof(name)),
-               "invalid pthread_t (.*) passed to pthread_getname_np");
+  EXPECT_EXIT(pthread_getname_np(dead_thread, name, sizeof(name)),
+              testing::KilledBySignal(SIGABRT),
+              "invalid pthread_t (.*) passed to pthread_getname_np");
 }
 
 TEST_F(pthread_DeathTest, pthread_getname_np__null_thread) {
@@ -630,8 +632,9 @@ TEST_F(pthread_DeathTest, pthread_detach__no_such_thread) {
   pthread_t dead_thread;
   MakeDeadThread(dead_thread);
 
-  EXPECT_DEATH(pthread_detach(dead_thread),
-               "invalid pthread_t (.*) passed to pthread_detach");
+  EXPECT_EXIT(pthread_detach(dead_thread),
+              testing::KilledBySignal(SIGABRT),
+              "invalid pthread_t (.*) passed to pthread_detach");
 }
 
 TEST_F(pthread_DeathTest, pthread_detach__null_thread) {
@@ -658,8 +661,9 @@ TEST_F(pthread_DeathTest, pthread_getcpuclockid__no_such_thread) {
   MakeDeadThread(dead_thread);
 
   clockid_t c;
-  EXPECT_DEATH(pthread_getcpuclockid(dead_thread, &c),
-               "invalid pthread_t (.*) passed to pthread_getcpuclockid");
+  EXPECT_EXIT(pthread_getcpuclockid(dead_thread, &c),
+              testing::KilledBySignal(SIGABRT),
+              "invalid pthread_t (.*) passed to pthread_getcpuclockid");
 }
 
 TEST_F(pthread_DeathTest, pthread_getcpuclockid__null_thread) {
@@ -674,8 +678,9 @@ TEST_F(pthread_DeathTest, pthread_getschedparam__no_such_thread) {
 
   int policy;
   sched_param param;
-  EXPECT_DEATH(pthread_getschedparam(dead_thread, &policy, &param),
-               "invalid pthread_t (.*) passed to pthread_getschedparam");
+  EXPECT_EXIT(pthread_getschedparam(dead_thread, &policy, &param),
+              testing::KilledBySignal(SIGABRT),
+              "invalid pthread_t (.*) passed to pthread_getschedparam");
 }
 
 TEST_F(pthread_DeathTest, pthread_getschedparam__null_thread) {
@@ -691,8 +696,9 @@ TEST_F(pthread_DeathTest, pthread_setschedparam__no_such_thread) {
 
   int policy = 0;
   sched_param param;
-  EXPECT_DEATH(pthread_setschedparam(dead_thread, policy, &param),
-               "invalid pthread_t (.*) passed to pthread_setschedparam");
+  EXPECT_EXIT(pthread_setschedparam(dead_thread, policy, &param),
+              testing::KilledBySignal(SIGABRT),
+              "invalid pthread_t (.*) passed to pthread_setschedparam");
 }
 
 TEST_F(pthread_DeathTest, pthread_setschedparam__null_thread) {
@@ -706,8 +712,9 @@ TEST_F(pthread_DeathTest, pthread_setschedprio__no_such_thread) {
   pthread_t dead_thread;
   MakeDeadThread(dead_thread);
 
-  EXPECT_DEATH(pthread_setschedprio(dead_thread, 123),
-               "invalid pthread_t (.*) passed to pthread_setschedprio");
+  EXPECT_EXIT(pthread_setschedprio(dead_thread, 123),
+              testing::KilledBySignal(SIGABRT),
+              "invalid pthread_t (.*) passed to pthread_setschedprio");
 }
 
 TEST_F(pthread_DeathTest, pthread_setschedprio__null_thread) {
@@ -719,8 +726,9 @@ TEST_F(pthread_DeathTest, pthread_join__no_such_thread) {
   pthread_t dead_thread;
   MakeDeadThread(dead_thread);
 
-  EXPECT_DEATH(pthread_join(dead_thread, nullptr),
-               "invalid pthread_t (.*) passed to pthread_join");
+  EXPECT_EXIT(pthread_join(dead_thread, nullptr),
+              testing::KilledBySignal(SIGABRT),
+              "invalid pthread_t (.*) passed to pthread_join");
 }
 
 TEST_F(pthread_DeathTest, pthread_join__null_thread) {
@@ -732,8 +740,9 @@ TEST_F(pthread_DeathTest, pthread_kill__no_such_thread) {
   pthread_t dead_thread;
   MakeDeadThread(dead_thread);
 
-  EXPECT_DEATH(pthread_kill(dead_thread, 0),
-               "invalid pthread_t (.*) passed to pthread_kill");
+  EXPECT_EXIT(pthread_kill(dead_thread, 0),
+              testing::KilledBySignal(SIGABRT),
+              "invalid pthread_t (.*) passed to pthread_kill");
 }
 
 TEST_F(pthread_DeathTest, pthread_kill__null_thread) {
