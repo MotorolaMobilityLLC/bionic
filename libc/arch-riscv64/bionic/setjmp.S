@@ -33,7 +33,7 @@
 // Current layout (changes from release to release):
 //
 // word   name            description
-// 0      sigflag/cookie  setjmp cookie in top 31 bits, signal mask flag in low bit
+// 0      sigflag/cookie  setjmp cookie in top 63 bits, signal mask flag in low bit
 // 1      sigmask         64-bit signal mask
 // 2      ra
 // 3      sp
