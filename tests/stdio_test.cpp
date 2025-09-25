@@ -3815,3 +3815,30 @@ TEST(STDIO_TEST, printf_lc_0) {
   EXPECT_EQ(3, snprintf(buf, sizeof(buf), "<%lc>", L'\0'));
   EXPECT_TRUE(!memcmp(buf, "<\0>", 3));
 }
+
+// https://sourceware.org/bugzilla/show_bug.cgi?id=26557
+// TL;DR: "does open_memstream() maintain the file length correctly?"
+static void glibc_bug_26557_helper(FILE* fp) {
+  char data[32] = {};
+  EXPECT_EQ(24u, fwrite(data, 1, 24, fp));
+  EXPECT_EQ(24, ftell(fp));
+  EXPECT_EQ(0, fseek(fp, 0, SEEK_SET));
+  EXPECT_EQ(4u, fwrite(data, 1, 4, fp));
+  EXPECT_EQ(0, fseek(fp, 0, SEEK_END));
+  EXPECT_EQ(24, ftell(fp));
+  EXPECT_EQ(0, fclose(fp));
+}
+
+TEST(STDIO_TEST, glibc_bug_26557_fopen) {
+  glibc_bug_26557_helper(tmpfile());
+}
+
+TEST(STDIO_TEST, glibc_bug_26557_fmemopen) {
+  glibc_bug_26557_helper(fmemopen(nullptr, 32, "wb"));
+}
+
+TEST(STDIO_TEST, glibc_bug_26557_open_memstream) {
+  char* p = new char[32];
+  size_t size = 32;
+  glibc_bug_26557_helper(open_memstream(&p, &size));
+}
