@@ -283,11 +283,9 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   fld fs10, _JB_FS10(a0)
   fld fs11, _JB_FS11(a0)
 
-  // Set return value.
-  beqz a1, 2f
+  // Return 1 if value (in a1) is 0, value otherwise.
   li a0, 1
-2:
-  mv a0, a1
+  maxu a0, a0, a1
   ret
 
 L(checksum_failure):
