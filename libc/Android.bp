@@ -292,6 +292,7 @@ cc_library_static {
     ],
 
     cflags: [
+        "-Wno-tautological-constant-out-of-range-compare",
         "-Wno-unused-parameter",
         // Don't use ridiculous amounts of stack.
         "-DALL_STATE",
