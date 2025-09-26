@@ -50,7 +50,7 @@
 // 7      pc
 // 8      sigflag/cookie  setjmp cookie in top 63 bits, signal mask flag in low bit
 // 9      sigmask         signal mask (includes rt signals as well)
-// 10     checksum        checksum of the core registers, to give better error messages.
+// 10     checksum
 
 #define _JB_RBX 0
 #define _JB_RBP 1
@@ -66,7 +66,7 @@
 
 .macro m_calculate_checksum dst, src
   movq $0, \dst
-  .irp i,0,1,2,3,4,5,6,7
+  .irp i,0,1,2,3,4,5,6,7,8,9
     xorq (\i*8)(\src), \dst
   .endr
 .endm
