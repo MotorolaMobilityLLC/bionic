@@ -47,7 +47,7 @@
 // 1      sigmask         signal mask (not used with _setjmp / _longjmp)
 // 2      core_base       base of core registers (x18-x30, sp)
 // 16     float_base      base of float registers (d8-d15)
-// 24     checksum        checksum of core registers
+// 24     checksum
 // 25     reserved        reserved entries (room to grow)
 // 32
 
