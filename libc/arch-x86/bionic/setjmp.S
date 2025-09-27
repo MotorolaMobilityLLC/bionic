@@ -45,7 +45,7 @@
 // 6      sigmask         64-bit signal mask (not used with _setjmp / _longjmp)
 // 7      "               "
 // 8      sigflag/cookie  setjmp cookie in top 31 bits, signal mask flag in low bit
-// 9      checksum        checksum of the core registers, to give better error messages.
+// 9      checksum
 
 #define _JB_EDX 0
 #define _JB_EBX 1
@@ -59,7 +59,7 @@
 
 .macro m_calculate_checksum dst, src
   movl $0, \dst
-  .irp i,0,1,2,3,4,5
+  .irp i,0,1,2,3,4,5,6,7,8
     xorl (\i*4)(\src), \dst
   .endr
 .endm
