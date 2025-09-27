@@ -78,11 +78,9 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   movl 8(%esp),%eax
 
 .L_sigsetjmp:
-  PIC_PROLOGUE
   pushl %eax
-  call PIC_PLT(__bionic_setjmp_cookie_get)
+  call __bionic_setjmp_cookie_get
   addl $4,%esp
-  PIC_EPILOGUE
 
   // Record the setjmp cookie and whether or not we're saving the signal mask.
   movl 4(%esp),%ecx
@@ -181,15 +179,13 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   xorl (_JB_ESI * 4)(%edx),%esi
   xorl (_JB_EDI * 4)(%edx),%edi
 
-  PIC_PROLOGUE
   pushl %eax
   pushl %ecx
   pushl (_JB_SIGFLAG * 4)(%edx)
-  call PIC_PLT(__bionic_setjmp_cookie_check)
+  call __bionic_setjmp_cookie_check
   addl $4,%esp
   popl %ecx
   popl %eax
-  PIC_EPILOGUE
 
   testl %eax,%eax
   jnz 2f
@@ -199,9 +195,8 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   ret
 
 3:
-  PIC_PROLOGUE
   pushl (_JB_SIGMASK * 4)(%edx)
-  call PIC_PLT(__bionic_setjmp_checksum_mismatch)
+  call __bionic_setjmp_checksum_mismatch
 END(siglongjmp)
 
 ALIAS_SYMBOL_WEAK_FOR_NATIVE_BRIDGE(longjmp, siglongjmp)
