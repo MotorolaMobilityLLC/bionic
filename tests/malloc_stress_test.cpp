@@ -89,12 +89,12 @@ TEST(malloc_stress, multiple_threads_forever) {
   uint64_t rss_max = 0;
   uint64_t vss_min = UINT64_MAX;
   uint64_t vss_max = 0;
+  uint64_t last_message_time = 0;
   ASSERT_EQ(1, mallopt(M_DECAY_TIME, 1));
 #endif
   uint64_t mallinfo_min = UINT64_MAX;
   uint64_t mallinfo_max = 0;
 
-  uint64_t last_message_time = 0;
   for (size_t i = 0; ; i++) {
     printf("Pass %zu\n", i);
 
