@@ -232,9 +232,11 @@ int _fwalk(int (*callback)(FILE*)) {
   return result;
 }
 
-extern "C" __LIBC_HIDDEN__ void __libc_stdio_cleanup(void) {
-  // Equivalent to fflush(nullptr), but without all the locking since we're shutting down anyway.
-  _fwalk(__sflush);
+extern "C" __LIBC_HIDDEN__ void __libc_stdio_cleanup() {
+  // This matches our historical behavior, but what about code that writes after this runs?
+  // glibc sets all streams to unbuffered (so future writes go straight out).
+  // musl takes the locks but keeps them held (so future writes deadlock).
+  fflush(nullptr);
 }
 
 /*
