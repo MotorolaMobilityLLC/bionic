@@ -293,9 +293,10 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   ldp d10, d11, [x0, #(_JB_D10_D11 * 8)]
   ldp d8,  d9,  [x0, #(_JB_D8_D9   * 8)]
 
-  // Set return value.
+  // Return 1 if value (in w1) is 0, value otherwise.
   cmp w1, wzr
   csinc w0, w1, wzr, ne
+
   autiasp
   .cfi_negate_ra_state
   ret
