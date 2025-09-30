@@ -29,6 +29,10 @@ struct sockaddr_mctp_ext {
   __u8 __smctp_pad0[3];
   __u8 smctp_haddr[MAX_ADDR_LEN];
 };
+struct mctp_fq_addr {
+  unsigned int net;
+  mctp_eid_t eid;
+};
 #define MCTP_NET_ANY 0x0
 #define MCTP_ADDR_NULL 0x00
 #define MCTP_ADDR_ANY 0xff

@@ -29,6 +29,7 @@ enum drm_panthor_ioctl_id {
   DRM_PANTHOR_TILER_HEAP_CREATE,
   DRM_PANTHOR_TILER_HEAP_DESTROY,
   DRM_PANTHOR_BO_SET_LABEL,
+  DRM_PANTHOR_SET_USER_MMIO_OFFSET,
 };
 struct drm_panthor_obj_array {
   __u32 stride;
@@ -83,6 +84,7 @@ struct drm_panthor_gpu_info {
   __u32 coherency_features;
   __u32 texture_features[4];
   __u32 as_present;
+  __u32 pad0;
   __u64 shader_present;
   __u64 l2_present;
   __u64 tiler_present;
@@ -239,6 +241,9 @@ struct drm_panthor_bo_set_label {
   __u32 pad;
   __u64 label;
 };
+struct drm_panthor_set_user_mmio_offset {
+  __u64 offset;
+};
 #define DRM_IOCTL_PANTHOR(__access,__id,__type) DRM_IO ##__access(DRM_COMMAND_BASE + DRM_PANTHOR_ ##__id, struct drm_panthor_ ##__type)
 enum {
   DRM_IOCTL_PANTHOR_DEV_QUERY = DRM_IOCTL_PANTHOR(WR, DEV_QUERY, dev_query),
@@ -255,6 +260,7 @@ enum {
   DRM_IOCTL_PANTHOR_TILER_HEAP_CREATE = DRM_IOCTL_PANTHOR(WR, TILER_HEAP_CREATE, tiler_heap_create),
   DRM_IOCTL_PANTHOR_TILER_HEAP_DESTROY = DRM_IOCTL_PANTHOR(WR, TILER_HEAP_DESTROY, tiler_heap_destroy),
   DRM_IOCTL_PANTHOR_BO_SET_LABEL = DRM_IOCTL_PANTHOR(WR, BO_SET_LABEL, bo_set_label),
+  DRM_IOCTL_PANTHOR_SET_USER_MMIO_OFFSET = DRM_IOCTL_PANTHOR(WR, SET_USER_MMIO_OFFSET, set_user_mmio_offset),
 };
 #ifdef __cplusplus
 }

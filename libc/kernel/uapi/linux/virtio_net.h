@@ -45,6 +45,12 @@
 #define VIRTIO_NET_F_RSC_EXT 61
 #define VIRTIO_NET_F_STANDBY 62
 #define VIRTIO_NET_F_SPEED_DUPLEX 63
+#define VIRTIO_NET_F_GUEST_UDP_TUNNEL_GSO 65
+#define VIRTIO_NET_F_GUEST_UDP_TUNNEL_GSO_CSUM 66
+#define VIRTIO_NET_F_HOST_UDP_TUNNEL_GSO 67
+#define VIRTIO_NET_F_HOST_UDP_TUNNEL_GSO_CSUM 68
+#define VIRTIO_NET_F_GUEST_UDP_TUNNEL_GSO_MAPPED 46
+#define VIRTIO_NET_F_GUEST_UDP_TUNNEL_GSO_CSUM_MAPPED 47
 #ifndef VIRTIO_NET_NO_LEGACY
 #define VIRTIO_NET_F_GSO 6
 #endif
@@ -74,12 +80,16 @@ struct virtio_net_hdr_v1 {
 #define VIRTIO_NET_HDR_F_NEEDS_CSUM 1
 #define VIRTIO_NET_HDR_F_DATA_VALID 2
 #define VIRTIO_NET_HDR_F_RSC_INFO 4
+#define VIRTIO_NET_HDR_F_UDP_TUNNEL_CSUM 8
   __u8 flags;
 #define VIRTIO_NET_HDR_GSO_NONE 0
 #define VIRTIO_NET_HDR_GSO_TCPV4 1
 #define VIRTIO_NET_HDR_GSO_UDP 3
 #define VIRTIO_NET_HDR_GSO_TCPV6 4
 #define VIRTIO_NET_HDR_GSO_UDP_L4 5
+#define VIRTIO_NET_HDR_GSO_UDP_TUNNEL_IPV4 0x20
+#define VIRTIO_NET_HDR_GSO_UDP_TUNNEL_IPV6 0x40
+#define VIRTIO_NET_HDR_GSO_UDP_TUNNEL (VIRTIO_NET_HDR_GSO_UDP_TUNNEL_IPV4 | VIRTIO_NET_HDR_GSO_UDP_TUNNEL_IPV6)
 #define VIRTIO_NET_HDR_GSO_ECN 0x80
   __u8 gso_type;
   __virtio16 hdr_len;
@@ -115,6 +125,11 @@ struct virtio_net_hdr_v1_hash {
 #define VIRTIO_NET_HASH_REPORT_UDPv6_EX 9
   __le16 hash_report;
   __le16 padding;
+};
+struct virtio_net_hdr_v1_hash_tunnel {
+  struct virtio_net_hdr_v1_hash hash_hdr;
+  __le16 outer_th_offset;
+  __le16 inner_nh_offset;
 };
 #ifndef VIRTIO_NET_NO_LEGACY
 struct virtio_net_hdr {

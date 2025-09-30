@@ -63,6 +63,8 @@
 #define TUN_F_UFO 0x10
 #define TUN_F_USO4 0x20
 #define TUN_F_USO6 0x40
+#define TUN_F_UDP_TUNNEL_GSO 0x080
+#define TUN_F_UDP_TUNNEL_GSO_CSUM 0x100
 #define TUN_PKT_STRIP 0x0001
 struct tun_pi {
   __u16 flags;

@@ -37,7 +37,7 @@ struct io_uring_sqe {
   };
   __u32 len;
   union {
-    __kernel_rwf_t rw_flags;
+    __u32 rw_flags;
     __u32 fsync_flags;
     __u16 poll_events;
     __u32 poll32_events;
@@ -233,6 +233,7 @@ enum io_uring_op {
 #define IORING_RECVSEND_FIXED_BUF (1U << 2)
 #define IORING_SEND_ZC_REPORT_USAGE (1U << 3)
 #define IORING_RECVSEND_BUNDLE (1U << 4)
+#define IORING_SEND_VECTORIZED (1U << 5)
 #define IORING_NOTIF_USAGE_ZC_COPIED (1U << 31)
 #define IORING_ACCEPT_MULTISHOT (1U << 0)
 #define IORING_ACCEPT_DONTWAIT (1U << 1)
@@ -248,6 +249,7 @@ enum io_uring_msg_ring_flags {
 #define IORING_NOP_FILE (1U << 1)
 #define IORING_NOP_FIXED_FILE (1U << 2)
 #define IORING_NOP_FIXED_BUFFER (1U << 3)
+#define IORING_NOP_TW (1U << 4)
 struct io_uring_cqe {
   __u64 user_data;
   __s32 res;
@@ -560,6 +562,14 @@ enum io_uring_socket_op {
   SOCKET_URING_OP_SIOCOUTQ,
   SOCKET_URING_OP_GETSOCKOPT,
   SOCKET_URING_OP_SETSOCKOPT,
+  SOCKET_URING_OP_TX_TIMESTAMP,
+};
+#define IORING_TIMESTAMP_HW_SHIFT 16
+#define IORING_TIMESTAMP_TYPE_SHIFT (IORING_TIMESTAMP_HW_SHIFT + 1)
+#define IORING_CQE_F_TSTAMP_HW ((__u32) 1 << IORING_TIMESTAMP_HW_SHIFT)
+struct io_timespec {
+  __u64 tv_sec;
+  __u64 tv_nsec;
 };
 struct io_uring_zcrx_rqe {
   __u64 off;

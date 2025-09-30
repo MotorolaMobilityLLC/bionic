@@ -31,6 +31,7 @@ enum {
   IOMMUFD_CMD_VDEVICE_ALLOC = 0x91,
   IOMMUFD_CMD_IOAS_CHANGE_PROCESS = 0x92,
   IOMMUFD_CMD_VEVENTQ_ALLOC = 0x93,
+  IOMMUFD_CMD_HW_QUEUE_ALLOC = 0x94,
 };
 struct iommu_destroy {
   __u32 size;
@@ -190,15 +191,27 @@ struct iommu_hw_info_arm_smmuv3 {
   __u32 iidr;
   __u32 aidr;
 };
+struct iommu_hw_info_tegra241_cmdqv {
+  __u32 flags;
+  __u8 version;
+  __u8 log2vcmdqs;
+  __u8 log2vsids;
+  __u8 __reserved;
+};
 enum iommu_hw_info_type {
   IOMMU_HW_INFO_TYPE_NONE = 0,
+  IOMMU_HW_INFO_TYPE_DEFAULT = 0,
   IOMMU_HW_INFO_TYPE_INTEL_VTD = 1,
   IOMMU_HW_INFO_TYPE_ARM_SMMUV3 = 2,
+  IOMMU_HW_INFO_TYPE_TEGRA241_CMDQV = 3,
 };
 enum iommufd_hw_capabilities {
   IOMMU_HW_CAP_DIRTY_TRACKING = 1 << 0,
   IOMMU_HW_CAP_PCI_PASID_EXEC = 1 << 1,
   IOMMU_HW_CAP_PCI_PASID_PRIV = 1 << 2,
+};
+enum iommufd_hw_info_flags {
+  IOMMU_HW_INFO_FLAG_INPUT_TYPE = 1 << 0,
 };
 struct iommu_hw_info {
   __u32 size;
@@ -206,7 +219,10 @@ struct iommu_hw_info {
   __u32 dev_id;
   __u32 data_len;
   __aligned_u64 data_uptr;
-  __u32 out_data_type;
+  union {
+    __u32 in_data_type;
+    __u32 out_data_type;
+  };
   __u8 out_max_pasid_log2;
   __u8 __reserved[3];
   __aligned_u64 out_capabilities;
@@ -301,6 +317,11 @@ struct iommu_fault_alloc {
 enum iommu_viommu_type {
   IOMMU_VIOMMU_TYPE_DEFAULT = 0,
   IOMMU_VIOMMU_TYPE_ARM_SMMUV3 = 1,
+  IOMMU_VIOMMU_TYPE_TEGRA241_CMDQV = 2,
+};
+struct iommu_viommu_tegra241_cmdqv {
+  __aligned_u64 out_vintf_mmap_offset;
+  __aligned_u64 out_vintf_mmap_length;
 };
 struct iommu_viommu_alloc {
   __u32 size;
@@ -309,6 +330,9 @@ struct iommu_viommu_alloc {
   __u32 dev_id;
   __u32 hwpt_id;
   __u32 out_viommu_id;
+  __u32 data_len;
+  __u32 __reserved;
+  __aligned_u64 data_uptr;
 };
 #define IOMMU_VIOMMU_ALLOC _IO(IOMMUFD_TYPE, IOMMUFD_CMD_VIOMMU_ALLOC)
 struct iommu_vdevice_alloc {
@@ -334,9 +358,13 @@ struct iommufd_vevent_header {
 enum iommu_veventq_type {
   IOMMU_VEVENTQ_TYPE_DEFAULT = 0,
   IOMMU_VEVENTQ_TYPE_ARM_SMMUV3 = 1,
+  IOMMU_VEVENTQ_TYPE_TEGRA241_CMDQV = 2,
 };
 struct iommu_vevent_arm_smmuv3 {
   __aligned_le64 evt[4];
+};
+struct iommu_vevent_tegra241_cmdqv {
+  __aligned_le64 lvcmdq_err_map[2];
 };
 struct iommu_veventq_alloc {
   __u32 size;
@@ -349,4 +377,19 @@ struct iommu_veventq_alloc {
   __u32 __reserved;
 };
 #define IOMMU_VEVENTQ_ALLOC _IO(IOMMUFD_TYPE, IOMMUFD_CMD_VEVENTQ_ALLOC)
+enum iommu_hw_queue_type {
+  IOMMU_HW_QUEUE_TYPE_DEFAULT = 0,
+  IOMMU_HW_QUEUE_TYPE_TEGRA241_CMDQV = 1,
+};
+struct iommu_hw_queue_alloc {
+  __u32 size;
+  __u32 flags;
+  __u32 viommu_id;
+  __u32 type;
+  __u32 index;
+  __u32 out_hw_queue_id;
+  __aligned_u64 nesting_parent_iova;
+  __aligned_u64 length;
+};
+#define IOMMU_HW_QUEUE_ALLOC _IO(IOMMUFD_TYPE, IOMMUFD_CMD_HW_QUEUE_ALLOC)
 #endif

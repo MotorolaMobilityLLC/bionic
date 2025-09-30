@@ -74,6 +74,7 @@
 #define UBLK_F_AUTO_BUF_REG (1ULL << 11)
 #define UBLK_F_QUIESCE (1ULL << 12)
 #define UBLK_F_PER_IO_DAEMON (1ULL << 13)
+#define UBLK_F_BUF_REG_OFF_DAEMON (1ULL << 14)
 #define UBLK_S_DEV_DEAD 0
 #define UBLK_S_DEV_LIVE 1
 #define UBLK_S_DEV_QUIESCED 2

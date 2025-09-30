@@ -438,4 +438,6 @@
 #define __NR_listxattrat (__NR_SYSCALL_BASE + 465)
 #define __NR_removexattrat (__NR_SYSCALL_BASE + 466)
 #define __NR_open_tree_attr (__NR_SYSCALL_BASE + 467)
+#define __NR_file_getattr (__NR_SYSCALL_BASE + 468)
+#define __NR_file_setattr (__NR_SYSCALL_BASE + 469)
 #endif

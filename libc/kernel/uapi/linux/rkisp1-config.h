@@ -89,6 +89,9 @@
 #define RKISP1_CIF_ISP_DPF_MAX_NLF_COEFFS 17
 #define RKISP1_CIF_ISP_DPF_MAX_SPATIAL_COEFFS 6
 #define RKISP1_CIF_ISP_COMPAND_NUM_POINTS 64
+#define RKISP1_CIF_ISP_WDR_CURVE_NUM_INTERV 32
+#define RKISP1_CIF_ISP_WDR_CURVE_NUM_COEFF (RKISP1_CIF_ISP_WDR_CURVE_NUM_INTERV + 1)
+#define RKISP1_CIF_ISP_WDR_CURVE_NUM_DY_REGS 4
 #define RKISP1_CIF_ISP_STAT_AWB (1U << 0)
 #define RKISP1_CIF_ISP_STAT_AUTOEXP (1U << 1)
 #define RKISP1_CIF_ISP_STAT_AFM (1U << 2)
@@ -360,6 +363,27 @@ struct rkisp1_cif_isp_compand_curve_config {
   __u32 x[RKISP1_CIF_ISP_COMPAND_NUM_POINTS];
   __u32 y[RKISP1_CIF_ISP_COMPAND_NUM_POINTS];
 };
+struct rkisp1_cif_isp_wdr_tone_curve {
+  __u32 dY[RKISP1_CIF_ISP_WDR_CURVE_NUM_DY_REGS];
+  __u16 ym[RKISP1_CIF_ISP_WDR_CURVE_NUM_COEFF];
+};
+struct rkisp1_cif_isp_wdr_iref_config {
+  __u8 rgb_factor;
+  __u8 use_y9_8;
+  __u8 use_rgb7_8;
+  __u8 disable_transient;
+};
+struct rkisp1_cif_isp_wdr_config {
+  struct rkisp1_cif_isp_wdr_tone_curve tone_curve;
+  struct rkisp1_cif_isp_wdr_iref_config iref_config;
+  __u16 rgb_offset;
+  __u16 luma_offset;
+  __u16 dmin_thresh;
+  __u8 dmin_strength;
+  __u8 use_rgb_colorspace;
+  __u8 bypass_chroma_mapping;
+  __u8 use_iref;
+};
 struct rkisp1_cif_isp_awb_meas {
   __u32 cnt;
   __u8 mean_y_or_g;
@@ -421,9 +445,11 @@ enum rkisp1_ext_params_block_type {
   RKISP1_EXT_PARAMS_BLOCK_TYPE_COMPAND_BLS,
   RKISP1_EXT_PARAMS_BLOCK_TYPE_COMPAND_EXPAND,
   RKISP1_EXT_PARAMS_BLOCK_TYPE_COMPAND_COMPRESS,
+  RKISP1_EXT_PARAMS_BLOCK_TYPE_WDR,
 };
 #define RKISP1_EXT_PARAMS_FL_BLOCK_DISABLE (1U << 0)
 #define RKISP1_EXT_PARAMS_FL_BLOCK_ENABLE (1U << 1)
+#define RKISP1_CID_SUPPORTED_PARAMS_BLOCKS (V4L2_CID_USER_RKISP1_BASE + 0x01)
 struct rkisp1_ext_params_block_header {
   __u16 type;
   __u16 flags;
@@ -505,7 +531,11 @@ struct rkisp1_ext_params_compand_curve_config {
   struct rkisp1_ext_params_block_header header;
   struct rkisp1_cif_isp_compand_curve_config config;
 } __attribute__((aligned(8)));
-#define RKISP1_EXT_PARAMS_MAX_SIZE (sizeof(struct rkisp1_ext_params_bls_config) + sizeof(struct rkisp1_ext_params_dpcc_config) + sizeof(struct rkisp1_ext_params_sdg_config) + sizeof(struct rkisp1_ext_params_lsc_config) + sizeof(struct rkisp1_ext_params_awb_gain_config) + sizeof(struct rkisp1_ext_params_flt_config) + sizeof(struct rkisp1_ext_params_bdm_config) + sizeof(struct rkisp1_ext_params_ctk_config) + sizeof(struct rkisp1_ext_params_goc_config) + sizeof(struct rkisp1_ext_params_dpf_config) + sizeof(struct rkisp1_ext_params_dpf_strength_config) + sizeof(struct rkisp1_ext_params_cproc_config) + sizeof(struct rkisp1_ext_params_ie_config) + sizeof(struct rkisp1_ext_params_awb_meas_config) + sizeof(struct rkisp1_ext_params_hst_config) + sizeof(struct rkisp1_ext_params_aec_config) + sizeof(struct rkisp1_ext_params_afc_config) + sizeof(struct rkisp1_ext_params_compand_bls_config) + sizeof(struct rkisp1_ext_params_compand_curve_config) + sizeof(struct rkisp1_ext_params_compand_curve_config))
+struct rkisp1_ext_params_wdr_config {
+  struct rkisp1_ext_params_block_header header;
+  struct rkisp1_cif_isp_wdr_config config;
+} __attribute__((aligned(8)));
+#define RKISP1_EXT_PARAMS_MAX_SIZE (sizeof(struct rkisp1_ext_params_bls_config) + sizeof(struct rkisp1_ext_params_dpcc_config) + sizeof(struct rkisp1_ext_params_sdg_config) + sizeof(struct rkisp1_ext_params_lsc_config) + sizeof(struct rkisp1_ext_params_awb_gain_config) + sizeof(struct rkisp1_ext_params_flt_config) + sizeof(struct rkisp1_ext_params_bdm_config) + sizeof(struct rkisp1_ext_params_ctk_config) + sizeof(struct rkisp1_ext_params_goc_config) + sizeof(struct rkisp1_ext_params_dpf_config) + sizeof(struct rkisp1_ext_params_dpf_strength_config) + sizeof(struct rkisp1_ext_params_cproc_config) + sizeof(struct rkisp1_ext_params_ie_config) + sizeof(struct rkisp1_ext_params_awb_meas_config) + sizeof(struct rkisp1_ext_params_hst_config) + sizeof(struct rkisp1_ext_params_aec_config) + sizeof(struct rkisp1_ext_params_afc_config) + sizeof(struct rkisp1_ext_params_compand_bls_config) + sizeof(struct rkisp1_ext_params_compand_curve_config) + sizeof(struct rkisp1_ext_params_compand_curve_config) + sizeof(struct rkisp1_ext_params_wdr_config))
 enum rksip1_ext_param_buffer_version {
   RKISP1_EXT_PARAM_BUFFER_V1 = 1,
 };

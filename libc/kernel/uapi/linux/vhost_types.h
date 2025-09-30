@@ -67,6 +67,10 @@ struct vhost_msg_v2 {
     __u8 padding[64];
   };
 };
+struct vhost_features_array {
+  __u64 count;
+  __u64 features[] __counted_by(count);
+};
 struct vhost_memory_region {
   __u64 guest_phys_addr;
   __u64 memory_size;
