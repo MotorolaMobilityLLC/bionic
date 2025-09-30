@@ -94,7 +94,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
 
   // Do we need to save the signal mask?
   testq $1,%rax
-  jz 2f
+  jz 1f
 
   // Save current signal mask.
   pushq %rdi // Push 'env'.
@@ -104,7 +104,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   call sigprocmask
   popq %rdi // Pop 'env'.
 
-2:
+1:
   // Fetch the setjmp cookie and clear the signal flag bit.
   popq %rax
   andq $-2,%rax
@@ -140,13 +140,13 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
 
   m_calculate_checksum %rax, %rdi
   xorq (_JB_CHECKSUM * 8)(%rdi), %rax
-  jnz 3f
+  jnz L(checksum_failure)
 
   // Do we need to restore the signal mask?
   movq (_JB_SIGFLAG * 8)(%rdi), %rdi
   pushq %rdi // Push cookie
   testq $1, %rdi
-  jz 2f
+  jz 1f
 
   // Restore the signal mask.
   movq $2,%rdi // SIG_SETMASK.
@@ -154,7 +154,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   xorq %rdx,%rdx // NULL.
   call sigprocmask
 
-2:
+1:
   // Fetch the setjmp cookie and clear the signal flag bit.
   popq %rcx
   andq $-2, %rcx
@@ -195,7 +195,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   movq %r11,0(%rsp)
   ret
 
-3:
+L(checksum_failure):
   call __bionic_setjmp_checksum_mismatch
 END(siglongjmp)
 
