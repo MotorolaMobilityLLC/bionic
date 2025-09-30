@@ -187,11 +187,11 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   popq %r11
   popq %rax
 
-  // Return 1 if value is 0, value otherwise.
-  movq $1,%r10
+  // Return 1 if value is 0.
   testl %eax,%eax
-  cmovzq %r10,%rax
-  // Overwrite the return address with our stashed %rip value and return.
+  jnz 1f
+  incl %eax
+1:
   movq %r11,0(%rsp)
   ret
 
