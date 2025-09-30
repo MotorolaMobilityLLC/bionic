@@ -94,8 +94,6 @@ __attribute__((__noinline__))
 static int __sbprintf(FILE* fp, const CHAR_TYPE* fmt, va_list ap) {
   FILE fake;
   struct __sfileext fakeext;
-  unsigned char buf[BUFSIZ];
-
   _FILEEXT_SETUP(&fake, &fakeext);
   /* copy the important variables */
   fake._flags = fp->_flags & ~__SNBF;
@@ -104,6 +102,7 @@ static int __sbprintf(FILE* fp, const CHAR_TYPE* fmt, va_list ap) {
   fake._write = fp->_write;
 
   /* set up the buffer */
+  unsigned char buf[BUFSIZ] __attribute__((__uninitialized__));
   fake._bf._base = fake._p = buf;
   fake._bf._size = fake._w = sizeof(buf);
   fake._lbfsize = 0; /* not actually used, but Just In Case */
