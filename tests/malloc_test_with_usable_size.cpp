@@ -457,8 +457,9 @@ TEST(malloc, mallinfo2) {
 #endif
 }
 
-// Jemalloc doesn't pass this test right now, so leave it as disabled.
-TEST(malloc, DISABLED_alloc_after_fork) {
+TEST(malloc, alloc_after_fork) {
+  if (!running_with_scudo()) GTEST_SKIP() << "only scudo supports this";
+
   // Both of these need to be a power of 2.
   static constexpr size_t kMinAllocationSize = 8;
   static constexpr size_t kMaxAllocationSize = 2097152;
