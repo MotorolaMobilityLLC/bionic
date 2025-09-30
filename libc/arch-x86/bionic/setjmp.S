@@ -187,10 +187,11 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   popl %ecx
   popl %eax
 
+  // Return 1 if value is 0, value otherwise.
+  movl $1,%edx
   testl %eax,%eax
-  jnz 2f
-  incl %eax
-2:
+  cmovzl %edx,%eax
+  // Overwrite the return address with our stashed %rip value and return.
   movl %ecx,0(%esp)
   ret
 
