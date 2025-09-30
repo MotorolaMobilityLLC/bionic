@@ -83,6 +83,20 @@ int mkstemps64(char* _Nonnull __template, int __flags) __INTRODUCED_IN(23);
 
 int mkstemps(char* _Nonnull __template, int __flags);
 
+/**
+* Deallocates memory on the heap and may check if the given size is correct.
+*
+* Available since API level 37.
+*/
+void free_sized(void* _Nullable __ptr, size_t __size) __INTRODUCED_IN(37);
+
+/**
+* Deallocates memory on the heap and may check if the given size and alignment are correct.
+*
+* Available since API level 37.
+*/
+void free_aligned_sized(void* _Nullable __ptr, size_t __alignment, size_t __size) __INTRODUCED_IN(37);
+
 int posix_memalign(void* _Nullable * _Nullable __memptr, size_t __alignment, size_t __size);
 
 /**

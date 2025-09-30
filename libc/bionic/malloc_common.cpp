@@ -86,6 +86,14 @@ extern "C" void free(void* mem) {
   }
 }
 
+extern "C" void free_sized(void* mem, size_t) {
+  free(mem);
+}
+
+extern "C" void free_aligned_sized(void* mem, size_t, size_t) {
+  free(mem);
+}
+
 extern "C" struct mallinfo mallinfo() {
   auto dispatch_table = GetDispatchTable();
   if (__predict_false(dispatch_table != nullptr)) {

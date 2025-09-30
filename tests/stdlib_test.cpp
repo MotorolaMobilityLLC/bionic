@@ -41,6 +41,7 @@
 #include "utils.h"
 
 using namespace std::string_literals;
+using stdlib_DeathTest = SilentDeathTest;
 
 template <typename T = int (*)(char*)>
 class GenericTemporaryFile {
@@ -222,6 +223,24 @@ TEST(stdlib, mrand48_distribution) {
   for (int bit = 0; bit < 32; ++bit) {
     EXPECT_TRUE((pivot_low <= bits[bit]) && (bits[bit] <= pivot_high));
   }
+}
+
+TEST(stdlib, free_sized) {
+#if defined(__BIONIC__)
+  void* ptr = malloc(4);
+  free_sized(ptr, 4);
+#else
+  GTEST_SKIP() << "Our glibc is too old.";
+#endif
+}
+
+TEST(stdlib, free_aligned_sized) {
+#if defined(__BIONIC__)
+  void* ptr = aligned_alloc(16, 32);
+  free_aligned_sized(ptr, 16, 32);
+#else
+  GTEST_SKIP() << "Our glibc is too old.";
+#endif
 }
 
 TEST(stdlib, posix_memalign_sweep) {
@@ -474,8 +493,6 @@ static void TestBug57421_main() {
 
 // Even though this isn't really a death test, we have to say "DeathTest" here so gtest knows to
 // run this test (which exits normally) in its own process.
-
-using stdlib_DeathTest = SilentDeathTest;
 
 TEST_F(stdlib_DeathTest, getenv_after_main_thread_exits) {
   // https://code.google.com/p/android/issues/detail?id=57421
