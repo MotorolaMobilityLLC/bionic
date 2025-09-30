@@ -73,19 +73,19 @@
 
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(setjmp)
   movl $1,%esi
-  jmp PIC_PLT(sigsetjmp)
+  jmp sigsetjmp
 END(setjmp)
 
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(_setjmp)
   movl $0,%esi
-  jmp PIC_PLT(sigsetjmp)
+  jmp sigsetjmp
 END(_setjmp)
 
 // int sigsetjmp(sigjmp_buf env, int save_signal_mask);
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   pushq %rdi
   movq %rsi,%rdi
-  call PIC_PLT(__bionic_setjmp_cookie_get)
+  call __bionic_setjmp_cookie_get
   popq %rdi
 
   // Record setjmp cookie and whether or not we're saving the signal mask.
@@ -101,7 +101,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   // The 'how' argument is ignored if new_mask is NULL.
   xorq %rsi,%rsi // NULL.
   leaq (_JB_SIGMASK * 8)(%rdi),%rdx // old_mask.
-  call PIC_PLT(sigprocmask)
+  call sigprocmask
   popq %rdi // Pop 'env'.
 
 2:
@@ -152,7 +152,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   movq $2,%rdi // SIG_SETMASK.
   leaq (_JB_SIGMASK * 8)(%r12),%rsi // new_mask.
   xorq %rdx,%rdx // NULL.
-  call PIC_PLT(sigprocmask)
+  call sigprocmask
 
 2:
   // Fetch the setjmp cookie and clear the signal flag bit.
@@ -183,7 +183,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   pushq %rax
   pushq %r11
   movq %rcx, %rdi
-  call PIC_PLT(__bionic_setjmp_cookie_check)
+  call __bionic_setjmp_cookie_check
   popq %r11
   popq %rax
 
@@ -196,7 +196,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   ret
 
 3:
-  call PIC_PLT(__bionic_setjmp_checksum_mismatch)
+  call __bionic_setjmp_checksum_mismatch
 END(siglongjmp)
 
 ALIAS_SYMBOL_WEAK_FOR_NATIVE_BRIDGE(longjmp, siglongjmp)
