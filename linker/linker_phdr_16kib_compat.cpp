@@ -475,25 +475,50 @@ void ElfReader::FixMinAlignFor16KiB() {
  * Apply RX or RWX protection to the code region of the ELF being loaded in
  * 16KiB compat mode.
  *
- * Input:
- *   start                            -> start address of the compat code region.
- *   size                             -> size of the compat code region in bytes.
- *   should_16kib_app_compat_use_rwx  -> use RWX or RX permission.
- *   note_gnu_property                -> AArch64-only: use PROT_BTI if the ELF is BTI-compatible.
  * Return:
- *   0 on success, -1 on failure (error code in errno).
+ *   true on success, false on failure (error code in errno).
  */
-int phdr_table_protect_16kib_app_compat_code(ElfW(Addr) start, ElfW(Addr) size,
-                                             bool should_16kib_app_compat_use_rwx,
-                                             const GnuPropertySection* note_gnu_property __unused) {
+bool soinfo::protect_16kib_app_compat_code() {
+  if (!should_use_16kib_app_compat_) {
+    return true;
+  }
+
   int prot = PROT_READ | PROT_EXEC;
-  if (should_16kib_app_compat_use_rwx) {
+  if (should_16kib_app_compat_use_rwx_) {
     prot |= PROT_WRITE;
   }
+
 #ifdef __aarch64__
-  if (note_gnu_property != nullptr && note_gnu_property->IsBTICompatible()) {
+  if (note_gnu_property_ == nullptr) {
+    note_gnu_property_ = std::make_shared<GnuPropertySection>(this);
+  }
+
+  if (note_gnu_property_->IsBTICompatible()) {
     prot |= PROT_BTI;
   }
 #endif
-  return mprotect(reinterpret_cast<void*>(start), size, prot);
+
+  if (mprotect(reinterpret_cast<void*>(compat_code_start_), compat_code_size_, prot)) {
+    DL_ERR("failed to set execute permission for compat loaded binary \"%s\": %m",
+           get_realpath());
+    return false;
+  }
+
+  return true;
+}
+
+/*
+ * Apply RW protection to the code region of the ELF being loaded in 16KiB compat mode. This is used
+ * for restoring write permissions to the code region after ifunc resolution.
+ *
+ * Return:
+ *   true on success, false on failure (error code in errno).
+ */
+bool soinfo::unprotect_16kib_app_compat_code() {
+  if (!should_use_16kib_app_compat_) {
+    return true;
+  }
+
+  return mprotect(reinterpret_cast<void*>(compat_code_start_), compat_code_size_,
+                  PROT_READ | PROT_WRITE) == 0;
 }

@@ -219,10 +219,11 @@ bool ElfReader::Load(address_space_params* address_space) {
     did_load_ = true;
 #if defined(__aarch64__)
     // For Armv8.5-A loaded executable segments may require PROT_BTI.
-    if (note_gnu_property_.IsBTICompatible()) {
+    if (note_gnu_property_->IsBTICompatible()) {
       did_load_ =
           (phdr_table_protect_segments(phdr_table_, phdr_num_, load_bias_, should_pad_segments_,
-                                       should_use_16kib_app_compat_, &note_gnu_property_) == 0);
+                                       should_use_16kib_app_compat_,
+                                       note_gnu_property_.get()) == 0);
     }
 #endif
   }
@@ -1709,7 +1710,8 @@ bool ElfReader::FindPhdr() {
 // It is not considered an error if such section is missing.
 bool ElfReader::FindGnuPropertySection() {
 #if defined(__aarch64__)
-  note_gnu_property_ = GnuPropertySection(phdr_table_, phdr_num_, load_bias_, name_.c_str());
+  note_gnu_property_ = std::make_shared<GnuPropertySection>(phdr_table_, phdr_num_,
+                                                            load_bias_, name_.c_str());
 #endif
   return true;
 }

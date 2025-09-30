@@ -73,7 +73,7 @@ class ElfReader {
   bool should_16kib_app_compat_use_rwx() const { return should_16kib_app_compat_use_rwx_; }
   ElfW(Addr) compat_code_start() const { return compat_code_start_; }
   ElfW(Addr) compat_code_size() const { return compat_code_size_; }
-  const GnuPropertySection* note_gnu_property() const { return &note_gnu_property_; }
+  std::shared_ptr<GnuPropertySection> note_gnu_property() const { return note_gnu_property_; }
 
  private:
   [[nodiscard]] bool ReadElfHeader();
@@ -167,7 +167,7 @@ class ElfReader {
   ElfW(Addr) compat_code_size_ = 0;
 
   // Only used by AArch64 at the moment.
-  GnuPropertySection note_gnu_property_ __unused;
+  std::shared_ptr<GnuPropertySection> note_gnu_property_;
 };
 
 size_t phdr_table_get_load_size(const ElfW(Phdr)* phdr_table, size_t phdr_count,
@@ -184,10 +184,6 @@ int phdr_table_unprotect_segments(const ElfW(Phdr)* phdr_table, size_t phdr_coun
 
 int phdr_table_protect_gnu_relro(const ElfW(Phdr)* phdr_table, size_t phdr_count,
                                  ElfW(Addr) load_bias, bool should_pad_segments);
-
-int phdr_table_protect_16kib_app_compat_code(ElfW(Addr) start, ElfW(Addr) size,
-                                             bool should_16kib_app_compat_use_rwx,
-                                             const GnuPropertySection* note_gnu_property = nullptr);
 
 int phdr_table_serialize_gnu_relro(const ElfW(Phdr)* phdr_table, size_t phdr_count,
                                    ElfW(Addr) load_bias, int fd, size_t* file_offset);

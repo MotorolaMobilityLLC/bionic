@@ -650,6 +650,7 @@ class LoadTask {
       si_->set_compat_code_start(elf_reader.compat_code_start());
       si_->set_compat_code_size(elf_reader.compat_code_size());
     }
+    si_->set_note_gnu_property(elf_reader.note_gnu_property());
 
     return true;
   }
@@ -3464,23 +3465,6 @@ bool soinfo::protect_relro() {
 
   if (phdr_table_protect_gnu_relro(phdr, phnum, load_bias, should_pad_segments_) < 0) {
     DL_ERR("can't enable GNU RELRO protection for \"%s\": %m", get_realpath());
-    return false;
-  }
-
-  return true;
-}
-
-bool soinfo::protect_16kib_app_compat_code() {
-  if (!should_use_16kib_app_compat_) {
-    return true;
-  }
-
-  auto note_gnu_property = GnuPropertySection(this);
-  if (phdr_table_protect_16kib_app_compat_code(compat_code_start_, compat_code_size_,
-                                               should_16kib_app_compat_use_rwx_,
-                                               &note_gnu_property) < 0) {
-    DL_ERR("failed to set execute permission for compat loaded binary \"%s\": %s", get_realpath(),
-           strerror(errno));
     return false;
   }
 
