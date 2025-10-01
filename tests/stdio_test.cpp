@@ -3098,27 +3098,52 @@ static int64_t GetTotalRamGiB() {
 }
 #endif
 
-TEST(STDIO_TEST, fread_int_overflow) {
-#if defined(__LP64__)
-  if (GetTotalRamGiB() <= 4) GTEST_SKIP() << "not enough memory";
+TEST(STDIO_TEST, fread_EOVERFLOW) {
+  TemporaryFile tf;
+  FILE* fp = fopen(tf.path, "r");
+  ASSERT_TRUE(fp != nullptr);
 
-  const size_t too_big_for_an_int = 0x80000000ULL;
-  std::vector<char> buf(too_big_for_an_int);
-  std::unique_ptr<FILE, decltype(&fclose)> fp{fopen("/dev/zero", "re"), fclose};
-  ASSERT_EQ(too_big_for_an_int, fread(&buf[0], 1, too_big_for_an_int, fp.get()));
-#else
-  GTEST_SKIP() << "32-bit can't allocate 2GiB";
-#endif
+  volatile size_t big = SIZE_MAX;
+  char buf[BUFSIZ];
+  errno = 0;
+  ASSERT_EQ(0u, fread(buf, big, big, fp));
+  ASSERT_ERRNO(EOVERFLOW);
+  ASSERT_TRUE(ferror(fp));
+  fclose(fp);
 }
 
-TEST(STDIO_TEST, fwrite_int_overflow) {
+TEST(STDIO_TEST, fwrite_EOVERFLOW) {
+  TemporaryFile tf;
+  FILE* fp = fopen(tf.path, "w");
+  ASSERT_TRUE(fp != nullptr);
+
+  volatile size_t big = SIZE_MAX;
+  char buf[BUFSIZ];
+  errno = 0;
+  ASSERT_EQ(0u, fwrite(buf, big, big, fp));
+  ASSERT_ERRNO(EOVERFLOW);
+  ASSERT_TRUE(ferror(fp));
+  fclose(fp);
+}
+
+TEST(STDIO_TEST, fread_fwrite_int_overflow) {
 #if defined(__LP64__)
   if (GetTotalRamGiB() <= 4) GTEST_SKIP() << "not enough memory";
 
+  // Historically the implementation used ints where it should have used size_t.
   const size_t too_big_for_an_int = 0x80000000ULL;
   std::vector<char> buf(too_big_for_an_int);
-  std::unique_ptr<FILE, decltype(&fclose)> fp{fopen("/dev/null", "we"), fclose};
-  ASSERT_EQ(too_big_for_an_int, fwrite(&buf[0], 1, too_big_for_an_int, fp.get()));
+
+  // We test both fread() and fwrite() in the same function to avoid two tests
+  // both allocating 2GiB of ram at the same time.
+  {
+    std::unique_ptr<FILE, decltype(&fclose)> fp{fopen("/dev/zero", "re"), fclose};
+    ASSERT_EQ(too_big_for_an_int, fread(&buf[0], 1, too_big_for_an_int, fp.get()));
+  }
+  {
+    std::unique_ptr<FILE, decltype(&fclose)> fp{fopen("/dev/null", "we"), fclose};
+    ASSERT_EQ(too_big_for_an_int, fwrite(&buf[0], 1, too_big_for_an_int, fp.get()));
+  }
 #else
   GTEST_SKIP() << "32-bit can't allocate 2GiB";
 #endif
