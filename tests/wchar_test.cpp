@@ -807,7 +807,7 @@ TEST(wchar, open_wmemstream) {
   free(p);
 }
 
-TEST(stdio, open_wmemstream_EINVAL) {
+TEST(wchar, open_wmemstream_EINVAL) {
 #if defined(__BIONIC__)
   wchar_t* p;
   size_t size;
