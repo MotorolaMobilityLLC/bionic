@@ -309,3 +309,57 @@ static void BM_string_strchr(benchmark::State& state) {
   state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strchr, "AT_ALIGNED_ONEBUF");
+
+template <size_t fn(const char*, const char*)>
+void BenchStrSpn(benchmark::State& state, const char* delims) {
+  const size_t nbytes = state.range(0);
+  const size_t haystack_alignment = state.range(1);
+
+  std::vector<char> haystack;
+  char* haystack_aligned = GetAlignedPtrFilled(&haystack, haystack_alignment, nbytes, 'x');
+  haystack_aligned[nbytes-1] = '\0';
+
+  while (state.KeepRunning()) {
+    benchmark::DoNotOptimize(fn(haystack_aligned, delims));
+  }
+
+  state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
+}
+
+static void BM_string_strcspn_common(benchmark::State& state) {
+  // The common case is a single delimiter.
+  // We choose one that causes us to scan the whole input, and is a real-world example.
+  BenchStrSpn<strcspn>(state, ",");
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strcspn_common, "AT_ALIGNED_ONEBUF");
+
+static void BM_string_strcspn_medium(benchmark::State& state) {
+  // The somewhat common case is two delimiters.
+  // We choose ones that cause us to scan the whole input, and are a real-world example.
+  BenchStrSpn<strcspn>(state, " \t");
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strcspn_medium, "AT_ALIGNED_ONEBUF");
+
+static void BM_string_strcspn_rare(benchmark::State& state) {
+  // It's rare to have lots of delimiters.
+  // We choose ones that cause us to scan the whole input, and are a real-world example (from curl).
+  BenchStrSpn<strcspn>(state, " \r\n\t/:#?!@{}[]\\$\'\"^`*<>=;,+&()%");
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strcspn_rare, "AT_ALIGNED_ONEBUF");
+
+static void BM_string_strspn_common(benchmark::State& state) {
+  // The common case is a couple of delimiters.
+  // We choose ones that cause us to scan the whole input,
+  // but real-world delimiters would require more realistic input.
+  BenchStrSpn<strspn>(state, "xx");
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strspn_common, "AT_ALIGNED_ONEBUF");
+
+static void BM_string_strspn_medium(benchmark::State& state) {
+  // The somewhat common case is something like "digits".
+  // Rather than write a more complicated benchmark,
+  // we just have ten instances of the same character that causes us to scan the whole input.
+  // (A sufficiently clever implementation might require a cleverer benchmark, but YAGNI.)
+  BenchStrSpn<strspn>(state, "xxxxxxxxxx");
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strspn_medium, "AT_ALIGNED_ONEBUF");
