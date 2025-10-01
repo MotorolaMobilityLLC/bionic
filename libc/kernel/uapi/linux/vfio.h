@@ -300,8 +300,10 @@ struct vfio_device_feature {
 struct vfio_device_bind_iommufd {
   __u32 argsz;
   __u32 flags;
+#define VFIO_DEVICE_BIND_FLAG_TOKEN (1 << 0)
   __s32 iommufd;
   __u32 out_devid;
+  __aligned_u64 token_uuid_ptr;
 };
 #define VFIO_DEVICE_BIND_IOMMUFD _IO(VFIO_TYPE, VFIO_BASE + 18)
 struct vfio_device_attach_iommufd_pt {

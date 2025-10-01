@@ -355,6 +355,7 @@ enum drm_xe_observation_ioctls {
 enum drm_xe_oa_unit_type {
   DRM_XE_OA_UNIT_TYPE_OAG,
   DRM_XE_OA_UNIT_TYPE_OAM,
+  DRM_XE_OA_UNIT_TYPE_OAM_SAG,
 };
 struct drm_xe_oa_unit {
   __u64 extensions;
@@ -365,6 +366,7 @@ struct drm_xe_oa_unit {
 #define DRM_XE_OA_CAPS_SYNCS (1 << 1)
 #define DRM_XE_OA_CAPS_OA_BUFFER_SIZE (1 << 2)
 #define DRM_XE_OA_CAPS_WAIT_NUM_REPORTS (1 << 3)
+#define DRM_XE_OA_CAPS_OAM (1 << 4)
   __u64 oa_timestamp_freq;
   __u64 reserved[4];
   __u64 num_engines;

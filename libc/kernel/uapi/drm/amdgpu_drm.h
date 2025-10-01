@@ -781,6 +781,7 @@ struct drm_amdgpu_info_hw_ip {
   __u32 ib_size_alignment;
   __u32 available_rings;
   __u32 ip_discovery_version;
+  __u32 userq_num_slots;
 };
 struct drm_amdgpu_info_uq_fw_areas_gfx {
   __u32 shadow_size;

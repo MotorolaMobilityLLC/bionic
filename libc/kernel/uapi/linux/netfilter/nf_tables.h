@@ -919,6 +919,7 @@ enum nft_synproxy_attributes {
 enum nft_devices_attributes {
   NFTA_DEVICE_UNSPEC,
   NFTA_DEVICE_NAME,
+  NFTA_DEVICE_PREFIX,
   __NFTA_DEVICE_MAX
 };
 #define NFTA_DEVICE_MAX (__NFTA_DEVICE_MAX - 1)
