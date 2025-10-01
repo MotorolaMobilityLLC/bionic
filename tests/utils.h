@@ -21,6 +21,8 @@
 #include <fcntl.h>
 #include <gtest/gtest.h>
 #include <inttypes.h>
+#include <malloc.h>
+#include <stdio.h>
 #include <sys/mman.h>
 #include <sys/prctl.h>
 #include <sys/types.h>
@@ -74,6 +76,17 @@ static inline bool running_with_native_bridge() {
 }
 
 #define SKIP_WITH_NATIVE_BRIDGE if (running_with_native_bridge()) GTEST_SKIP()
+
+static inline bool running_with_scudo() {
+  char* buf = nullptr;
+  size_t size = 0;
+  FILE* fp = open_memstream(&buf, &size);
+  malloc_info(0, fp);
+  fputc('\0', fp);
+  bool result = strstr(buf, "scudo") != nullptr;
+  fclose(fp);
+  return result;
+}
 
 #if defined(__linux__)
 
