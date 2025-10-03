@@ -29,6 +29,49 @@
 #include <string.h>
 #include <xlocale.h>
 
+// Benchmarking shows that bool[] works better than a bitset,
+// and 256 bytes of stack (the latter half of which is never used in practice)
+// doesn't seem unreasonable.
+static_assert(sizeof(bool) == 1);
+static inline void init_delimiter_set(bool* set, const char* delims) {
+  for (const uint8_t* d = reinterpret_cast<const uint8_t*>(delims); *d; ++d) {
+    set[*d] = true;
+  }
+}
+
+__attribute__((__flatten__))
+size_t strspn(const char* ss, const char* delims) {
+  const uint8_t* s = reinterpret_cast<const uint8_t*>(ss);
+  const uint8_t* p = s;
+  if (delims[0] == '\0') return 0;
+  if (delims[1] == '\0') {
+    // The common case is a single delimiter, where the set is worse.
+    while (*p == delims[0]) ++p;
+  } else {
+    bool set[256] = {};
+    init_delimiter_set(set, delims);
+    while (set[*p]) ++p;
+  }
+  return p - s;
+}
+
+__attribute__((__flatten__))
+size_t strcspn(const char* ss, const char* delims) {
+  const uint8_t* s = reinterpret_cast<const uint8_t*>(ss);
+  const uint8_t* p = s;
+  if (delims[0] == '\0' || delims[1] == '\0') {
+    // The common case is a single delimiter, where the set is far worse.
+    // On arm64 strchrnul() is faster than open coding even for small distances,
+    // and orders of magnitude better for large distances.
+    return strchrnul(ss, delims[0]) - ss;
+  } else {
+    bool set[256] = {};
+    init_delimiter_set(set, delims);
+    while (*p && !set[*p]) ++p;
+  }
+  return p - s;
+}
+
 int strcoll(const char* lhs, const char* rhs) {
   return strcmp(lhs, rhs);
 }
