@@ -71,13 +71,13 @@ END(setjmp)
 
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(_setjmp)
   movl $0,%eax
-  jmp .L_sigsetjmp
+  jmp L(_sigsetjmp)
 END(_setjmp)
 
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   movl 8(%esp),%eax
 
-.L_sigsetjmp:
+L(_sigsetjmp):
   pushl %eax
   call __bionic_setjmp_cookie_get
   addl $4,%esp
@@ -134,7 +134,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   // Check the checksum before doing anything.
   m_calculate_checksum %eax, %edx
   xorl (_JB_CHECKSUM * 4)(%edx), %eax
-  jnz 3f
+  jnz L(checksum_failure)
 
   // Do we have a signal mask to restore?
   movl (_JB_SIGFLAG * 4)(%edx), %eax
@@ -195,7 +195,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   movl %ecx,0(%esp)
   ret
 
-3:
+L(checksum_failure):
   pushl (_JB_SIGMASK * 4)(%edx)
   call __bionic_setjmp_checksum_mismatch
 END(siglongjmp)
