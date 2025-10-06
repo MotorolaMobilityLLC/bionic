@@ -919,7 +919,7 @@ cc_library_static {
         "bionic/socketpair.cpp",
         "bionic/spawn.cpp",
         "bionic/stat.cpp",
-        "bionic/stdlib_l.cpp",
+        "bionic/stdlib.cpp",
         "bionic/strerror.cpp",
         "bionic/string.cpp",
         "bionic/strsignal.cpp",
