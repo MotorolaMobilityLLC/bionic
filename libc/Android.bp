@@ -745,6 +745,80 @@ cc_rustlibs_for_make {
 }
 
 // ========================================================
+// portable_simd_* - C++ that uses SIMD intrinsics that are
+// meant to be "portable" to various different sets of
+// SIMD intrinsics.
+// ========================================================
+
+// Defaults for 'portable-simd' functions like `mem*`, `str*`.
+// These are highly performance-sensitive and an alternative to hand-written
+// asm, so:
+// - sanitizers are disabled (in part because these reach out of bounds in
+//   buffers on purpose - otherwise, there's no way to vectorize things like
+//   `strlen`.)
+// - stack protectors are disabled for parity with asm
+// - similarly, zeroing stack vars is disabled.
+cc_defaults {
+    name: "libc_bionic_portable_simd_defaults",
+    defaults: ["libc_defaults"],
+    cflags: [
+        "-fno-sanitize=all",
+        "-fno-stack-protector",
+        "-ftrivial-auto-var-init=uninitialized",
+    ],
+    arch: {
+        x86_64: {
+            srcs: [
+                "portable-simd/strlen.cpp",
+            ],
+        },
+    },
+}
+
+cc_library_static {
+    name: "libc_bionic_portable_simd_x86_64_v2",
+    defaults: ["libc_bionic_portable_simd_defaults"],
+    arch: {
+        x86_64: {
+            cflags: [
+                "-DPSIMD_TARGET_SSE=1",
+                // Since this is the Android build system's default ABI, don't
+                // bother setting CFLAGS for v2.
+            ],
+        },
+    },
+}
+
+cc_library_static {
+    name: "libc_bionic_portable_simd_x86_64_v3",
+    defaults: ["libc_bionic_portable_simd_defaults"],
+    arch: {
+        x86_64: {
+            cflags: [
+                "-DPSIMD_TARGET_AVX2=1",
+                // x86-64-v3 feature flags. We _could_ just write
+                // `-march=x86-64-v3` here, but doing so overrides any `-march`
+                // given by the build system, so `-march=x86-64-v3` could end
+                // up unnecessarily restricting what Clang can generate here.
+                //
+                // See https://clang.llvm.org/docs/UsersManual.html#x86 for the
+                // features Clang associates with x86-64-v3. These are kept in
+                // the order of that doc.
+                "-mavx",
+                "-mavx2",
+                "-mbmi",
+                "-mbmi2",
+                "-mf16c",
+                "-mfma",
+                "-mlzcnt",
+                "-mmovbe",
+                "-mxsave",
+            ],
+        },
+    },
+}
+
+// ========================================================
 // libc_bionic.a - home-grown C library code
 // ========================================================
 
@@ -1107,7 +1181,6 @@ cc_library_static {
                 "arch-x86_64/string/sse2-stpncpy-slm.S",
                 "arch-x86_64/string/sse2-strcat-slm.S",
                 "arch-x86_64/string/sse2-strcpy-slm.S",
-                "arch-x86_64/string/sse2-strlen-slm.S",
                 "arch-x86_64/string/sse2-strncat-slm.S",
                 "arch-x86_64/string/sse2-strncpy-slm.S",
                 "arch-x86_64/string/sse4-memcmp-slm.S",
@@ -1115,6 +1188,10 @@ cc_library_static {
                 "arch-x86_64/string/ssse3-strncmp-slm.S",
                 "arch-x86_64/string/strchr.S",
                 "arch-x86_64/string/strrchr.S",
+            ],
+            whole_static_libs: [
+                "libc_bionic_portable_simd_x86_64_v2",
+                "libc_bionic_portable_simd_x86_64_v3",
             ],
         },
     },
@@ -2084,6 +2161,7 @@ cc_library_static {
                 "arch-x86_64/string/sse2-stpncpy-slm.S",
                 "arch-x86_64/string/sse2-strcat-slm.S",
                 "arch-x86_64/string/sse2-strcpy-slm.S",
+                // TODO(b/452714218): Swap this to portable-simd
                 "arch-x86_64/string/sse2-strlen-slm.S",
                 "arch-x86_64/string/sse2-strncat-slm.S",
                 "arch-x86_64/string/sse2-strncpy-slm.S",
