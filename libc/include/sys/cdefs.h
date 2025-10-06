@@ -325,7 +325,29 @@
 #define __LIBC32_LEGACY_PUBLIC__ __attribute__((__visibility__("default")))
 #endif
 
-/* Used to rename functions so that the compiler emits a call to 'x' rather than the function this was applied to. */
+/*
+ * Used to rename functions so that the compiler emits a call to 'x' rather
+ * than the function this macro was applied to.
+ *
+ * This has a variety of uses:
+ * 1. _FORTIFY_SOURCE uses __RENAME() to retain access to the "real" functions.
+ * 1. _FILE_OFFSET_BITS=64, though usually via __RENAME_IF_FILE_OFFSET64().
+ * 1. Handling the POSIX vs non-POSIX basename() mess.
+ * 1. const-correct C++ overloads for C functions.
+ *    There may be a better way to do this that lets us implement the C23
+ *    equivalent https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3020.pdf
+ *    at the same time/without too much duplication.
+ * 1. Redirecting _l() functions to the non-locale variant;
+ *    they're the same on Android, and because of this they were often added
+ *    quite a lot later. Using __RENAME() for these lets us (a) make them
+ *    available at earlier API levels and also (b) not even require an extra
+ *    relocation in the resulting ELF file. (But if we ever get to the point
+ *    where (a) is no longer relevant, (b) is probably not worthwhile alone.)
+ * 1. Upgrading non-POSIX extensions when they're added to POSIX while
+ *    retaining compatibility with older API levels. This is rare, but
+ *    posix_spawn_file_actions_addchdir() is an example; fpurge() vs __fpurge()
+ *    is different but similar.
+ */
 #define __RENAME(x) __asm__(#x)
 
 #include <android/versioning.h>
