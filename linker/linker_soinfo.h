@@ -37,6 +37,7 @@
 
 #include "async_safe/CHECK.h"
 #include "linker_namespaces.h"
+#include "linker_note_gnu_property.h"
 #include "linker_tls.h"
 #include "private/bionic_elf_tls.h"
 #include "private/bionic_globals.h"
@@ -255,6 +256,7 @@ struct soinfo {
                   const android_dlextinfo* extinfo, size_t* relro_fd_offset);
   bool protect_relro();
   bool protect_16kib_app_compat_code();
+  bool unprotect_16kib_app_compat_code();
 
   void tag_globals(bool deterministic_memtag_globals);
   ElfW(Addr) apply_memtag_if_mte_globals(ElfW(Addr) sym_addr) const;
@@ -418,6 +420,11 @@ struct soinfo {
   void set_compat_code_size(ElfW(Addr) size) { compat_code_size_ = size; }
   ElfW(Addr) compat_code_size() const { return compat_code_size_; }
 
+  const GnuPropertySection* note_gnu_property() const { return note_gnu_property_.get(); }
+  void set_note_gnu_property(std::shared_ptr<GnuPropertySection> note_gnu_property) {
+    note_gnu_property_ = note_gnu_property;
+  }
+
  private:
   bool is_image_linked() const;
   void set_image_linked();
@@ -517,6 +524,9 @@ struct soinfo {
   // RWX compat mode: Contains the whole ELF.
   ElfW(Addr) compat_code_start_ = 0;
   ElfW(Addr) compat_code_size_ = 0;
+
+  // Only used by AArch64 at the moment.
+  std::shared_ptr<GnuPropertySection> note_gnu_property_;
 };
 
 // This function is used by dlvsym() to calculate hash of sym_ver

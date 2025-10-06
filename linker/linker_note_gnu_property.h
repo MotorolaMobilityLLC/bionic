@@ -31,7 +31,7 @@
 #include <elf.h>
 #include <link.h>
 
-#include "linker_soinfo.h"
+struct soinfo;
 
 // The Elf* structures below are derived from the document
 // Linux Extensions to gABI (https://github.com/hjl-tools/linux-abi/wiki).

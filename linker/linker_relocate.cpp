@@ -179,35 +179,31 @@ static bool process_relocation_impl(Relocator& relocator, const rel_t& reloc) {
     sym_name = relocator.get_string(relocator.si_symtab[r_sym].st_name);
   }
 
-  // While relocating a DSO with text relocations (obsolete and 32-bit only), the .text segment is
-  // writable (but not executable). To call an ifunc, temporarily remap the segment as executable
-  // (but not writable). Then switch it back to continue applying relocations in the segment.
+  // While relocating a DSO that either has text relocations (obsolete and 32-bit only) or is loaded
+  // in 16KiB compat mode, the .text segment is writable (but not executable). To call an ifunc,
+  // temporarily remap the segment as executable (but not writable). Then switch it back to continue
+  // applying relocations in the segment.
 #if defined(__LP64__)
-  const bool handle_text_relocs = false;
-  auto protect_segments = []() { return true; };
-  auto unprotect_segments = []() { return true; };
+  const bool handle_text_protection = relocator.si->should_use_16kib_app_compat();
+  auto protect_segments = [&]() {
+    return relocator.si->protect_16kib_app_compat_code();
+  };
+  auto unprotect_segments = [&]() {
+    return relocator.si->unprotect_16kib_app_compat_code();
+  };
 #else
-  const bool handle_text_relocs = IsGeneral && relocator.si->has_text_relocations;
+  const bool handle_text_protection = IsGeneral && relocator.si->has_text_relocations;
   auto protect_segments = [&]() {
     // Make .text executable.
-    if (phdr_table_protect_segments(relocator.si->phdr, relocator.si->phnum,
+    return phdr_table_protect_segments(relocator.si->phdr, relocator.si->phnum,
                                     relocator.si->load_bias, relocator.si->should_pad_segments(),
-                                    relocator.si->should_use_16kib_app_compat()) < 0) {
-      DL_ERR("can't protect segments for \"%s\": %m", relocator.si->get_realpath());
-      return false;
-    }
-    return true;
+                                    relocator.si->should_use_16kib_app_compat()) == 0;
   };
   auto unprotect_segments = [&]() {
     // Make .text writable.
-    if (phdr_table_unprotect_segments(relocator.si->phdr, relocator.si->phnum,
+    return phdr_table_unprotect_segments(relocator.si->phdr, relocator.si->phnum,
                                       relocator.si->load_bias, relocator.si->should_pad_segments(),
-                                      relocator.si->should_use_16kib_app_compat()) < 0) {
-      DL_ERR("can't unprotect loadable segments for \"%s\": %m",
-             relocator.si->get_realpath());
-      return false;
-    }
-    return true;
+                                      relocator.si->should_use_16kib_app_compat()) == 0;
   };
 #endif
 
@@ -278,8 +274,7 @@ static bool process_relocation_impl(Relocator& relocator, const rel_t& reloc) {
     } else {
       if (!lookup_symbol<IsGeneral>(relocator, r_sym, sym_name, &found_in, &sym)) return false;
       if (sym != nullptr) {
-        const bool should_protect_segments = handle_text_relocs &&
-                                             found_in == relocator.si &&
+        const bool should_protect_segments = handle_text_protection && found_in == relocator.si &&
                                              ELF_ST_TYPE(sym->st_info) == STT_GNU_IFUNC;
         if (should_protect_segments && !protect_segments()) return false;
         sym_addr = found_in->resolve_symbol_address(sym);
@@ -376,9 +371,15 @@ static bool process_relocation_impl(Relocator& relocator, const rel_t& reloc) {
         const ElfW(Addr) ifunc_addr = relocator.si->load_bias + get_addend_rel();
         LD_DEBUG(reloc && IsGeneral, "RELO IRELATIVE %16p <- %16p",
                  rel_target, reinterpret_cast<void*>(ifunc_addr));
-        if (handle_text_relocs && !protect_segments()) return false;
+        if (handle_text_protection && !protect_segments()) {
+          DL_ERR("can't protect segments for \"%s\": %m", relocator.si->get_realpath());
+          return false;
+        }
         const ElfW(Addr) result = call_ifunc_resolver(ifunc_addr);
-        if (handle_text_relocs && !unprotect_segments()) return false;
+        if (handle_text_protection && !unprotect_segments()) {
+          DL_ERR("can't unprotect segments for \"%s\": %m", relocator.si->get_realpath());
+          return false;
+        }
         *static_cast<ElfW(Addr)*>(rel_target) = result;
       }
       break;
