@@ -560,12 +560,6 @@ __strong_alias(freopen64, freopen);
 int fclose(FILE* fp) {
   CHECK_FP(fp);
 
-  if (fp->_flags == 0) {
-    // Already freed!
-    errno = EBADF;
-    return EOF;
-  }
-
   ScopedFileLock sfl(fp);
   WCIO_FREE(fp);
   int r = fp->_flags & __SWR ? __sflush(fp) : 0;
@@ -1414,15 +1408,7 @@ int fflush_unlocked(FILE* fp) {
 
 int fpurge(FILE* fp) {
   CHECK_FP(fp);
-
   ScopedFileLock sfl(fp);
-
-  if (fp->_flags == 0) {
-    // Already freed!
-    errno = EBADF;
-    return EOF;
-  }
-
   if (HASUB(fp)) FREEUB(fp);
   WCIO_FREE(fp);
   fp->_p = fp->_bf._base;
