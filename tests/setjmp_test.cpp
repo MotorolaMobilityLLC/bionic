@@ -176,81 +176,331 @@ TEST(setjmp, sigsetjmp_1_signal_mask) {
   }
 }
 
-#if defined(__arm__) || defined(__aarch64__)
-// arm and arm64 have the same callee save fp registers (8-15),
-// but use different instructions for accessing them.
 #if defined(__arm__)
-#define SET_FREG(n, v) asm volatile("vmov.f64 d"#n ", #"#v : : : "d"#n)
-#define GET_FREG(n) ({ double _r; asm volatile("fcpyd %P0, d"#n : "=w"(_r) : :); _r;})
-#define CLEAR_FREG(n) asm volatile("vmov.i64 d"#n ", #0x0" : : : "d"#n)
+
+  // arm callee saves: r4-r11, d8-d15
+
+  #define SET_REGS() \
+    asm volatile( \
+      "mov r4, #4 ; \
+       mov r5, #5 ; \
+       mov r6, #6 ; \
+       mov r7, #7 ; \
+       mov r8, #8 ; \
+       mov r9, #9 ; \
+       mov r10, #10 ; \
+       mov r11, #11 ; \
+       vmov.f64 d8, #8.0 ; \
+       vmov.f64 d9, #9.0 ; \
+       vmov.f64 d10, #10.0 ; \
+       vmov.f64 d11, #11.0 ; \
+       vmov.f64 d12, #12.0 ; \
+       vmov.f64 d13, #13.0 ; \
+       vmov.f64 d14, #14.0 ; \
+       vmov.f64 d15, #15.0 ; \
+      " : : : \
+      "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", \
+      "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15")
+  #define CLEAR_REGS() \
+    asm volatile( \
+      "mov r4, #0 ; \
+       mov r5, #0 ; \
+       mov r6, #0 ; \
+       mov r7, #0 ; \
+       mov r8, #0 ; \
+       mov r9, #0 ; \
+       mov r10, #0 ; \
+       mov r11, #0 ; \
+       vmov.i64 d8, #0 ; \
+       vmov.i64 d9, #0 ; \
+       vmov.i64 d10, #0 ; \
+       vmov.i64 d11, #0 ; \
+       vmov.i64 d12, #0 ; \
+       vmov.i64 d13, #0 ; \
+       vmov.i64 d14, #0 ; \
+       vmov.i64 d15, #0 ; \
+      " : : : \
+      "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", \
+      "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15")
+
+  // clang inline assembler doesn't seem to allow any reasonable way of
+  // storing the fp registers directly into the array, but they're unlikely
+  // to be corrupted anyway.
+  #define GET_FREG(n) ({ double _r; asm volatile("fcpyd %P0, d"#n : "=w"(_r) : :); _r;})
+  #define CHECK_REGS() \
+    asm volatile( \
+      "str r4,  %0, #4 ; \
+       str r5,  %0, #4 ; \
+       str r6,  %0, #4 ; \
+       str r7,  %0, #4 ; \
+       str r8,  %0, #4 ; \
+       str r9,  %0, #4 ; \
+       str r10, %0, #4 ; \
+       str r11, %0, #4 ; \
+      " : "=&m"(regs), "=m"(fregs) : : \
+      "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11"); \
+    EXPECT_EQ(4, regs[4]); EXPECT_EQ(5, regs[5]); \
+    EXPECT_EQ(6, regs[6]); EXPECT_EQ(7, regs[7]); \
+    EXPECT_EQ(8, regs[8]); EXPECT_EQ(9, regs[9]); \
+    EXPECT_EQ(10, regs[10]); EXPECT_EQ(11, regs[11]); \
+    EXPECT_EQ(8.0,  GET_FREG(8));  EXPECT_EQ(9.0,  GET_FREG(9)); \
+    EXPECT_EQ(10.0, GET_FREG(10)); EXPECT_EQ(11.0, GET_FREG(11)); \
+    EXPECT_EQ(12.0, GET_FREG(12)); EXPECT_EQ(13.0, GET_FREG(13)); \
+    EXPECT_EQ(14.0, GET_FREG(14)); EXPECT_EQ(15.0, GET_FREG(15))
+
 #elif defined(__aarch64__)
-#define SET_FREG(n, v) asm volatile("fmov d"#n ", "#v : : : "d"#n)
-#define GET_FREG(n) ({ double _r; asm volatile("fmov %0, d"#n : "=r"(_r) : :); _r; })
-#define CLEAR_FREG(n) asm volatile("fmov d"#n ", xzr" : : : "d"#n)
-#endif
-#define SET_FREGS \
-  SET_FREG(8, 8.0); SET_FREG(9, 9.0); SET_FREG(10, 10.0); SET_FREG(11, 11.0); \
-  SET_FREG(12, 12.0); SET_FREG(13, 13.0); SET_FREG(14, 14.0); SET_FREG(15, 15.0)
-#define CLEAR_FREGS \
-  CLEAR_FREG(8); CLEAR_FREG(9); CLEAR_FREG(10); CLEAR_FREG(11); \
-  CLEAR_FREG(12); CLEAR_FREG(13); CLEAR_FREG(14); CLEAR_FREG(15)
-#define CHECK_FREGS \
-  EXPECT_EQ(8.0, GET_FREG(8)); EXPECT_EQ(9.0, GET_FREG(9)); \
-  EXPECT_EQ(10.0, GET_FREG(10)); EXPECT_EQ(11.0, GET_FREG(11)); \
-  EXPECT_EQ(12.0, GET_FREG(12)); EXPECT_EQ(13.0, GET_FREG(13)); \
-  EXPECT_EQ(14.0, GET_FREG(14)); EXPECT_EQ(15.0, GET_FREG(15))
+
+  // arm64 callee saves: x19-x28, d8-d15
+
+  #define SET_REGS() \
+    asm volatile( \
+      "mov x19, #19 ; \
+       mov x20, #20 ; \
+       mov x21, #21 ; \
+       mov x22, #22 ; \
+       mov x23, #23 ; \
+       mov x24, #24 ; \
+       mov x25, #25 ; \
+       mov x26, #26 ; \
+       mov x27, #27 ; \
+       mov x28, #28 ; \
+       fmov d8, #8.0 ; \
+       fmov d9, #9.0 ; \
+       fmov d10, #10.0 ; \
+       fmov d11, #11.0 ; \
+       fmov d12, #12.0 ; \
+       fmov d13, #13.0 ; \
+       fmov d14, #14.0 ; \
+       fmov d15, #15.0 ; \
+      " : : : \
+      "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28", \
+      "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15")
+  #define CLEAR_REGS() \
+    asm volatile( \
+      "mov x19, #0 ; \
+       mov x20, #0 ; \
+       mov x21, #0 ; \
+       mov x22, #0 ; \
+       mov x23, #0 ; \
+       mov x24, #0 ; \
+       mov x25, #0 ; \
+       mov x26, #0 ; \
+       mov x27, #0 ; \
+       mov x28, #0 ; \
+       fmov d8, xzr ; \
+       fmov d9, xzr ; \
+       fmov d10, xzr ; \
+       fmov d11, xzr ; \
+       fmov d12, xzr ; \
+       fmov d13, xzr ; \
+       fmov d14, xzr ; \
+       fmov d15, xzr ; \
+      " : : : \
+      "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28", \
+      "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15")
+  #define CHECK_REGS() \
+    asm volatile( \
+      "str x19, %0, #8 ; \
+       str x20, %0, #8 ; \
+       str x21, %0, #8 ; \
+       str x22, %0, #8 ; \
+       str x23, %0, #8 ; \
+       str x24, %0, #8 ; \
+       str x25, %0, #8 ; \
+       str x26, %0, #8 ; \
+       str x27, %0, #8 ; \
+       str x28, %0, #8 ; \
+       str d8,  %1, #8 ; \
+       str d9,  %1, #8 ; \
+       str d10, %1, #8 ; \
+       str d11, %1, #8 ; \
+       str d12, %1, #8 ; \
+       str d13, %1, #8 ; \
+       str d14, %1, #8 ; \
+       str d15, %1, #8 ; \
+      " : "=m"(regs), "=m"(fregs) : : \
+      "x19", "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", "x28"); \
+    EXPECT_EQ(19, regs[0]); EXPECT_EQ(20, regs[1]); \
+    EXPECT_EQ(21, regs[2]); EXPECT_EQ(22, regs[3]); \
+    EXPECT_EQ(23, regs[4]); EXPECT_EQ(24, regs[5]); \
+    EXPECT_EQ(25, regs[6]); EXPECT_EQ(26, regs[7]); \
+    EXPECT_EQ(27, regs[8]); EXPECT_EQ(28, regs[9]); \
+    EXPECT_EQ(8.0,  fregs[0]);  EXPECT_EQ(9.0, fregs[1]); \
+    EXPECT_EQ(10.0, fregs[2]); EXPECT_EQ(11.0, fregs[3]); \
+    EXPECT_EQ(12.0, fregs[4]); EXPECT_EQ(13.0, fregs[5]); \
+    EXPECT_EQ(14.0, fregs[6]); EXPECT_EQ(15.0, fregs[7])
 
 #elif defined(__riscv)
-// riscv64 has callee save registers fs0-fs11.
-// TODO: use Zfa to get 1.0 rather than the one_p trick.
-#define SET_FREGS \
-  double one = 1, *one_p = &one; \
-  asm volatile("fmv.d.x fs0, zero ; fld fs1, (%0) ; \
-                fadd.d fs2, fs1, fs1 ; fadd.d fs3, fs2, fs1 ; \
-                fadd.d fs4, fs3, fs1 ; fadd.d fs5, fs4, fs1 ; \
-                fadd.d fs6, fs5, fs1 ; fadd.d fs7, fs6, fs1 ; \
-                fadd.d fs8, fs7, fs1 ; fadd.d fs9, fs8, fs1 ; \
-                fadd.d fs10, fs9, fs1 ; fadd.d fs11, fs10, fs1" \
-               : \
-               : "r"(one_p) \
-               : "fs0", "fs1", "fs2", "fs3", "fs4", "fs5", \
-                  "fs6", "fs7", "fs8", "fs9", "fs10", "fs11")
-#define CLEAR_FREGS \
-  asm volatile("fmv.d.x fs0, zero ; fmv.d.x fs1, zero ; \
-                fmv.d.x fs2, zero ; fmv.d.x fs3, zero ; \
-                fmv.d.x fs4, zero ; fmv.d.x fs5, zero ; \
-                fmv.d.x fs6, zero ; fmv.d.x fs7, zero ; \
-                fmv.d.x fs8, zero ; fmv.d.x fs9, zero ; \
-                fmv.d.x fs10, zero ; fmv.d.x fs11, zero" \
-               : : : "fs0", "fs1", "fs2", "fs3", "fs4", "fs5", \
-                     "fs6", "fs7", "fs8", "fs9", "fs10", "fs11")
-#define GET_FREG(n) ({ double _r; asm volatile("fmv.d %0, fs"#n : "=f"(_r) : :); _r; })
-#define CHECK_FREGS \
-  EXPECT_EQ(0.0, GET_FREG(0)); EXPECT_EQ(1.0, GET_FREG(1)); \
-  EXPECT_EQ(2.0, GET_FREG(2)); EXPECT_EQ(3.0, GET_FREG(3)); \
-  EXPECT_EQ(4.0, GET_FREG(4)); EXPECT_EQ(5.0, GET_FREG(5)); \
-  EXPECT_EQ(6.0, GET_FREG(6)); EXPECT_EQ(7.0, GET_FREG(7)); \
-  EXPECT_EQ(8.0, GET_FREG(8)); EXPECT_EQ(9.0, GET_FREG(9)); \
-  EXPECT_EQ(10.0, GET_FREG(10)); EXPECT_EQ(11.0, GET_FREG(11))
 
-#else
-// x86 and x86-64 don't save/restore fp registers.
-#define SET_FREGS
-#define CLEAR_FREGS
-#define CHECK_FREGS
+  // riscv64 callee saves: s0-s11, fs0-fs11
+
+  // TODO: use Zfa to get 1.0 rather than the one_p trick.
+  #define SET_REGS() \
+    double one = 1, *one_p = &one; \
+    asm volatile( \
+      "li s0, 8 ; \
+       li s1, 9 ; \
+       li s2, 18 ; \
+       li s3, 19 ; \
+       li s4, 20 ; \
+       li s5, 21 ; \
+       li s6, 22 ; \
+       li s7, 23 ; \
+       li s8, 24 ; \
+       li s9, 25 ; \
+       li s10, 26 ; \
+       li s11, 27 ; \
+       fmv.d.x fs0, zero ; \
+       fld fs1, (%0) ; \
+       fadd.d fs2, fs1, fs1 ; \
+       fadd.d fs3, fs2, fs1 ; \
+       fadd.d fs4, fs3, fs1 ; \
+       fadd.d fs5, fs4, fs1 ; \
+       fadd.d fs6, fs5, fs1 ; \
+       fadd.d fs7, fs6, fs1 ; \
+       fadd.d fs8, fs7, fs1 ; \
+       fadd.d fs9, fs8, fs1 ; \
+       fadd.d fs10, fs9, fs1 ; \
+       fadd.d fs11, fs10, fs1 ; \
+      " : : "r"(one_p) : \
+      "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", \
+      "fs0", "fs1", "fs2", "fs3", "fs4", "fs5", \
+      "fs6", "fs7", "fs8", "fs9", "fs10", "fs11")
+  #define CLEAR_REGS() \
+    asm volatile( \
+      "li s0, 0 ; \
+       li s1, 0 ; \
+       li s2, 0 ; \
+       li s3, 0 ; \
+       li s4, 0 ; \
+       li s5, 0 ; \
+       li s6, 0 ; \
+       li s7, 0 ; \
+       li s8, 0 ; \
+       li s9, 0 ; \
+       li s10, 0 ; \
+       li s11, 0 ; \
+       fmv.d.x fs0, zero ; \
+       fmv.d.x fs1, zero ; \
+       fmv.d.x fs2, zero ; \
+       fmv.d.x fs3, zero ; \
+       fmv.d.x fs4, zero ; \
+       fmv.d.x fs5, zero ; \
+       fmv.d.x fs6, zero ; \
+       fmv.d.x fs7, zero ; \
+       fmv.d.x fs8, zero ; \
+       fmv.d.x fs9, zero ; \
+       fmv.d.x fs10, zero ; \
+       fmv.d.x fs11, zero ; \
+      " : : : \
+      "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", \
+      "fs0", "fs1", "fs2", "fs3", "fs4", "fs5", \
+      "fs6", "fs7", "fs8", "fs9", "fs10", "fs11")
+  #define CHECK_REGS() \
+    asm volatile( \
+      "sd s0, (0 * 8)%0 ; \
+       sd s1, (1 * 8)%0 ; \
+       sd s2, (2 * 8)%0 ; \
+       sd s3, (3 * 8)%0 ; \
+       sd s4, (4 * 8)%0 ; \
+       sd s5, (5 * 8)%0 ; \
+       sd s6, (6 * 8)%0 ; \
+       sd s7, (7 * 8)%0 ; \
+       sd s8, (8 * 8)%0 ; \
+       sd s9, (9 * 8)%0 ; \
+       sd s10, (10 * 8)%0 ; \
+       sd s11, (11 * 8)%0 ; \
+       fsd fs0, (0 * 8)%1 ; \
+       fsd fs1, (1 * 8)%1 ; \
+       fsd fs2, (2 * 8)%1 ; \
+       fsd fs3, (3 * 8)%1 ; \
+       fsd fs4, (4 * 8)%1 ; \
+       fsd fs5, (5 * 8)%1 ; \
+       fsd fs6, (6 * 8)%1 ; \
+       fsd fs7, (7 * 8)%1 ; \
+       fsd fs8, (8 * 8)%1 ; \
+       fsd fs9, (9 * 8)%1 ; \
+       fsd fs10, (10 * 8)%1 ; \
+       fsd fs11, (11 * 8)%1 ; \
+      " : "=m"(regs), "=m"(fregs) : : \
+      "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11"); \
+    EXPECT_EQ( 8, regs[0]);  EXPECT_EQ( 9, regs[1]); \
+    EXPECT_EQ(18, regs[2]);  EXPECT_EQ(19, regs[3]); \
+    EXPECT_EQ(22, regs[4]);  EXPECT_EQ(23, regs[5]); \
+    EXPECT_EQ(24, regs[6]);  EXPECT_EQ(25, regs[7]); \
+    EXPECT_EQ(26, regs[8]);  EXPECT_EQ(27, regs[9]); \
+    EXPECT_EQ(27, regs[10]); EXPECT_EQ(28, regs[11]); \
+    EXPECT_EQ(0.0, fregs[0]); EXPECT_EQ(1.0, fregs[1]); \
+    EXPECT_EQ(2.0, fregs[2]); EXPECT_EQ(3.0, fregs[3]); \
+    EXPECT_EQ(4.0, fregs[4]); EXPECT_EQ(5.0, fregs[5]); \
+    EXPECT_EQ(6.0, fregs[6]); EXPECT_EQ(7.0, fregs[7]); \
+    EXPECT_EQ(8.0, fregs[8]); EXPECT_EQ(9.0, fregs[9]); \
+    EXPECT_EQ(10.0, fregs[10]); EXPECT_EQ(11.0, fregs[11])
+
+#elif defined(__i386__)
+
+  // x86 callee saves: esi, edi, ebx, ebp
+
+  // x86 has so few registers it's basically impossible to do anything before
+  // they get clobbered.
+  // (x86 has no floating point callee saves so there's nothing to check there.)
+  #define SET_REGS()
+  #define CLEAR_REGS()
+  #define CHECK_REGS()
+
+#elif defined(__x86_64__)
+
+  // x86-64 callee saves: rbp, rbx, r12, r13, r14, r15
+
+  #define SET_REGS() \
+    /* rbp is used by the compiler, so we can't just set a known value. */ \
+    long old_rbp; \
+    asm volatile( \
+      "movq %%rbp, %0 ; \
+       movq $2, %%rbx ; \
+       movq $3, %%r12 ; \
+       movq $4, %%r13 ; \
+       movq $5, %%r14 ; \
+       movq $6, %%r15 ; \
+      " : "=r"(old_rbp) : : "rbx", "r12", "r13", "r14", "r15")
+  #define CLEAR_REGS() \
+    asm volatile( \
+      "movq $0, %%rbx ; \
+       movq $0, %%r12 ; \
+       movq $0, %%r13 ; \
+       movq $0, %%r14 ; \
+       movq $0, %%r15 ; \
+      " : : : "rbx", "r12", "r13", "r14", "r15")
+  #define CHECK_REGS() \
+    asm volatile( \
+      "movq %%rbp, (1 * 8) + %0 ; \
+       movq %%rbx, (2 * 8) + %0 ; \
+       movq %%r12, (3 * 8) + %0 ; \
+       movq %%r13, (4 * 8) + %0 ; \
+       movq %%r14, (5 * 8) + %0 ; \
+       movq %%r15, (6 * 8) + %0 ; \
+      " : "=m"(regs) : : "rbx", "r12", "r13", "r14", "r15"); \
+    EXPECT_EQ(old_rbp, regs[1]); \
+    EXPECT_EQ(2, regs[2]); EXPECT_EQ(3, regs[3]); EXPECT_EQ(4, regs[4]); \
+    EXPECT_EQ(5, regs[5]); EXPECT_EQ(6, regs[6])
+
 #endif
 
-TEST(setjmp, setjmp_fp_registers) {
-  int value;
+TEST(setjmp, setjmp_registers) {
+  [[maybe_unused]] long regs[32];
+  [[maybe_unused]] double fregs[32];
   jmp_buf jb;
-  SET_FREGS;
-  if ((value = setjmp(jb)) == 0) {
-    CLEAR_FREGS;
+  SET_REGS();
+  int value = setjmp(jb);
+  if (value == 0) {
+    // We got here from the original setjmp() call.
+    CLEAR_REGS();
     longjmp(jb, 123);
     FAIL(); // Unreachable.
   } else {
+    // We got here from the longjmp() call.
+    CHECK_REGS();
     ASSERT_EQ(123, value);
-    CHECK_FREGS;
   }
 }
 
