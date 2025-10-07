@@ -129,6 +129,13 @@ TEST(STDIO_TEST, flockfile_18208568_stderr) {
   funlockfile(stderr);
 }
 
+TEST(STDIO_TEST, flockfile_18208568_ftrylock) {
+  // Same test but for ftrylockfile().
+  ASSERT_EQ(0, ftrylockfile(stderr));
+  ASSERT_EQ(0, feof(stderr));
+  funlockfile(stderr);
+}
+
 TEST(STDIO_TEST, flockfile_18208568_regular) {
   // We never had a bug for streams other than stdin/stdout/stderr, but test anyway.
   FILE* fp = fopen("/dev/null", "w");
@@ -138,6 +145,19 @@ TEST(STDIO_TEST, flockfile_18208568_regular) {
   // something that will take the lock.
   ASSERT_EQ(0, feof(fp));
   funlockfile(fp);
+  fclose(fp);
+}
+
+TEST(STDIO_TEST, ftrylockfile) {
+  FILE* fp = fopen("/dev/null", "w");
+  // If we lock it on this thread...
+  ASSERT_EQ(0, ftrylockfile(fp));
+
+  std::thread([=] {
+    // ...we can't lock it on another thread.
+    ASSERT_EQ(EBUSY, ftrylockfile(fp));
+  }).join();
+
   fclose(fp);
 }
 
