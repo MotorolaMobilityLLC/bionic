@@ -735,7 +735,7 @@ static off64_t __ftello64_unlocked(FILE* fp) {
   return result;
 }
 
-int __fseeko64(FILE* fp, off64_t offset, int whence, int off_t_bits) {
+static int __fseeko64(FILE* fp, off64_t offset, int whence, int off_t_bits) {
   ScopedFileLock sfl(fp);
 
   // Change any SEEK_CUR to SEEK_SET, and check `whence` argument.
