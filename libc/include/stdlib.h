@@ -356,7 +356,7 @@ long strtol_l(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, i
 long long strtoll(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, int __base);
 
 /** Equivalent to strtoll() on Android. */
-long long strtoll_l(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, int __base, locale_t _Nonnull __l);
+long long strtoll_l(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, int __base, locale_t _Nonnull __l) __RENAME(strtoll);
 
 /**
  * [strtoul(3)](https://man7.org/linux/man-pages/man3/strtoul.3.html) converts a
@@ -382,7 +382,7 @@ unsigned long strtoul_l(const char* _Nonnull __s, char* _Nullable * _Nullable __
 unsigned long long strtoull(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, int __base);
 
 /** Equivalent to strtoull() on Android. */
-unsigned long long strtoull_l(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, int __base, locale_t _Nonnull __l);
+unsigned long long strtoull_l(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, int __base, locale_t _Nonnull __l) __RENAME(strtoull);
 
 /**
  * [strtof(3)](https://man7.org/linux/man-pages/man3/strtof.3.html) converts a
@@ -394,6 +394,9 @@ unsigned long long strtoull_l(const char* _Nonnull __s, char* _Nullable * _Nulla
  */
 float strtof(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr);
 
+/** Equivalent to strtof() on Android. */
+float strtof_l(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, locale_t _Nonnull __l) __RENAME(strtof);
+
 /**
  * [strtod(3)](https://man7.org/linux/man-pages/man3/strtod.3.html) converts a
  * string to a double.
@@ -403,6 +406,9 @@ float strtof(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr);
  * errno is set to ERANGE if the result overflowed or underflowed.
  */
 double strtod(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr);
+
+/** Equivalent to strtod() on Android. */
+double strtod_l(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, locale_t _Nonnull __l) __RENAME(strtod);
 
 /**
  * [strtold(3)](https://man7.org/linux/man-pages/man3/strtold.3.html) converts a
@@ -415,19 +421,8 @@ double strtod(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr);
 long double strtold(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr);
 
 /** Equivalent to strtold() on Android. */
-long double strtold_l(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, locale_t _Nonnull __l);
-
-#if __ANDROID_API__ >= 26
-/** Equivalent to strtod() on Android. */
-double strtod_l(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, locale_t _Nonnull __l) __INTRODUCED_IN(26);
-/** Equivalent to strtof() on Android. */
-float strtof_l(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, locale_t _Nonnull __l) __INTRODUCED_IN(26);
-#else
-// Implemented as static inlines before 26.
-#endif
+long double strtold_l(const char* _Nonnull __s, char* _Nullable * _Nullable __end_ptr, locale_t _Nonnull __l) __RENAME(strtold);
 
 __END_DECLS
-
-#include <android/legacy_stdlib_inlines.h>
 
 #endif /* _STDLIB_H */

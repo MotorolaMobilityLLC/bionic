@@ -41,3 +41,4 @@ long double strtold(const char* s, char** end_ptr) {
   return strtod(s, end_ptr);
 #endif
 }
+__strong_alias(strtold_l, strtold);
