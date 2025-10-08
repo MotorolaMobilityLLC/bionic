@@ -343,6 +343,13 @@
  *    available at earlier API levels and also (b) not even require an extra
  *    relocation in the resulting ELF file. (But if we ever get to the point
  *    where (a) is no longer relevant, (b) is probably not worthwhile alone.)
+ *    An interesting side-effect of this is that it means that if we ever did
+ *    decide to implement locale-specific behavior (which seems unlikely
+ *    because the POSIX APIs aren't particularly useful; you really need
+ *    something more like icu for serious i18n work) apps wouldn't suddenly
+ *    be faced with a behavior change --- they'd only get it when recompiling,
+ *    and we could trivially offer an opt-in/opt-out system similar to
+ *    _FILE_OFFSET_BITS.
  * 1. Upgrading non-POSIX extensions when they're added to POSIX while
  *    retaining compatibility with older API levels. This is rare, but
  *    posix_spawn_file_actions_addchdir() is an example; fpurge() vs __fpurge()
