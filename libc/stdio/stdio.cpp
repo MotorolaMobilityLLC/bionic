@@ -453,6 +453,7 @@ FILE* fdopen(int fd, const char* mode) {
 
 FILE* freopen(const char* file, const char* mode, FILE* fp) {
   CHECK_FP(fp);
+  ScopedFileLock sfl(fp);
 
   // POSIX says: "If pathname is a null pointer, the freopen() function shall
   // attempt to change the mode of the stream to that specified by mode, as if
@@ -474,8 +475,6 @@ FILE* freopen(const char* file, const char* mode, FILE* fp) {
     fclose(fp);
     return nullptr;
   }
-
-  ScopedFileLock sfl(fp);
 
   // TODO: rewrite this mess completely.
 
