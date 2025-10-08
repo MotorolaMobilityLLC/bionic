@@ -640,7 +640,7 @@ int ferror(FILE* fp) {
 }
 
 int __sflush(FILE* fp) {
-  // Flushing a read-only file is a no-op.
+  // Flushing is a no-op if we're not currently writing.
   if ((fp->_flags & __SWR) == 0) return 0;
 
   // Flushing a file without a buffer is a no-op.
