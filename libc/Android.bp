@@ -1339,6 +1339,18 @@ cc_library_static {
         "libbionic_panic_abort",
         "liblibc_alloc_rust",
     ],
+
+    target: {
+        linux_bionic: {
+            exclude_static_libs: [
+                "libbionic_panic_abort",
+                "liblibc_alloc_rust",
+            ],
+            whole_static_libs: [
+                "libstd",
+            ],
+        },
+    },
 }
 
 // Versions of dl_iterate_phdr and similar APIs used to lookup unwinding information in a static

@@ -390,6 +390,11 @@ cc_defaults {
         linux_bionic: {
             static_libs: [
                 "liblinker_debuggerd_stub",
+                "libstd",
+            ],
+            exclude_static_libs: [
+                "libbionic_panic_abort",
+                "liblibc_alloc_rust",
             ],
         },
     },
