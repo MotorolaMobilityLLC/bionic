@@ -697,7 +697,7 @@ cc_library_static {
 // icu4x_bionic.a - Thin Rust wrapper around ICU4X
 // ========================================================
 
-rust_ffi_static {
+rust_library_rlib {
     name: "libicu4x_bionic",
     crate_name: "icu4x_bionic",
     crate_root: "bionic/icu4x.rs",
@@ -719,6 +719,7 @@ rust_ffi_static {
     recovery_available: true,
     native_bridge_supported: true,
     sdk_version: "minimum",
+    no_stdlibs: true,
     defaults: ["linux_bionic_supported"],
 }
 
@@ -726,7 +727,11 @@ rust_ffi_static {
 // go/android-mto-staticlibs-in-make
 cc_rustlibs_for_make {
     name: "libstatic_rustlibs_for_make",
-    whole_static_libs: ["libicu4x_bionic"],
+    whole_static_libs: [
+        "libicu4x_bionic",
+        "libbionic_panic_abort",
+        "liblibc_alloc_rust",
+    ],
     apex_available: [
         "//apex_available:platform",
         "//apex_available:anyapex",
@@ -1331,6 +1336,8 @@ cc_library_static {
     whole_static_libs: [
         "libc_common",
         "libc_dynamic_dispatch",
+        "libbionic_panic_abort",
+        "liblibc_alloc_rust",
     ],
 }
 
@@ -1432,6 +1439,7 @@ cc_defaults {
             "libc_init_static",
             "libc_common_static",
             "libc_unwind_static",
+            "libstd",
         ],
     },
     shared: {

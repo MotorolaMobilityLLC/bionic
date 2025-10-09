@@ -326,6 +326,11 @@ cc_defaults {
         // which is not supported in the loader.
         "libc++_static_noexcept",
 
+        // Similarly, to avoid libstd's use of ELF TLS, use
+        // direct alloc + panic providers
+        "libbionic_panic_abort",
+        "liblibc_alloc_rust",
+
         "libc_nomalloc",
         "libc_dynamic_dispatch",
         "libm",
