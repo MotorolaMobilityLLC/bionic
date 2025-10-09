@@ -310,7 +310,7 @@ static void BM_string_strchr(benchmark::State& state) {
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strchr, "AT_ALIGNED_ONEBUF");
 
-template <size_t fn(const char*, const char*)>
+template <typename T, T fn(const char*, const char*)>
 void BenchStrSpn(benchmark::State& state, const char* delims) {
   const size_t nbytes = state.range(0);
   const size_t haystack_alignment = state.range(1);
@@ -326,40 +326,59 @@ void BenchStrSpn(benchmark::State& state, const char* delims) {
   state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
 }
 
+// The common strpbrk()/strcspn() case is a single delimiter.
+// We choose one that causes us to scan the whole input, and is a real-world example.
+static constexpr char strcspn_common_case[] = ",";
+// The somewhat common strpbrk()/strcspn() case is two delimiters.
+// We choose ones that cause us to scan the whole input, and are a real-world example.
+static constexpr char strcspn_medium_case[] = " \t";
+// It's rare to have lots of delimiters with strpbrk()/strcspn().
+// We choose ones that cause us to scan the whole input, and are a real-world example (from curl).
+static constexpr char strcspn_rare_case[] = " \r\n\t/:#?!@{}[]\\$\'\"^`*<>=;,+&()%";
+
+static void BM_string_strpbrk_common(benchmark::State& state) {
+  BenchStrSpn<char*, strpbrk>(state, strcspn_common_case);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strpbrk_common, "AT_ALIGNED_ONEBUF");
+
+static void BM_string_strpbrk_medium(benchmark::State& state) {
+  BenchStrSpn<char*, strpbrk>(state, strcspn_medium_case);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strpbrk_medium, "AT_ALIGNED_ONEBUF");
+
+static void BM_string_strpbrk_rare(benchmark::State& state) {
+  BenchStrSpn<char*, strpbrk>(state, strcspn_rare_case);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strpbrk_rare, "AT_ALIGNED_ONEBUF");
+
 static void BM_string_strcspn_common(benchmark::State& state) {
-  // The common case is a single delimiter.
-  // We choose one that causes us to scan the whole input, and is a real-world example.
-  BenchStrSpn<strcspn>(state, ",");
+  BenchStrSpn<size_t, strcspn>(state, strcspn_common_case);
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strcspn_common, "AT_ALIGNED_ONEBUF");
 
 static void BM_string_strcspn_medium(benchmark::State& state) {
-  // The somewhat common case is two delimiters.
-  // We choose ones that cause us to scan the whole input, and are a real-world example.
-  BenchStrSpn<strcspn>(state, " \t");
+  BenchStrSpn<size_t, strcspn>(state, strcspn_medium_case);
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strcspn_medium, "AT_ALIGNED_ONEBUF");
 
 static void BM_string_strcspn_rare(benchmark::State& state) {
-  // It's rare to have lots of delimiters.
-  // We choose ones that cause us to scan the whole input, and are a real-world example (from curl).
-  BenchStrSpn<strcspn>(state, " \r\n\t/:#?!@{}[]\\$\'\"^`*<>=;,+&()%");
+  BenchStrSpn<size_t, strcspn>(state, strcspn_rare_case);
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strcspn_rare, "AT_ALIGNED_ONEBUF");
 
 static void BM_string_strspn_common(benchmark::State& state) {
-  // The common case is a couple of delimiters.
+  // The common strspn() case is a couple of delimiters.
   // We choose ones that cause us to scan the whole input,
   // but real-world delimiters would require more realistic input.
-  BenchStrSpn<strspn>(state, "xx");
+  BenchStrSpn<size_t, strspn>(state, "xx");
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strspn_common, "AT_ALIGNED_ONEBUF");
 
 static void BM_string_strspn_medium(benchmark::State& state) {
-  // The somewhat common case is something like "digits".
+  // The somewhat strspn() common case is something like "digits".
   // Rather than write a more complicated benchmark,
   // we just have ten instances of the same character that causes us to scan the whole input.
   // (A sufficiently clever implementation might require a cleverer benchmark, but YAGNI.)
-  BenchStrSpn<strspn>(state, "xxxxxxxxxx");
+  BenchStrSpn<size_t, strspn>(state, "xxxxxxxxxx");
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strspn_medium, "AT_ALIGNED_ONEBUF");
