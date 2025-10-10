@@ -29,6 +29,10 @@
 #include <string.h>
 #include <xlocale.h>
 
+//
+// Core functionality.
+//
+
 // https://github.com/ARM-software/optimized-routines/issues/89
 #if defined(__aarch64__)
 char* strcat(char* dst, const char* src) {
@@ -36,6 +40,13 @@ char* strcat(char* dst, const char* src) {
   return dst;
 }
 #endif
+
+//
+// String delimiter functions.
+//
+
+// The approach here is to optimize strcspn()/strspn() and write everything
+// else in terms of those two.
 
 // Benchmarking shows that bool[] works better than a bitset,
 // and 256 bytes of stack (the latter half of which is never used in practice)
@@ -79,6 +90,17 @@ size_t strcspn(const char* ss, const char* delims) {
   }
   return p - s;
 }
+
+__attribute__((__flatten__))
+char* strpbrk(const char* s, const char* delims) {
+  size_t i = strcspn(s, delims);
+  if (s[i] != '\0') return const_cast<char*>(s) + i;
+  return nullptr;
+}
+
+//
+// No-op i18n stuff.
+//
 
 int strcoll(const char* lhs, const char* rhs) {
   return strcmp(lhs, rhs);
