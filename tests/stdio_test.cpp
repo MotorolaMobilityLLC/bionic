@@ -282,6 +282,20 @@ TEST(STDIO_TEST, getdelim_directory) {
   fclose(fp);
 }
 
+// https://sourceware.org/bugzilla/show_bug.cgi?id=28038
+TEST(STDIO_TEST, getdelim_eof_terminator) {
+  FILE* fp = tmpfile();
+  ASSERT_TRUE(fp != nullptr);
+  char* line = static_cast<char*>(malloc(1));
+  size_t allocated_length = 1;
+  *line = 'x';
+  ASSERT_EQ(-1, getdelim(&line, &allocated_length, '\n', fp));
+  EXPECT_GT(allocated_length, 0u);
+  EXPECT_EQ('\0', line[0]);
+  fclose(fp);
+  free(line);
+}
+
 TEST(STDIO_TEST, fgetln) {
 #if !defined(__GLIBC__)
   FILE* fp = tmpfile();

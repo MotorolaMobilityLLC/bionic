@@ -119,13 +119,11 @@ getdelim(char **__restrict buf, size_t *__restrict buflen,
 
 	FUNLOCKFILE(fp);
 
-	/* POSIX demands we return -1 on EOF. */
-	if (off == 0)
-		return -1;
-
 	if (*buf != NULL)
 		*(*buf + off) = '\0';
-	return off;
+
+	/* POSIX demands we return -1 on EOF. */
+	return (off == 0) ? -1 : off;
 
 error:
 	fp->_flags |= __SERR;
