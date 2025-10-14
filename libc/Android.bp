@@ -1100,6 +1100,7 @@ cc_library_static {
 
                 "arch-x86_64/string/avx2-memmove-kbl.S",
                 "arch-x86_64/string/avx2-memset-kbl.S",
+                "arch-x86_64/string/memchr.S",
                 "arch-x86_64/string/sse2-memmove-slm.S",
                 "arch-x86_64/string/sse2-memset-slm.S",
                 "arch-x86_64/string/sse2-stpcpy-slm.S",
@@ -2061,6 +2062,7 @@ cc_library_static {
                 "-Dmemset_generic=memset",
             ],
             srcs: [
+                "arch-x86_64/string/memchr.S",
                 "arch-x86_64/string/sse2-memmove-slm.S",
                 "arch-x86_64/string/sse2-memset-slm.S",
                 "arch-x86_64/string/sse2-stpcpy-slm.S",

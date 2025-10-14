@@ -21,6 +21,24 @@
 #include <benchmark/benchmark.h>
 #include <util.h>
 
+static void BM_string_memchr(benchmark::State& state) {
+  const size_t nbytes = state.range(0);
+  const size_t haystack_alignment = state.range(1);
+
+  std::vector<char> haystack;
+  char* haystack_aligned = GetAlignedPtrFilled(&haystack, haystack_alignment, nbytes, 'x');
+  haystack_aligned[nbytes-1] = '\0';
+
+  while (state.KeepRunning()) {
+    if (memchr(haystack_aligned, 'y', nbytes) != nullptr) {
+      errx(1, "ERROR: memchr found a byte where it should have failed.");
+    }
+  }
+
+  state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_memchr, "AT_ALIGNED_ONEBUF");
+
 static void BM_string_memcmp(benchmark::State& state) {
   const size_t nbytes = state.range(0);
   const size_t src_alignment = state.range(1);
