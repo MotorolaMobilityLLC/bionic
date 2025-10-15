@@ -21,7 +21,8 @@
 #include <benchmark/benchmark.h>
 #include <util.h>
 
-static void BM_string_memchr(benchmark::State& state) {
+template <typename R, typename S, R fn(S, int, size_t)>
+void BenchMemChr(benchmark::State& state) {
   const size_t nbytes = state.range(0);
   const size_t haystack_alignment = state.range(1);
 
@@ -30,14 +31,28 @@ static void BM_string_memchr(benchmark::State& state) {
   haystack_aligned[nbytes-1] = '\0';
 
   while (state.KeepRunning()) {
-    if (memchr(haystack_aligned, 'y', nbytes) != nullptr) {
-      errx(1, "ERROR: memchr found a byte where it should have failed.");
+    if (fn(haystack_aligned, 'y', nbytes) != nullptr) {
+      errx(1, "ERROR: found a byte where it should have failed.");
     }
   }
 
   state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
 }
+
+static void BM_string_memchr(benchmark::State& state) {
+  return BenchMemChr<void*, const void*, memchr>(state);
+}
 BIONIC_BENCHMARK_WITH_ARG(BM_string_memchr, "AT_ALIGNED_ONEBUF");
+
+static void BM_string_memrchr(benchmark::State& state) {
+  // TODO: clean up the whole const-correct override situation.
+#if defined(__BIONIC__)
+  return BenchMemChr<const void*, const void*, memrchr>(state);
+#else
+  return BenchMemChr<void*, const void*, memrchr>(state);
+#endif
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_memrchr, "AT_ALIGNED_ONEBUF");
 
 static void BM_string_memcmp(benchmark::State& state) {
   const size_t nbytes = state.range(0);
@@ -310,7 +325,8 @@ static void BM_string_strstr(benchmark::State& state) {
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strstr, "AT_ALIGNED_TWOBUF");
 
-static void BM_string_strchr(benchmark::State& state) {
+template <char* fn(const char*, int)>
+void BenchStrChr(benchmark::State& state) {
   const size_t nbytes = state.range(0);
   const size_t haystack_alignment = state.range(1);
 
@@ -319,14 +335,23 @@ static void BM_string_strchr(benchmark::State& state) {
   haystack_aligned[nbytes-1] = '\0';
 
   while (state.KeepRunning()) {
-    if (strchr(haystack_aligned, 'y') != nullptr) {
-      errx(1, "ERROR: strchr found a chr where it should have failed.");
+    if (fn(haystack_aligned, 'y') != nullptr) {
+      errx(1, "ERROR: found a char that wasn't there.");
     }
   }
 
   state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
 }
+
+static void BM_string_strchr(benchmark::State& state) {
+  BenchStrChr<strchr>(state);
+}
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strchr, "AT_ALIGNED_ONEBUF");
+
+static void BM_string_strrchr(benchmark::State& state) {
+  BenchStrChr<strrchr>(state);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strrchr, "AT_ALIGNED_ONEBUF");
 
 template <typename T, T fn(const char*, const char*)>
 void BenchStrSpn(benchmark::State& state, const char* delims) {
