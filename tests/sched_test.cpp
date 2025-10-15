@@ -28,8 +28,8 @@ static int child_fn(void* i_ptr) {
   return 123;
 }
 
-#if defined(__BIONIC__)
 TEST(sched, clone) {
+#if defined(__BIONIC__)
   void* child_stack[1024];
 
   int i = 0;
@@ -42,16 +42,13 @@ TEST(sched, clone) {
 
   ASSERT_TRUE(WIFEXITED(status));
   ASSERT_EQ(123, WEXITSTATUS(status));
-}
 #else
-// For glibc, any call to clone with CLONE_VM set will cause later pthread
-// calls in the same process to misbehave.
-// See https://sourceware.org/bugzilla/show_bug.cgi?id=10311 for more details.
-TEST(sched, clone) {
-  // In order to enumerate all possible tests for CTS, create an empty test.
+  // For glibc, any call to clone with CLONE_VM set will cause later pthread
+  // calls in the same process to misbehave.
+  // See https://sourceware.org/bugzilla/show_bug.cgi?id=10311 for more details.
   GTEST_SKIP() << "glibc is broken";
-}
 #endif
+}
 
 TEST(sched, clone_errno) {
   // Check that our hand-written clone assembler sets errno correctly on failure.
