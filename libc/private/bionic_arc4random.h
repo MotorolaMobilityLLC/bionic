@@ -31,10 +31,22 @@
 #include <sys/cdefs.h>
 
 #include <stddef.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-// arc4random(3) aborts if it's unable to fetch entropy, which is always
-// the case for init on devices. GCE kernels have a workaround to ensure
-// sufficient entropy during early boot, but no device kernels do. This
-// wrapper falls back to AT_RANDOM if the kernel doesn't have enough
-// entropy for getrandom(2) or /dev/urandom.
-void __libc_safe_arc4random_buf(void* buf, size_t n);
+// Before first_stage_init runs, some platforms might not have /dev/urandom and
+// if they do, reading that node could take seconds if they don't have access to
+// a hwrng. Let's skip randomness for those very specific cases.
+bool __libc_arc4random_ready();
+
+// arc4random(3) aborts if it's unable to fetch entropy, which might be the case
+// on some low-end devices without any hwrng before first_stage_init. GCE
+// kernels have a workaround to ensure sufficient entropy during early boot, but
+// no device kernels do. This wrapper falls back to AT_RANDOM if the kernel
+// doesn't have enough entropy for getrandom(2) or /dev/urandom but note that
+// AT_RANDOM only gives us 16 bytes, and they're already taken, so it won't be
+// possible to add new callers.
+void __libc_arc4random_buf_or_die(void* buf, size_t n);
+
+// Unsafe wrapper during first_stage_init.
+uint32_t __libc_arc4random_uniform_or_zero(uint32_t upper_bound);

@@ -35,7 +35,7 @@
 
 void __libc_init_setjmp_cookie(libc_globals* globals) {
   long value;
-  __libc_safe_arc4random_buf(&value, sizeof(value));
+  __libc_arc4random_buf_or_die(&value, sizeof(value));
 
   // Mask off the last bit to store the signal flag.
   globals->setjmp_cookie = value & ~1;

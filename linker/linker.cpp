@@ -75,6 +75,7 @@
 #include "android-base/macros.h"
 #include "android-base/stringprintf.h"
 #include "android-base/strings.h"
+#include "private/bionic_arc4random.h"
 #include "private/bionic_asm_note.h"
 #include "private/bionic_call_ifunc_resolver.h"
 #include "private/bionic_globals.h"
@@ -1531,11 +1532,8 @@ static bool find_library_internal(android_namespace_t* ns,
 static void soinfo_unload(soinfo* si);
 
 static void shuffle(std::vector<LoadTask*>* v) {
-  if (is_first_stage_init()) {
-    // arc4random* is not available in first stage init because /dev/random
-    // hasn't yet been created.
-    return;
-  }
+  if (!__libc_arc4random_ready()) return;
+
   for (size_t i = 0, size = v->size(); i < size; ++i) {
     size_t n = size - i;
     size_t r = arc4random_uniform(n);

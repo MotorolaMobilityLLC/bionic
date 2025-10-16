@@ -47,6 +47,7 @@
 #include "linker_utils.h"
 
 #include "private/CFIShadow.h"  // For kLibraryAlignment
+#include "private/bionic_arc4random.h"
 #include "private/bionic_asm_note.h"
 #include "private/bionic_inline_raise.h"
 #include "private/elf_note.h"
@@ -625,8 +626,7 @@ static void* ReserveWithAlignmentPadding(size_t size, size_t mapping_align, size
     // to improve address randomization and make it harder to locate this library code by probing.
     munmap(mmap_ptr, mmap_size);
     mapping_align = std::max(mapping_align, kGapAlignment);
-    gap_size =
-        kGapAlignment * (is_first_stage_init() ? 1 : arc4random_uniform(kMaxGapUnits - 1) + 1);
+    gap_size = kGapAlignment * (__libc_arc4random_uniform_or_zero(kMaxGapUnits - 1) + 1);
     mmap_size = __builtin_align_up(size + gap_size, mapping_align) + mapping_align - page_size();
     mmap_ptr = reinterpret_cast<uint8_t*>(mmap(nullptr, mmap_size, PROT_NONE, mmap_flags, -1, 0));
     if (mmap_ptr == MAP_FAILED) {
@@ -646,9 +646,7 @@ static void* ReserveWithAlignmentPadding(size_t size, size_t mapping_align, size
   uint8_t* first = __builtin_align_up(mmap_ptr, mapping_align);
   uint8_t* last = __builtin_align_down(gap_start, mapping_align) - size;
 
-  // arc4random* is not available in first stage init because /dev/urandom hasn't yet been
-  // created. Don't randomize then.
-  size_t n = is_first_stage_init() ? 0 : arc4random_uniform((last - first) / start_align + 1);
+  size_t n = __libc_arc4random_uniform_or_zero((last - first) / start_align + 1);
   uint8_t* start = first + n * start_align;
   // Unmap the extra space around the allocation.
   // Keep it mapped PROT_NONE on 64-bit targets where address space is plentiful to make it harder
