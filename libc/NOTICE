@@ -4264,6 +4264,12 @@ SUCH DAMAGE.
 
 -------------------------------------------------------------------
 
+SPDX-License-Identifier: BSD-2-Clause
+
+Copyright (c) 2023, 2025 Robert Clausecker <fuz@FreeBSD.org>
+
+-------------------------------------------------------------------
+
 SPDX-License-Identifier: BSD-3-Clause
 
 Copyright (c) 1992, 1993, 1994 Henry Spencer.
