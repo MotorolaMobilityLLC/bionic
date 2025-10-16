@@ -99,6 +99,28 @@ char* strpbrk(const char* s, const char* delims) {
 }
 
 __attribute__((__flatten__))
+char* strsep(char** last, const char* delims) {
+  // Already finished?
+  char* start = *last;
+  if (start == nullptr) return nullptr;
+
+  // Find end of token (first delimiter).
+  char* end = start + strcspn(start, delims);
+  if (*end != '\0') {
+    // Replace delimiter with NUL, point past it.
+    *end = '\0';
+    *last = end + 1;
+  } else {
+    // Token ends at end of string.
+    // Signal that to next invocation.
+    *last = nullptr;
+  }
+
+  // Return pointer to start of token.
+  return start;
+}
+
+__attribute__((__flatten__))
 char* strtok_r(char* s, const char* delims, char** last) {
   // Already finished?
   if (s == nullptr && (s = *last) == nullptr) {
