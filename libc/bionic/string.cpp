@@ -98,6 +98,44 @@ char* strpbrk(const char* s, const char* delims) {
   return nullptr;
 }
 
+__attribute__((__flatten__))
+char* strtok_r(char* s, const char* delims, char** last) {
+  // Already finished?
+  if (s == nullptr && (s = *last) == nullptr) {
+    return nullptr;
+  }
+
+  // Skip leading delimiters with optimized strspn().
+  s += strspn(s, delims);
+
+  // Finished now (no non-delimiters)?
+  if (*s == '\0') {
+    *last = nullptr;
+    return nullptr;
+  }
+
+  // Find next delimiter with optimized strcspn().
+  *last = s + strcspn(s, delims);
+  if (**last != '\0') {
+    // Replace delimiter with NUL, point past it.
+    **last = '\0';
+    *last += 1;
+  } else {
+    // Token ends at end of string.
+    // Signal that to next invocation.
+    *last = nullptr;
+  }
+
+  // Return pointer to start of token.
+  return s;
+}
+
+__attribute__((__flatten__))
+char* strtok(char* s, const char* delims) {
+  static char* last;
+  return strtok_r(s, delims, &last);
+}
+
 //
 // No-op i18n stuff.
 //
