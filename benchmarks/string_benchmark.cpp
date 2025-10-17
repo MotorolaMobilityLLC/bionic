@@ -369,13 +369,13 @@ void BenchStrSpn(benchmark::State& state, const char* delims) {
   state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
 }
 
-// The common strpbrk()/strcspn() case is a single delimiter.
+// The common strpbrk()/strcspn()/strsep() case is a single delimiter.
 // We choose one that causes us to scan the whole input, and is a real-world example.
 static constexpr char strcspn_common_case[] = ",";
-// The somewhat common strpbrk()/strcspn() case is two delimiters.
+// The somewhat common strpbrk()/strcspn()/strsep() case is two delimiters.
 // We choose ones that cause us to scan the whole input, and are a real-world example.
 static constexpr char strcspn_medium_case[] = " \t";
-// It's rare to have lots of delimiters with strpbrk()/strcspn().
+// It's rare to have lots of delimiters with strpbrk()/strcspn()/strsep().
 // We choose ones that cause us to scan the whole input, and are a real-world example (from curl).
 static constexpr char strcspn_rare_case[] = " \r\n\t/:#?!@{}[]\\$\'\"^`*<>=;,+&()%";
 
@@ -425,3 +425,37 @@ static void BM_string_strspn_medium(benchmark::State& state) {
   BenchStrSpn<size_t, strspn>(state, "xxxxxxxxxx");
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strspn_medium, "AT_ALIGNED_ONEBUF");
+
+// strsep() is basically the same as strcspn()/strpbrk()/strspn(),
+// so we reuse the same delimiters,
+// but the interface is different enough that we have this copy & paste.
+void BenchStrSep(benchmark::State& state, const char* delims) {
+  const size_t nbytes = state.range(0);
+  const size_t haystack_alignment = state.range(1);
+
+  std::vector<char> haystack;
+  char* haystack_aligned = GetAlignedPtrFilled(&haystack, haystack_alignment, nbytes, 'x');
+  haystack_aligned[nbytes-1] = '\0';
+
+  while (state.KeepRunning()) {
+    char* s = haystack_aligned;
+    benchmark::DoNotOptimize(strsep(&s, delims));
+  }
+
+  state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
+}
+
+static void BM_string_strsep_common(benchmark::State& state) {
+  BenchStrSep(state, strcspn_common_case);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strsep_common, "AT_ALIGNED_ONEBUF");
+
+static void BM_string_strsep_medium(benchmark::State& state) {
+  BenchStrSep(state, strcspn_medium_case);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strsep_medium, "AT_ALIGNED_ONEBUF");
+
+static void BM_string_strsep_rare(benchmark::State& state) {
+  BenchStrSep(state, strcspn_rare_case);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strsep_rare, "AT_ALIGNED_ONEBUF");
