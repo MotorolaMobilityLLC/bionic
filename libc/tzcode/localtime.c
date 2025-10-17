@@ -418,14 +418,14 @@ tzloadbody(char const *name, struct state *sp, bool doextend,
 #endif
 	register union input_buffer *up = &lsp->u.u;
 	register int tzheadsize = sizeof(struct tzhead);
-	char system_tz_name[PROP_VALUE_MAX];
+	char system_tz_name[PROP_VALUE_MAX] __attribute__((__uninitialized__));
 
 	sp->goback = sp->goahead = false;
 
 	if (! name) {
 #if defined(__BIONIC__)
-		extern void __bionic_get_system_tz(char* , size_t);
-		__bionic_get_system_tz(system_tz_name, sizeof(system_tz_name));
+		extern void __bionic_get_system_tz(char*);
+		__bionic_get_system_tz(system_tz_name);
 		name = system_tz_name;
 #else
 		name = TZDEFAULT;
