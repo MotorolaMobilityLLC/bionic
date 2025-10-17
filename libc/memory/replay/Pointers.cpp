@@ -22,8 +22,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "err.h"
 #include "Pointers.h"
+#include "err.h"
 
 Pointers::Pointers(size_t max_allocs) {
   size_t pagesize = getpagesize();
@@ -34,7 +34,7 @@ Pointers::Pointers(size_t max_allocs) {
   void* memory =
       mmap(nullptr, pointers_size_, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
   if (memory == MAP_FAILED) {
-      err(1, "Unable to allocate data for pointer hash: %zu total_allocs", max_allocs);
+    err(1, "Unable to allocate data for pointer hash: %zu total_allocs", max_allocs);
   }
   // Set all of the pointers to be empty.
   memset(memory, 0, pointers_size_);

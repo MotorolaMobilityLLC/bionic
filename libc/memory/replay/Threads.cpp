@@ -92,7 +92,7 @@ Thread* Threads::CreateThread(pid_t tid) {
 
 Thread* Threads::FindThread(pid_t tid) {
   size_t index = GetHashEntry(tid);
-  for (size_t entries = num_threads_; entries != 0; ) {
+  for (size_t entries = num_threads_; entries != 0;) {
     pid_t cur_tid = threads_[index].tid_;
     if (cur_tid == tid) {
       return threads_ + index;

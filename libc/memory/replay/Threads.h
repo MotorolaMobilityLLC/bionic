@@ -43,7 +43,7 @@ class Threads {
   Thread* threads_ = nullptr;
   size_t data_size_ = 0;
   size_t max_threads_ = 0;
-  size_t num_threads_= 0;
+  size_t num_threads_ = 0;
   uint64_t total_time_nsecs_ = 0;
 
   Thread* FindEmptyEntry(pid_t tid);

@@ -37,7 +37,6 @@ TEST(PointersTest, readd_pointer) {
   ASSERT_EQ(reinterpret_cast<void*>(0x5555), memory_pointer);
 }
 
-
 TEST(PointersTest, expect_collision) {
   Pointers pointers(2);
 
@@ -105,7 +104,8 @@ static void TestRemoveZeroValue() {
   Pointers pointers(1);
 
   void* memory = pointers.Remove(0);
-  if (memory) {}
+  if (memory) {
+  }
 }
 
 TEST(PointersTest_DeathTest, remove_zero_value) {

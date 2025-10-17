@@ -30,11 +30,9 @@ class NativeInfoTest : public ::testing::Test {
     ASSERT_TRUE(tmp_file_->fd != -1);
   }
 
-  void TearDown() override {
-    delete tmp_file_;
-  }
+  void TearDown() override { delete tmp_file_; }
 
- TemporaryFile* tmp_file_ = nullptr;
+  TemporaryFile* tmp_file_ = nullptr;
 };
 
 TEST_F(NativeInfoTest, no_matching) {
@@ -55,8 +53,8 @@ TEST_F(NativeInfoTest, no_matching) {
       "MMUPageSize:           4 kB\n"
       "Locked:                0 kB\n"
       "Name:           [anon:thread signal stack]\n";
-  ASSERT_TRUE(TEMP_FAILURE_RETRY(
-      write(tmp_file_->fd, smaps_data.c_str(), smaps_data.size())) != -1);
+  ASSERT_TRUE(TEMP_FAILURE_RETRY(write(tmp_file_->fd, smaps_data.c_str(), smaps_data.size())) !=
+              -1);
   ASSERT_TRUE(lseek(tmp_file_->fd, 0, SEEK_SET) != off_t(-1));
 
   size_t rss_bytes = 1;
@@ -116,8 +114,8 @@ TEST_F(NativeInfoTest, multiple_anons) {
       "MMUPageSize:           4 kB\n"
       "Locked:                0 kB\n"
       "Name:\n";
-  ASSERT_TRUE(TEMP_FAILURE_RETRY(
-      write(tmp_file_->fd, smaps_data.c_str(), smaps_data.size())) != -1);
+  ASSERT_TRUE(TEMP_FAILURE_RETRY(write(tmp_file_->fd, smaps_data.c_str(), smaps_data.size())) !=
+              -1);
   ASSERT_TRUE(lseek(tmp_file_->fd, 0, SEEK_SET) != off_t(-1));
 
   size_t rss_bytes = 1;
@@ -177,8 +175,8 @@ TEST_F(NativeInfoTest, multiple_heaps) {
       "MMUPageSize:           4 kB\n"
       "Locked:                0 kB\n"
       "Name:\n";
-  ASSERT_TRUE(TEMP_FAILURE_RETRY(
-      write(tmp_file_->fd, smaps_data.c_str(), smaps_data.size())) != -1);
+  ASSERT_TRUE(TEMP_FAILURE_RETRY(write(tmp_file_->fd, smaps_data.c_str(), smaps_data.size())) !=
+              -1);
   ASSERT_TRUE(lseek(tmp_file_->fd, 0, SEEK_SET) != off_t(-1));
 
   size_t rss_bytes = 1;
@@ -319,8 +317,8 @@ TEST_F(NativeInfoTest, mix_heap_anon) {
       "Locked:                0 kB\n"
       "Name:           [anon:GWP-ASan Guard Page]\n";
 
-  ASSERT_TRUE(TEMP_FAILURE_RETRY(
-      write(tmp_file_->fd, smaps_data.c_str(), smaps_data.size())) != -1);
+  ASSERT_TRUE(TEMP_FAILURE_RETRY(write(tmp_file_->fd, smaps_data.c_str(), smaps_data.size())) !=
+              -1);
   ASSERT_TRUE(lseek(tmp_file_->fd, 0, SEEK_SET) != off_t(-1));
 
   size_t rss_bytes = 1;

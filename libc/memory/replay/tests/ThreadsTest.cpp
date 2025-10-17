@@ -126,8 +126,8 @@ static void TestTooManyThreads() {
 
   Threads threads(&pointers, 1);
   for (size_t i = 0; i <= threads.max_threads(); i++) {
-    Thread* thread = threads.CreateThread(900+i);
-    ASSERT_EQ(thread, threads.FindThread(900+i));
+    Thread* thread = threads.CreateThread(900 + i);
+    ASSERT_EQ(thread, threads.FindThread(900 + i));
   }
 }
 
