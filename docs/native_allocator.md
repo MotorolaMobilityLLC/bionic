@@ -317,7 +317,7 @@ process.
 
 To build this benchmark:
 
-    mmma -j system/extras/memory_replay
+    mmma -j bionic/libc/memory/replay
 
 This will build two executables:
 
@@ -342,13 +342,13 @@ one after another. This will cause a lot of threads allocating at the same
 time. The trace data does not include timestamps,
 so it is not possible to create a completely accurate replay.
 
-To generate these traces, see the [Malloc Debug documentation](https://android.googlesource.com/platform/bionic/+/main/libc/malloc_debug/README.md),
-the option [record\_allocs](https://android.googlesource.com/platform/bionic/+/main/libc/malloc_debug/README.md#record_allocs_total_entries).
+To generate these traces, see the [Malloc Debug documentation](https://android.googlesource.com/platform/bionic/+/main/libc/memory/malloc_debug/README.md),
+the option [record\_allocs](https://android.googlesource.com/platform/bionic/+/main/libc/memory/malloc_debug/README.md#record_allocs_total_entries).
 
 To run these benchmarks, first copy the trace files to the target using
 these commands:
 
-    adb push system/extras/memory_replay/traces /data/local/tmp
+    adb push bionic/libc/memory/replay/traces /data/local/tmp
 
 Since all of the traces come from applications, the `memory_replay` program
 will always call `mallopt(M_DECAY_TIME, 1)' before running the trace.
@@ -403,7 +403,7 @@ will name the map using the call:
 If the native allocator creates a different name, then it necessary to
 modify the file:
 
-    system/extras/memory_replay/NativeInfo.cpp
+    bionic/libc/memory/replay/NativeInfo.cpp
 
 The `GetNativeInfo` function needs to be modified to include the name
 of the maps that this allocator includes.
