@@ -45,6 +45,7 @@
 #include "platform/bionic/page.h"
 #include "private/ErrnoRestorer.h"
 #include "private/ScopedRWLock.h"
+#include "private/bionic_arc4random.h"
 #include "private/bionic_constants.h"
 #include "private/bionic_defs.h"
 #include "private/bionic_globals.h"
@@ -140,10 +141,9 @@ static void __init_shadow_call_stack(pthread_internal_t* thread __unused) {
       reinterpret_cast<char*>(__builtin_align_up(reinterpret_cast<uintptr_t>(scs_guard_region), SCS_SIZE));
 
   // We need to ensure that [scs_offset,scs_offset+SCS_SIZE) is in the guard region and that there
-  // is at least one unmapped page after the shadow call stack (to catch stack overflows). We can't
-  // use arc4random_uniform in init because /dev/urandom might not have been created yet.
+  // is at least one unmapped page after the shadow call stack (to catch stack overflows).
   size_t scs_offset =
-      (getpid() == 1) ? 0 : (arc4random_uniform(SCS_GUARD_REGION_SIZE / SCS_SIZE - 1) * SCS_SIZE);
+      __libc_arc4random_uniform_or_zero(SCS_GUARD_REGION_SIZE / SCS_SIZE - 1) * SCS_SIZE;
 
   // Make the stack read-write, and store its address in the register we're using as the shadow
   // stack pointer. This is deliberately the only place where the address is stored.

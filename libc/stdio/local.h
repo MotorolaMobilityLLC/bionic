@@ -38,10 +38,6 @@
 #include <stdbool.h>
 #include <wchar.h>
 
-#if defined(__cplusplus)  // Until we fork all of stdio...
-#include "private/bionic_fortify.h"
-#endif
-
 /*
  * Information local to this implementation of stdio,
  * in particular, macros and private variables.
@@ -69,12 +65,16 @@ struct __sFILE {
   int _lbfsize;      /* 0 or -_bf._size, for inline putc */
 
   // Function pointers used by `funopen`.
-  // Note that `_seek` is ignored if `_seek64` (in __sfileext) is set.
-  // TODO: NetBSD has `funopen2` which corrects the `int`s to `size_t`s.
-  // TODO: glibc has `fopencookie` which passes the function pointers in a struct.
+  // TODO: NetBSD has `funopen2()` which corrects the `int`s to `size_t`s.
+  // TODO: glibc and FreeBSD have `fopencookie()` which pass the function
+  // pointers in a struct (and uses `size_t` rather than `int`).
   void* _cookie; /* cookie passed to io functions */
   int (*_close)(void*);
   int (*_read)(void*, char*, int);
+  // Note that `_seek` is ignored if `_seek64` (in __sfileext) is set.
+  // TODO: only FreeBSD uses fpos_t rather than off_t; since they're the same
+  // on any OS we care about (albeit not guaranteed by POSIX) it doesn't much
+  // matter, and FreeBSD is what iOS uses, so probably best to _not_ fix that.
   fpos_t (*_seek)(void*, fpos_t, int);
   int (*_write)(void*, const char*, int);
 
@@ -84,29 +84,36 @@ struct __sFILE {
   unsigned char* _up; /* saved _p when _p is doing ungetc data */
   int _ur;            /* saved _r when _r is counting ungetc data */
 
-  /* tricks to meet minimum requirements even when malloc() fails */
-  unsigned char _ubuf[3]; /* guarantee an ungetc() buffer */
-  unsigned char _nbuf[1]; /* guarantee a getc() buffer */
+  // Tricks to avoid calling malloc() in common cases.
+  unsigned char _ubuf[3]; // Guarantee an ungetc() buffer.
+  unsigned char _nbuf[1]; // Guarantee a getc() buffer.
 
-  /* separate buffer for fgetln() when line crosses buffer boundary */
-  struct __sbuf _lb; /* buffer for fgetln() */
+  struct __sbuf fgetln_buffer;
 
-  /* Unix stdio files get aligned to block boundaries on fseek() */
-  int _blksize; /* stat.st_blksize (may be != _bf._size) */
-
-  fpos_t _unused_0;  // This was the `_offset` field (see below).
-
-  // Do not add new fields here. (Or remove or change the size of any above.)
-  // Although bionic currently exports `stdin`, `stdout`, and `stderr` symbols,
-  // that still hasn't made it to the NDK. All NDK-built apps index directly
-  // into an array of this struct (which was in <stdio.h> historically), so if
-  // you need to make any changes, they need to be in the `__sfileext` struct
-  // below, and accessed via `_EXT`.
+  int _unused_0;  // This was the `_blksize` field (see below).
+  fpos_t _unused_1;  // This was the `_offset` field (see below).
 };
+
+// Do not add/remove/change the size of any fields anywhere in this struct.
+//
+// Although bionic exports `stdin`, `stdout`, and `stderr` symbols
+// from API 23 on, apps supporting earlier APIs index directly into `__sF[]`
+// which is an array of this struct (which was in <stdio.h> historically).
+// That means that if the size of this struct changes, `stdout` and `stderr`
+// are broken.
+//
+// If you need to make any changes, they need to be in the `__sfileext` struct
+// below, and accessed via `_EXT()`.
+#if defined(__LP64__)
+_Static_assert(sizeof(struct __sFILE) == 152, "__sFILE changed size");
+#else
+_Static_assert(sizeof(struct __sFILE) == 84, "__sFILE changed size");
+#endif
 
 /* minimal requirement of SUSv2 */
 #define WCIO_UNGETWC_BUFSIZE 1
 
+// TODO: this struct isn't useful on its own; inline directly into __sfileext.
 struct wchar_io_data {
   mbstate_t wcio_mbstate_in;
   mbstate_t wcio_mbstate_out;
@@ -114,7 +121,7 @@ struct wchar_io_data {
   wchar_t wcio_ungetwc_buf[WCIO_UNGETWC_BUFSIZE];
   size_t wcio_ungetwc_inbuf;
 
-  int wcio_mode; /* orientation */
+  int orientation;
 };
 
 struct __sfileext {
@@ -148,20 +155,15 @@ struct __sfileext {
 #define __SRW 0x0010   // Was opened for reading & writing.
 #define __SEOF 0x0020  // Found EOF.
 #define __SERR 0x0040  // Found error.
-#define __SMBF 0x0080  // `_buf` is from malloc.
+#define __SMBF 0x0080  // `_bf` is from malloc.
 // #define __SAPP 0x0100 --- historical (fdopen()ed in append mode).
 #define __SSTR 0x0200  // This is an sprintf/snprintf string.
 // #define __SOPT 0x0400 --- historical (do fseek() optimization).
 // #define __SNPT 0x0800 --- historical (do not do fseek() optimization).
 // #define __SOFF 0x1000 --- historical (set iff _offset is in fact correct).
-// #define __SMOD 0x2000 --- historical (set iff fgetln modified _p text).
+// #define __SMOD 0x2000 --- historical (set iff fgetln() returned _bf pointer).
 #define __SALC 0x4000  // Allocate string space dynamically.
-#define __SIGN 0x8000  // Ignore this file in _fwalk.
-
-// TODO: remove remaining references to these obsolete flags (see above).
-#define __SMOD 0
-#define __SNPT 0
-#define __SOPT 0
+// #define __SIGN 0x8000  // historical (ignore this file in _fwalk()).
 
 #define _EXT(fp) __BIONIC_CAST(reinterpret_cast, struct __sfileext*, (fp)->_ext._base)
 
@@ -198,9 +200,11 @@ __LIBC32_LEGACY_PUBLIC__ fpos_t __sseek(void*, fpos_t, int);
 __LIBC32_LEGACY_PUBLIC__ int __sclose(void*);
 __LIBC32_LEGACY_PUBLIC__ int _fwalk(int (*)(FILE*));
 
+/* This was referenced by a couple of different pieces of middleware and the Crystax NDK. */
+__LIBC32_LEGACY_PUBLIC__ extern struct glue __sglue;
+
 off64_t __sseek64(void*, off64_t, int);
-int __sflush_locked(FILE*);
-int __swhatbuf(FILE*, size_t*, int*);
+void __swhatbuf(FILE*, size_t*, int*);
 wint_t __fgetwc_unlock(FILE*);
 wint_t __ungetwc(wint_t, FILE*);
 int __vfprintf(FILE*, const char*, va_list);
@@ -254,11 +258,6 @@ extern void __sinit(void);  // Not actually implemented.
 size_t parsefloat(FILE*, char*, char*);
 size_t wparsefloat(FILE*, wchar_t*, wchar_t*);
 
-// Check a FILE* isn't nullptr, so we can emit a clear diagnostic message
-// instead of just crashing with SIGSEGV.
-#define CHECK_FP(fp) \
-  if (fp == nullptr) __fortify_fatal("%s: null FILE*", __FUNCTION__)
-
 /*
  * Floating point scanf/printf (input/output) definitions.
  */
@@ -284,25 +283,25 @@ char* __hdtoa(double, const char*, int, int*, int*, char**);
 char* __hldtoa(long double, const char*, int, int*, int*, char**);
 char* __ldtoa(long double*, int, int, int*, int*, char**);
 
-#define WCIO_GET(fp) (_EXT(fp) ? &(_EXT(fp)->_wcio) : NULL)
+#define WCIO_GET(fp) (&(_EXT(fp)->_wcio))
 
 #define ORIENT_BYTES (-1)
 #define ORIENT_UNKNOWN 0
 #define ORIENT_CHARS 1
 
-#define _SET_ORIENTATION(fp, mode)                                              \
-  do {                                                                          \
-    struct wchar_io_data* _wcio = WCIO_GET(fp);                                 \
-    if (_wcio && _wcio->wcio_mode == ORIENT_UNKNOWN) _wcio->wcio_mode = (mode); \
+#define _SET_ORIENTATION(fp, mode) \
+  do { \
+    struct wchar_io_data* _wcio = WCIO_GET(fp); \
+    if (_wcio->orientation == ORIENT_UNKNOWN) { \
+      _wcio->orientation = (mode > 0) ? ORIENT_CHARS : ORIENT_BYTES; \
+     } \
   } while (0)
 
-#define WCIO_FREE(fp)                           \
-  do {                                          \
+#define WCIO_FREE(fp) \
+  do { \
     struct wchar_io_data* _wcio = WCIO_GET(fp); \
-    if (_wcio) {                                \
-      _wcio->wcio_mode = ORIENT_UNKNOWN;        \
-      _wcio->wcio_ungetwc_inbuf = 0;            \
-    }                                           \
+    _wcio->orientation = ORIENT_UNKNOWN; \
+    _wcio->wcio_ungetwc_inbuf = 0; \
   } while (0)
 
 __END_DECLS

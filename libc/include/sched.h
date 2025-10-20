@@ -266,6 +266,9 @@ int sched_getaffinity(pid_t __pid, size_t __cpu_set_size, cpu_set_t* _Nonnull __
  * sets the scheduling attributes for the given thread.
  *
  * Returns 0 on success and returns -1 and sets `errno` on failure.
+ * If the failure is E2BIG,
+ * the kernel writes the expected size into the given `sched_attr`,
+ * which is why that argument is not `const`.
  */
 #if defined(__USE_GNU)
 int sched_setattr(pid_t __pid, struct sched_attr* _Nonnull __attr, unsigned __flags) __INTRODUCED_IN(37);

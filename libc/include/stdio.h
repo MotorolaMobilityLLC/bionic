@@ -118,8 +118,26 @@ int fscanf(FILE* _Nonnull __fp, const char* _Nonnull __fmt, ...) __scanflike(2, 
 size_t fwrite(const void* _Nonnull __buf, size_t __size, size_t __count, FILE* _Nonnull __fp);
 __nodiscard int getc(FILE* _Nonnull __fp);
 __nodiscard int getchar(void);
-ssize_t getdelim(char* _Nullable * _Nonnull __line_ptr, size_t* _Nonnull __line_length_ptr, int __delimiter, FILE* _Nonnull __fp);
-ssize_t getline(char* _Nullable * _Nonnull __line_ptr, size_t* _Nonnull __line_length_ptr, FILE* _Nonnull __fp);
+
+/**
+ * [getdelim(2)](https://man7.org/linux/man-pages/man3/getdelim.3.html)
+ * reads a delimited chunk from the given file.
+ *
+ * The memory to be used (and the size of the allocation) are the first
+ * two arguments. Idiomatic code passes NULL on the first call,
+ * and reuses the buffer on successive calls (hence the need to know its length).
+ * Note in particular that the size of the allocation is generally _larger_
+ * than the length of the chunk returned (hence the need to use the return value).
+ *
+ * Returns the length of the chunk (excluding the terminating NUL),
+ * and returns -1 and sets `errno` on failure.
+ */
+ssize_t getdelim(char* _Nullable * _Nonnull __line_ptr, size_t* _Nonnull __allocated_size_ptr, int __delimiter, FILE* _Nonnull __fp);
+
+/**
+ * Equivalent to getdelim() with '\n' as the delimiter.
+ */
+ssize_t getline(char* _Nullable * _Nonnull __line_ptr, size_t* _Nonnull __allocated_size_ptr, FILE* _Nonnull __fp);
 
 void perror(const char* _Nullable __msg);
 int printf(const char* _Nonnull __fmt, ...) __printflike(1, 2);
@@ -336,7 +354,15 @@ __nodiscard FILE* _Nullable open_memstream(char* _Nonnull * _Nonnull __ptr, size
 #endif /* __BIONIC_AVAILABILITY_GUARD(23) */
 
 int  asprintf(char* _Nullable * _Nonnull __s_ptr, const char* _Nonnull __fmt, ...) __printflike(2, 3);
+
+/**
+ * fgetln() is a less portable and harder to use variant of getline().
+ * In particular, fgetln() does not guarantee a terminating NUL byte.
+ *
+ * New code should use getline().
+ */
 char* _Nullable fgetln(FILE* _Nonnull __fp, size_t* _Nonnull __length_ptr);
+
 int fpurge(FILE* _Nonnull __fp);
 void setbuffer(FILE* _Nonnull __fp, char* _Nullable __buf, int __size);
 int setlinebuf(FILE* _Nonnull __fp);

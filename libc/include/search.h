@@ -59,7 +59,7 @@ typedef enum {
 /** The hash table type for hcreate_r()/hdestroy_r()/hsearch_r(). */
 #if defined(__USE_BSD) || defined(__USE_GNU)
 struct hsearch_data {
-  struct __hsearch* _Nullable __hsearch;
+  void* _Nullable __opaque;
 };
 #endif
 

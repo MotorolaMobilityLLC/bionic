@@ -53,14 +53,13 @@ float_type wcstod(const wchar_t* str, wchar_t** end, float_type strtod_fn(const 
   ascii_str[max_len] = 0;
 
   // Set up a fake FILE that points to those ASCII characters, for `parsefloat`.
-  FILE f;
-  __sfileext fext;
+  FILE f = {};
+  __sfileext fext = {};
   _FILEEXT_SETUP(&f, &fext);
   f._flags = __SRD;
   f._bf._base = f._p = reinterpret_cast<unsigned char*>(ascii_str);
   f._bf._size = f._r = max_len;
   f._read = [](void*, char*, int) { return 0; }; // aka `eofread`, aka "no more data".
-  f._lb._base = nullptr;
 
   // Ask `parsefloat` to look at the same data more carefully.
 

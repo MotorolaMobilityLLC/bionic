@@ -41,6 +41,8 @@ struct drm_msm_timespec {
 #define MSM_PARAM_UBWC_SWIZZLE 0x12
 #define MSM_PARAM_MACROTILE_MODE 0x13
 #define MSM_PARAM_UCHE_TRAP_BASE 0x14
+#define MSM_PARAM_HAS_PRR 0x15
+#define MSM_PARAM_EN_VM_BIND 0x16
 #define MSM_PARAM_NR_RINGS MSM_PARAM_PRIORITIES
 struct drm_msm_param {
   __u32 pipe;
@@ -51,12 +53,13 @@ struct drm_msm_param {
 };
 #define MSM_BO_SCANOUT 0x00000001
 #define MSM_BO_GPU_READONLY 0x00000002
+#define MSM_BO_NO_SHARE 0x00000004
 #define MSM_BO_CACHE_MASK 0x000f0000
 #define MSM_BO_CACHED 0x00010000
 #define MSM_BO_WC 0x00020000
 #define MSM_BO_UNCACHED 0x00040000
 #define MSM_BO_CACHED_COHERENT 0x080000
-#define MSM_BO_FLAGS (MSM_BO_SCANOUT | MSM_BO_GPU_READONLY | MSM_BO_CACHE_MASK)
+#define MSM_BO_FLAGS (MSM_BO_SCANOUT | MSM_BO_GPU_READONLY | MSM_BO_NO_SHARE | MSM_BO_CACHE_MASK)
 struct drm_msm_gem_new {
   __u64 size;
   __u32 flags;
@@ -90,6 +93,13 @@ struct drm_msm_gem_cpu_prep {
 struct drm_msm_gem_cpu_fini {
   __u32 handle;
 };
+#define MSM_SYNCOBJ_RESET 0x00000001
+#define MSM_SYNCOBJ_FLAGS (MSM_SYNCOBJ_RESET | 0)
+struct drm_msm_syncobj {
+  __u32 handle;
+  __u32 flags;
+  __u64 point;
+};
 struct drm_msm_gem_submit_reloc {
   __u32 submit_offset;
 #ifdef __cplusplus
@@ -111,7 +121,10 @@ struct drm_msm_gem_submit_cmd {
   __u32 size;
   __u32 pad;
   __u32 nr_relocs;
-  __u64 relocs;
+  union {
+    __u64 relocs;
+    __u64 iova;
+  };
 };
 #define MSM_SUBMIT_BO_READ 0x0001
 #define MSM_SUBMIT_BO_WRITE 0x0002
@@ -131,13 +144,6 @@ struct drm_msm_gem_submit_bo {
 #define MSM_SUBMIT_SYNCOBJ_OUT 0x04000000
 #define MSM_SUBMIT_FENCE_SN_IN 0x02000000
 #define MSM_SUBMIT_FLAGS (MSM_SUBMIT_NO_IMPLICIT | MSM_SUBMIT_FENCE_FD_IN | MSM_SUBMIT_FENCE_FD_OUT | MSM_SUBMIT_SUDO | MSM_SUBMIT_SYNCOBJ_IN | MSM_SUBMIT_SYNCOBJ_OUT | MSM_SUBMIT_FENCE_SN_IN | 0)
-#define MSM_SUBMIT_SYNCOBJ_RESET 0x00000001
-#define MSM_SUBMIT_SYNCOBJ_FLAGS (MSM_SUBMIT_SYNCOBJ_RESET | 0)
-struct drm_msm_gem_submit_syncobj {
-  __u32 handle;
-  __u32 flags;
-  __u64 point;
-};
 struct drm_msm_gem_submit {
   __u32 flags;
   __u32 fence;
@@ -153,6 +159,39 @@ struct drm_msm_gem_submit {
   __u32 nr_out_syncobjs;
   __u32 syncobj_stride;
   __u32 pad;
+};
+#define MSM_VM_BIND_OP_UNMAP 0
+#define MSM_VM_BIND_OP_MAP 1
+#define MSM_VM_BIND_OP_MAP_NULL 2
+#define MSM_VM_BIND_OP_DUMP 1
+#define MSM_VM_BIND_OP_FLAGS (MSM_VM_BIND_OP_DUMP | 0)
+struct drm_msm_vm_bind_op {
+  __u32 op;
+  __u32 handle;
+  __u64 obj_offset;
+  __u64 iova;
+  __u64 range;
+  __u32 flags;
+  __u32 pad;
+};
+#define MSM_VM_BIND_FENCE_FD_IN 0x00000001
+#define MSM_VM_BIND_FENCE_FD_OUT 0x00000002
+#define MSM_VM_BIND_FLAGS (MSM_VM_BIND_FENCE_FD_IN | MSM_VM_BIND_FENCE_FD_OUT | 0)
+struct drm_msm_vm_bind {
+  __u32 flags;
+  __u32 nr_ops;
+  __s32 fence_fd;
+  __u32 queue_id;
+  __u64 in_syncobjs;
+  __u64 out_syncobjs;
+  __u32 nr_in_syncobjs;
+  __u32 nr_out_syncobjs;
+  __u32 syncobj_stride;
+  __u32 op_stride;
+  union {
+    struct drm_msm_vm_bind_op op;
+    __u64 ops;
+  };
 };
 #define MSM_WAIT_FENCE_BOOST 0x00000001
 #define MSM_WAIT_FENCE_FLAGS (MSM_WAIT_FENCE_BOOST | 0)
@@ -171,7 +210,8 @@ struct drm_msm_gem_madvise {
   __u32 retained;
 };
 #define MSM_SUBMITQUEUE_ALLOW_PREEMPT 0x00000001
-#define MSM_SUBMITQUEUE_FLAGS (MSM_SUBMITQUEUE_ALLOW_PREEMPT | 0)
+#define MSM_SUBMITQUEUE_VM_BIND 0x00000002
+#define MSM_SUBMITQUEUE_FLAGS (MSM_SUBMITQUEUE_ALLOW_PREEMPT | MSM_SUBMITQUEUE_VM_BIND | 0)
 struct drm_msm_submitqueue {
   __u32 flags;
   __u32 prio;
@@ -197,6 +237,7 @@ struct drm_msm_submitqueue_query {
 #define DRM_MSM_SUBMITQUEUE_NEW 0x0A
 #define DRM_MSM_SUBMITQUEUE_CLOSE 0x0B
 #define DRM_MSM_SUBMITQUEUE_QUERY 0x0C
+#define DRM_MSM_VM_BIND 0x0D
 #define DRM_IOCTL_MSM_GET_PARAM DRM_IOWR(DRM_COMMAND_BASE + DRM_MSM_GET_PARAM, struct drm_msm_param)
 #define DRM_IOCTL_MSM_SET_PARAM DRM_IOW(DRM_COMMAND_BASE + DRM_MSM_SET_PARAM, struct drm_msm_param)
 #define DRM_IOCTL_MSM_GEM_NEW DRM_IOWR(DRM_COMMAND_BASE + DRM_MSM_GEM_NEW, struct drm_msm_gem_new)
@@ -209,6 +250,7 @@ struct drm_msm_submitqueue_query {
 #define DRM_IOCTL_MSM_SUBMITQUEUE_NEW DRM_IOWR(DRM_COMMAND_BASE + DRM_MSM_SUBMITQUEUE_NEW, struct drm_msm_submitqueue)
 #define DRM_IOCTL_MSM_SUBMITQUEUE_CLOSE DRM_IOW(DRM_COMMAND_BASE + DRM_MSM_SUBMITQUEUE_CLOSE, __u32)
 #define DRM_IOCTL_MSM_SUBMITQUEUE_QUERY DRM_IOW(DRM_COMMAND_BASE + DRM_MSM_SUBMITQUEUE_QUERY, struct drm_msm_submitqueue_query)
+#define DRM_IOCTL_MSM_VM_BIND DRM_IOWR(DRM_COMMAND_BASE + DRM_MSM_VM_BIND, struct drm_msm_vm_bind)
 #ifdef __cplusplus
 }
 #endif

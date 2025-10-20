@@ -30,7 +30,9 @@ class __LIBC_HIDDEN__ ScopedTrace {
   ~ScopedTrace();
 
   void End();
+
  private:
+  bool should_trace_;
   bool called_end_;
   BIONIC_DISALLOW_COPY_AND_ASSIGN(ScopedTrace);
 };

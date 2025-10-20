@@ -114,6 +114,7 @@ struct input_mask {
 #define BUS_CEC 0x1E
 #define BUS_INTEL_ISHTP 0x1F
 #define BUS_AMD_SFH 0x20
+#define BUS_SDW 0x21
 #define MT_TOOL_FINGER 0x00
 #define MT_TOOL_PEN 0x01
 #define MT_TOOL_PALM 0x02

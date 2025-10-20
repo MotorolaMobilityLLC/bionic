@@ -28,10 +28,11 @@ TEST(assert, assert_true) {
 }
 
 TEST_F(assert_DeathTest, assert_false) {
-  EXPECT_DEATH(assert(false),
-               "bionic/tests/assert_test.cpp:.*: "
-               "virtual void assert_DeathTest_assert_false_Test::TestBody\\(\\): "
-               "assertion \"false\" failed");
+  EXPECT_EXIT(assert(false),
+              testing::KilledBySignal(SIGABRT),
+              "bionic/tests/assert_test.cpp:.*: "
+              "virtual void assert_DeathTest_assert_false_Test::TestBody\\(\\): "
+              "assertion \"false\" failed");
 }
 
 // Re-include <assert.h> with assertions disabled.

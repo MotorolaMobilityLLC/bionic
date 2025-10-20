@@ -1,6 +1,7 @@
 // Copyright (C) 2025 The Android Open Source Project
 // SPDX-License-Identifier: Apache-2.0
 
+#![no_std]
 #![allow(missing_docs)] // Not particularly useful to document these thin wrappers
 
 //! This is a thin wrapper around ICU4X for use in Bionic

@@ -33,7 +33,7 @@ TEST_P(MemtagStackTest, test) {
     GTEST_SKIP() << "MTE unsupported";
   }
   bool is_static = std::get<1>(GetParam());
-  if (running_with_hwasan() && !is_static) {
+  if (android::base::running_with_hwasan() && !is_static) {
     GTEST_SKIP() << "Can't run with HWASanified libc.so";
   }
   std::string helper =

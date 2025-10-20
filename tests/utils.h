@@ -21,6 +21,8 @@
 #include <fcntl.h>
 #include <gtest/gtest.h>
 #include <inttypes.h>
+#include <malloc.h>
+#include <stdio.h>
 #include <sys/mman.h>
 #include <sys/prctl.h>
 #include <sys/types.h>

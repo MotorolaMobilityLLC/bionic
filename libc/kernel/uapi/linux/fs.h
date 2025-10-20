@@ -29,6 +29,9 @@
 #define RENAME_NOREPLACE (1 << 0)
 #define RENAME_EXCHANGE (1 << 1)
 #define RENAME_WHITEOUT (1 << 2)
+enum procfs_ino {
+  PROCFS_ROOT_INO = 1,
+};
 struct file_clone_range {
   __s64 src_fd;
   __u64 src_offset;
@@ -47,6 +50,27 @@ struct fsuuid2 {
 struct fs_sysfs_path {
   __u8 len;
   __u8 name[128];
+};
+#define LBMD_PI_CAP_INTEGRITY (1 << 0)
+#define LBMD_PI_CAP_REFTAG (1 << 1)
+#define LBMD_PI_CSUM_NONE 0
+#define LBMD_PI_CSUM_IP 1
+#define LBMD_PI_CSUM_CRC16_T10DIF 2
+#define LBMD_PI_CSUM_CRC64_NVME 4
+#define LBMD_SIZE_VER0 16
+struct logical_block_metadata_cap {
+  __u32 lbmd_flags;
+  __u16 lbmd_interval;
+  __u8 lbmd_size;
+  __u8 lbmd_opaque_size;
+  __u8 lbmd_opaque_offset;
+  __u8 lbmd_pi_size;
+  __u8 lbmd_pi_offset;
+  __u8 lbmd_guard_tag_type;
+  __u8 lbmd_app_tag_size;
+  __u8 lbmd_ref_tag_size;
+  __u8 lbmd_storage_tag_size;
+  __u8 pad;
 };
 #define FILE_DEDUPE_RANGE_SAME 0
 #define FILE_DEDUPE_RANGE_DIFFERS 1
@@ -84,6 +108,15 @@ struct fsxattr {
   __u32 fsx_cowextsize;
   unsigned char fsx_pad[8];
 };
+struct file_attr {
+  __u64 fa_xflags;
+  __u32 fa_extsize;
+  __u32 fa_nextents;
+  __u32 fa_projid;
+  __u32 fa_cowextsize;
+};
+#define FILE_ATTR_SIZE_VER0 24
+#define FILE_ATTR_SIZE_LATEST FILE_ATTR_SIZE_VER0
 #define FS_XFLAG_REALTIME 0x00000001
 #define FS_XFLAG_PREALLOC 0x00000002
 #define FS_XFLAG_IMMUTABLE 0x00000008
@@ -155,6 +188,7 @@ struct fsxattr {
 #define FS_IOC_SETFSLABEL _IOW(0x94, 50, char[FSLABEL_MAX])
 #define FS_IOC_GETFSUUID _IOR(0x15, 0, struct fsuuid2)
 #define FS_IOC_GETFSSYSFSPATH _IOR(0x15, 1, struct fs_sysfs_path)
+#define FS_IOC_GETLBMD_CAP _IOWR(0x15, 2, struct logical_block_metadata_cap)
 #define FS_SECRM_FL 0x00000001
 #define FS_UNRM_FL 0x00000002
 #define FS_COMPR_FL 0x00000004

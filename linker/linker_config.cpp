@@ -454,12 +454,12 @@ class Properties {
   DISALLOW_IMPLICIT_CONSTRUCTORS(Properties);
 };
 
-bool Config::read_binary_config(const char* ld_config_file_path,
-                                      const char* binary_realpath,
-                                      bool is_asan,
-                                      bool is_hwasan,
-                                      const Config** config,
-                                      std::string* error_msg) {
+bool Config::read_config_for_binary(const char* ld_config_file_path,
+                                    const char* binary_realpath,
+                                    bool is_asan,
+                                    bool is_hwasan,
+                                    const Config** config,
+                                    std::string* error_msg) {
   g_config.clear();
 
   std::unordered_map<std::string, PropertyValue> property_map;

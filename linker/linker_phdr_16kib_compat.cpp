@@ -360,29 +360,20 @@ void ElfReader::SetupRXRWAppCompat(ElfW(Addr) rx_rw_boundary) {
 
   // RW region (.data, .bss ...)
   ElfW(Addr) rw_start = load_bias_ + rx_rw_boundary;
-  ElfW(Addr) rw_size = load_size_ - (rw_start - reinterpret_cast<ElfW(Addr)>(load_start_));
+  CHECK(rw_start % page_size() == 0);
 
-  CHECK(rw_start % getpagesize() == 0);
-  CHECK(rw_size % getpagesize() == 0);
-
-  // Compat RELRO (RX) region (.text, .data.relro, ...)
-  compat_relro_size_ = load_size_ - rw_size;
-  compat_relro_start_ = reinterpret_cast<ElfW(Addr)>(load_start_);
+  // Compat code and RELRO (RX) region (.text, .data.relro, ...)
+  compat_code_start_ = load_start();
+  compat_code_size_ = rw_start - load_start();
 }
 
-bool ElfReader::SetupRWXAppCompat() {
+void ElfReader::SetupRWXAppCompat() {
   // Warn and fallback to RWX mapping
   const std::string layout = elf_layout(phdr_table_, phdr_num_);
   DL_WARN("\"%s\": RX|RW compat loading failed, falling back to RWX compat: load segments [%s]",
           name_.c_str(), layout.c_str());
-
-  // There is no RELRO protection in this mode
-  CHECK(!compat_relro_start_);
-  CHECK(!compat_relro_size_);
-
-  // Make the reserved mapping RWX; the ELF contents will be read
-  // into it, instead of mapped over it.
-  return mprotect(load_start_, load_size_, PROT_READ | PROT_WRITE | PROT_EXEC) != -1;
+  compat_code_start_ = load_start();
+  compat_code_size_ = load_size();
 }
 
 bool ElfReader::Setup16KiBAppCompat() {
@@ -393,9 +384,9 @@ bool ElfReader::Setup16KiBAppCompat() {
   ElfW(Addr) rx_rw_boundary;  // Permission boundary for RX|RW compat mode
   if (IsEligibleForRXRWAppCompat(&rx_rw_boundary)) {
     SetupRXRWAppCompat(rx_rw_boundary);
-  } else if (!SetupRWXAppCompat()) {
-    DL_ERR_AND_LOG("\"%s\": mprotect failed to setup RWX app compat: %m", name_.c_str());
-    return false;
+  } else {
+    should_16kib_app_compat_use_rwx_ = true;
+    SetupRWXAppCompat();
   }
 
   LabelCompatVma();
@@ -478,4 +469,56 @@ void ElfReader::FixMinAlignFor16KiB() {
       min_align_ = std::min(min_align_, relro_min_align);
     }
   }
+}
+
+/*
+ * Apply RX or RWX protection to the code region of the ELF being loaded in
+ * 16KiB compat mode.
+ *
+ * Return:
+ *   true on success, false on failure (error code in errno).
+ */
+bool soinfo::protect_16kib_app_compat_code() {
+  if (!should_use_16kib_app_compat_) {
+    return true;
+  }
+
+  int prot = PROT_READ | PROT_EXEC;
+  if (should_16kib_app_compat_use_rwx_) {
+    prot |= PROT_WRITE;
+  }
+
+#ifdef __aarch64__
+  if (note_gnu_property_ == nullptr) {
+    note_gnu_property_ = std::make_shared<GnuPropertySection>(this);
+  }
+
+  if (note_gnu_property_->IsBTICompatible()) {
+    prot |= PROT_BTI;
+  }
+#endif
+
+  if (mprotect(reinterpret_cast<void*>(compat_code_start_), compat_code_size_, prot)) {
+    DL_ERR("failed to set execute permission for compat loaded binary \"%s\": %m",
+           get_realpath());
+    return false;
+  }
+
+  return true;
+}
+
+/*
+ * Apply RW protection to the code region of the ELF being loaded in 16KiB compat mode. This is used
+ * for restoring write permissions to the code region after ifunc resolution.
+ *
+ * Return:
+ *   true on success, false on failure (error code in errno).
+ */
+bool soinfo::unprotect_16kib_app_compat_code() {
+  if (!should_use_16kib_app_compat_) {
+    return true;
+  }
+
+  return mprotect(reinterpret_cast<void*>(compat_code_start_), compat_code_size_,
+                  PROT_READ | PROT_WRITE) == 0;
 }

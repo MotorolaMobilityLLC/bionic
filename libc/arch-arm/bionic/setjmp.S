@@ -62,8 +62,8 @@
 //                        this avoids software emulation of unaligned loads/stores)
 // 4      float_base      base of float registers (d8 to d15)
 // 20     float_state     floating-point status and control register
-// 21     core_base       base of core registers (r4-r11, r13-r14)
-// 31     checksum        checksum of all of the core registers, to give better error messages
+// 21     core_base       base of core registers (r4-r11, r13(sp)-r14(lr))
+// 31     checksum
 // 32     reserved        reserved entries (room to grow)
 // ...
 // 63     "               "
@@ -87,7 +87,7 @@ END(_setjmp)
 
 .macro m_calculate_checksum dst, src, scratch
   mov \dst, #0
-  .irp i,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28
+  .irp i,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30
     ldr \scratch, [\src, #(\i * 4)]
     eor \dst, \dst, \scratch
   .endr

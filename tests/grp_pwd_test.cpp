@@ -447,30 +447,6 @@ static void expect_ids(T ids, bool is_group) {
     return result;
   };
 
-  // AID_UPROBESTATS (1093) was added in API level 35, but "trunk stable" means
-  // that the 2024Q* builds are tested with the _previous_ release's CTS.
-  if (android::base::GetIntProperty("ro.build.version.sdk", 0) == 34) {
-#if !defined(AID_UPROBESTATS)
-#define AID_UPROBESTATS 1093
-#endif
-    ids.erase(AID_UPROBESTATS);
-    expected_ids.erase(AID_UPROBESTATS);
-    if (getpwuid(AID_UPROBESTATS)) {
-      EXPECT_STREQ(getpwuid(AID_UPROBESTATS)->pw_name, "uprobestats");
-    }
-  }
-  // AID_VIRTUALMACHINE (3013) was added in API level 35, but "trunk stable" means
-  // that the 2024Q* builds are tested with the _previous_ release's CTS.
-  if (android::base::GetIntProperty("ro.build.version.sdk", 0) == 34) {
-#if !defined(AID_VIRTUALMACHINE)
-#define AID_VIRTUALMACHINE 3013
-#endif
-    ids.erase(AID_VIRTUALMACHINE);
-    expected_ids.erase(AID_VIRTUALMACHINE);
-    if (getpwuid(AID_VIRTUALMACHINE)) {
-      EXPECT_STREQ(getpwuid(AID_VIRTUALMACHINE)->pw_name, "virtualmachine");
-    }
-  }
   // AID_CROS_EC (1094) was added in API level 36, but "trunk stable" means
   // that the 2024Q* builds are tested with the _previous_ release's CTS.
   if (android::base::GetIntProperty("ro.build.version.sdk", 0) == 35) {
@@ -505,6 +481,18 @@ static void expect_ids(T ids, bool is_group) {
     expected_ids.erase(AID_UPDATE_ENGINE_LOG);
     if (getpwuid(AID_UPDATE_ENGINE_LOG)) {
       EXPECT_STREQ(getpwuid(AID_UPDATE_ENGINE_LOG)->pw_name, "update_engine_log");
+    }
+  }
+  // AID_AP_FIRMWARE (1097) was added in API level 37, but "trunk stable" means
+  // that the 2025Q{1,2} builds are tested with the _previous_ release's CTS.
+  if (android::base::GetIntProperty("ro.build.version.sdk", 0) == 36) {
+#if !defined(AID_AP_FIRMWARE)
+#define AID_AP_FIRMWARE 1097
+#endif
+    ids.erase(AID_AP_FIRMWARE);
+    expected_ids.erase(AID_AP_FIRMWARE);
+    if (getpwuid(AID_AP_FIRMWARE)) {
+      EXPECT_STREQ(getpwuid(AID_AP_FIRMWARE)->pw_name, "ap_firmware");
     }
   }
 

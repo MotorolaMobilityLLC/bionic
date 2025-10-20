@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <err.h>
+#include <error.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdio_ext.h>
@@ -35,7 +35,7 @@ static void FillFile(TemporaryFile& tf) {
 }
 
 template <typename Fn>
-void ReadWriteTest(benchmark::State& state, Fn f, bool buffered) {
+void ReadWriteTest(benchmark::State& state, Fn f, const char* mode, bool buffered) {
   size_t chunk_size = state.range(0);
 
   // /dev/zero copies zeroes if you read from it and discards writes.
@@ -45,7 +45,8 @@ void ReadWriteTest(benchmark::State& state, Fn f, bool buffered) {
   // (Old versions of stdio would copy reads/writes larger than
   // the stdio buffer through the stdio buffer in chunks,
   // rather than directly to the user's destination.)
-  FILE* fp = fopen("/dev/zero", "r+e");
+  FILE* fp = fopen("/dev/zero", mode);
+  if (fp == nullptr) error(1, errno, "fopen() with mode %s failed", mode);
   __fsetlocking(fp, FSETLOCKING_BYCALLER);
   char* buf = new char[chunk_size];
 
@@ -55,7 +56,7 @@ void ReadWriteTest(benchmark::State& state, Fn f, bool buffered) {
 
   while (state.KeepRunning()) {
     if (f(buf, chunk_size, 1, fp) != 1) {
-      errx(1, "ERROR: op of %zu bytes failed.", chunk_size);
+      error(1, errno, "ERROR: transfer of %zu bytes failed", chunk_size);
     }
   }
 
@@ -65,22 +66,42 @@ void ReadWriteTest(benchmark::State& state, Fn f, bool buffered) {
 }
 
 void BM_stdio_fread(benchmark::State& state) {
-  ReadWriteTest(state, fread, true);
+  ReadWriteTest(state, fread, "re", true);
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_stdio_fread, "AT_COMMON_SIZES");
 
 void BM_stdio_fwrite(benchmark::State& state) {
-  ReadWriteTest(state, fwrite, true);
+  ReadWriteTest(state, fwrite, "we", true);
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_stdio_fwrite, "AT_COMMON_SIZES");
 
+void BM_stdio_fread_rw(benchmark::State& state) {
+  ReadWriteTest(state, fread, "r+e", true);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_stdio_fread_rw, "AT_COMMON_SIZES");
+
+void BM_stdio_fwrite_rw(benchmark::State& state) {
+  ReadWriteTest(state, fwrite, "r+e", true);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_stdio_fwrite_rw, "AT_COMMON_SIZES");
+
+void BM_stdio_fread_a(benchmark::State& state) {
+  ReadWriteTest(state, fread, "a+e", true);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_stdio_fread_a, "AT_COMMON_SIZES");
+
+void BM_stdio_fwrite_a(benchmark::State& state) {
+  ReadWriteTest(state, fwrite, "ae", true);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_stdio_fwrite_a, "AT_COMMON_SIZES");
+
 void BM_stdio_fread_unbuffered(benchmark::State& state) {
-  ReadWriteTest(state, fread, false);
+  ReadWriteTest(state, fread, "re", false);
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_stdio_fread_unbuffered, "AT_COMMON_SIZES");
 
 void BM_stdio_fwrite_unbuffered(benchmark::State& state) {
-  ReadWriteTest(state, fwrite, false);
+  ReadWriteTest(state, fwrite, "we", false);
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_stdio_fwrite_unbuffered, "AT_COMMON_SIZES");
 

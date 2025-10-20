@@ -45,6 +45,7 @@
 #include "linker_relocate.h"
 #include "linker_utils.h"
 #include "platform/bionic/mte.h"
+#include "private/bionic_arc4random.h"
 #include "private/bionic_globals.h"
 
 SymbolLookupList::SymbolLookupList(soinfo* si)
@@ -771,12 +772,11 @@ void soinfo::generate_handle() {
   // Make sure the handle is unique and does not collide
   // with special values which are RTLD_DEFAULT and RTLD_NEXT.
   do {
-    if (!is_first_stage_init()) {
+    if (__libc_arc4random_ready()) {
       arc4random_buf(&handle_, sizeof(handle_));
     } else {
-      // arc4random* is not available in init because /dev/urandom hasn't yet been
-      // created. So, when running with init, use the monotonically increasing
-      // numbers as handles
+      // Use monotonically increasing numbers as handles if we don't have
+      // entropy yet
       handle_ += 2;
     }
     // the least significant bit for the handle is always 1

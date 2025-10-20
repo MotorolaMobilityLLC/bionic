@@ -33,8 +33,11 @@
 
 #include "utils.h"
 
-// http://b/20017123.
-TEST(sys_prctl, bug_20017123) {
+// https://nvd.nist.gov/vuln/detail/CVE-2015-6640: prctl_set_vma_anon_name in kernel/sys.c in
+// Android before 5.1.1 LMY49F and 6.0 before 2016-01-01 does not ensure that only one vma is
+// accessed in a certain update action, which allows attackers to gain privileges or cause a denial
+// of service (vma list corruption) via a crafted application, aka internal bug 20017123.
+TEST(sys_prctl, cve_2015_6640) {
   size_t page_size = static_cast<size_t>(sysconf(_SC_PAGESIZE));
   void* p = mmap(NULL, page_size * 3, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   ASSERT_NE(MAP_FAILED, p);

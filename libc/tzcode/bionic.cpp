@@ -36,12 +36,12 @@
 #include "private/CachedProperty.h"
 
 extern "C" void tzset_unlocked(void);
-extern "C" void __bionic_get_system_tz(char* buf, size_t n);
+extern "C" void __bionic_get_system_tz(char* buf);
 extern "C" int __bionic_open_tzdata(const char*, int32_t*);
 
 extern "C" void tzsetlcl(char const*);
 
-void __bionic_get_system_tz(char* buf, size_t n) {
+void __bionic_get_system_tz(char* buf) {
   static CachedProperty persist_sys_timezone("persist.sys.timezone");
   const char* name = persist_sys_timezone.Get();
 
@@ -50,7 +50,7 @@ void __bionic_get_system_tz(char* buf, size_t n) {
   // classic example), fall back to GMT.
   if (name == nullptr) name = "GMT";
 
-  strlcpy(buf, name, n);
+  strcpy(buf, name);
 
   if (!strcmp(buf, "GMT")) {
     // Typically we'll set the system property to an Olson ID, but
@@ -77,16 +77,16 @@ void __bionic_get_system_tz(char* buf, size_t n) {
 
 void tzset_unlocked() {
   // The TZ environment variable is meant to override the system-wide setting.
-  const char* name = getenv("TZ");
-  char buf[PROP_VALUE_MAX];
-
-  // If that's not set, look at the "persist.sys.timezone" system property.
-  if (name == nullptr) {
-    __bionic_get_system_tz(buf, sizeof(buf));
-    name = buf;
+  const char* tz = getenv("TZ");
+  if (tz != nullptr) {
+    tzsetlcl(tz);
+    return;
   }
 
-  tzsetlcl(name);
+  // If that's not set, look at the "persist.sys.timezone" system property.
+  char property[PROP_VALUE_MAX];
+  __bionic_get_system_tz(property);
+  tzsetlcl(property);
 }
 
 #if !defined(__ANDROID__)

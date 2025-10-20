@@ -129,9 +129,11 @@ struct drm_ivpu_metric_streamer_get_data {
   __u64 buffer_size;
   __u64 data_size;
 };
+#define DRM_IVPU_CMDQ_FLAG_TURBO 0x00000001
 struct drm_ivpu_cmdq_create {
   __u32 cmdq_id;
   __u32 priority;
+  __u32 flags;
 };
 struct drm_ivpu_cmdq_destroy {
   __u32 cmdq_id;

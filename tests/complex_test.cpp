@@ -244,6 +244,24 @@ TEST(complex_h, cpowl) {
   ASSERT_EQ(8.0L, cpowl(2.0L, 3.0L));
 }
 
+TEST(complex_h, cpow_zero) {
+  // https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=289447
+  complex double z = 0.0 + 0.0 * I;
+  complex double r = cpow(z, z);
+  EXPECT_EQ(1.0, creal(r));
+  EXPECT_EQ(0.0, cimag(r));
+
+  complex float zf = 0.0f + 0.0f * I;
+  complex float rf = cpowf(zf, zf);
+  EXPECT_EQ(1.0f, crealf(rf));
+  EXPECT_EQ(0.0f, cimagf(rf));
+
+  complex long double zld = 0.0L + 0.L * I;
+  complex float rld = cpowf(zld, zld);
+  EXPECT_EQ(1.0L, crealf(rld));
+  EXPECT_EQ(0.0L, cimagf(rld));
+}
+
 TEST(complex_h, cproj) {
   ASSERT_EQ(0.0, cproj(0));
 }

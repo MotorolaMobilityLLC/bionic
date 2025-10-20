@@ -243,6 +243,12 @@
 #if defined(__NR_fgetxattr)
   #define SYS_fgetxattr __NR_fgetxattr
 #endif
+#if defined(__NR_file_getattr)
+  #define SYS_file_getattr __NR_file_getattr
+#endif
+#if defined(__NR_file_setattr)
+  #define SYS_file_setattr __NR_file_setattr
+#endif
 #if defined(__NR_finit_module)
   #define SYS_finit_module __NR_finit_module
 #endif

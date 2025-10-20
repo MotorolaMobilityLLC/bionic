@@ -36,7 +36,7 @@
 // Current layout (changes from release to release):
 //
 // word   name            description
-// 0      edx             registers
+// 0      eip             registers
 // 1      ebx
 // 2      esp
 // 3      ebp
@@ -45,9 +45,9 @@
 // 6      sigmask         64-bit signal mask (not used with _setjmp / _longjmp)
 // 7      "               "
 // 8      sigflag/cookie  setjmp cookie in top 31 bits, signal mask flag in low bit
-// 9      checksum        checksum of the core registers, to give better error messages.
+// 9      checksum
 
-#define _JB_EDX 0
+#define _JB_EIP 0
 #define _JB_EBX 1
 #define _JB_ESP 2
 #define _JB_EBP 3
@@ -59,7 +59,7 @@
 
 .macro m_calculate_checksum dst, src
   movl $0, \dst
-  .irp i,0,1,2,3,4,5
+  .irp i,0,1,2,3,4,5,6,7,8
     xorl (\i*4)(\src), \dst
   .endr
 .endm
@@ -71,18 +71,16 @@ END(setjmp)
 
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(_setjmp)
   movl $0,%eax
-  jmp .L_sigsetjmp
+  jmp L(_sigsetjmp)
 END(_setjmp)
 
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   movl 8(%esp),%eax
 
-.L_sigsetjmp:
-  PIC_PROLOGUE
+L(_sigsetjmp):
   pushl %eax
-  call PIC_PLT(__bionic_setjmp_cookie_get)
+  call __bionic_setjmp_cookie_get
   addl $4,%esp
-  PIC_EPILOGUE
 
   // Record the setjmp cookie and whether or not we're saving the signal mask.
   movl 4(%esp),%ecx
@@ -110,13 +108,13 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   andl $-2,%eax
 
   // Save the callee-save registers.
+  // (We use %edx to hold the return address off the stack for the future %eip.)
   movl 0(%esp),%edx
-
 .macro m_mangle_register reg, offset
   movl \reg,(\offset * 4)(%ecx)
   xorl %eax,(\offset * 4)(%ecx)
 .endm
-  m_mangle_register %edx, _JB_EDX
+  m_mangle_register %edx, _JB_EIP
   m_mangle_register %ebx, _JB_EBX
   m_mangle_register %esp, _JB_ESP
   m_mangle_register %ebp, _JB_EBP
@@ -136,7 +134,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   // Check the checksum before doing anything.
   m_calculate_checksum %eax, %edx
   xorl (_JB_CHECKSUM * 4)(%edx), %eax
-  jnz 3f
+  jnz L(checksum_failure)
 
   // Do we have a signal mask to restore?
   movl (_JB_SIGFLAG * 4)(%edx), %eax
@@ -176,32 +174,30 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   movl %ecx,%ebx
   movl %ecx,%esi
   movl %ecx,%edi
-  xorl (_JB_EDX * 4)(%edx),%ecx
+  xorl (_JB_EIP * 4)(%edx),%ecx
   xorl (_JB_EBX * 4)(%edx),%ebx
   xorl (_JB_ESI * 4)(%edx),%esi
   xorl (_JB_EDI * 4)(%edx),%edi
 
-  PIC_PROLOGUE
   pushl %eax
   pushl %ecx
   pushl (_JB_SIGFLAG * 4)(%edx)
-  call PIC_PLT(__bionic_setjmp_cookie_check)
+  call __bionic_setjmp_cookie_check
   addl $4,%esp
   popl %ecx
   popl %eax
-  PIC_EPILOGUE
 
+  // Return 1 if value is 0, value otherwise.
+  movl $1,%edx
   testl %eax,%eax
-  jnz 2f
-  incl %eax
-2:
+  cmovzl %edx,%eax
+  // Overwrite the return address with our stashed %eip value and return.
   movl %ecx,0(%esp)
   ret
 
-3:
-  PIC_PROLOGUE
+L(checksum_failure):
   pushl (_JB_SIGMASK * 4)(%edx)
-  call PIC_PLT(__bionic_setjmp_checksum_mismatch)
+  call __bionic_setjmp_checksum_mismatch
 END(siglongjmp)
 
 ALIAS_SYMBOL_WEAK_FOR_NATIVE_BRIDGE(longjmp, siglongjmp)

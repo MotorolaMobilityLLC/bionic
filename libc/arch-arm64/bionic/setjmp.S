@@ -43,11 +43,11 @@
 // Current layout (changes from release to release):
 //
 // word   name            description
-// 0      sigflag/cookie  setjmp cookie in top 31 bits, signal mask flag in low bit
+// 0      sigflag/cookie  setjmp cookie in top 63 bits, signal mask flag in low bit
 // 1      sigmask         signal mask (not used with _setjmp / _longjmp)
 // 2      core_base       base of core registers (x18-x30, sp)
 // 16     float_base      base of float registers (d8-d15)
-// 24     checksum        checksum of core registers
+// 24     checksum
 // 25     reserved        reserved entries (room to grow)
 // 32
 
@@ -293,9 +293,10 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   ldp d10, d11, [x0, #(_JB_D10_D11 * 8)]
   ldp d8,  d9,  [x0, #(_JB_D8_D9   * 8)]
 
-  // Set return value.
+  // Return 1 if value (in w1) is 0, value otherwise.
   cmp w1, wzr
   csinc w0, w1, wzr, ne
+
   autiasp
   .cfi_negate_ra_state
   ret

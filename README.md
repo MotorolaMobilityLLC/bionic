@@ -134,20 +134,21 @@ libc/
         # header/source files needed by the BSD implementation.
 
   bionic/
-    # This is the biggest mess. The C++ files are files we own, typically
-    # because the Linux kernel interface is sufficiently different that we
-    # can't use any of the BSD implementations. The C files are usually
+    # This is where code we wrote lives. The C++ files are files we own,
+    # typically because the Linux kernel interface is sufficiently different
+    # that we can't use any of the BSD implementations. The C files are
     # legacy mess that needs to be sorted out, either by replacing it with
     # current upstream source in one of the upstream directories or by
     # switching the file to C++ and cleaning it up.
 
-  malloc_debug/
-    # The code that implements the functionality to enable debugging of
-    # native allocation problems.
+  memory/
+    # Glue code and utilities related to the native heap. Note that the actual
+    # heap implementation is in external/scudo/.
 
   stdio/
     # These are legacy files of dubious provenance. We're working to clean
-    # this mess up, and this directory should disappear.
+    # this mess up, and this directory should disappear when the stdio
+    # implementation moves into bionic/libc/bionic/.
 
   tools/
     # Various tools used to maintain bionic.
@@ -160,6 +161,19 @@ libc/
     # Android-format timezone data.
     # See 'Updating tzdata' later.
 ```
+
+## I can't find the implementation of a function --- where is it?
+
+System call stubs (explained in more detail below) are generated from
+SYSCALLS.TXT at build time, and not checked in.
+
+The heap implementation is in external/scudo/.
+
+Some optimized assembler string/memory and math routines for arm/arm64 are
+in external/arm-optimized-routines/ (though many -- especially for 32-bit arm --
+are in bionic).
+
+Some code also comes from external/llvm-libc/.
 
 ## Adding a new function
 

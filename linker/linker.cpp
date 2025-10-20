@@ -75,6 +75,7 @@
 #include "android-base/macros.h"
 #include "android-base/stringprintf.h"
 #include "android-base/strings.h"
+#include "private/bionic_arc4random.h"
 #include "private/bionic_asm_note.h"
 #include "private/bionic_call_ifunc_resolver.h"
 #include "private/bionic_globals.h"
@@ -645,10 +646,12 @@ class LoadTask {
     si_->set_gap_size(elf_reader.gap_size());
     si_->set_should_pad_segments(elf_reader.should_pad_segments());
     si_->set_should_use_16kib_app_compat(elf_reader.should_use_16kib_app_compat());
+    si_->set_should_16kib_app_compat_use_rwx(elf_reader.should_16kib_app_compat_use_rwx());
     if (si_->should_use_16kib_app_compat()) {
-      si_->set_compat_relro_start(elf_reader.compat_relro_start());
-      si_->set_compat_relro_size(elf_reader.compat_relro_size());
+      si_->set_compat_code_start(elf_reader.compat_code_start());
+      si_->set_compat_code_size(elf_reader.compat_code_size());
     }
+    si_->set_note_gnu_property(elf_reader.note_gnu_property());
 
     return true;
   }
@@ -1529,11 +1532,8 @@ static bool find_library_internal(android_namespace_t* ns,
 static void soinfo_unload(soinfo* si);
 
 static void shuffle(std::vector<LoadTask*>* v) {
-  if (is_first_stage_init()) {
-    // arc4random* is not available in first stage init because /dev/random
-    // hasn't yet been created.
-    return;
-  }
+  if (!__libc_arc4random_ready()) return;
+
   for (size_t i = 0, size = v->size(); i < size; ++i) {
     size_t n = size - i;
     size_t r = arc4random_uniform(n);
@@ -3422,6 +3422,12 @@ bool soinfo::link_image(const SymbolLookupList& lookup_list, soinfo* local_group
     return false;
   }
 
+  // Now that we've finished linking we can apply execute permission to code segments in compat
+  // loaded binaries, and remove write permission from .text and GNU RELRO in RX|RW compat mode.
+  if (!protect_16kib_app_compat_code()) {
+    return false;
+  }
+
   if (should_tag_memtag_globals()) {
     std::list<std::string>* vma_names_ptr = vma_names();
     // should_tag_memtag_globals -> __aarch64__ -> vma_names() != nullptr
@@ -3452,18 +3458,14 @@ bool soinfo::link_image(const SymbolLookupList& lookup_list, soinfo* local_group
 
 bool soinfo::protect_relro() {
   if (should_use_16kib_app_compat_) {
-    if (phdr_table_protect_gnu_relro_16kib_compat(compat_relro_start_, compat_relro_size_) < 0) {
-      DL_ERR("can't enable COMPAT GNU RELRO protection for \"%s\": %s", get_realpath(),
-             strerror(errno));
-      return false;
-    }
-  } else {
-    if (phdr_table_protect_gnu_relro(phdr, phnum, load_bias, should_pad_segments_,
-                                     should_use_16kib_app_compat_) < 0) {
-      DL_ERR("can't enable GNU RELRO protection for \"%s\": %m", get_realpath());
-      return false;
-    }
+    return true;
   }
+
+  if (phdr_table_protect_gnu_relro(phdr, phnum, load_bias, should_pad_segments_) < 0) {
+    DL_ERR("can't enable GNU RELRO protection for \"%s\": %m", get_realpath());
+    return false;
+  }
+
   return true;
 }
 
@@ -3652,8 +3654,8 @@ std::vector<android_namespace_t*> init_default_namespaces(const char* executable
     LD_DEBUG(any, "[ Reading linker config \"%s\" ]", ld_config_file_path.c_str());
     ScopedTrace trace(("linker config " + ld_config_file_path).c_str());
     std::string error_msg;
-    if (!Config::read_binary_config(ld_config_file_path.c_str(), executable_path, g_is_asan, g_is_hwasan,
-                                    &config, &error_msg)) {
+    if (!Config::read_config_for_binary(ld_config_file_path.c_str(), executable_path,
+                                        g_is_asan, g_is_hwasan, &config, &error_msg)) {
       if (!error_msg.empty()) {
         DL_WARN("Warning: couldn't read '%s' for '%s' (using default configuration instead): %s",
                 ld_config_file_path.c_str(), executable_path, error_msg.c_str());

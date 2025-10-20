@@ -242,8 +242,3 @@ std::string resolve_path(const std::string& path) {
   }
   return "";
 }
-
-bool is_first_stage_init() {
-  static bool ret = (getpid() == 1 && access("/proc/self/exe", F_OK) == -1);
-  return ret;
-}

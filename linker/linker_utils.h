@@ -56,4 +56,3 @@ void split_path(const char* path, const char* delimiters, std::vector<std::strin
 std::string dirname(const char* path);
 
 bool safe_add(off64_t* out, off64_t a, size_t b);
-bool is_first_stage_init();

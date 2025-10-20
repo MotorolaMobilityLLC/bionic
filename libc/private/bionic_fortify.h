@@ -36,6 +36,7 @@
 #include <sys/select.h> // For struct fd_set.
 
 #include <async_safe/log.h>
+#include <private/bionic_inline_raise.h>
 
 //
 // LLVM can't inline variadic functions, and we don't want one definition of
@@ -46,6 +47,11 @@ inline __noreturn __printflike(1, 2) void __fortify_fatal(const char* fmt, ...) 
   va_start(args, fmt);
   async_safe_fatal_va_list("FORTIFY", fmt, args);
   va_end(args);
+
+  // Assume we can save a stack frame in the crash, fall back to abort() if not.
+#if !defined(BIONIC_RUST_BAREMETAL)
+  inline_raise(SIGABRT);
+#endif
   abort();
 }
 

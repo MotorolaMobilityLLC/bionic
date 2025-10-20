@@ -326,6 +326,11 @@ cc_defaults {
         // which is not supported in the loader.
         "libc++_static_noexcept",
 
+        // Similarly, to avoid libstd's use of ELF TLS, use
+        // direct alloc + panic providers
+        "libbionic_panic_abort",
+        "liblibc_alloc_rust",
+
         "libc_nomalloc",
         "libc_dynamic_dispatch",
         "libm",
@@ -385,6 +390,11 @@ cc_defaults {
         linux_bionic: {
             static_libs: [
                 "liblinker_debuggerd_stub",
+                "libstd",
+            ],
+            exclude_static_libs: [
+                "libbionic_panic_abort",
+                "liblibc_alloc_rust",
             ],
         },
     },
@@ -435,6 +445,7 @@ cc_defaults {
 }
 
 cc_library {
+    name: "ld-android",
     srcs: ["ld_android.cpp"],
     cflags: [
         "-Wall",
@@ -444,7 +455,6 @@ cc_library {
     ],
     stl: "none",
 
-    name: "ld-android",
     defaults: [
         "linux_bionic_supported",
         "linker_version_script_overlay",
@@ -474,6 +484,7 @@ cc_library {
 cc_test {
     name: "linker-unit-tests",
     test_suites: ["device-tests"],
+    isolated: true,
 
     cflags: [
         "-g",
@@ -509,7 +520,11 @@ cc_test {
         "linker_mapped_file_fragment.cpp",
         "linker_sdk_versions.cpp",
         "linker_dlwarning.cpp",
-        "linker_phdr_16kib_compat.cpp"
+        "linker_phdr_16kib_compat.cpp",
+        "linker_transparent_hugepage_support.cpp",
+
+        // linker_phdr.cpp dependency
+        ":libc_sources_arc4random",
     ],
 
     static_libs: [
@@ -531,6 +546,7 @@ cc_test {
         },
         arm64: {
             srcs: ["arch/arm_neon/linker_gnu_hash_neon.cpp"],
+            data_libs: ["note_gnu_property"],
         },
     },
 }

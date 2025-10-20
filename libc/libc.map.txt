@@ -377,6 +377,8 @@ LIBC {
     fputws;
     fread;
     free;
+    free_sized; # introduced=37
+    free_aligned_sized; # introduced=37
     freeaddrinfo;
     freelocale;
     fremovexattr;

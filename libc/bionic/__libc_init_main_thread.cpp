@@ -111,7 +111,7 @@ extern "C" void android_reset_stack_guards() {
   // The TLS stack guard is set from the global, so ensure that we've initialized the global
   // before we initialize the TLS. Dynamic executables will initialize their copy of the global
   // stack protector from the one in the main thread's TLS.
-  __libc_safe_arc4random_buf(&__stack_chk_guard, sizeof(__stack_chk_guard));
+  __libc_arc4random_buf_or_die(&__stack_chk_guard, sizeof(__stack_chk_guard));
   __init_tcb_stack_guard(__get_bionic_tcb());
 }
 

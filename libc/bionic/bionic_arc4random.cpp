@@ -31,16 +31,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/auxv.h>
+#include <sys/random.h>
 #include <unistd.h>
 
 #include <async_safe/log.h>
 
-void __libc_safe_arc4random_buf(void* buf, size_t n) {
-  // Only call arc4random_buf once we have `/dev/urandom` because getentropy(3)
-  // will fall back to using `/dev/urandom` if getrandom(2) fails, and abort if
-  // if can't use `/dev/urandom`.
-  static bool have_urandom = access("/dev/urandom", R_OK) == 0;
-  if (have_urandom) {
+void __libc_arc4random_buf_or_die(void* buf, size_t n) {
+  if (__libc_arc4random_ready()) {
     arc4random_buf(buf, n);
     return;
   }
@@ -53,5 +50,23 @@ void __libc_safe_arc4random_buf(void* buf, size_t n) {
 
   memcpy(buf, reinterpret_cast<char*>(getauxval(AT_RANDOM)) + at_random_bytes_consumed, n);
   at_random_bytes_consumed += n;
-  return;
+}
+
+uint32_t __libc_arc4random_uniform_or_zero(uint32_t upper_bound) {
+  return __libc_arc4random_ready() ? arc4random_uniform(upper_bound) : 0;
+}
+
+bool __libc_arc4random_ready() {
+  // This is true for the lifetime of the process...
+  static bool is_first_stage_init = getpid() == 1 && access("/proc/self/exe", F_OK) == -1;
+  if (!is_first_stage_init) return true;
+
+  // ...while this might change
+  static bool getrandom_ready;
+  if (getrandom_ready) return true;
+
+  char buf;
+  getrandom_ready = getrandom(&buf, 1, GRND_NONBLOCK) == 1;
+
+  return getrandom_ready;
 }

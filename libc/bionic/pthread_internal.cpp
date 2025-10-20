@@ -130,7 +130,7 @@ static uintptr_t __get_main_stack_startstack() {
     async_safe_fatal("couldn't open /proc/self/stat: %m");
   }
 
-  char line[BUFSIZ];
+  char line[BUFSIZ] __attribute__((__uninitialized__));
   if (fgets(line, sizeof(line), fp) == nullptr) {
     async_safe_fatal("couldn't read /proc/self/stat: %m");
   }
@@ -165,7 +165,7 @@ void __find_main_stack_limits(uintptr_t* low, uintptr_t* high) {
   if (fp == nullptr) {
     async_safe_fatal("couldn't open /proc/self/maps: %m");
   }
-  char line[BUFSIZ];
+  char line[BUFSIZ] __attribute__((__uninitialized__));
   while (fgets(line, sizeof(line), fp) != nullptr) {
     uintptr_t lo, hi;
     if (sscanf(line, "%" SCNxPTR "-%" SCNxPTR, &lo, &hi) == 2) {

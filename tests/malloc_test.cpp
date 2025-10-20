@@ -506,41 +506,12 @@ TEST(malloc, mallopt_unique_params) {
 #endif
 }
 
-#if defined(__BIONIC__)
-static void GetAllocatorVersion(bool* allocator_scudo) {
-  TemporaryFile tf;
-  ASSERT_TRUE(tf.fd != -1);
-  FILE* fp = fdopen(tf.fd, "w+");
-  tf.release();
-  ASSERT_TRUE(fp != nullptr);
-  if (malloc_info(0, fp) != 0) {
-    *allocator_scudo = false;
-    return;
-  }
-  ASSERT_EQ(0, fclose(fp));
-
-  std::string contents;
-  ASSERT_TRUE(android::base::ReadFileToString(tf.path, &contents));
-
-  tinyxml2::XMLDocument doc;
-  ASSERT_EQ(tinyxml2::XML_SUCCESS, doc.Parse(contents.c_str()));
-
-  auto root = doc.FirstChildElement();
-  ASSERT_NE(nullptr, root);
-  ASSERT_STREQ("malloc", root->Name());
-  std::string version(root->Attribute("version"));
-  *allocator_scudo = (version == "scudo-1");
-}
-#endif
-
 TEST(malloc, mallopt_scudo_only_options) {
 #if defined(__BIONIC__)
   SKIP_WITH_HWASAN << "hwasan does not implement mallopt";
-  bool allocator_scudo;
-  GetAllocatorVersion(&allocator_scudo);
-  if (!allocator_scudo) {
-    GTEST_SKIP() << "scudo allocator only test";
-  }
+
+  SKIP_WITHOUT_SCUDO << "scudo allocator only test";
+
   ASSERT_EQ(1, mallopt(M_CACHE_COUNT_MAX, 100));
   ASSERT_EQ(1, mallopt(M_CACHE_SIZE_MAX, 1024 * 1024 * 2));
   ASSERT_EQ(1, mallopt(M_TSDS_COUNT_MAX, 8));
@@ -1045,11 +1016,8 @@ void TestHeapZeroing(int num_iterations, int (*get_alloc_size)(int iteration)) {
 TEST(malloc, zero_init) {
 #if defined(__BIONIC__)
   SKIP_WITH_HWASAN << "hwasan does not implement mallopt";
-  bool allocator_scudo;
-  GetAllocatorVersion(&allocator_scudo);
-  if (!allocator_scudo) {
-    GTEST_SKIP() << "scudo allocator only test";
-  }
+
+  SKIP_WITHOUT_SCUDO << "scudo allocator only test";
 
   mallopt(M_BIONIC_ZERO_INIT, 1);
 
@@ -1113,11 +1081,7 @@ TEST(malloc, allocation_slack) {
 #if defined(__BIONIC__)
   SKIP_WITH_NATIVE_BRIDGE;  // http://b/189606147
 
-  bool allocator_scudo;
-  GetAllocatorVersion(&allocator_scudo);
-  if (!allocator_scudo) {
-    GTEST_SKIP() << "scudo allocator only test";
-  }
+  SKIP_WITHOUT_SCUDO << "scudo allocator only test";
 
   // Test that older target SDK levels let you access a few bytes off the end of
   // a large allocation.

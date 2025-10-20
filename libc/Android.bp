@@ -215,6 +215,7 @@ cc_library_static {
 // -ffreestanding.
 
 cc_library_static {
+    name: "libc_bootstrap",
 
     srcs: [
         "bionic/__libc_init_main_thread.cpp",
@@ -237,7 +238,6 @@ cc_library_static {
         "-fno-stack-protector",
         "-ffreestanding",
     ],
-    name: "libc_bootstrap",
 }
 
 filegroup {
@@ -278,6 +278,7 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
+    name: "libc_tzcode",
 
     defaults: ["libc_defaults"],
     srcs: [
@@ -320,7 +321,6 @@ cc_library_static {
         "tzcode/",
         "upstream-freebsd/android/include",
     ],
-    name: "libc_tzcode",
 }
 
 // ========================================================
@@ -328,6 +328,7 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
+    name: "libc_dns",
 
     defaults: ["libc_defaults"],
     srcs: [
@@ -351,8 +352,6 @@ cc_library_static {
         "upstream-netbsd/lib/libc/include",
         "upstream-netbsd/android/include",
     ],
-
-    name: "libc_dns",
 }
 
 // ========================================================
@@ -370,13 +369,10 @@ cc_library_static {
 }
 
 cc_library_static {
+    name: "libc_freebsd",
     defaults: ["libc_defaults"],
     srcs: [
         "upstream-freebsd/lib/libc/stdlib/getopt_long.c",
-        "upstream-freebsd/lib/libc/stdlib/hcreate.c",
-        "upstream-freebsd/lib/libc/stdlib/hcreate_r.c",
-        "upstream-freebsd/lib/libc/stdlib/hdestroy_r.c",
-        "upstream-freebsd/lib/libc/stdlib/hsearch_r.c",
         "upstream-freebsd/lib/libc/stdlib/quick_exit.c",
         "upstream-freebsd/lib/libc/string/wcsdup.c",
     ],
@@ -390,11 +386,10 @@ cc_library_static {
     local_include_dirs: [
         "upstream-freebsd/android/include",
     ],
-
-    name: "libc_freebsd",
 }
 
 cc_library_static {
+    name: "libc_freebsd_large_stack",
     defaults: ["libc_defaults"],
     srcs: [
         "upstream-freebsd/lib/libc/gen/glob.c",
@@ -409,8 +404,6 @@ cc_library_static {
     local_include_dirs: [
         "upstream-freebsd/android/include",
     ],
-
-    name: "libc_freebsd_large_stack",
 }
 
 // ========================================================
@@ -421,7 +414,7 @@ cc_library_static {
 // automatically included.
 
 cc_library_static {
-
+    name: "libc_netbsd",
     defaults: ["libc_defaults"],
     srcs: [
         "upstream-netbsd/common/lib/libc/stdlib/random.c",
@@ -460,8 +453,6 @@ cc_library_static {
         "upstream-netbsd/android/include",
         "upstream-netbsd/lib/libc/include",
     ],
-
-    name: "libc_netbsd",
 }
 
 // ========================================================
@@ -471,6 +462,7 @@ cc_library_static {
 // These files are built with the openbsd-compat.h header file
 // automatically included.
 cc_library_static {
+    name: "libc_openbsd",
     defaults: ["libc_defaults"],
     srcs: [
         "upstream-openbsd/lib/libc/crypt/arc4random.c",
@@ -495,29 +487,21 @@ cc_library_static {
         "upstream-openbsd/lib/libc/net/inet_ntop.c",
         "upstream-openbsd/lib/libc/net/inet_pton.c",
         "upstream-openbsd/lib/libc/net/res_random.c",
-        "upstream-openbsd/lib/libc/stdio/fgetln.c",
         "upstream-openbsd/lib/libc/stdio/fgetwc.c",
         "upstream-openbsd/lib/libc/stdio/fgetws.c",
         "upstream-openbsd/lib/libc/stdio/flags.c",
         "upstream-openbsd/lib/libc/stdio/fputwc.c",
         "upstream-openbsd/lib/libc/stdio/fputws.c",
         "upstream-openbsd/lib/libc/stdio/fvwrite.c",
-        "upstream-openbsd/lib/libc/stdio/fwide.c",
         "upstream-openbsd/lib/libc/stdio/getdelim.c",
         "upstream-openbsd/lib/libc/stdio/gets.c",
-        "upstream-openbsd/lib/libc/stdio/makebuf.c",
         "upstream-openbsd/lib/libc/stdio/mktemp.c",
         "upstream-openbsd/lib/libc/stdio/open_memstream.c",
         "upstream-openbsd/lib/libc/stdio/open_wmemstream.c",
-        "upstream-openbsd/lib/libc/stdio/rget.c",
-        "upstream-openbsd/lib/libc/stdio/setvbuf.c",
         "upstream-openbsd/lib/libc/stdio/ungetc.c",
         "upstream-openbsd/lib/libc/stdio/ungetwc.c",
         "upstream-openbsd/lib/libc/stdio/vasprintf.c",
-        "upstream-openbsd/lib/libc/stdio/vdprintf.c",
-        "upstream-openbsd/lib/libc/stdio/vsscanf.c",
         "upstream-openbsd/lib/libc/stdio/vswprintf.c",
-        "upstream-openbsd/lib/libc/stdio/vswscanf.c",
         "upstream-openbsd/lib/libc/stdio/wbuf.c",
         "upstream-openbsd/lib/libc/stdio/wsetup.c",
         "upstream-openbsd/lib/libc/stdlib/getenv.c",
@@ -529,8 +513,6 @@ cc_library_static {
         "upstream-openbsd/lib/libc/string/strcasestr.c",
         "upstream-openbsd/lib/libc/string/strdup.c",
         "upstream-openbsd/lib/libc/string/strndup.c",
-        "upstream-openbsd/lib/libc/string/strsep.c",
-        "upstream-openbsd/lib/libc/string/strtok.c",
 
         // These files are originally from OpenBSD,
         // and benefit from being compiled with openbsd-compat.h.
@@ -553,7 +535,6 @@ cc_library_static {
         },
         arm64: {
             srcs: [
-                "upstream-openbsd/lib/libc/string/strcat.c",
                 "upstream-openbsd/lib/libc/string/stpncpy.c",
                 "upstream-openbsd/lib/libc/string/strncat.c",
                 "upstream-openbsd/lib/libc/string/strncpy.c",
@@ -590,8 +571,6 @@ cc_library_static {
         "upstream-openbsd/lib/libc/include/",
         "upstream-openbsd/lib/libc/stdio/",
     ],
-
-    name: "libc_openbsd",
 }
 
 cc_library_static {
@@ -620,6 +599,7 @@ cc_library_static {
 // automatically included.
 
 cc_library_static {
+    name: "libc_gdtoa",
     defaults: ["libc_defaults"],
     srcs: [
         "upstream-openbsd/android/gdtoa_support.cpp",
@@ -657,8 +637,6 @@ cc_library_static {
         "upstream-openbsd/android/include",
         "upstream-openbsd/lib/libc/include",
     ],
-
-    name: "libc_gdtoa",
 }
 
 // ========================================================
@@ -666,10 +644,9 @@ cc_library_static {
 // implementation details
 // ========================================================
 cc_library_static {
+    name: "libc_fortify",
     defaults: ["libc_defaults"],
     srcs: ["bionic/fortify.cpp"],
-
-    name: "libc_fortify",
 
     // Disable FORTIFY for the compilation of these, so we don't end up having
     // FORTIFY silently call itself.
@@ -719,7 +696,7 @@ cc_library_static {
 // icu4x_bionic.a - Thin Rust wrapper around ICU4X
 // ========================================================
 
-rust_ffi_static {
+rust_library_rlib {
     name: "libicu4x_bionic",
     crate_name: "icu4x_bionic",
     crate_root: "bionic/icu4x.rs",
@@ -741,6 +718,7 @@ rust_ffi_static {
     recovery_available: true,
     native_bridge_supported: true,
     sdk_version: "minimum",
+    no_stdlibs: true,
     defaults: ["linux_bionic_supported"],
 }
 
@@ -748,7 +726,11 @@ rust_ffi_static {
 // go/android-mto-staticlibs-in-make
 cc_rustlibs_for_make {
     name: "libstatic_rustlibs_for_make",
-    whole_static_libs: ["libicu4x_bionic"],
+    whole_static_libs: [
+        "libicu4x_bionic",
+        "libbionic_panic_abort",
+        "liblibc_alloc_rust",
+    ],
     apex_available: [
         "//apex_available:platform",
         "//apex_available:anyapex",
@@ -767,6 +749,7 @@ cc_rustlibs_for_make {
 // ========================================================
 
 cc_library_static {
+    name: "libc_bionic",
     defaults: ["libc_defaults"],
     srcs: [
         "bionic/NetdClientDispatch.cpp",
@@ -940,10 +923,10 @@ cc_library_static {
         "bionic/socketpair.cpp",
         "bionic/spawn.cpp",
         "bionic/stat.cpp",
-        "bionic/stdlib_l.cpp",
         "bionic/strerror.cpp",
-        "bionic/string_l.cpp",
+        "bionic/string.cpp",
         "bionic/strsignal.cpp",
+        "bionic/strtod.cpp",
         "bionic/strtol.cpp",
         "bionic/strtold.cpp",
         "bionic/swab.cpp",
@@ -987,7 +970,6 @@ cc_library_static {
         // TODO: finish cleanup.
         "stdio/fmemopen.cpp",
         "stdio/parsefloat.c",
-        "stdio/refill.c",
         "stdio/stdio.cpp",
         "stdio/stdio_ext.cpp",
         "stdio/vfscanf.cpp",
@@ -1069,6 +1051,7 @@ cc_library_static {
                 "arch-riscv64/string/stpcpy.S",
                 "arch-riscv64/string/strcat.S",
                 "arch-riscv64/string/strchr.S",
+                "arch-riscv64/string/strchrnul.S",
                 "arch-riscv64/string/strcmp.S",
                 "arch-riscv64/string/strcpy.S",
                 "arch-riscv64/string/strlen.S",
@@ -1117,6 +1100,8 @@ cc_library_static {
 
                 "arch-x86_64/string/avx2-memmove-kbl.S",
                 "arch-x86_64/string/avx2-memset-kbl.S",
+                "arch-x86_64/string/memchr.S",
+                "arch-x86_64/string/memrchr.S",
                 "arch-x86_64/string/sse2-memmove-slm.S",
                 "arch-x86_64/string/sse2-memset-slm.S",
                 "arch-x86_64/string/sse2-stpcpy-slm.S",
@@ -1129,6 +1114,8 @@ cc_library_static {
                 "arch-x86_64/string/sse4-memcmp-slm.S",
                 "arch-x86_64/string/ssse3-strcmp-slm.S",
                 "arch-x86_64/string/ssse3-strncmp-slm.S",
+                "arch-x86_64/string/strchr.S",
+                "arch-x86_64/string/strrchr.S",
             ],
         },
     },
@@ -1154,7 +1141,6 @@ cc_library_static {
 
     cppflags: ["-Wold-style-cast"],
     include_dirs: ["bionic/libstdc++/include"],
-    name: "libc_bionic",
 }
 
 genrule {
@@ -1210,6 +1196,7 @@ genrule {
 }
 
 cc_library_static {
+    name: "libc_syscalls",
     defaults: ["libc_defaults"],
     srcs: ["bionic/__set_errno.cpp"],
     arch: {
@@ -1229,7 +1216,6 @@ cc_library_static {
             srcs: [":syscalls-x86_64"],
         },
     },
-    name: "libc_syscalls",
 }
 
 // ========================================================
@@ -1240,13 +1226,13 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
+    name: "libc_aeabi",
     defaults: ["libc_defaults"],
     arch: {
         arm: {
             srcs: ["arch-arm/bionic/__aeabi.c"],
         },
     },
-    name: "libc_aeabi",
     cflags: ["-fno-builtin"],
 }
 
@@ -1255,8 +1241,8 @@ cc_library_static {
 // ========================================================
 
 cc_library_static {
-    defaults: ["libc_defaults"],
     name: "libc_common",
+    defaults: ["libc_defaults"],
 
     whole_static_libs: [
         "libarm-optimized-routines-string",
@@ -1335,8 +1321,8 @@ cc_library_static {
 // libc_common_static.a For static binaries.
 // ========================================================
 cc_library_static {
-    defaults: ["libc_defaults"],
     name: "libc_common_static",
+    defaults: ["libc_defaults"],
 
     whole_static_libs: [
         "libc_common",
@@ -1348,13 +1334,27 @@ cc_library_static {
 // libc_common_shared.a For shared libraries.
 // ========================================================
 cc_library_static {
-    defaults: ["libc_defaults"],
     name: "libc_common_shared",
+    defaults: ["libc_defaults"],
 
     whole_static_libs: [
         "libc_common",
         "libc_dynamic_dispatch",
+        "libbionic_panic_abort",
+        "liblibc_alloc_rust",
     ],
+
+    target: {
+        linux_bionic: {
+            exclude_static_libs: [
+                "libbionic_panic_abort",
+                "liblibc_alloc_rust",
+            ],
+            whole_static_libs: [
+                "libstd",
+            ],
+        },
+    },
 }
 
 // Versions of dl_iterate_phdr and similar APIs used to lookup unwinding information in a static
@@ -1432,16 +1432,29 @@ filegroup {
 }
 
 // ========================================================
+// libc_sources_arc4random
+// linker_phdr dependency required by linker-unit-tests
+// ========================================================
+filegroup {
+    name: "libc_sources_arc4random",
+    defaults: ["libc_defaults"],
+    srcs: [
+        "bionic/bionic_arc4random.cpp",
+    ],
+    visibility: ["//bionic/linker"],
+}
+
+// ========================================================
 // libc.a + libc.so
 // ========================================================
 cc_defaults {
+    name: "libc_library_defaults",
     defaults: [
         "libc_defaults",
         "libc_native_allocator_defaults",
         "bug_24465209_workaround",
         "keep_symbols",
     ],
-    name: "libc_library_defaults",
     product_variables: {
         platform_sdk_version: {
             asflags: ["-DPLATFORM_SDK_VERSION=%d"],
@@ -1455,6 +1468,7 @@ cc_defaults {
             "libc_init_static",
             "libc_common_static",
             "libc_unwind_static",
+            "libstd",
         ],
     },
     shared: {
@@ -1646,6 +1660,7 @@ cc_library_headers {
         "//system/core/libcutils:__subpackages__",
         "//system/memory/libmemunreachable:__subpackages__",
         "//system/unwinding/libunwindstack:__subpackages__",
+        "//system/librustutils:__subpackages__",
         "//tools/security/sanitizer-status:__subpackages__",
     ],
     vendor_available: true,
@@ -1781,6 +1796,7 @@ cc_library_headers {
 // ========================================================
 
 cc_library {
+    name: "libstdc++",
     defaults: [
         "libc_defaults",
         "bug_24465209_workaround",
@@ -1791,7 +1807,6 @@ cc_library {
         "bionic/__cxa_pure_virtual.cpp",
         "bionic/new.cpp",
     ],
-    name: "libstdc++",
     static_ndk_lib: true,
     static_libs: ["libasync_safe"],
     apex_available: [
@@ -2030,6 +2045,8 @@ cc_library_static {
     cflags: [
         "-Wall",
         "-Werror",
+
+        "-DBIONIC_RUST_BAREMETAL",
     ],
     asflags: [
         "-DBIONIC_RUST_BAREMETAL",
@@ -2060,6 +2077,8 @@ cc_library_static {
                 "-Dmemset_generic=memset",
             ],
             srcs: [
+                "arch-x86_64/string/memchr.S",
+                "arch-x86_64/string/memrchr.S",
                 "arch-x86_64/string/sse2-memmove-slm.S",
                 "arch-x86_64/string/sse2-memset-slm.S",
                 "arch-x86_64/string/sse2-stpcpy-slm.S",
@@ -2072,13 +2091,14 @@ cc_library_static {
                 "arch-x86_64/string/sse4-memcmp-slm.S",
                 "arch-x86_64/string/ssse3-strcmp-slm.S",
                 "arch-x86_64/string/ssse3-strncmp-slm.S",
+                "arch-x86_64/string/strchr.S",
+                "arch-x86_64/string/strrchr.S",
             ],
         },
     },
     whole_static_libs: [
         "//external/llvm-libc:llvmlibc",
         "libarm-optimized-routines-mem",
-        "libc_netbsd",
     ],
     system_shared_libs: [],
     nocrt: true,

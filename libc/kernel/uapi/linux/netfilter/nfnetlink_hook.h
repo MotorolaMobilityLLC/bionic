@@ -39,6 +39,7 @@ enum nfnl_hook_chain_desc_attributes {
 enum nfnl_hook_chaintype {
   NFNL_HOOK_TYPE_NFTABLES = 0x1,
   NFNL_HOOK_TYPE_BPF,
+  NFNL_HOOK_TYPE_NFT_FLOWTABLE,
 };
 enum nfnl_hook_bpf_attributes {
   NFNLA_HOOK_BPF_UNSPEC,

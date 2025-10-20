@@ -26,12 +26,6 @@
  * SUCH DAMAGE.
  */
 
-#include <assert.h>
-#include <errno.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/auxv.h>
 #include <sys/cdefs.h>
 
 #include <async_safe/log.h>
@@ -41,29 +35,25 @@
 
 void __libc_init_setjmp_cookie(libc_globals* globals) {
   long value;
-  __libc_safe_arc4random_buf(&value, sizeof(value));
+  __libc_arc4random_buf_or_die(&value, sizeof(value));
 
   // Mask off the last bit to store the signal flag.
   globals->setjmp_cookie = value & ~1;
 }
 
-extern "C" __LIBC_HIDDEN__ long __bionic_setjmp_cookie_get(long sigflag) {
+extern "C" long __bionic_setjmp_cookie_get(long sigflag) {
   if (sigflag & ~1) {
     async_safe_fatal("unexpected sigflag value: %ld", sigflag);
   }
-
   return __libc_globals->setjmp_cookie | sigflag;
 }
 
-// Aborts if cookie doesn't match, returns the signal flag otherwise.
-extern "C" __LIBC_HIDDEN__ long __bionic_setjmp_cookie_check(long cookie) {
+extern "C" void __bionic_setjmp_cookie_check(long cookie) {
   if (__libc_globals->setjmp_cookie != (cookie & ~1)) {
     async_safe_fatal("setjmp cookie mismatch");
   }
-
-  return cookie & 1;
 }
 
-extern "C" __LIBC_HIDDEN__ long __bionic_setjmp_checksum_mismatch() {
+extern "C" [[noreturn]] void __bionic_setjmp_checksum_mismatch() {
   async_safe_fatal("setjmp checksum mismatch");
 }
