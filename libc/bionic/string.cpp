@@ -33,6 +33,10 @@
 // Core functionality.
 //
 
+void* mempcpy(void* dst, const void* src, size_t n) {
+  return reinterpret_cast<char*>(memcpy(dst, src, n)) + n;
+}
+
 // https://github.com/ARM-software/optimized-routines/issues/89
 #if defined(__aarch64__)
 char* strcat(char* dst, const char* src) {
