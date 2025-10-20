@@ -90,6 +90,24 @@ static void BM_string_memcpy(benchmark::State& state) {
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_memcpy, "AT_ALIGNED_TWOBUF");
 
+static void BM_string_memccpy(benchmark::State& state) {
+  const size_t nbytes = state.range(0);
+  const size_t src_alignment = state.range(1);
+  const size_t dst_alignment = state.range(2);
+
+  std::vector<char> src;
+  std::vector<char> dst;
+  char* src_aligned = GetAlignedPtrFilled(&src, src_alignment, nbytes, 'x');
+  char* dst_aligned = GetAlignedPtr(&dst, dst_alignment, nbytes);
+
+  while (state.KeepRunning()) {
+    memccpy(dst_aligned, src_aligned, 'y', nbytes);
+  }
+
+  state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_memccpy, "AT_ALIGNED_TWOBUF");
+
 static void BM_string_memmove_non_overlapping(benchmark::State& state) {
   const size_t nbytes = state.range(0);
   const size_t src_alignment = state.range(1);

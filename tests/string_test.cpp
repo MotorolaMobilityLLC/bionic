@@ -1669,12 +1669,12 @@ TEST(STRING_TEST, memccpy_smoke) {
 
   memset(dst, 0, sizeof(dst));
   char* p = static_cast<char*>(memccpy(dst, "hello world", ' ', 32));
-  ASSERT_STREQ("hello ", dst);
-  ASSERT_EQ(ptrdiff_t(6), p - dst);
+  EXPECT_STREQ("hello ", dst);
+  EXPECT_EQ(ptrdiff_t(6), p - dst);
 
   memset(dst, 0, sizeof(dst));
-  ASSERT_EQ(nullptr, memccpy(dst, "hello world", ' ', 4));
-  ASSERT_STREQ("hell", dst);
+  EXPECT_EQ(nullptr, memccpy(dst, "hello world", ' ', 4));
+  EXPECT_STREQ("hell", dst);
 }
 
 TEST(STRING_TEST, memset_explicit_smoke) {
