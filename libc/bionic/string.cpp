@@ -33,6 +33,7 @@
 // Core functionality.
 //
 
+#if !defined(__x86_64__)
 void* memccpy(void* dst, const void* src, int c, size_t n) {
   const char* p = static_cast<const char*>(memchr(src, c, n));
   if (p != nullptr) {
@@ -43,6 +44,7 @@ void* memccpy(void* dst, const void* src, int c, size_t n) {
   memcpy(dst, src, n);
   return nullptr;
 }
+#endif
 
 void* mempcpy(void* dst, const void* src, size_t n) {
   return reinterpret_cast<char*>(memcpy(dst, src, n)) + n;
