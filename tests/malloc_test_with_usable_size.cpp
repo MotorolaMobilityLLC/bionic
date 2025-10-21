@@ -458,7 +458,7 @@ TEST(malloc, mallinfo2) {
 }
 
 TEST(malloc, alloc_after_fork) {
-  if (!running_with_scudo()) GTEST_SKIP() << "only scudo supports this";
+  SKIP_WITHOUT_SCUDO << "only scudo supports this";
 
   // Both of these need to be a power of 2.
   static constexpr size_t kMinAllocationSize = 8;
