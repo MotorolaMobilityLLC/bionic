@@ -527,22 +527,17 @@ cc_library_static {
     arch: {
         arm: {
             srcs: [
-                "upstream-openbsd/lib/libc/string/stpncpy.c",
                 "upstream-openbsd/lib/libc/string/strncat.c",
                 "upstream-openbsd/lib/libc/string/strncmp.c",
-                "upstream-openbsd/lib/libc/string/strncpy.c",
             ],
         },
         arm64: {
             srcs: [
-                "upstream-openbsd/lib/libc/string/stpncpy.c",
                 "upstream-openbsd/lib/libc/string/strncat.c",
-                "upstream-openbsd/lib/libc/string/strncpy.c",
             ],
         },
         riscv64: {
             srcs: [
-                "upstream-openbsd/lib/libc/string/stpncpy.c",
             ],
         },
         x86: {
