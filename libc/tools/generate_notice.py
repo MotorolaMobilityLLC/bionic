@@ -31,6 +31,7 @@ def is_interesting(path_str: str) -> bool:
         ".mk",
         ".py",
         ".pyc",
+        ".so",
         ".swp",
         ".txt",
         ".xml",
@@ -153,8 +154,8 @@ def do_file(path: str) -> None:
 
     # Skip over our own files if they're SPDX licensed.
     # Because we use the // comment style, without this we'd copy the whole source file!
-    if re.compile('^// Copyright \(C\) 2\d\d\d The Android Open Source Project\n' + \
-                  '// SPDX-License-Identifier: ').match(content):
+    if re.compile(r'^// Copyright \(C\) 2\d\d\d The Android Open Source Project\n' + \
+                   '// SPDX-License-Identifier: ').match(content):
         return
 
     # Manually iterate because extract_copyright_at tells us how many lines to
