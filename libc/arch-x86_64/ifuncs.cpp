@@ -30,11 +30,27 @@
 
 #include <private/bionic_ifuncs.h>
 
+static bool cpu_supports_x86_64_v3() {
+  const static bool result = ([] {
+#ifdef __AVX2__
+    // All known CPUs with AVX2 support x86-64-v3. If that's available at
+    // build-time, the CPU we're building for must support it.
+    //
+    // This saves a few cycles in ifuncs, and potentially lets the linker's
+    // `--gc-sections` remove x86_64_v2 functions when they'll never be used.
+    return true;
+#else
+    __builtin_cpu_init();
+    return __builtin_cpu_supports("avx2");
+#endif
+  })();
+  return result;
+}
+
 extern "C" {
 
 DEFINE_IFUNC_FOR(memmove) {
-  __builtin_cpu_init();
-  if (__builtin_cpu_supports("avx2")) RETURN_FUNC(memmove_func_t, memmove_avx2);
+  if (cpu_supports_x86_64_v3()) RETURN_FUNC(memmove_func_t, memmove_avx2);
   RETURN_FUNC(memmove_func_t, memmove_generic);
 }
 MEMMOVE_SHIM()
@@ -45,24 +61,27 @@ DEFINE_IFUNC_FOR(memcpy) {
 MEMCPY_SHIM()
 
 DEFINE_IFUNC_FOR(__memcpy_chk) {
-  __builtin_cpu_init();
-  if (__builtin_cpu_supports("avx2")) RETURN_FUNC(__memcpy_chk_func_t, __memcpy_chk_avx2);
+  if (cpu_supports_x86_64_v3()) RETURN_FUNC(__memcpy_chk_func_t, __memcpy_chk_avx2);
   RETURN_FUNC(__memcpy_chk_func_t, __memcpy_chk_generic);
 }
 __MEMCPY_CHK_SHIM()
 
 DEFINE_IFUNC_FOR(memset) {
-  __builtin_cpu_init();
-  if (__builtin_cpu_supports("avx2")) RETURN_FUNC(memset_func_t, memset_avx2);
+  if (cpu_supports_x86_64_v3()) RETURN_FUNC(memset_func_t, memset_avx2);
   RETURN_FUNC(memset_func_t, memset_generic);
 }
 MEMSET_SHIM()
 
 DEFINE_IFUNC_FOR(__memset_chk) {
-  __builtin_cpu_init();
-  if (__builtin_cpu_supports("avx2")) RETURN_FUNC(__memset_chk_func_t, __memset_chk_avx2);
+  if (cpu_supports_x86_64_v3()) RETURN_FUNC(__memset_chk_func_t, __memset_chk_avx2);
   RETURN_FUNC(__memset_chk_func_t, __memset_chk_generic);
 }
 __MEMSET_CHK_SHIM()
+
+DEFINE_IFUNC_FOR(strlen) {
+  if (cpu_supports_x86_64_v3()) RETURN_FUNC(strlen_func_t, portable_simd_strlen_avx2);
+  RETURN_FUNC(strlen_func_t, portable_simd_strlen_sse);
+}
+STRLEN_SHIM()
 
 }  // extern "C"
