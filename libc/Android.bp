@@ -772,8 +772,8 @@ cc_defaults {
     },
 }
 
-cc_library_static {
-    name: "libc_bionic_portable_simd_x86_64_v2",
+cc_defaults {
+    name: "libc_bionic_portable_simd_x86_64_v2_defaults",
     defaults: ["libc_bionic_portable_simd_defaults"],
     arch: {
         x86_64: {
@@ -781,6 +781,23 @@ cc_library_static {
                 "-DPSIMD_TARGET_SSE=1",
                 // Since this is the Android build system's default ABI, don't
                 // bother setting CFLAGS for v2.
+            ],
+        },
+    },
+}
+
+cc_library_static {
+    name: "libc_bionic_portable_simd_x86_64_v2",
+    defaults: ["libc_bionic_portable_simd_x86_64_v2_defaults"],
+}
+
+cc_library_static {
+    name: "libc_bionic_portable_simd_x86_64_no_ifuncs",
+    defaults: ["libc_bionic_portable_simd_x86_64_v2_defaults"],
+    arch: {
+        x86_64: {
+            cflags: [
+                "-DPSIMD_ADD_LIBC_ALIASES=1",
             ],
         },
     },
@@ -2159,8 +2176,6 @@ cc_library_static {
                 "arch-x86_64/string/sse2-stpncpy-slm.S",
                 "arch-x86_64/string/sse2-strcat-slm.S",
                 "arch-x86_64/string/sse2-strcpy-slm.S",
-                // TODO(b/452714218): Swap this to portable-simd
-                "arch-x86_64/string/sse2-strlen-slm.S",
                 "arch-x86_64/string/sse2-strncat-slm.S",
                 "arch-x86_64/string/sse2-strncpy-slm.S",
                 "arch-x86_64/string/sse4-memcmp-slm.S",
@@ -2168,6 +2183,9 @@ cc_library_static {
                 "arch-x86_64/string/ssse3-strncmp-slm.S",
                 "arch-x86_64/string/strchr.S",
                 "arch-x86_64/string/strrchr.S",
+            ],
+            whole_static_libs: [
+                "libc_bionic_portable_simd_x86_64_no_ifuncs",
             ],
         },
     },

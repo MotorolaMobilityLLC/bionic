@@ -89,15 +89,38 @@ namespace hn = hwy::HWY_NAMESPACE;
 // should be put on `PSIMD_LIBC_FUNCTION`.
 #define PSIMD_FLATTEN __attribute__((__flatten__))
 
+// If PSIMD_ADD_LIBC_ALIASES is defined, we'll emit strong aliases for each
+// function to its corresponding libc function. For example, if this TU defines
+// a portable-simd version of `strlen` for SSE, `-DPSIMD_ADD_LIBC_ALIASES` will
+// emit a definition of `strlen` as well as `portable_simd_strlen_sse`.
+#if defined(PSIMD_ADD_LIBC_ALIASES)
+#define PSIMD_MAYBE_STRONG_ALIAS(libc_name, impl_func) __strong_alias(libc_name, impl_func)
+#else
+#define PSIMD_MAYBE_STRONG_ALIAS(libc_name, impl_func)
+#endif
+
 // Attributes to place on functions that we 'export', AKA are designed to be
 // provided by ifuncs.
 //
 // The goal is to optimize these maximally, so mark every function hot and
 // force as much as inlining as possible.
+//
+// Example usage is:
+// PSIMD_LIBC_FUNCTION(size_t, strlen, const char *) { /* function body */ }
+//
+// This defines a function called e.g., `portable_simd_strlen_avx2` (where
+// `avx2` depends on the SIMD instructions we're targeting). If
+// `PSIMD_ADD_LIBC_ALIASES` is enabled, it also adds a strong alias for
+// `strlen = portable_simd_strlen_avx2`.
 #define PSIMD_CONCAT1(x, y) x##y
 #define PSIMD_CONCAT(x, y) PSIMD_CONCAT1(x, y)
-#define PSIMD_LIBC_FUNCTION(ret_ty, name, ...) \
-  PSIMD_FLATTEN __attribute__((__hot__)) ret_ty PSIMD_CONCAT(name, PSIMD_EXPORT_SUFFIX)(__VA_ARGS__)
+#define PSIMD_LIBC_FUNCTION_IMPL(ret_ty, libc_name, full_name, ...) \
+  PSIMD_MAYBE_STRONG_ALIAS(libc_name, full_name)                    \
+  PSIMD_FLATTEN __attribute__((__hot__)) ret_ty full_name(__VA_ARGS__)
+#define PSIMD_LIBC_FUNCTION(ret_ty, libc_name, ...) \
+  PSIMD_LIBC_FUNCTION_IMPL(                         \
+      ret_ty, libc_name,                            \
+      PSIMD_CONCAT(PSIMD_CONCAT(portable_simd_, libc_name), PSIMD_EXPORT_SUFFIX), __VA_ARGS__)
 
 namespace portable_simd {
 
