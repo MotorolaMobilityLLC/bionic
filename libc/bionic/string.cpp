@@ -58,6 +58,24 @@ char* strcat(char* dst, const char* src) {
 }
 #endif
 
+#if defined(__arm__) || defined(__aarch64__) || defined(__riscv)
+__attribute__((__flatten__))
+char* stpncpy(char* dst, const char* src, size_t dst_n) {
+  size_t src_n = strnlen(src, dst_n);
+  memcpy(dst, src, src_n);
+  memset(dst + src_n, 0, dst_n - src_n);
+  return dst + src_n;
+}
+#endif
+
+#if defined(__arm__) || defined(__aarch64__)
+__attribute__((__flatten__))
+char* strncpy(char* dst, const char* src, size_t n) {
+  stpncpy(dst, src, n);
+  return dst;
+}
+#endif
+
 // If you have a fast memchr(), but not a strnlen().
 #if defined(__x86_64__)
 size_t strnlen(const char* s, size_t n) {
