@@ -26,6 +26,12 @@
  * SUCH DAMAGE.
  */
 
+// FORTIFY only provides value when the size of the buffer can be
+// statically determined, and that's never the case with any calls
+// here. b/454067908 shows that leaving it enabled leads to
+// suboptimal codegen.
+#undef _FORTIFY_SOURCE
+
 #include <string.h>
 #include <xlocale.h>
 
