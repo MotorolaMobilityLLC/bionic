@@ -523,32 +523,11 @@ cc_library_static {
         "stdio/vfwprintf.cpp",
     ],
 
-    // Each architecture has optimized versions of some routines,
-    // and only includes the portable C versions of ones it's missing.
+    // TODO: drop this for the llvm-libc one, until/unless we get a psimd one.
     arch: {
         arm: {
             srcs: [
-                "upstream-openbsd/lib/libc/string/strncat.c",
                 "upstream-openbsd/lib/libc/string/strncmp.c",
-            ],
-        },
-        arm64: {
-            srcs: [
-                "upstream-openbsd/lib/libc/string/strncat.c",
-            ],
-        },
-        riscv64: {
-            srcs: [
-            ],
-        },
-        x86: {
-            srcs: [
-                // x86 has custom implementations of all of these.
-            ],
-        },
-        x86_64: {
-            srcs: [
-                // x86_64 has custom/llvm-libc implementations of all of these.
             ],
         },
     },

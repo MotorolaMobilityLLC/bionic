@@ -33,6 +33,7 @@
 #undef _FORTIFY_SOURCE
 
 #include <string.h>
+#include <sys/param.h>
 #include <xlocale.h>
 
 //
@@ -79,6 +80,18 @@ __attribute__((__flatten__))
 char* strncpy(char* dst, const char* src, size_t n) {
   stpncpy(dst, src, n);
   return dst;
+}
+#endif
+
+#if defined(__arm__) || defined(__aarch64__)
+__attribute__((__flatten__))
+char* strncat(char* dst, const char* src, size_t n) {
+  char* result = dst;
+  dst += strlen(dst);
+  // strncat() writes just one NUL, unlike strncpy().
+  char* end = static_cast<char*>(mempcpy(dst, src, strnlen(src, n)));
+  *end = '\0';
+  return result;
 }
 #endif
 
