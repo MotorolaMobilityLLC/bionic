@@ -763,6 +763,7 @@ cc_defaults {
     arch: {
         x86_64: {
             srcs: [
+                "portable-simd/memchr.cpp",
                 "portable-simd/strlen.cpp",
             ],
         },
@@ -1184,7 +1185,6 @@ cc_library_static {
                 "arch-x86_64/string/avx2-memmove-kbl.S",
                 "arch-x86_64/string/avx2-memset-kbl.S",
                 "arch-x86_64/string/memccpy.S",
-                "arch-x86_64/string/memchr.S",
                 "arch-x86_64/string/memrchr.S",
                 "arch-x86_64/string/sse2-memmove-slm.S",
                 "arch-x86_64/string/sse2-memset-slm.S",
@@ -2181,7 +2181,6 @@ cc_library_static {
                 "-Dmemset_generic=memset",
             ],
             srcs: [
-                "arch-x86_64/string/memchr.S",
                 "arch-x86_64/string/memrchr.S",
                 "arch-x86_64/string/sse2-memmove-slm.S",
                 "arch-x86_64/string/sse2-memset-slm.S",

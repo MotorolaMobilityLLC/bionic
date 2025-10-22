@@ -49,6 +49,14 @@ static bool cpu_supports_x86_64_v3() {
 
 extern "C" {
 
+DEFINE_IFUNC_FOR(memchr) {
+  if (cpu_supports_x86_64_v3()) RETURN_FUNC(memchr_func_t, portable_simd_memchr_avx2);
+  RETURN_FUNC(memchr_func_t, portable_simd_memchr_sse);
+}
+MEMCHR_SHIM()
+
+// While we do want to keep alphabetical order, memcpy calls this, so place it
+// above that.
 DEFINE_IFUNC_FOR(memmove) {
   if (cpu_supports_x86_64_v3()) RETURN_FUNC(memmove_func_t, memmove_avx2);
   RETURN_FUNC(memmove_func_t, memmove_generic);

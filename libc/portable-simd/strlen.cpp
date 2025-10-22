@@ -80,9 +80,9 @@ PSIMD_FLATTEN static optional<const CharType*> ptr_of_nul(const void* ptr,
 PSIMD_FLATTEN static size_t strlen_vectorized(const CharType* s) {
   constexpr VectorTag d;
 
-  auto [ptr, nul_distance] =
-      align_forward_to_vec<VectorTag>(s, [&](auto val, size_t bytes_to_skip) -> optional<size_t> {
-        if (const optional<size_t> x = index_of_nul(val, bytes_to_skip)) {
+  auto [ptr, nul_distance] = align_forward_to_vec<VectorTag>(
+      s, [&](auto val, optional<size_t> bytes_to_skip, optional<size_t>) -> optional<size_t> {
+        if (const optional<size_t> x = index_of_nul(val, bytes_to_skip.unwrap_or(0))) {
           return optional{*x};
         }
         return {};
