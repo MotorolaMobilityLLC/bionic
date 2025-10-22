@@ -27,10 +27,12 @@
  */
 
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
 #include <uchar.h>
 #include <wchar.h>
+#include <xlocale.h>
 
 #include "private/bionic_mbstate.h"
 
@@ -212,3 +214,22 @@ size_t wcsrtombs(char* dst, const wchar_t** src, size_t len, mbstate_t* ps) {
   return wcsnrtombs(dst, src, SIZE_MAX, len, ps);
 }
 __strong_alias(wcsrtombs_l, wcsrtombs);
+
+int wcscoll(const wchar_t* lhs, const wchar_t* rhs) {
+  return wcscmp(lhs, rhs);
+}
+__strong_alias(wcscoll_l, wcscoll);
+
+size_t wcsxfrm(wchar_t* dst, const wchar_t* src, size_t n) {
+  return wcslcpy(dst, src, n);
+}
+__strong_alias(wcsxfrm_l, wcsxfrm);
+
+wchar_t* wcsdup(const wchar_t* s) {
+  size_t n = wcslen(s) + 1;
+  wchar_t* result = static_cast<wchar_t*>(malloc(n * sizeof(wchar_t)));
+  if (result != nullptr) {
+    wmemcpy(result, s, n);
+  }
+  return result;
+}
