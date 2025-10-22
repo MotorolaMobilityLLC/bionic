@@ -757,6 +757,7 @@ cc_rustlibs_for_make {
 cc_defaults {
     name: "libc_bionic_portable_simd_defaults",
     defaults: ["libc_defaults"],
+    header_libs: ["//external/google-highway:hwy_headers_only"],
     cflags: [
         "-fno-sanitize=all",
         "-fno-stack-protector",

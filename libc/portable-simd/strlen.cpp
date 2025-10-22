@@ -26,9 +26,6 @@
  * SUCH DAMAGE.
  */
 
-#include <emmintrin.h>
-#include <immintrin.h>
-#include <smmintrin.h>
 #include <stdbit.h>
 #include <stdint.h>
 #include <string.h>
@@ -39,11 +36,30 @@
 namespace portable_simd {
 namespace {
 
-template <typename VectorTraits>
-PSIMD_FLATTEN static optional<size_t> index_of_nul(typename VectorTraits::VectorType val,
+// Highway doesn't support direct `char` usage in vector types, presumably
+// because it can vary in signed-ness. `strlen` theoretically doesn't care,
+// since all we're comparing against is 0.
+//
+// TODO(gbiv): **That said**,
+// https://google.github.io/highway/en/master/quick_reference.html#speeding-up-code-for-older-x86-platforms
+// notes:
+//
+// > If possible, use signed 8..32 bit types instead of unsigned types for
+// > comparisons and Min/Max.
+//
+// At present, this is written to compare `uint8_t`s, which only really matters
+// in the 'long' case loop. Could be interesting to see if swapping to int8_t
+// (with any requisite changes in the algorithm below) helps.
+using CharType = uint8_t;
+using VectorTag = portable_simd::FullVector<CharType>;
+
+PSIMD_FLATTEN static optional<size_t> index_of_nul(hn::VFromD<VectorTag> val,
                                                    size_t bytes_to_skip = 0) {
-  const auto all_zeroes = VectorTraits::broadcast_byte(0);
-  const size_t raw_zero_mask = VectorTraits::compare_eq_bytewise_mask(val, all_zeroes);
+  constexpr VectorTag d;
+  const auto all_zeroes = Zero(d);
+  // TODO(gbiv): why `detail::`? This is only required for AVX2, so maybe a
+  // missing function from hwy?
+  const size_t raw_zero_mask = hn::detail::BitsFromMask(all_zeroes == val);
   const size_t zero_mask = raw_zero_mask >> bytes_to_skip;
   if (!zero_mask) {
     return {};
@@ -53,20 +69,20 @@ PSIMD_FLATTEN static optional<size_t> index_of_nul(typename VectorTraits::Vector
   return optional{byte_index};
 }
 
-template <typename VectorTraits>
-PSIMD_FLATTEN static optional<const char*> ptr_of_nul(const void* ptr,
-                                                      typename VectorTraits::VectorType val) {
-  if (const optional<size_t> x = index_of_nul<VectorTraits>(val)) {
-    return optional{*x + static_cast<const char*>(ptr)};
+PSIMD_FLATTEN static optional<const CharType*> ptr_of_nul(const void* ptr,
+                                                          hn::VFromD<VectorTag> val) {
+  if (const optional<size_t> x = index_of_nul(val)) {
+    return optional{*x + static_cast<const CharType*>(ptr)};
   }
   return {};
 }
 
-template <typename VectorTraits>
-PSIMD_FLATTEN static size_t strlen_vectorized(const char* s) {
-  auto [ptr, nul_distance] = align_forward_to_vec<VectorTraits>(
-      s, [&](auto val, size_t bytes_to_skip) -> optional<size_t> {
-        if (const optional<size_t> x = index_of_nul<VectorTraits>(val, bytes_to_skip)) {
+PSIMD_FLATTEN static size_t strlen_vectorized(const CharType* s) {
+  constexpr VectorTag d;
+
+  auto [ptr, nul_distance] =
+      align_forward_to_vec<VectorTag>(s, [&](auto val, size_t bytes_to_skip) -> optional<size_t> {
+        if (const optional<size_t> x = index_of_nul(val, bytes_to_skip)) {
           return optional{*x};
         }
         return {};
@@ -86,10 +102,10 @@ PSIMD_FLATTEN static size_t strlen_vectorized(const char* s) {
   // branch really badly, so it's a better balance if we can work in batches.
   // Since batch size must be a power of two, work in batches of 4.
   const auto check_ptr_and_inc = [&]() -> optional<size_t> {
-    if (const optional<const char*> x = ptr_of_nul<VectorTraits>(ptr, *ptr)) {
+    if (const optional<const CharType*> x = ptr_of_nul(ptr, Load(d, ptr))) {
       return optional{static_cast<size_t>(*x - s)};
     }
-    ++ptr;
+    ptr += d.MaxLanes();
     return {};
   };
 
@@ -104,8 +120,7 @@ PSIMD_FLATTEN static size_t strlen_vectorized(const char* s) {
   // few checks beforehand.
   constexpr size_t kMinBytesUntilStringIsBig = 128;
   // Worst case, we've only read 1 byte so far. Add 1 check to round up.
-  constexpr size_t kExtraChecksNeeded =
-      1 + (kMinBytesUntilStringIsBig - 1) / VectorTraits::kVectorSize;
+  constexpr size_t kExtraChecksNeeded = 1 + (kMinBytesUntilStringIsBig - 1) / d.MaxBytes();
 
 #pragma unroll
   for (size_t i = 0; i < kExtraChecksNeeded; ++i) {
@@ -114,11 +129,12 @@ PSIMD_FLATTEN static size_t strlen_vectorized(const char* s) {
     }
   }
 
-  // Now bring ourselves to 4*kVectorAlign alignment.
-  constexpr size_t kFourVecAlign = 4 * VectorTraits::kVectorAlign;
+  // Now bring ourselves to 4*kVectorAlign alignment. Note that `MaxBytes()` is
+  // assumed to be equivalent to the required alignment.
+  constexpr size_t kFourVecAlign = 4 * vector_align(d);
   static_assert(kPageSize % kFourVecAlign == 0);
   const size_t vector_width_from_prev_align =
-      (reinterpret_cast<uintptr_t>(ptr) & (kFourVecAlign - 1)) / VectorTraits::kVectorAlign;
+      (reinterpret_cast<uintptr_t>(ptr) & (kFourVecAlign - 1)) / vector_align(d);
   switch (vector_width_from_prev_align) {
     case 1:
       if (const optional<size_t> x = check_ptr_and_inc()) {
@@ -140,17 +156,17 @@ PSIMD_FLATTEN static size_t strlen_vectorized(const char* s) {
   }
 
   while (true) {
-    const auto vec1 = ptr[0];
-    const auto vec2 = ptr[1];
-    const auto min12 = VectorTraits::minimum_bytewise_unsigned(vec1, vec2);
-    const auto vec3 = ptr[2];
-    const auto vec4 = ptr[3];
-    const auto min34 = VectorTraits::minimum_bytewise_unsigned(vec3, vec4);
-    const auto min_all = VectorTraits::minimum_bytewise_unsigned(min12, min34);
+    const auto vec1 = Load(d, ptr);
+    const auto vec2 = Load(d, ptr + d.MaxLanes());
+    const auto min12 = Min(vec1, vec2);
+    const auto vec3 = Load(d, ptr + d.MaxLanes() * 2);
+    const auto vec4 = Load(d, ptr + d.MaxLanes() * 3);
+    const auto min34 = Min(vec3, vec4);
+    const auto min_all = Min(min12, min34);
 
-    const optional<size_t> maybe_index = index_of_nul<VectorTraits>(min_all);
+    const optional<size_t> maybe_index = index_of_nul(min_all);
     if (!maybe_index) [[likely]] {
-      ptr += 4;
+      ptr += 4 * d.MaxLanes();
       continue;
     }
 
@@ -158,36 +174,28 @@ PSIMD_FLATTEN static size_t strlen_vectorized(const char* s) {
     // We're in the 'longer string' case, so there's no reason to assume `vec1`
     // is most likely to have the `\0`. Assuming all cases are equally likely,
     // prefer a constant 2 `ptr_of_nul` cost, rather than 1-3.
-    if (const optional<const char*> x = ptr_of_nul<VectorTraits>(ptr, min12)) {
-      if (const optional<const char*> x2 = ptr_of_nul<VectorTraits>(ptr, vec1)) {
+    if (const optional<const CharType*> x = ptr_of_nul(ptr, min12)) {
+      if (const optional<const CharType*> x2 = ptr_of_nul(ptr, vec1)) {
         return static_cast<size_t>(*x2 - s);
       }
       // If vec1 had no zeroes, then we can assume the min 0 is from vec2.
-      return static_cast<size_t>(*x - s) + VectorTraits::kVectorSize;
+      return static_cast<size_t>(*x - s) + d.MaxLanes();
     }
 
-    ptr += 2;
-    if (const optional<const char*> x = ptr_of_nul<VectorTraits>(ptr, vec3)) {
+    ptr += d.MaxLanes() * 2;
+    if (const optional<const CharType*> x = ptr_of_nul(ptr, vec3)) {
       return static_cast<size_t>(*x - s);
     }
 
     // Since nothing else has nul in it, it's guaranteed that the nul is
     // vec4's, so we can use the above `index_of_nul` result.
-    ++ptr;
-    return static_cast<size_t>(reinterpret_cast<const char*>(ptr) - s) + index_of_first_zero;
+    ptr += d.MaxLanes();
+    return static_cast<size_t>(reinterpret_cast<const CharType*>(ptr) - s) + index_of_first_zero;
   }
 }
 }  // namespace
 }  // namespace portable_simd
 
-#if PSIMD_TARGET_SSE
-PSIMD_LIBC_FUNCTION size_t portable_simd_strlen_sse(const char* s) {
-  return portable_simd::strlen_vectorized<portable_simd::VectorTraitsSSE>(s);
+PSIMD_LIBC_FUNCTION(size_t, portable_simd_strlen, const char* s) {
+  return portable_simd::strlen_vectorized(reinterpret_cast<const portable_simd::CharType*>(s));
 }
-#elif PSIMD_TARGET_AVX2
-PSIMD_LIBC_FUNCTION size_t portable_simd_strlen_avx2(const char* s) {
-  return portable_simd::strlen_vectorized<portable_simd::VectorTraitsAVX2>(s);
-}
-#else
-#error unknown PSIMD_TARGET
-#endif
