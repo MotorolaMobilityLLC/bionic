@@ -196,6 +196,6 @@ PSIMD_FLATTEN static size_t strlen_vectorized(const CharType* s) {
 }  // namespace
 }  // namespace portable_simd
 
-PSIMD_LIBC_FUNCTION(size_t, portable_simd_strlen, const char* s) {
+PSIMD_LIBC_FUNCTION(size_t, strlen, const char* s) {
   return portable_simd::strlen_vectorized(reinterpret_cast<const portable_simd::CharType*>(s));
 }
