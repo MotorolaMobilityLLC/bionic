@@ -74,6 +74,12 @@ DEFINE_IFUNC_FOR(__memcpy_chk) {
 }
 __MEMCPY_CHK_SHIM()
 
+DEFINE_IFUNC_FOR(memrchr) {
+  if (cpu_supports_x86_64_v3()) RETURN_FUNC(memrchr_func_t, portable_simd_memrchr_avx2);
+  RETURN_FUNC(memrchr_func_t, portable_simd_memrchr_sse);
+}
+MEMRCHR_SHIM()
+
 DEFINE_IFUNC_FOR(memset) {
   if (cpu_supports_x86_64_v3()) RETURN_FUNC(memset_func_t, memset_avx2);
   RETURN_FUNC(memset_func_t, memset_generic);
