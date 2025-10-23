@@ -375,7 +375,6 @@ cc_library_static {
     srcs: [
         "upstream-freebsd/lib/libc/stdlib/getopt_long.c",
         "upstream-freebsd/lib/libc/stdlib/quick_exit.c",
-        "upstream-freebsd/lib/libc/string/wcsdup.c",
     ],
 
     cflags: [
@@ -1048,7 +1047,6 @@ cc_library_static {
         "bionic/vdso.cpp",
         "bionic/wait.cpp",
         "bionic/wchar.cpp",
-        "bionic/wchar_l.cpp",
         "bionic/wcstod.cpp",
         "bionic/wctype.cpp",
         "bionic/wcwidth.cpp",
