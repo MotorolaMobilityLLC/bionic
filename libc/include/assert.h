@@ -51,17 +51,13 @@
 #ifdef NDEBUG
 # define assert(e) __assert_no_op
 #else
-# if defined(__cplusplus) || __STDC_VERSION__ >= 199901L
-#  define assert(e) ((e) ? __assert_no_op : __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, #e))
-# else
 /**
  * assert() aborts the program after logging an error message, if the
  * expression evaluates to false.
  *
  * On Android, the error goes to both stderr and logcat.
  */
-#  define assert(e) ((e) ? __assert_no_op : __assert(__FILE__, __LINE__, #e))
-# endif
+# define assert(e) ((e) ? __assert_no_op : __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, #e))
 #endif
 
 /* `static_assert` is a keyword in C++11 and C23; C11 had `_Static_assert` instead. */
@@ -73,8 +69,8 @@
 __BEGIN_DECLS
 
 /**
- * __assert() is called by assert() on failure. Most users want assert()
- * instead, but this can be useful for reporting other failures.
+ * __assert() was called by assert() on failure when compiled for C89.
+ * Most users want assert() instead, but this can be useful for reporting other failures.
  */
 void __assert(const char* _Nonnull __file, int __line, const char* _Nonnull __msg) __noreturn;
 
