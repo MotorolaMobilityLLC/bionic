@@ -1625,8 +1625,8 @@ cc_defaults {
     },
 }
 
-cc_library {
-    name: "libc",
+cc_defaults {
+    name: "libc_ndk_defaults",
     defaults: [
         "libc_library_defaults",
     ],
@@ -1638,13 +1638,30 @@ cc_library {
             "current",
         ],
     },
-    static_ndk_lib: true,
     llndk: {
         symbol_file: "libc.map.txt",
         export_headers_as_system: true,
         export_llndk_headers: ["libc_headers"],
     },
     afdo: true,
+
+}
+
+cc_library {
+    name: "libc",
+    defaults: [
+        "libc_ndk_defaults",
+    ],
+}
+
+cc_library_static {
+    name: "libc.ndk_static",
+    defaults: [
+        "libc_ndk_defaults",
+    ],
+    stem: "libc",
+    static_ndk_lib: true,
+    force_rust_staticlib: true,
 }
 
 cc_library {
