@@ -511,8 +511,6 @@ cc_library_static {
         "upstream-openbsd/lib/libc/stdlib/tfind.c",
         "upstream-openbsd/lib/libc/stdlib/tsearch.c",
         "upstream-openbsd/lib/libc/string/strcasestr.c",
-        "upstream-openbsd/lib/libc/string/strdup.c",
-        "upstream-openbsd/lib/libc/string/strndup.c",
 
         // These files are originally from OpenBSD,
         // and benefit from being compiled with openbsd-compat.h.

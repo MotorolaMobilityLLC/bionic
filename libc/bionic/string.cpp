@@ -32,6 +32,7 @@
 // suboptimal codegen.
 #undef _FORTIFY_SOURCE
 
+#include <stdlib.h>
 #include <string.h>
 #include <xlocale.h>
 
@@ -220,3 +221,26 @@ size_t strxfrm(char* dst, const char* src, size_t n) {
   return strlcpy(dst, src, n);
 }
 __strong_alias(strxfrm_l, strxfrm);
+
+//
+// String duplication functions.
+//
+
+char* strdup(const char* s) {
+  size_t n = strlen(s) + 1;
+  char* result = static_cast<char*>(malloc(n));
+  if (result != nullptr) {
+    memcpy(result, s, n);
+  }
+  return result;
+}
+
+char* strndup(const char* s, size_t n) {
+  n = strnlen(s, n);
+  char* result = static_cast<char*>(malloc(n + 1));
+  if (result != nullptr) {
+    memcpy(result, s, n);
+    result[n] = '\0';
+  }
+  return result;
+}
