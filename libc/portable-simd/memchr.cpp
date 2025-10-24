@@ -1,0 +1,247 @@
+/*
+ * Copyright (C) 2025 The Android Open Source Project
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+#include <stdbit.h>
+#include <stdint.h>
+#include <string.h>
+
+#include "portable_simd_detail.h"
+#include "portable_simd_exports.h"
+
+namespace portable_simd {
+namespace {
+
+// Highway doesn't support direct `char` usage in vector types, presumably
+// because it can vary in signed-ness. `memchr` does not care at all; choose
+// signed because hwy docs say it's slightly more efficient on older x86_64
+// CPUs. If there's any better argument for unsigned, that should probably be
+// preferred.
+using CharType = int8_t;
+using VectorTag = portable_simd::FullVector<CharType>;
+
+// Returns the pointer to the first element in `val` equal to `ch`, provided
+// `val` was loaded from `ptr - bytes_to_skip`. If `count` is non-empty, this
+// will ignore any matches >= `count` bytes from the start of `val`.
+PSIMD_FLATTEN static optional<const void*> ptr_of_first(const CharType* ptr,
+                                                        hn::VFromD<VectorTag> val, CharType ch,
+                                                        optional<size_t> count = {},
+                                                        size_t bytes_to_skip = 0) {
+  constexpr VectorTag d;
+  const auto all_ch = Set(d, ch);
+  const size_t raw_eq_mask = hn::detail::BitsFromMask(all_ch == val);
+  size_t eq_mask = raw_eq_mask >> bytes_to_skip;
+
+  if (count) {
+    const size_t inbounds_mask = ~(kMaxSizeT << *count);
+    eq_mask &= inbounds_mask;
+  }
+
+  if (!eq_mask) {
+    return {};
+  }
+
+  return optional<const void*>{ptr + stdc_trailing_zeros(eq_mask)};
+}
+
+PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType ch, size_t count) {
+  constexpr VectorTag d;
+
+  const auto result_from_final_vec = [ch](const CharType* ptr, const auto vec_val, size_t count,
+                                          size_t bytes_to_skip = 0) -> const void* {
+    // If `count == 0`, we loaded `vec_val` when we shouldn't have. This is a
+    // correctness issue, since `ptr` might've been at the start of a new page.
+    PSIMD_DCHECK(count != 0);
+    return ptr_of_first(ptr, vec_val, ch, optional<size_t>{count}, bytes_to_skip)
+        .unwrap_or(nullptr);
+  };
+
+  if (count <= d.MaxBytes()) {
+    // Unlikely because it seems rare that people would depend on 0-sized
+    // memchrs being a very fast case.
+    if (count == 0) [[unlikely]] {
+      return nullptr;
+    }
+
+    // We know for certain that we need 2 or fewer loads to service this request.
+    const auto [ptr, maybe_result] = align_forward_to_vec<VectorTag>(
+        s,
+        [&](const auto val, optional<size_t> bytes_to_skip,
+            optional<size_t>) -> optional<const void*> {
+          // If we loaded `ptr` directly, one vector op is all this will take.
+          if (!bytes_to_skip.has_value()) {
+            return optional{result_from_final_vec(s, val, count)};
+          }
+
+          // Reiterating from `align_forward_to_vec`, this is expected to be
+          // inlined such that `bytes_to_skip.has_value()` always trivially folds
+          // to a constant.
+          if (const optional<const void*> x =
+                  ptr_of_first(s, val, ch, optional<size_t>{count}, *bytes_to_skip)) {
+            return x;
+          }
+
+          const auto bytes_read = d.MaxBytes() - *bytes_to_skip;
+          if (bytes_read >= count) {
+            return optional<const void*>{nullptr};
+          }
+
+          count -= bytes_read;
+          return {};
+        });
+
+    if (maybe_result) {
+      return *maybe_result;
+    }
+    return result_from_final_vec(ptr, Load(d, ptr), count);
+  }
+
+  // We know the full load is safe, since `count` is larger than a full vector.
+  auto [ptr, maybe_result] = align_forward_to_vec_known_safe<VectorTag>(
+      s,
+      [&](auto val, optional<size_t> bytes_to_skip,
+          optional<size_t> overlap_bytes) -> optional<const void*> {
+        PSIMD_DCHECK(!bytes_to_skip.has_value());
+        PSIMD_DCHECK(overlap_bytes.has_value());
+        if (const optional<const void*> x = ptr_of_first(s, val, ch)) {
+          // No need to bounds-check, due to `count`'s size.
+          return optional<const void*>{*x};
+        }
+        count -= d.MaxBytes() - *overlap_bytes;
+        return {};
+      });
+  if (maybe_result) {
+    return *maybe_result;
+  }
+
+  // The simplest implementation from here would be:
+  //
+  // while (true) {
+  //   // check for byte, return if found
+  //   ++ptr;
+  // }
+  //
+  // `perf` says that x86_64 CPUs stall on 'check for byte, return if found'
+  // branches really badly, so it's a better balance if we can work in batches.
+  // Work in batches until heuristics say that running down an unrolled
+  // loop is likely to be better.
+  size_t full_vector_loads_remaining = count / d.MaxBytes();
+  constexpr size_t unrolled_loop_size = 4;
+  while (full_vector_loads_remaining >= unrolled_loop_size) {
+    // NOTE: "3 loads at once," was chosen based on experimentation on Brya,
+    // which ships with chips like the 2024 Intel Core 3 100U. 2 loads was as
+    // much as 1.1x slower on very long inputs. There was no obvious
+    // improvement in doing 4 per loop.
+    const auto needle = Set(d, ch);
+    const auto vec1 = Load(d, ptr);
+    const auto vec2 = Load(d, ptr + d.MaxBytes());
+    const auto vec3 = Load(d, ptr + d.MaxBytes() * 2);
+    const auto vec1_eq = vec1 == needle;
+    const auto vec2_eq = vec2 == needle;
+    const auto vec3_eq = vec3 == needle;
+
+    // So highway may represent masks as _either_:
+    // - a vector which you can convert to a scalar through
+    //   hn::detail::BitsFromMask(), or
+    // - a scalar.
+    //
+    // It does not allow `operator|` on masks.
+    //
+    // This implementation was written assuming:
+    // - they're vectors (thus converting mask -> vector is free), and
+    // - this loop's hot path involves looping (so operations on that path
+    //   should be minimized).
+    //
+    // When that no longer holds, it should be trivial to refactor a bit.
+    static_assert(sizeof(vec1_eq.raw) == sizeof(vec1));
+    const auto mask_or = [](const auto a, const auto b) {
+      return MaskFromVec(VecFromMask(a) | VecFromMask(b));
+    };
+
+    const auto vec12_eq = mask_or(vec1_eq, vec2_eq);
+    const auto all_vecs = mask_or(vec12_eq, vec3_eq);
+    const size_t eq_bits = hn::detail::BitsFromMask(all_vecs);
+    // `[[likely]]` keeps this loop tight.
+    if (!eq_bits) [[likely]] {
+      full_vector_loads_remaining -= 3;
+      ptr += 3 * d.MaxBytes();
+      continue;
+    }
+
+    if (const size_t eq12_mask = hn::detail::BitsFromMask(vec12_eq)) {
+      if (const size_t eq1_mask = hn::detail::BitsFromMask(vec1_eq)) {
+        return ptr + stdc_trailing_zeros(eq1_mask);
+      }
+      ptr += d.MaxBytes();
+      // If eq1_mask was empty, bits must've been from eq2_mask.
+      return ptr + stdc_trailing_zeros(eq12_mask);
+    }
+    // If eq12_mask was empty, bits must've been from eq2_mask.
+    ptr += d.MaxBytes() * 2;
+    return ptr + stdc_trailing_zeros(eq_bits);
+  }
+
+  const auto check_ptr_and_inc = [&]() -> optional<const void*> {
+    if (const optional<const void*> x = ptr_of_first(ptr, Load(d, ptr), ch)) {
+      return optional{*x};
+    }
+    ptr += d.MaxBytes();
+    return {};
+  };
+
+  switch (full_vector_loads_remaining) {
+    case 3:
+      if (const optional<const void*> x = check_ptr_and_inc()) {
+        return *x;
+      }
+      [[fallthrough]];
+    case 2:
+      if (const optional<const void*> x = check_ptr_and_inc()) {
+        return *x;
+      }
+      [[fallthrough]];
+    case 1:
+      if (const optional<const void*> x = check_ptr_and_inc()) {
+        return *x;
+      }
+      [[fallthrough]];
+    case 0:
+      if (const size_t residual_count = count % d.MaxBytes()) {
+        return result_from_final_vec(ptr, Load(d, ptr), residual_count);
+      }
+      return nullptr;
+    default:
+      __builtin_unreachable();
+  }
+}
+}  // namespace
+}  // namespace portable_simd
+
+PSIMD_LIBC_FUNCTION(void*, memchr, const void* ptr, int ch, size_t count) {
+  return const_cast<void*>(portable_simd::memchr_vectorized(
+      reinterpret_cast<const portable_simd::CharType*>(ptr), ch, count));
+}

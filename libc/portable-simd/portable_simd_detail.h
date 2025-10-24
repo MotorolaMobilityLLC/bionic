@@ -81,7 +81,7 @@ namespace hn = hwy::HWY_NAMESPACE;
 
 // NOTE: `PSIMD_FLATTEN` **ideally** only belongs on `PSIMD_LIBC_FUNCTION`s.
 // Clang has a longstanding bug in its `flatten` implementation
-// (https://groups.google.com/g/llvm-dev/c/gGRCEi9g4ac/m/sEKFTnTGAwAJ)
+// (https://github.com/llvm/llvm-project/issues/60689)
 // where flattening doesn't happen transitively, so we (unfortunately) need to
 // `FLATTEN` more than just `PSIMD_LIBC_FUNCTION`s.
 //
@@ -168,6 +168,13 @@ struct optional {
   bool has_value() const { return inhabited_; }
   explicit operator bool() const { return has_value(); }
 
+  T unwrap_or(T val) const {
+    if (has_value()) {
+      return elem_;
+    }
+    return val;
+  }
+
  private:
   T elem_;
   bool inhabited_;
@@ -220,6 +227,27 @@ struct GenericAlignForwardResult {
   optional<T> result;
 };
 
+template <
+    typename VectorTag, typename Fn,
+    typename T = invoke_result_t<Fn, hn::VFromD<VectorTag>, optional<size_t>, optional<size_t>>>
+PSIMD_FLATTEN inline GenericAlignForwardResult<VectorTag, T> align_forward_to_vec_known_safe(
+    const void* s, Fn f) {
+  using VectorElem = hn::TFromD<VectorTag>;
+  constexpr VectorTag d;
+  const auto loaded = LoadU(d, reinterpret_cast<const VectorElem*>(s));
+  auto aligned_ptr = reinterpret_cast<uintptr_t>(s);
+  const auto overlap_bytes = aligned_ptr & static_cast<uintptr_t>(d.MaxLanes() - 1);
+  if (const T x = f(loaded, /*skip_bytes=*/optional<size_t>{}, optional<size_t>{overlap_bytes})) {
+    return {nullptr, x};
+  }
+
+  aligned_ptr -= overlap_bytes;
+  aligned_ptr += d.MaxLanes();
+  const auto* ptr = reinterpret_cast<const VectorElem*>(aligned_ptr);
+  PSIMD_DCHECK(hn::IsAligned(d, ptr));
+  return {ptr, {}};
+}
+
 // This function uses VectorTraits to determine 'align forward' `s`. That is:
 // - It reads one vector worth of data,
 // - It calls `fn` on that (with extra info, see signature below)
@@ -229,34 +257,33 @@ struct GenericAlignForwardResult {
 //
 // Fn's signature should be:
 //
-// optional<T> f(VectorType val, size_t shift_bytes)
+// optional<T> f(VectorType val, size_t shift_bytes, size_t overlap_bytes)
 //
 // - `val` is the loaded vector.
 // - `shift_bytes` indicates how many bytes _backwards_ we ended up loading.
-//   One path hardcodes a 0 here, so checking for 0 (if necessary) will be
-//   optimized away in the fast path.
-template <typename VectorTag, typename Fn,
-          typename T = invoke_result_t<Fn, hn::VFromD<VectorTag>, size_t>>
+//   An empty optional is passed if `s` was loaded unaltered. An optional is
+//   passed rather than integer value, since this is expected to be inlined,
+//   and the constant `true`/`false` on branches is easier to optimize well.
+// - `overlap_bytes` is the number of bytes that will overlap between
+//   dereferencing `ptr` and the value passed to `f`. That is, if you have a
+//   16-byte vector size and passed `s == 0x5`, `f` would be called on a load
+//   of `0x5` and `ptr` would be `0x10`. Loading `ptr` would produce 5 bytes
+//   that were present in the load of `0x5`. This may be optional(0).
+//
+// Moreover, `f` can assume
+// `shift_bytes.has_value() ^ overlap_bytes.has_value()`.
+template <
+    typename VectorTag, typename Fn,
+    typename T = invoke_result_t<Fn, hn::VFromD<VectorTag>, optional<size_t>, optional<size_t>>>
 PSIMD_FLATTEN inline GenericAlignForwardResult<VectorTag, T> align_forward_to_vec(const void* s,
                                                                                   Fn f) {
   constexpr VectorTag d;
-  using VectorElem = hn::TFromD<VectorTag>;
-  const VectorElem* ptr;
   if (can_safely_unaligned_read<VectorTag>(s)) [[likely]] {
-    const auto loaded = LoadU(d, reinterpret_cast<const VectorElem*>(s));
-    if (const T x = f(loaded, /*shift_bytes=*/size_t(0))) {
-      return {nullptr, x};
-    }
-
-    auto aligned_ptr = reinterpret_cast<uintptr_t>(s);
-    aligned_ptr &= ~static_cast<uintptr_t>(d.MaxLanes() - 1);
-    ptr = reinterpret_cast<const VectorElem*>(aligned_ptr);
-  } else {
-    const auto [back_ptr, skip_bytes] = align_backwards<VectorTag>(s);
-    ptr = back_ptr;
-    if (const T x = f(Load(d, ptr), skip_bytes)) {
-      return {nullptr, x};
-    }
+    return align_forward_to_vec_known_safe<VectorTag>(s, f);
+  }
+  auto [ptr, skip_bytes] = align_backwards<VectorTag>(s);
+  if (const T x = f(Load(d, ptr), optional{skip_bytes}, /*overlap_bytes=*/optional<size_t>{})) {
+    return {nullptr, x};
   }
   ptr += d.MaxLanes();
   PSIMD_DCHECK(hn::IsAligned(d, ptr));
