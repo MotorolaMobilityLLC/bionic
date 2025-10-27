@@ -43,13 +43,12 @@
 #include <sys/cdefs.h>
 
 #undef assert
-#undef __assert_no_op
-
-/** Internal implementation detail. Do not use. */
-#define __assert_no_op __BIONIC_CAST(static_cast, void, 0)
 
 #ifdef NDEBUG
-# define assert(e) __assert_no_op
+/**
+ * assert() does nothing when NDEBUG is defined.
+ */
+# define assert(...) ((void) 0)
 #else
 /**
  * assert() aborts the program after logging an error message, if the
@@ -57,7 +56,10 @@
  *
  * On Android, the error goes to both stderr and logcat.
  */
-# define assert(e) ((e) ? __assert_no_op : __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, #e))
+# define assert(...) \
+    ((__VA_ARGS__) \
+        ? (void) 0 \
+        : __assert2(__FILE__, __LINE__, __PRETTY_FUNCTION__, #__VA_ARGS__))
 #endif
 
 /* `static_assert` is a keyword in C++11 and C23; C11 had `_Static_assert` instead. */
