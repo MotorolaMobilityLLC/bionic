@@ -292,6 +292,7 @@ cc_library_static {
     ],
 
     cflags: [
+        "-Wno-tautological-constant-out-of-range-compare",
         "-Wno-unused-parameter",
         // Don't use ridiculous amounts of stack.
         "-DALL_STATE",
@@ -374,7 +375,6 @@ cc_library_static {
     srcs: [
         "upstream-freebsd/lib/libc/stdlib/getopt_long.c",
         "upstream-freebsd/lib/libc/stdlib/quick_exit.c",
-        "upstream-freebsd/lib/libc/string/wcsdup.c",
     ],
 
     cflags: [
@@ -511,8 +511,6 @@ cc_library_static {
         "upstream-openbsd/lib/libc/stdlib/tfind.c",
         "upstream-openbsd/lib/libc/stdlib/tsearch.c",
         "upstream-openbsd/lib/libc/string/strcasestr.c",
-        "upstream-openbsd/lib/libc/string/strdup.c",
-        "upstream-openbsd/lib/libc/string/strndup.c",
 
         // These files are originally from OpenBSD,
         // and benefit from being compiled with openbsd-compat.h.
@@ -522,37 +520,11 @@ cc_library_static {
         "stdio/vfwprintf.cpp",
     ],
 
-    // Each architecture has optimized versions of some routines,
-    // and only includes the portable C versions of ones it's missing.
+    // TODO: drop this for the llvm-libc one, until/unless we get a psimd one.
     arch: {
         arm: {
             srcs: [
-                "upstream-openbsd/lib/libc/string/stpncpy.c",
-                "upstream-openbsd/lib/libc/string/strncat.c",
                 "upstream-openbsd/lib/libc/string/strncmp.c",
-                "upstream-openbsd/lib/libc/string/strncpy.c",
-            ],
-        },
-        arm64: {
-            srcs: [
-                "upstream-openbsd/lib/libc/string/stpncpy.c",
-                "upstream-openbsd/lib/libc/string/strncat.c",
-                "upstream-openbsd/lib/libc/string/strncpy.c",
-            ],
-        },
-        riscv64: {
-            srcs: [
-                "upstream-openbsd/lib/libc/string/stpncpy.c",
-            ],
-        },
-        x86: {
-            srcs: [
-                // x86 has custom implementations of all of these.
-            ],
-        },
-        x86_64: {
-            srcs: [
-                // x86_64 has custom/llvm-libc implementations of all of these.
             ],
         },
     },
@@ -745,6 +717,99 @@ cc_rustlibs_for_make {
 }
 
 // ========================================================
+// portable_simd_* - C++ that uses SIMD intrinsics that are
+// meant to be "portable" to various different sets of
+// SIMD intrinsics.
+// ========================================================
+
+// Defaults for 'portable-simd' functions like `mem*`, `str*`.
+// These are highly performance-sensitive and an alternative to hand-written
+// asm, so:
+// - sanitizers are disabled (in part because these reach out of bounds in
+//   buffers on purpose - otherwise, there's no way to vectorize things like
+//   `strlen`.)
+// - stack protectors are disabled for parity with asm
+// - similarly, zeroing stack vars is disabled.
+cc_defaults {
+    name: "libc_bionic_portable_simd_defaults",
+    defaults: ["libc_defaults"],
+    header_libs: ["//external/google-highway:hwy_headers_only"],
+    cflags: [
+        "-fno-sanitize=all",
+        "-fno-stack-protector",
+        "-ftrivial-auto-var-init=uninitialized",
+    ],
+    arch: {
+        x86_64: {
+            srcs: [
+                "portable-simd/memchr.cpp",
+                "portable-simd/strlen.cpp",
+            ],
+        },
+    },
+}
+
+cc_defaults {
+    name: "libc_bionic_portable_simd_x86_64_v2_defaults",
+    defaults: ["libc_bionic_portable_simd_defaults"],
+    arch: {
+        x86_64: {
+            cflags: [
+                "-DPSIMD_TARGET_SSE=1",
+                // Since this is the Android build system's default ABI, don't
+                // bother setting CFLAGS for v2.
+            ],
+        },
+    },
+}
+
+cc_library_static {
+    name: "libc_bionic_portable_simd_x86_64_v2",
+    defaults: ["libc_bionic_portable_simd_x86_64_v2_defaults"],
+}
+
+cc_library_static {
+    name: "libc_bionic_portable_simd_x86_64_no_ifuncs",
+    defaults: ["libc_bionic_portable_simd_x86_64_v2_defaults"],
+    arch: {
+        x86_64: {
+            cflags: [
+                "-DPSIMD_ADD_LIBC_ALIASES=1",
+            ],
+        },
+    },
+}
+
+cc_library_static {
+    name: "libc_bionic_portable_simd_x86_64_v3",
+    defaults: ["libc_bionic_portable_simd_defaults"],
+    arch: {
+        x86_64: {
+            cflags: [
+                "-DPSIMD_TARGET_AVX2=1",
+                // x86-64-v3 feature flags. We _could_ just write
+                // `-march=x86-64-v3` here, but doing so overrides any `-march`
+                // given by the build system, so `-march=x86-64-v3` could end
+                // up unnecessarily restricting what Clang can generate here.
+                //
+                // See https://clang.llvm.org/docs/UsersManual.html#x86 for the
+                // features Clang associates with x86-64-v3. These are kept in
+                // the order of that doc.
+                "-mavx",
+                "-mavx2",
+                "-mbmi",
+                "-mbmi2",
+                "-mf16c",
+                "-mfma",
+                "-mlzcnt",
+                "-mmovbe",
+                "-mxsave",
+            ],
+        },
+    },
+}
+
+// ========================================================
 // libc_bionic.a - home-grown C library code
 // ========================================================
 
@@ -847,7 +912,6 @@ cc_library_static {
         "bionic/mblen.cpp",
         "bionic/mbrtoc16.cpp",
         "bionic/mbrtoc32.cpp",
-        "bionic/mempcpy.cpp",
         "bionic/memset_explicit.cpp",
         "bionic/mkdir.cpp",
         "bionic/mkfifo.cpp",
@@ -961,7 +1025,6 @@ cc_library_static {
         "bionic/vdso.cpp",
         "bionic/wait.cpp",
         "bionic/wchar.cpp",
-        "bionic/wchar_l.cpp",
         "bionic/wcstod.cpp",
         "bionic/wctype.cpp",
         "bionic/wcwidth.cpp",
@@ -1100,7 +1163,7 @@ cc_library_static {
 
                 "arch-x86_64/string/avx2-memmove-kbl.S",
                 "arch-x86_64/string/avx2-memset-kbl.S",
-                "arch-x86_64/string/memchr.S",
+                "arch-x86_64/string/memccpy.S",
                 "arch-x86_64/string/memrchr.S",
                 "arch-x86_64/string/sse2-memmove-slm.S",
                 "arch-x86_64/string/sse2-memset-slm.S",
@@ -1108,7 +1171,6 @@ cc_library_static {
                 "arch-x86_64/string/sse2-stpncpy-slm.S",
                 "arch-x86_64/string/sse2-strcat-slm.S",
                 "arch-x86_64/string/sse2-strcpy-slm.S",
-                "arch-x86_64/string/sse2-strlen-slm.S",
                 "arch-x86_64/string/sse2-strncat-slm.S",
                 "arch-x86_64/string/sse2-strncpy-slm.S",
                 "arch-x86_64/string/sse4-memcmp-slm.S",
@@ -1116,6 +1178,10 @@ cc_library_static {
                 "arch-x86_64/string/ssse3-strncmp-slm.S",
                 "arch-x86_64/string/strchr.S",
                 "arch-x86_64/string/strrchr.S",
+            ],
+            whole_static_libs: [
+                "libc_bionic_portable_simd_x86_64_v2",
+                "libc_bionic_portable_simd_x86_64_v3",
             ],
         },
     },
@@ -1551,8 +1617,8 @@ cc_defaults {
     },
 }
 
-cc_library {
-    name: "libc",
+cc_defaults {
+    name: "libc_ndk_defaults",
     defaults: [
         "libc_library_defaults",
     ],
@@ -1564,13 +1630,30 @@ cc_library {
             "current",
         ],
     },
-    static_ndk_lib: true,
     llndk: {
         symbol_file: "libc.map.txt",
         export_headers_as_system: true,
         export_llndk_headers: ["libc_headers"],
     },
     afdo: true,
+
+}
+
+cc_library {
+    name: "libc",
+    defaults: [
+        "libc_ndk_defaults",
+    ],
+}
+
+cc_library_static {
+    name: "libc.ndk_static",
+    defaults: [
+        "libc_ndk_defaults",
+    ],
+    stem: "libc",
+    static_ndk_lib: true,
+    force_rust_staticlib: true,
 }
 
 cc_library {
@@ -2077,7 +2160,6 @@ cc_library_static {
                 "-Dmemset_generic=memset",
             ],
             srcs: [
-                "arch-x86_64/string/memchr.S",
                 "arch-x86_64/string/memrchr.S",
                 "arch-x86_64/string/sse2-memmove-slm.S",
                 "arch-x86_64/string/sse2-memset-slm.S",
@@ -2085,7 +2167,6 @@ cc_library_static {
                 "arch-x86_64/string/sse2-stpncpy-slm.S",
                 "arch-x86_64/string/sse2-strcat-slm.S",
                 "arch-x86_64/string/sse2-strcpy-slm.S",
-                "arch-x86_64/string/sse2-strlen-slm.S",
                 "arch-x86_64/string/sse2-strncat-slm.S",
                 "arch-x86_64/string/sse2-strncpy-slm.S",
                 "arch-x86_64/string/sse4-memcmp-slm.S",
@@ -2093,6 +2174,9 @@ cc_library_static {
                 "arch-x86_64/string/ssse3-strncmp-slm.S",
                 "arch-x86_64/string/strchr.S",
                 "arch-x86_64/string/strrchr.S",
+            ],
+            whole_static_libs: [
+                "libc_bionic_portable_simd_x86_64_no_ifuncs",
             ],
         },
     },

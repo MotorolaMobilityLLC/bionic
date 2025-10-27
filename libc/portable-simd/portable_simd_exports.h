@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,15 +26,13 @@
  * SUCH DAMAGE.
  */
 
-#include <wchar.h>
-#include <xlocale.h>
+#pragma once
 
-int wcscoll(const wchar_t* lhs, const wchar_t* rhs) {
-  return wcscmp(lhs, rhs);
-}
-__strong_alias(wcscoll_l, wcscoll);
+#include <stddef.h>
 
-size_t wcsxfrm(wchar_t* dst, const wchar_t* src, size_t n) {
-  return wcslcpy(dst, src, n);
+extern "C" {
+void* portable_simd_memchr_sse(const void*, int, size_t);
+void* portable_simd_memchr_avx2(const void*, int, size_t);
+size_t portable_simd_strlen_sse(const char*);
+size_t portable_simd_strlen_avx2(const char*);
 }
-__strong_alias(wcsxfrm_l, wcsxfrm);

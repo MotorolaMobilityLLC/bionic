@@ -90,6 +90,24 @@ static void BM_string_memcpy(benchmark::State& state) {
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_memcpy, "AT_ALIGNED_TWOBUF");
 
+static void BM_string_memccpy(benchmark::State& state) {
+  const size_t nbytes = state.range(0);
+  const size_t src_alignment = state.range(1);
+  const size_t dst_alignment = state.range(2);
+
+  std::vector<char> src;
+  std::vector<char> dst;
+  char* src_aligned = GetAlignedPtrFilled(&src, src_alignment, nbytes, 'x');
+  char* dst_aligned = GetAlignedPtr(&dst, dst_alignment, nbytes);
+
+  while (state.KeepRunning()) {
+    memccpy(dst_aligned, src_aligned, 'y', nbytes);
+  }
+
+  state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_memccpy, "AT_ALIGNED_TWOBUF");
+
 static void BM_string_memmove_non_overlapping(benchmark::State& state) {
   const size_t nbytes = state.range(0);
   const size_t src_alignment = state.range(1);
@@ -168,6 +186,22 @@ static void BM_string_strlen(benchmark::State& state) {
   state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strlen, "AT_ALIGNED_ONEBUF");
+
+static void BM_string_strnlen(benchmark::State& state) {
+  const size_t nbytes = state.range(0);
+  const size_t alignment = state.range(1);
+
+  std::vector<char> buf;
+  char* buf_aligned = GetAlignedPtrFilled(&buf, alignment, nbytes + 1, 'x');
+  buf_aligned[nbytes - 1] = '\0';
+
+  while (state.KeepRunning()) {
+    benchmark::DoNotOptimize(strnlen(buf_aligned, nbytes));
+  }
+
+  state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strnlen, "AT_ALIGNED_ONEBUF");
 
 static void BM_string_strcat_copy_only(benchmark::State& state) {
   const size_t nbytes = state.range(0);
