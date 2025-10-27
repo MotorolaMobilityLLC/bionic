@@ -520,15 +520,6 @@ cc_library_static {
         "stdio/vfwprintf.cpp",
     ],
 
-    // TODO: drop this for the llvm-libc one, until/unless we get a psimd one.
-    arch: {
-        arm: {
-            srcs: [
-                "upstream-openbsd/lib/libc/string/strncmp.c",
-            ],
-        },
-    },
-
     cflags: [
         "-Wno-sign-compare",
         "-Wno-unused-parameter",
