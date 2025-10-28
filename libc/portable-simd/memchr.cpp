@@ -73,7 +73,7 @@ struct MemchrTraits {
                                                           optional<size_t> bytes_to_skip = {}) {
     constexpr VectorTag d;
     const auto all_ch = Set(d, ch);
-    const size_t raw_eq_mask = BitsFromMask(d, all_ch == val);
+    const size_t raw_eq_mask = hn::detail::BitsFromMask(all_ch == val);
     size_t eq_mask = raw_eq_mask >> bytes_to_skip.unwrap_or(0);
 
     if (count) {
@@ -138,7 +138,7 @@ struct MemrchrTraits {
     // NOTE: The size of this type is important; this code ends up simpler if we
     // can rely on this mask only ever containing bits that correspond with
     // vector lanes.
-    ScalarMaskForD<VectorTag> eq_mask = BitsFromMask(d, all_ch == val);
+    ScalarMaskForD<VectorTag> eq_mask = hn::detail::BitsFromMask(all_ch == val);
 
     // TODO(gbiv): This was written expecting that `count` and `bytes_to_skip`
     // would both trivially `has_value` or not, so there'll no be actual
@@ -276,7 +276,8 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
     const auto vec3_eq = vec3 == needle;
 
     // So highway may represent masks as _either_:
-    // - a vector which you can convert to a scalar through BitsFromMask(), or
+    // - a vector which you can convert to a scalar through
+    //   hn::detail::BitsFromMask(), or
     // - a scalar.
     //
     // It does not allow `operator|` on masks.
@@ -293,7 +294,7 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
 
     const auto vec12_eq = mask_or(vec1_eq, vec2_eq);
     const auto all_vecs = mask_or(vec12_eq, vec3_eq);
-    const size_t eq_bits = BitsFromMask(d, all_vecs);
+    const size_t eq_bits = hn::detail::BitsFromMask(all_vecs);
     // `[[likely]]` keeps this loop tight.
     if (!eq_bits) [[likely]] {
       full_vector_loads_remaining -= 3;
@@ -301,8 +302,8 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
       continue;
     }
 
-    if (const size_t eq12_mask = BitsFromMask(d, vec12_eq)) {
-      if (const size_t eq1_mask = BitsFromMask(d, vec1_eq)) {
+    if (const size_t eq12_mask = hn::detail::BitsFromMask(vec12_eq)) {
+      if (const size_t eq1_mask = hn::detail::BitsFromMask(vec1_eq)) {
         return ptr + Traits::byte_offset_of_first(eq1_mask);
       }
       ptr = Traits::advance_ptr(ptr, 1);
