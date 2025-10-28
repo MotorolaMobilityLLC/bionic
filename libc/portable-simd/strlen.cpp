@@ -57,9 +57,7 @@ PSIMD_FLATTEN static optional<size_t> index_of_nul(hn::VFromD<VectorTag> val,
                                                    size_t bytes_to_skip = 0) {
   constexpr VectorTag d;
   const auto all_zeroes = Zero(d);
-  // TODO(gbiv): why `detail::`? This is only required for AVX2, so maybe a
-  // missing function from hwy?
-  const size_t raw_zero_mask = hn::detail::BitsFromMask(all_zeroes == val);
+  const size_t raw_zero_mask = BitsFromMask(d, all_zeroes == val);
   const size_t zero_mask = raw_zero_mask >> bytes_to_skip;
   if (!zero_mask) {
     return {};
