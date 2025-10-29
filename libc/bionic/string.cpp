@@ -96,14 +96,6 @@ char* strncat(char* dst, const char* src, size_t n) {
 }
 #endif
 
-// If you have a fast memchr(), but not a strnlen().
-#if defined(__x86_64__)
-size_t strnlen(const char* s, size_t n) {
-  const char* nul = static_cast<const char*>(memchr(s, '\0', n));
-  return nul ? (nul - s) : n;
-}
-#endif
-
 //
 // String delimiter functions.
 //
