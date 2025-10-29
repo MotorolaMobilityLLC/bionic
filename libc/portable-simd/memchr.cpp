@@ -262,57 +262,66 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
   // loop is likely to be better.
   size_t full_vector_loads_remaining = count / d.MaxBytes();
   constexpr size_t unrolled_loop_size = 4;
-  while (full_vector_loads_remaining >= unrolled_loop_size) {
-    // NOTE: "3 loads at once," was chosen based on experimentation on Brya,
+
+  if (full_vector_loads_remaining >= unrolled_loop_size) {
+    const auto needle = Set(d, ch);
+    // NOTE: "3 checks per loop," was chosen based on experimentation on Brya,
     // which ships with chips like the 2024 Intel Core 3 100U. 2 loads was as
     // much as 1.1x slower on very long inputs. There was no obvious
     // improvement in doing 4 per loop.
-    const auto needle = Set(d, ch);
-    const auto vec1 = Load(d, ptr);
-    const auto vec2 = Load(d, Traits::advance_ptr(ptr));
-    const auto vec3 = Load(d, Traits::advance_ptr(ptr, 2));
-    const auto vec1_eq = vec1 == needle;
-    const auto vec2_eq = vec2 == needle;
-    const auto vec3_eq = vec3 == needle;
-
-    // So highway may represent masks as _either_:
-    // - a vector which you can convert to a scalar through
-    //   hn::detail::BitsFromMask(), or
-    // - a scalar.
-    //
-    // It does not allow `operator|` on masks.
-    //
-    // This implementation was written assuming:
-    // - they're vectors (thus converting mask -> vector is free), and
-    // - this loop's hot path involves looping (so operations on that path
-    //   should be minimized).
-    //
-    // When that no longer holds, it should be trivial to refactor a bit.
-    static_assert(sizeof(vec1_eq.raw) == sizeof(vec1));
-    const auto mask_or = [](const auto a, const auto b)
-                             PSIMD_FLATTEN { return MaskFromVec(VecFromMask(a) | VecFromMask(b)); };
-
-    const auto vec12_eq = mask_or(vec1_eq, vec2_eq);
-    const auto all_vecs = mask_or(vec12_eq, vec3_eq);
-    const size_t eq_bits = hn::detail::BitsFromMask(all_vecs);
-    // `[[likely]]` keeps this loop tight.
-    if (!eq_bits) [[likely]] {
-      full_vector_loads_remaining -= 3;
-      ptr = Traits::advance_ptr(ptr, 3);
-      continue;
-    }
-
-    if (const size_t eq12_mask = hn::detail::BitsFromMask(vec12_eq)) {
-      if (const size_t eq1_mask = hn::detail::BitsFromMask(vec1_eq)) {
-        return ptr + Traits::byte_offset_of_first(eq1_mask);
+    constexpr size_t checks_per_loop = 3;
+    do {
+      // So highway may represent masks as _either_:
+      // - a vector which you can convert to a scalar through
+      //   hn::detail::BitsFromMask(), or
+      // - a scalar.
+      //
+      // It does not allow `operator|` on masks.
+      //
+      // This implementation was written assuming:
+      // - they're vectors (thus converting mask -> vector is free), and
+      // - this loop's hot path involves looping (so operations on that path
+      //   should be minimized).
+      //
+      // When that no longer holds, it should be trivial to refactor a bit.
+      static_assert(sizeof(hn::MFromD<VectorTag>) == sizeof(hn::VFromD<VectorTag>));
+      hn::MFromD<VectorTag> equal_results[checks_per_loop];
+#pragma unroll
+      for (size_t i = 0; i < checks_per_loop; ++i) {
+        const auto v = Load(d, Traits::advance_ptr(ptr, i));
+        equal_results[i] = v == needle;
       }
-      ptr = Traits::advance_ptr(ptr, 1);
-      // If eq1_mask was empty, bits must've been from eq2_mask.
-      return ptr + Traits::byte_offset_of_first(eq12_mask);
-    }
-    // If eq12_mask was empty, bits must've been from eq2_mask.
-    ptr = Traits::advance_ptr(ptr, 2);
-    return ptr + Traits::byte_offset_of_first(eq_bits);
+
+      const auto mask_or = [](const auto a, const auto b) PSIMD_FLATTEN {
+        return MaskFromVec(VecFromMask(a) | VecFromMask(b));
+      };
+
+      auto merged_eq = mask_or(equal_results[0], equal_results[1]);
+#pragma unroll
+      for (size_t i = 2; i < checks_per_loop; ++i) {
+        merged_eq = mask_or(merged_eq, equal_results[i]);
+      }
+
+      const size_t eq_bits = hn::detail::BitsFromMask(merged_eq);
+      // `[[likely]]` keeps this loop tight.
+      if (!eq_bits) [[likely]] {
+        full_vector_loads_remaining -= checks_per_loop;
+        ptr = Traits::advance_ptr(ptr, checks_per_loop);
+        continue;
+      }
+
+#pragma unroll
+      for (size_t i = 0; i < checks_per_loop - 1; ++i) {
+        if (const size_t m = hn::detail::BitsFromMask(equal_results[i])) {
+          return ptr + Traits::byte_offset_of_first(m);
+        }
+        ptr = Traits::advance_ptr(ptr, 1);
+      }
+
+      // If earlier masks were empty, `eq_bits` only contains bits relevant to
+      // the last vector.
+      return ptr + Traits::byte_offset_of_first(eq_bits);
+    } while (full_vector_loads_remaining >= unrolled_loop_size);
   }
 
   const auto check_ptr_and_advance = [&]() PSIMD_FLATTEN -> optional<const void*> {
