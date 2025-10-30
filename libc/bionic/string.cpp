@@ -96,6 +96,14 @@ char* strncat(char* dst, const char* src, size_t n) {
 }
 #endif
 
+__attribute__((__flatten__))
+size_t strlcat(char* dst, const char* src, size_t n) {
+  size_t dst_len = strnlen(dst, n);
+  if (dst_len == n) return dst_len + strlen(src);
+  return dst_len + strlcpy(dst + dst_len, src, n - dst_len);
+}
+
+__attribute__((__flatten__))
 size_t strlcpy(char* dst, const char* src, size_t n) {
   size_t src_len = strlen(src);
   if (src_len < n) {
