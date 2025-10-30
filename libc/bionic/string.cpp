@@ -96,6 +96,17 @@ char* strncat(char* dst, const char* src, size_t n) {
 }
 #endif
 
+size_t strlcpy(char* dst, const char* src, size_t n) {
+  size_t src_len = strlen(src);
+  if (src_len < n) {
+    memcpy(dst, src, src_len + 1);
+  } else if (n != 0) {
+    memcpy(dst, src, n - 1);
+    dst[n - 1] = '\0';
+  }
+  return src_len;
+}
+
 //
 // String delimiter functions.
 //
