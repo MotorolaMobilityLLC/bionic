@@ -1836,6 +1836,7 @@ cc_library_headers {
     llndk: {
         llndk_headers: true,
     },
+    lfi_supported: true,
     host_supported: true,
     vendor_available: true,
     product_available: true,
@@ -1902,6 +1903,7 @@ cc_library_headers {
     ramdisk_available: true,
     vendor_ramdisk_available: true,
     recovery_available: true,
+    lfi_supported: true,
     sdk_version: "1",
 
     apex_available: [
@@ -2265,6 +2267,54 @@ cc_library_static {
     lto: {
         never: true,
     },
+}
+
+// ========================================================
+// libc dependencies for LFI projects
+// ========================================================
+
+cc_library_static {
+    name: "libc_lfi",
+    header_libs: ["libc_headers"],
+    export_header_lib_headers: [
+        "libc_headers",
+    ],
+    include_dirs: [
+        "bionic/libc/platform",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
+    whole_static_libs: [
+        "libarm-optimized-routines-mem",
+    ],
+    system_shared_libs: [],
+    nocrt: true,
+    stl: "none",
+    lfi_supported: true,
+    arch: {
+        arm: {
+            enabled: false,
+        },
+        arm64: {
+            enabled: true,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+    min_sdk_version: "apex_inherit",
+    apex_available: [
+        "com.android.media.swcodec",
+    ],
+    visibility: [
+        "//external/libopus:__subpackages__",
+        "//system/lfi:__subpackages__",
+    ],
 }
 
 // ========================================================
