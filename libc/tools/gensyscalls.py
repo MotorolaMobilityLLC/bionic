@@ -129,11 +129,11 @@ x86_64_call = """\
     movl    $%(__NR_name)s, %%eax
     syscall
     cmpq    $-MAX_ERRNO, %%rax
-    jb      1f
-    movl    %%eax, %%edi
-    call    __set_errno_internal
-1:
+    jae     1f
     ret
+
+1:  movl    %%eax, %%edi
+    jmp     __set_errno_internal
 END(%(func)s)
 """
 
