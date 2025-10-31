@@ -57,7 +57,6 @@ ENTRY_PRIVATE(__bionic_clone)
     ldmfd   sp!, {r4, r5, r6, r7}
     cmn     r0, #(MAX_ERRNO + 1)
     bxls    lr
-    neg     r0, r0
     b       __set_errno_internal
 
 .L_bc_child:

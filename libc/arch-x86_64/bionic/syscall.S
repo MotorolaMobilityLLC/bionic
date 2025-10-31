@@ -55,7 +55,6 @@ ENTRY(syscall)
     syscall
     cmpq    $-MAX_ERRNO, %rax
     jb      1f
-    negl    %eax
     movl    %eax, %edi
     call    __set_errno_internal
 1:

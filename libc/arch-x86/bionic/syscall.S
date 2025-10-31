@@ -51,7 +51,6 @@ ENTRY(syscall)
     cmpl    $-MAX_ERRNO, %eax
     jb      1f
     # Yes, so set errno.
-    negl    %eax
     pushl   %eax
     call    __set_errno_internal
     addl    $4, %esp

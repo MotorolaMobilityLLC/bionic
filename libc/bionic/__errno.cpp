@@ -50,7 +50,7 @@ int*  __errno() {
 
 // This one is for internal use only and used by both LP32 and LP64 assembler.
 __attribute__((__flatten__))
-extern "C" __LIBC_HIDDEN__ long __set_errno_internal(int n) {
-  errno = n;
+extern "C" __LIBC_HIDDEN__ long __set_errno_internal(int syscall_result) {
+  errno = -syscall_result;
   return -1;
 }

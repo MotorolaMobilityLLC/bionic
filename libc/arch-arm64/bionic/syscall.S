@@ -42,7 +42,6 @@ ENTRY(syscall)
 
     /* check if syscall returned successfully */
     cmn     x0, #(MAX_ERRNO + 1)
-    cneg    x0, x0, hi
     b.hi    __set_errno_internal
 
     ret
