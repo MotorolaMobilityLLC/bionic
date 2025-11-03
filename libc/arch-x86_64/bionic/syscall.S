@@ -50,14 +50,6 @@ ENTRY(syscall)
     mov     %r8,  %r10
     mov     %r9,  %r8
     mov     8(%rsp), %r9
-
-    # Make the system call.
     syscall
-
-    cmpq    $-MAX_ERRNO, %rax
-    jae     1f
-    ret
-
-1:  movl    %eax, %edi
-    jmp    __set_errno_internal
+    DO_SYSCALL_RETURN
 END(syscall)

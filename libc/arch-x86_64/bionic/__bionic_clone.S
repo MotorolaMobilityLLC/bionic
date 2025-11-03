@@ -46,17 +46,12 @@ ENTRY_PRIVATE(__bionic_clone)
         movl    $__NR_clone, %eax
         syscall
 
-        # Check result.
+        # Are we the child?
         testq   %rax, %rax
         jz      L(bc_child)
-        jg      L(bc_parent)
 
-        # (This ret can't happen, but keeps this sequence identical for all syscalls.)
-        cmpq    $-MAX_ERRNO, %rax
-        jae     1f
-        ret
-1:      movl    %eax, %edi
-        jmp    __set_errno_internal
+        # We're either the parent or the syscall failed.
+        DO_SYSCALL_RETURN
 
 L(bc_child):
         # We don't want anyone to unwind past this point.
@@ -70,8 +65,4 @@ L(bc_child):
         popq    %rsi  # arg
         call    __start_thread
         hlt
-
-L(bc_parent):
-        # We're the parent; nothing to do.
-        ret
 END(__bionic_clone)
