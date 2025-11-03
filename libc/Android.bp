@@ -1119,6 +1119,7 @@ cc_library_static {
                 "arch-riscv64/string/memmove.S",
                 "arch-riscv64/string/memset.S",
                 "arch-riscv64/string/stpcpy.S",
+                "arch-riscv64/string/stpncpy.S",
                 "arch-riscv64/string/strcat.S",
                 "arch-riscv64/string/strchr.S",
                 "arch-riscv64/string/strchrnul.S",
