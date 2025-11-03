@@ -47,6 +47,8 @@ using VectorTag = portable_simd::FullVector<CharType>;
 // Both memchr and memrchr share an implementation, with a `Traits` object to
 // encapsulate their differences.
 struct MemchrTraits {
+  constexpr static bool kIsMaxLengthGuaranteed = true;
+
   // Advance `ptr` in the direction of this memchr.
   PSIMD_FLATTEN static const CharType* advance_ptr(const CharType* p, size_t n = 1) {
     constexpr VectorTag d;
@@ -100,6 +102,8 @@ struct MemchrTraits {
 };
 
 struct MemrchrTraits {
+  constexpr static bool kIsMaxLengthGuaranteed = true;
+
   // Advance `ptr` in the direction of this memchr.
   PSIMD_FLATTEN static const CharType* advance_ptr(const CharType* p, size_t n = 1) {
     constexpr VectorTag d;
@@ -175,6 +179,18 @@ struct MemrchrTraits {
   }
 };
 
+struct StrnlenTraits : MemchrTraits {
+  // `strnlen` is `memchr`, with the caveat that we can't assume that `count`
+  // bytes *must be* available at the given pointer.
+  constexpr static bool kIsMaxLengthGuaranteed = false;
+
+  PSIMD_FLATTEN __attribute__((diagnose_if(true, "This is unsafe, and should never be called",
+                                           "error"))) static auto
+  align_ptr_to_vec_known_safe(auto...) {
+    __builtin_unreachable();
+  }
+};
+
 template <typename Traits>
 PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType ch, size_t count) {
   constexpr VectorTag d;
@@ -231,20 +247,26 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
     return result_from_final_vec(ptr, Load(d, ptr), count);
   }
 
-  // We know the full load is safe, since `count` is larger than a full vector.
-  auto [ptr, maybe_result] = Traits::align_ptr_to_vec_known_safe(
-      s,
-      [&](auto val, optional<size_t> bytes_to_skip, optional<size_t> overlap_bytes)
-          PSIMD_FLATTEN -> optional<const void*> {
-            PSIMD_DCHECK(!bytes_to_skip.has_value());
-            PSIMD_DCHECK(overlap_bytes.has_value());
-            if (const optional<const void*> x = Traits::ptr_of_first(s, val, ch)) {
-              // No need to bounds-check, due to `count`'s size.
-              return optional<const void*>{*x};
-            }
-            count -= d.MaxBytes() - *overlap_bytes;
-            return {};
-          });
+  // As long as `count` bytes are guaranteed to be available, we know the full
+  // load is safe, since `count` is larger than a full vector.
+  auto align_func = [&](auto val, optional<size_t> bytes_to_skip, optional<size_t> overlap_bytes)
+                        PSIMD_FLATTEN -> optional<const void*> {
+    if (const optional<const void*> x =
+            Traits::ptr_of_first(s, val, ch, /*count=*/{}, bytes_to_skip)) {
+      // No need to bounds-check, due to `count`'s size.
+      return optional<const void*>{*x};
+    }
+    count -= d.MaxBytes() - overlap_bytes.unwrap_or(0);
+    return {};
+  };
+
+  GenericAlignResult<VectorTag, optional<const void*>> first_align_result;
+  if constexpr (Traits::kIsMaxLengthGuaranteed) {
+    first_align_result = Traits::align_ptr_to_vec_known_safe(s, align_func);
+  } else {
+    first_align_result = Traits::align_ptr_to_vec(s, align_func);
+  }
+  auto [ptr, maybe_result] = first_align_result;
   if (maybe_result) {
     return *maybe_result;
   }
@@ -262,58 +284,6 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
   // loop is likely to be better.
   size_t full_vector_loads_remaining = count / d.MaxBytes();
   constexpr size_t unrolled_loop_size = 4;
-  while (full_vector_loads_remaining >= unrolled_loop_size) {
-    // NOTE: "3 loads at once," was chosen based on experimentation on Brya,
-    // which ships with chips like the 2024 Intel Core 3 100U. 2 loads was as
-    // much as 1.1x slower on very long inputs. There was no obvious
-    // improvement in doing 4 per loop.
-    const auto needle = Set(d, ch);
-    const auto vec1 = Load(d, ptr);
-    const auto vec2 = Load(d, Traits::advance_ptr(ptr));
-    const auto vec3 = Load(d, Traits::advance_ptr(ptr, 2));
-    const auto vec1_eq = vec1 == needle;
-    const auto vec2_eq = vec2 == needle;
-    const auto vec3_eq = vec3 == needle;
-
-    // So highway may represent masks as _either_:
-    // - a vector which you can convert to a scalar through
-    //   hn::detail::BitsFromMask(), or
-    // - a scalar.
-    //
-    // It does not allow `operator|` on masks.
-    //
-    // This implementation was written assuming:
-    // - they're vectors (thus converting mask -> vector is free), and
-    // - this loop's hot path involves looping (so operations on that path
-    //   should be minimized).
-    //
-    // When that no longer holds, it should be trivial to refactor a bit.
-    static_assert(sizeof(vec1_eq.raw) == sizeof(vec1));
-    const auto mask_or = [](const auto a, const auto b)
-                             PSIMD_FLATTEN { return MaskFromVec(VecFromMask(a) | VecFromMask(b)); };
-
-    const auto vec12_eq = mask_or(vec1_eq, vec2_eq);
-    const auto all_vecs = mask_or(vec12_eq, vec3_eq);
-    const size_t eq_bits = hn::detail::BitsFromMask(all_vecs);
-    // `[[likely]]` keeps this loop tight.
-    if (!eq_bits) [[likely]] {
-      full_vector_loads_remaining -= 3;
-      ptr = Traits::advance_ptr(ptr, 3);
-      continue;
-    }
-
-    if (const size_t eq12_mask = hn::detail::BitsFromMask(vec12_eq)) {
-      if (const size_t eq1_mask = hn::detail::BitsFromMask(vec1_eq)) {
-        return ptr + Traits::byte_offset_of_first(eq1_mask);
-      }
-      ptr = Traits::advance_ptr(ptr, 1);
-      // If eq1_mask was empty, bits must've been from eq2_mask.
-      return ptr + Traits::byte_offset_of_first(eq12_mask);
-    }
-    // If eq12_mask was empty, bits must've been from eq2_mask.
-    ptr = Traits::advance_ptr(ptr, 2);
-    return ptr + Traits::byte_offset_of_first(eq_bits);
-  }
 
   const auto check_ptr_and_advance = [&]() PSIMD_FLATTEN -> optional<const void*> {
     if (const optional<const void*> x = Traits::ptr_of_first(ptr, Load(d, ptr), ch)) {
@@ -322,6 +292,86 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
     ptr = Traits::advance_ptr(ptr);
     return {};
   };
+
+  if (full_vector_loads_remaining >= unrolled_loop_size) {
+    const auto needle = Set(d, ch);
+    // NOTE: "3 checks per loop," was chosen based on experimentation on Brya,
+    // which ships with chips like the 2024 Intel Core 3 100U. 2 loads was as
+    // much as 1.1x slower on very long inputs. There was no obvious
+    // improvement in doing 4 per loop.
+    //
+    // That said, just arbitrarily do 2 checks per loop is the size isn't a
+    // guaranteed upper-bound. It needs to be _some_ power of two, since this
+    // loop can't safely cross a page boundary.
+    constexpr size_t checks_per_loop = Traits::kIsMaxLengthGuaranteed ? 3 : 2;
+
+    if constexpr (!Traits::kIsMaxLengthGuaranteed) {
+      // If we can't trust the total size, the following loops needs to avoid
+      // loading across page boundaries.
+      constexpr size_t misaligned_mask = vector_align(d) * 2 - 1;
+      if (reinterpret_cast<uintptr_t>(ptr) & misaligned_mask) {
+        if (const optional<const void*> x = check_ptr_and_advance()) {
+          return *x;
+        }
+        full_vector_loads_remaining -= 1;
+      }
+      // (Guard against refactors subtly messing this up).
+      PSIMD_DCHECK(full_vector_loads_remaining >= checks_per_loop);
+    }
+
+    do {
+      // So highway may represent masks as _either_:
+      // - a vector which you can convert to a scalar through
+      //   hn::detail::BitsFromMask(), or
+      // - a scalar.
+      //
+      // It does not allow `operator|` on masks.
+      //
+      // This implementation was written assuming:
+      // - they're vectors (thus converting mask -> vector is free), and
+      // - this loop's hot path involves looping (so operations on that path
+      //   should be minimized).
+      //
+      // When that no longer holds, it should be trivial to refactor a bit.
+      static_assert(sizeof(hn::MFromD<VectorTag>) == sizeof(hn::VFromD<VectorTag>));
+      hn::MFromD<VectorTag> equal_results[checks_per_loop];
+#pragma unroll
+      for (size_t i = 0; i < checks_per_loop; ++i) {
+        const auto v = Load(d, Traits::advance_ptr(ptr, i));
+        equal_results[i] = v == needle;
+      }
+
+      const auto mask_or = [](const auto a, const auto b) PSIMD_FLATTEN {
+        return MaskFromVec(VecFromMask(a) | VecFromMask(b));
+      };
+
+      auto merged_eq = mask_or(equal_results[0], equal_results[1]);
+#pragma unroll
+      for (size_t i = 2; i < checks_per_loop; ++i) {
+        merged_eq = mask_or(merged_eq, equal_results[i]);
+      }
+
+      const size_t eq_bits = hn::detail::BitsFromMask(merged_eq);
+      // `[[likely]]` keeps this loop tight.
+      if (!eq_bits) [[likely]] {
+        full_vector_loads_remaining -= checks_per_loop;
+        ptr = Traits::advance_ptr(ptr, checks_per_loop);
+        continue;
+      }
+
+#pragma unroll
+      for (size_t i = 0; i < checks_per_loop - 1; ++i) {
+        if (const size_t m = hn::detail::BitsFromMask(equal_results[i])) {
+          return ptr + Traits::byte_offset_of_first(m);
+        }
+        ptr = Traits::advance_ptr(ptr, 1);
+      }
+
+      // If earlier masks were empty, `eq_bits` only contains bits relevant to
+      // the last vector.
+      return ptr + Traits::byte_offset_of_first(eq_bits);
+    } while (full_vector_loads_remaining >= unrolled_loop_size);
+  }
 
   switch (full_vector_loads_remaining) {
     case 3:
@@ -359,4 +409,14 @@ PSIMD_LIBC_FUNCTION(void*, memchr, const void* ptr, int ch, size_t count) {
 PSIMD_LIBC_FUNCTION(void*, memrchr, const void* ptr, int ch, size_t count) {
   return const_cast<void*>(portable_simd::memchr_vectorized<portable_simd::MemrchrTraits>(
       reinterpret_cast<const portable_simd::CharType*>(ptr), ch, count));
+}
+
+PSIMD_LIBC_FUNCTION(size_t, strnlen, const char* ptr, size_t count) {
+  const char* s =
+      static_cast<const char*>(portable_simd::memchr_vectorized<portable_simd::StrnlenTraits>(
+          reinterpret_cast<const portable_simd::CharType*>(ptr), '\0', count));
+  if (!s) {
+    return count;
+  }
+  return static_cast<size_t>(s - ptr);
 }
