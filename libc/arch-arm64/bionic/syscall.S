@@ -41,8 +41,8 @@ ENTRY(syscall)
     svc     #0
 
     /* check if syscall returned successfully */
-    cmn     x0, #(MAX_ERRNO + 1)
-    b.hi    __set_errno_internal
+    cmp     x0, #-MAX_ERRNO
+    b.hs    __set_errno_internal
 
     ret
 END(syscall)
