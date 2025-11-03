@@ -3262,3 +3262,12 @@ TEST(pthread, pthread_create_with_sme_dormant_state) {
 }
 
 #endif  // defined(__aarch64__)
+
+TEST(pthread, PTHREAD_NULL_macro) {
+#if defined(__BIONIC__)
+  [[maybe_unused]] pthread_t t = PTHREAD_NULL;
+  ASSERT_NE(PTHREAD_NULL, pthread_self());
+#else
+  GTEST_SKIP() << "our host glibc is too old";
+#endif
+}
