@@ -281,6 +281,13 @@ __recvmmsg:recvmmsg(int, struct mmsghdr*, unsigned int, int, const struct timesp
 __sendmmsg:sendmmsg(int, struct mmsghdr*, unsigned int, int)   all
 
 # sockets for x86. These are done as an "indexed" call to socketcall syscall.
+# This should be obsolete, but in practice there are a lot of seccomp filters
+# that would need to be updated for us to switch to the regular system calls,
+# especially in Chrome, and it probably makes more sense to just wait for x86
+# to be removed than put the effort in.
+# See http://b/423197304 for more background, and http://b/435724036 for advice
+# on how to test WebView changes if you do decide to try to remove these before
+# we just drop 32-bit entirely.
 __socket:socketcall:1(int, int, int) x86
 __connect:socketcall:3(int, struct sockaddr*, socklen_t)   x86
 __socketpair:socketcall:8(int, int, int, int*)    x86
