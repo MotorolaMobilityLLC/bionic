@@ -53,10 +53,11 @@ ENTRY(syscall)
 
     # Make the system call.
     syscall
+
     cmpq    $-MAX_ERRNO, %rax
-    jb      1f
-    movl    %eax, %edi
-    call    __set_errno_internal
-1:
+    jae     1f
     ret
+
+1:  movl    %eax, %edi
+    jmp    __set_errno_internal
 END(syscall)
