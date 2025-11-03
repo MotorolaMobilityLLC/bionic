@@ -51,10 +51,12 @@ ENTRY_PRIVATE(__bionic_clone)
         jz      L(bc_child)
         jg      L(bc_parent)
 
-        # An error occurred, set errno and return -1.
-        movl    %eax, %edi
-        call    __set_errno_internal
+        # (This ret can't happen, but keeps this sequence identical for all syscalls.)
+        cmpq    $-MAX_ERRNO, %rax
+        jae     1f
         ret
+1:      movl    %eax, %edi
+        jmp    __set_errno_internal
 
 L(bc_child):
         # We don't want anyone to unwind past this point.
