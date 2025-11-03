@@ -61,6 +61,5 @@ L(success):
   ret
 
 L(failure):
-  neg     a0, a0
   tail    __set_errno_internal
 END(vfork)

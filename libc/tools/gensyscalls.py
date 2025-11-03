@@ -29,7 +29,6 @@ arm_call_default = syscall_stub_header + """\
     .cfi_restore r7
     cmn     r0, #(MAX_ERRNO + 1)
     bxls    lr
-    neg     r0, r0
     b       __set_errno_internal
 END(%(func)s)
 """
@@ -50,7 +49,6 @@ arm_call_long = syscall_stub_header + """\
     .cfi_def_cfa_offset 0
     cmn     r0, #(MAX_ERRNO + 1)
     bxls    lr
-    neg     r0, r0
     b       __set_errno_internal
 END(%(func)s)
 """
@@ -65,7 +63,6 @@ arm64_call = syscall_stub_header + """\
     svc     #0
 
     cmn     x0, #(MAX_ERRNO + 1)
-    cneg    x0, x0, hi
     b.hi    __set_errno_internal
 
     ret
@@ -86,7 +83,6 @@ riscv64_call = syscall_stub_header + """\
 
     ret
 1:
-    neg     a0, a0
     tail    __set_errno_internal
 END(%(func)s)
 """
@@ -113,7 +109,6 @@ x86_call = """\
 
     cmpl    $-MAX_ERRNO, %%eax
     jb      1f
-    negl    %%eax
     pushl   %%eax
     call    __set_errno_internal
     addl    $4, %%esp
@@ -135,7 +130,6 @@ x86_64_call = """\
     syscall
     cmpq    $-MAX_ERRNO, %%rax
     jb      1f
-    negl    %%eax
     movl    %%eax, %%edi
     call    __set_errno_internal
 1:

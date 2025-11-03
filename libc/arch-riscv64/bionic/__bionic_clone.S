@@ -50,7 +50,6 @@ ENTRY_PRIVATE(__bionic_clone)
 
 L(failure):
   # Set errno if something went wrong.
-  neg a0, a0
   tail __set_errno_internal
 
 L(child):

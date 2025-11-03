@@ -130,6 +130,24 @@ namespace portable_simd {
 template <typename T>
 using FullVector = hn::FixedTag<T, hn::ScalableTag<T>{}.MaxLanes()>;
 
+template <size_t VectorSize>
+struct ScalarByteMask;
+
+template <>
+struct ScalarByteMask<128> {
+  using type = uint16_t;
+};
+
+template <>
+struct ScalarByteMask<256> {
+  using type = uint32_t;
+};
+
+// Usable when you want the most compact type that a mask for a given VectorTag
+// fits into.
+template <typename T>
+using ScalarMaskForD = ScalarByteMask<T{}.MaxBytes() * 8>::type;
+
 namespace {
 // Pages are expected to be at minimum 4096 bytes. If a is _guaranteed_ to only
 // use e.g., 16KB+ pages, we can see a small benefit by bumping this to 16KB
@@ -222,7 +240,7 @@ PSIMD_FLATTEN BackAlignedPtr<const hn::TFromD<VectorTag>> align_backwards(const 
 // The result of calling align_forward_to_vec. See the docs there.
 // Either `ptr` is non-null, or `result` has a value.
 template <typename VectorTag, typename Opt, typename T = typename Opt::value_type>
-struct GenericAlignForwardResult {
+struct GenericAlignResult {
   const hn::TFromD<VectorTag>* ptr;
   optional<T> result;
 };
@@ -230,8 +248,8 @@ struct GenericAlignForwardResult {
 template <
     typename VectorTag, typename Fn,
     typename T = invoke_result_t<Fn, hn::VFromD<VectorTag>, optional<size_t>, optional<size_t>>>
-PSIMD_FLATTEN inline GenericAlignForwardResult<VectorTag, T> align_forward_to_vec_known_safe(
-    const void* s, Fn f) {
+PSIMD_FLATTEN inline GenericAlignResult<VectorTag, T> align_forward_to_vec_known_safe(const void* s,
+                                                                                      Fn f) {
   using VectorElem = hn::TFromD<VectorTag>;
   constexpr VectorTag d;
   const auto loaded = LoadU(d, reinterpret_cast<const VectorElem*>(s));
@@ -275,8 +293,7 @@ PSIMD_FLATTEN inline GenericAlignForwardResult<VectorTag, T> align_forward_to_ve
 template <
     typename VectorTag, typename Fn,
     typename T = invoke_result_t<Fn, hn::VFromD<VectorTag>, optional<size_t>, optional<size_t>>>
-PSIMD_FLATTEN inline GenericAlignForwardResult<VectorTag, T> align_forward_to_vec(const void* s,
-                                                                                  Fn f) {
+PSIMD_FLATTEN inline GenericAlignResult<VectorTag, T> align_forward_to_vec(const void* s, Fn f) {
   constexpr VectorTag d;
   if (can_safely_unaligned_read<VectorTag>(s)) [[likely]] {
     return align_forward_to_vec_known_safe<VectorTag>(s, f);
@@ -286,6 +303,58 @@ PSIMD_FLATTEN inline GenericAlignForwardResult<VectorTag, T> align_forward_to_ve
     return {nullptr, x};
   }
   ptr += d.MaxLanes();
+  PSIMD_DCHECK(hn::IsAligned(d, ptr));
+  return {ptr, {}};
+}
+
+template <
+    typename VectorTag, typename Fn,
+    typename T = invoke_result_t<Fn, hn::VFromD<VectorTag>, optional<size_t>, optional<size_t>>>
+PSIMD_FLATTEN inline GenericAlignResult<VectorTag, T> align_backward_to_vec_known_safe(
+    const void* s, Fn f) {
+  using VectorElem = hn::TFromD<VectorTag>;
+  constexpr VectorTag d;
+
+  const auto loaded = LoadU(d, static_cast<const VectorElem*>(s));
+  auto aligned_ptr = reinterpret_cast<uintptr_t>(s);
+  const size_t offset_from_aligned = aligned_ptr & static_cast<uintptr_t>(d.MaxLanes() - 1);
+  const size_t amount_to_dec = offset_from_aligned ? offset_from_aligned : d.MaxBytes();
+  const size_t overlap_bytes = d.MaxBytes() - amount_to_dec;
+  if (const T x = f(loaded, /*skip_bytes=*/optional<size_t>{}, optional<size_t>{overlap_bytes})) {
+    return {nullptr, x};
+  }
+
+  aligned_ptr -= amount_to_dec;
+  const auto* ptr = reinterpret_cast<const VectorElem*>(aligned_ptr);
+  PSIMD_DCHECK(hn::IsAligned(d, ptr));
+  return {ptr, {}};
+}
+
+// This is `align_forward_to_vec`, but intended for reverse functions, like
+// `memrchr`, so:
+// - It takes a pointer that is known to be safe to load *from the end of* (moreover,
+//   `*(s + VectorTag{}.MaxBytes() - 1)` must be safe)
+// - If loading `s` into a vector is unsafe, this will load at an address
+//   _greater than_ `s`, and `skip_bytes` will refer to bytes in the highest
+//   lanes of `s`.
+template <
+    typename VectorTag, typename Fn,
+    typename T = invoke_result_t<Fn, hn::VFromD<VectorTag>, optional<size_t>, optional<size_t>>>
+PSIMD_FLATTEN inline GenericAlignResult<VectorTag, T> align_backward_to_vec(const void* s, Fn f) {
+  constexpr VectorTag d;
+  if (can_safely_unaligned_read<VectorTag>(s)) [[likely]] {
+    return align_backward_to_vec_known_safe<VectorTag>(s, f);
+  }
+
+  // We can't read `s` directly, so we have to advance until we can.
+  const size_t bytes_to_next_page = kPageSize - (reinterpret_cast<uintptr_t>(s) % kPageSize);
+  s = static_cast<const char*>(s) + bytes_to_next_page;
+  const hn::TFromD<VectorTag>* ptr = static_cast<const hn::TFromD<VectorTag>*>(s);
+  size_t skip_bytes = bytes_to_next_page;
+  if (const T x = f(Load(d, ptr), optional{skip_bytes}, /*overlap_bytes=*/optional<size_t>{})) {
+    return {nullptr, x};
+  }
+  ptr -= d.MaxLanes();
   PSIMD_DCHECK(hn::IsAligned(d, ptr));
   return {ptr, {}};
 }

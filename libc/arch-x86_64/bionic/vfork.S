@@ -52,7 +52,6 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(vfork)
 
   cmpq    $-MAX_ERRNO, %rax
   jb      1f
-  negl    %eax
   movl    %eax, %edi
   call    __set_errno_internal
 1:

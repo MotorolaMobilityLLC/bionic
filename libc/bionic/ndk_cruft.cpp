@@ -369,9 +369,9 @@ pthread_internal_t* __get_thread() {
 }
 
 // This one exists only for the LP32 NDK and is not present anywhere else.
-extern long __set_errno_internal(int);
 long __set_errno(int n) {
-  return __set_errno_internal(n);
+  errno = n;
+  return -1;
 }
 
 // Since dlmalloc_inspect_all and dlmalloc_trim are exported for systems

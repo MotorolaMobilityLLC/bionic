@@ -15,6 +15,7 @@
  */
 
 #include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
 #undef NDEBUG
 #include <assert.h>
@@ -35,6 +36,17 @@ TEST_F(assert_DeathTest, assert_false) {
               "assertion \"false\" failed");
 }
 
+TEST(assert, n2829) {
+#if defined(__BIONIC__)
+  // https://www.open-std.org/jtc1/sc22/wg14/www/docs/n2829.htm
+  assert((int[2]){1,2}[0]);
+  struct A {int x,y;};
+  assert((struct A){1,2}.x);
+#else
+  GTEST_SKIP() << "our glibc is too old";
+#endif
+}
+
 // Re-include <assert.h> with assertions disabled.
 #define NDEBUG
 #include <assert.h>
@@ -45,4 +57,15 @@ TEST(assert, assert_true_NDEBUG) {
 
 TEST(assert, assert_false_NDEBUG) {
   assert(false);
+}
+
+TEST(assert, n2829_NDEBUG) {
+#if defined(__BIONIC__)
+  // https://www.open-std.org/jtc1/sc22/wg14/www/docs/n2829.htm
+  assert((int[2]){1,2}[0]);
+  struct A {int x,y;};
+  assert((struct A){1,2}.x);
+#else
+  GTEST_SKIP() << "our glibc is too old";
+#endif
 }

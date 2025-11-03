@@ -46,6 +46,5 @@ ENTRY(syscall)
     .cfi_def_cfa_offset 0
     cmn     r0, #(MAX_ERRNO + 1)
     bxls    lr
-    neg     r0, r0
     b       __set_errno_internal
 END(syscall)

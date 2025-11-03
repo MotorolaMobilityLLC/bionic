@@ -52,7 +52,6 @@ ENTRY_PRIVATE(__bionic_clone)
         jg      L(bc_parent)
 
         # An error occurred, set errno and return -1.
-        negl    %eax
         movl    %eax, %edi
         call    __set_errno_internal
         ret

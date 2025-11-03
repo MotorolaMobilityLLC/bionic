@@ -44,75 +44,186 @@ namespace {
 using CharType = int8_t;
 using VectorTag = portable_simd::FullVector<CharType>;
 
-// Returns the pointer to the first element in `val` equal to `ch`, provided
-// `val` was loaded from `ptr - bytes_to_skip`. If `count` is non-empty, this
-// will ignore any matches >= `count` bytes from the start of `val`.
-PSIMD_FLATTEN static optional<const void*> ptr_of_first(const CharType* ptr,
-                                                        hn::VFromD<VectorTag> val, CharType ch,
-                                                        optional<size_t> count = {},
-                                                        size_t bytes_to_skip = 0) {
-  constexpr VectorTag d;
-  const auto all_ch = Set(d, ch);
-  const size_t raw_eq_mask = hn::detail::BitsFromMask(all_ch == val);
-  size_t eq_mask = raw_eq_mask >> bytes_to_skip;
-
-  if (count) {
-    const size_t inbounds_mask = ~(kMaxSizeT << *count);
-    eq_mask &= inbounds_mask;
+// Both memchr and memrchr share an implementation, with a `Traits` object to
+// encapsulate their differences.
+struct MemchrTraits {
+  // Advance `ptr` in the direction of this memchr.
+  PSIMD_FLATTEN static const CharType* advance_ptr(const CharType* p, size_t n = 1) {
+    constexpr VectorTag d;
+    return p + n * d.MaxBytes();
   }
 
-  if (!eq_mask) {
-    return {};
+  // Performs adjustment on `p` before starting the algorithm. Memchr starts at `p`.
+  PSIMD_FLATTEN static const CharType* initial_adjust_ptr(const CharType* p, size_t) { return p; }
+
+  // Given a scalar mask indicating which vector element(s) matched our target
+  // character, return the offset from the vector pointer of the closest
+  // match.
+  PSIMD_FLATTEN static size_t byte_offset_of_first(ScalarMaskForD<VectorTag> mask) {
+    return stdc_trailing_zeros(mask);
   }
 
-  return optional<const void*>{ptr + stdc_trailing_zeros(eq_mask)};
-}
+  // Returns the pointer to the closest element in `val` equal to `ch`,
+  // provided `val` was loaded from `ptr - bytes_to_skip`. If `count` is
+  // non-empty, this will ignore any elements in the highest `count` bytes of
+  // `val`.
+  PSIMD_FLATTEN static optional<const void*> ptr_of_first(const CharType* ptr,
+                                                          hn::VFromD<VectorTag> val, CharType ch,
+                                                          optional<size_t> count = {},
+                                                          optional<size_t> bytes_to_skip = {}) {
+    constexpr VectorTag d;
+    const auto all_ch = Set(d, ch);
+    const size_t raw_eq_mask = hn::detail::BitsFromMask(all_ch == val);
+    size_t eq_mask = raw_eq_mask >> bytes_to_skip.unwrap_or(0);
 
+    if (count) {
+      const size_t inbounds_mask = ~(kMaxSizeT << *count);
+      eq_mask &= inbounds_mask;
+    }
+
+    if (!eq_mask) {
+      return {};
+    }
+
+    return optional<const void*>{ptr + byte_offset_of_first(eq_mask)};
+  }
+
+  // `align_forward_to_vec`.
+  PSIMD_FLATTEN static auto align_ptr_to_vec(const CharType* s, auto f) {
+    return align_forward_to_vec<VectorTag>(s, f);
+  }
+
+  // `align_forward_to_vec_known_safe`.
+  PSIMD_FLATTEN static auto align_ptr_to_vec_known_safe(const CharType* s, auto f) {
+    return align_forward_to_vec_known_safe<VectorTag>(s, f);
+  }
+};
+
+struct MemrchrTraits {
+  // Advance `ptr` in the direction of this memchr.
+  PSIMD_FLATTEN static const CharType* advance_ptr(const CharType* p, size_t n = 1) {
+    constexpr VectorTag d;
+    return p - n * d.MaxBytes();
+  }
+
+  // Performs adjustment on `p` before starting the algorithm.
+  // Memrchr starts at the end and immediately calls alignment functions that
+  // expect the pointer to be adjusted backwards by one vector width.
+  PSIMD_FLATTEN static const CharType* initial_adjust_ptr(const CharType* p, size_t count) {
+    constexpr VectorTag d;
+    return p + count - d.MaxBytes();
+  }
+
+  // Given a scalar mask indicating which vector element(s) matched our target
+  // character, return the offset from the vector pointer of the farthest
+  // match.
+  PSIMD_FLATTEN static size_t byte_offset_of_first(ScalarMaskForD<VectorTag> mask) {
+    constexpr VectorTag d;
+    const size_t leading_zeros = stdc_leading_zeros(mask);
+    const size_t distance_of_one = leading_zeros + 1;
+    const size_t offset_from_start = d.MaxBytes() - distance_of_one;
+    return offset_from_start;
+  }
+
+  // Returns the pointer to the farthest element in `val` equal to `ch`,
+  // provided `val` was loaded from `ptr - bytes_to_skip`. If `count` is
+  // non-empty, this will ignore any elements in the lowest `count` bytes of `val`.
+  PSIMD_FLATTEN static optional<const void*> ptr_of_first(const CharType* ptr,
+                                                          hn::VFromD<VectorTag> val, CharType ch,
+                                                          optional<size_t> count = {},
+                                                          optional<size_t> bytes_to_skip = {}) {
+    constexpr VectorTag d;
+    const auto all_ch = Set(d, ch);
+
+    // NOTE: The size of this type is important; this code ends up simpler if we
+    // can rely on this mask only ever containing bits that correspond with
+    // vector lanes.
+    ScalarMaskForD<VectorTag> eq_mask = hn::detail::BitsFromMask(all_ch == val);
+
+    // TODO(gbiv): This was written expecting that `count` and `bytes_to_skip`
+    // would both trivially `has_value` or not, so there'll no be actual
+    // branches here. It could be nice to either:
+    // - have an assertion of that here (though attempts like
+    //   `if (!__builtin_constant_p(has_value())) warning_func();` have failed,
+    //   despite no branches existing in the LLVM IR related to the optionals),
+    //   or
+    // - template this on some kind of `const_optional` type so we can `if
+    //   constexpr` these branches
+    if (bytes_to_skip) {
+      eq_mask <<= *bytes_to_skip;
+    }
+
+    if (count) {
+      const size_t count_mask = kMaxSizeT << (d.MaxBytes() - *count);
+      eq_mask &= count_mask;
+    }
+
+    if (!eq_mask) {
+      return {};
+    }
+    return optional<const void*>{ptr + byte_offset_of_first(eq_mask)};
+  }
+
+  // `align_backward_to_vec`.
+  PSIMD_FLATTEN static auto align_ptr_to_vec(const CharType* s, auto f) {
+    return align_backward_to_vec<VectorTag>(s, f);
+  }
+
+  // `align_backward_to_vec_known_safe`.
+  PSIMD_FLATTEN static auto align_ptr_to_vec_known_safe(const CharType* s, auto f) {
+    return align_backward_to_vec_known_safe<VectorTag>(s, f);
+  }
+};
+
+template <typename Traits>
 PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType ch, size_t count) {
   constexpr VectorTag d;
 
+  s = Traits::initial_adjust_ptr(s, count);
+
   const auto result_from_final_vec = [ch](const CharType* ptr, const auto vec_val, size_t count,
-                                          size_t bytes_to_skip = 0) -> const void* {
+                                          optional<size_t> bytes_to_skip = {}) -> const void* {
     // If `count == 0`, we loaded `vec_val` when we shouldn't have. This is a
     // correctness issue, since `ptr` might've been at the start of a new page.
     PSIMD_DCHECK(count != 0);
-    return ptr_of_first(ptr, vec_val, ch, optional<size_t>{count}, bytes_to_skip)
+    return Traits::ptr_of_first(ptr, vec_val, ch, optional<size_t>{count}, bytes_to_skip)
         .unwrap_or(nullptr);
   };
 
   if (count <= d.MaxBytes()) {
     // Unlikely because it seems rare that people would depend on 0-sized
-    // memchrs being a very fast case.
+    // memrchrs being a very fast case.
     if (count == 0) [[unlikely]] {
       return nullptr;
     }
 
     // We know for certain that we need 2 or fewer loads to service this request.
-    const auto [ptr, maybe_result] = align_forward_to_vec<VectorTag>(
+    const auto [ptr, maybe_result] = Traits::align_ptr_to_vec(
         s,
-        [&](const auto val, optional<size_t> bytes_to_skip,
-            optional<size_t>) -> optional<const void*> {
-          // If we loaded `ptr` directly, one vector op is all this will take.
-          if (!bytes_to_skip.has_value()) {
-            return optional{result_from_final_vec(s, val, count)};
-          }
+        [&](const auto val, optional<size_t> bytes_to_skip, optional<size_t>)
+            PSIMD_FLATTEN -> optional<const void*> {
+              // If we loaded `ptr` directly, one vector op is all this will
+              // take.
+              if (!bytes_to_skip.has_value()) {
+                return optional{result_from_final_vec(s, val, count)};
+              }
 
-          // Reiterating from `align_forward_to_vec`, this is expected to be
-          // inlined such that `bytes_to_skip.has_value()` always trivially folds
-          // to a constant.
-          if (const optional<const void*> x =
-                  ptr_of_first(s, val, ch, optional<size_t>{count}, *bytes_to_skip)) {
-            return x;
-          }
+              // Reiterating from `align_forward_to_vec`, this is expected to
+              // be inlined such that `bytes_to_skip.has_value()` always
+              // trivially folds to a constant.
+              if (const optional<const void*> x =
+                      Traits::ptr_of_first(s, val, ch, optional<size_t>{count}, bytes_to_skip)) {
+                return x;
+              }
 
-          const auto bytes_read = d.MaxBytes() - *bytes_to_skip;
-          if (bytes_read >= count) {
-            return optional<const void*>{nullptr};
-          }
+              const auto bytes_read = d.MaxBytes() - *bytes_to_skip;
+              if (bytes_read >= count) {
+                return optional<const void*>{nullptr};
+              }
 
-          count -= bytes_read;
-          return {};
-        });
+              count -= bytes_read;
+              return {};
+            });
 
     if (maybe_result) {
       return *maybe_result;
@@ -121,19 +232,19 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
   }
 
   // We know the full load is safe, since `count` is larger than a full vector.
-  auto [ptr, maybe_result] = align_forward_to_vec_known_safe<VectorTag>(
+  auto [ptr, maybe_result] = Traits::align_ptr_to_vec_known_safe(
       s,
-      [&](auto val, optional<size_t> bytes_to_skip,
-          optional<size_t> overlap_bytes) -> optional<const void*> {
-        PSIMD_DCHECK(!bytes_to_skip.has_value());
-        PSIMD_DCHECK(overlap_bytes.has_value());
-        if (const optional<const void*> x = ptr_of_first(s, val, ch)) {
-          // No need to bounds-check, due to `count`'s size.
-          return optional<const void*>{*x};
-        }
-        count -= d.MaxBytes() - *overlap_bytes;
-        return {};
-      });
+      [&](auto val, optional<size_t> bytes_to_skip, optional<size_t> overlap_bytes)
+          PSIMD_FLATTEN -> optional<const void*> {
+            PSIMD_DCHECK(!bytes_to_skip.has_value());
+            PSIMD_DCHECK(overlap_bytes.has_value());
+            if (const optional<const void*> x = Traits::ptr_of_first(s, val, ch)) {
+              // No need to bounds-check, due to `count`'s size.
+              return optional<const void*>{*x};
+            }
+            count -= d.MaxBytes() - *overlap_bytes;
+            return {};
+          });
   if (maybe_result) {
     return *maybe_result;
   }
@@ -158,8 +269,8 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
     // improvement in doing 4 per loop.
     const auto needle = Set(d, ch);
     const auto vec1 = Load(d, ptr);
-    const auto vec2 = Load(d, ptr + d.MaxBytes());
-    const auto vec3 = Load(d, ptr + d.MaxBytes() * 2);
+    const auto vec2 = Load(d, Traits::advance_ptr(ptr));
+    const auto vec3 = Load(d, Traits::advance_ptr(ptr, 2));
     const auto vec1_eq = vec1 == needle;
     const auto vec2_eq = vec2 == needle;
     const auto vec3_eq = vec3 == needle;
@@ -178,9 +289,8 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
     //
     // When that no longer holds, it should be trivial to refactor a bit.
     static_assert(sizeof(vec1_eq.raw) == sizeof(vec1));
-    const auto mask_or = [](const auto a, const auto b) {
-      return MaskFromVec(VecFromMask(a) | VecFromMask(b));
-    };
+    const auto mask_or = [](const auto a, const auto b)
+                             PSIMD_FLATTEN { return MaskFromVec(VecFromMask(a) | VecFromMask(b)); };
 
     const auto vec12_eq = mask_or(vec1_eq, vec2_eq);
     const auto all_vecs = mask_or(vec12_eq, vec3_eq);
@@ -188,44 +298,44 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
     // `[[likely]]` keeps this loop tight.
     if (!eq_bits) [[likely]] {
       full_vector_loads_remaining -= 3;
-      ptr += 3 * d.MaxBytes();
+      ptr = Traits::advance_ptr(ptr, 3);
       continue;
     }
 
     if (const size_t eq12_mask = hn::detail::BitsFromMask(vec12_eq)) {
       if (const size_t eq1_mask = hn::detail::BitsFromMask(vec1_eq)) {
-        return ptr + stdc_trailing_zeros(eq1_mask);
+        return ptr + Traits::byte_offset_of_first(eq1_mask);
       }
-      ptr += d.MaxBytes();
+      ptr = Traits::advance_ptr(ptr, 1);
       // If eq1_mask was empty, bits must've been from eq2_mask.
-      return ptr + stdc_trailing_zeros(eq12_mask);
+      return ptr + Traits::byte_offset_of_first(eq12_mask);
     }
     // If eq12_mask was empty, bits must've been from eq2_mask.
-    ptr += d.MaxBytes() * 2;
-    return ptr + stdc_trailing_zeros(eq_bits);
+    ptr = Traits::advance_ptr(ptr, 2);
+    return ptr + Traits::byte_offset_of_first(eq_bits);
   }
 
-  const auto check_ptr_and_inc = [&]() -> optional<const void*> {
-    if (const optional<const void*> x = ptr_of_first(ptr, Load(d, ptr), ch)) {
+  const auto check_ptr_and_advance = [&]() PSIMD_FLATTEN -> optional<const void*> {
+    if (const optional<const void*> x = Traits::ptr_of_first(ptr, Load(d, ptr), ch)) {
       return optional{*x};
     }
-    ptr += d.MaxBytes();
+    ptr = Traits::advance_ptr(ptr);
     return {};
   };
 
   switch (full_vector_loads_remaining) {
     case 3:
-      if (const optional<const void*> x = check_ptr_and_inc()) {
+      if (const optional<const void*> x = check_ptr_and_advance()) {
         return *x;
       }
       [[fallthrough]];
     case 2:
-      if (const optional<const void*> x = check_ptr_and_inc()) {
+      if (const optional<const void*> x = check_ptr_and_advance()) {
         return *x;
       }
       [[fallthrough]];
     case 1:
-      if (const optional<const void*> x = check_ptr_and_inc()) {
+      if (const optional<const void*> x = check_ptr_and_advance()) {
         return *x;
       }
       [[fallthrough]];
@@ -242,6 +352,11 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
 }  // namespace portable_simd
 
 PSIMD_LIBC_FUNCTION(void*, memchr, const void* ptr, int ch, size_t count) {
-  return const_cast<void*>(portable_simd::memchr_vectorized(
+  return const_cast<void*>(portable_simd::memchr_vectorized<portable_simd::MemchrTraits>(
+      reinterpret_cast<const portable_simd::CharType*>(ptr), ch, count));
+}
+
+PSIMD_LIBC_FUNCTION(void*, memrchr, const void* ptr, int ch, size_t count) {
+  return const_cast<void*>(portable_simd::memchr_vectorized<portable_simd::MemrchrTraits>(
       reinterpret_cast<const portable_simd::CharType*>(ptr), ch, count));
 }
