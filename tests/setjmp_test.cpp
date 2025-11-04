@@ -476,45 +476,66 @@ TEST(setjmp, setjmp_registers) {
 
 #if defined(__arm__)
 #define JB_SIGFLAG_OFFSET 0
+#define JB_CHECKSUM_OFFSET 31
 #elif defined(__aarch64__)
 #define JB_SIGFLAG_OFFSET 0
+#define JB_CHECKSUM_OFFSET 24
 #elif defined(__i386__)
 #define JB_SIGFLAG_OFFSET 8
+#define JB_CHECKSUM_OFFSET 9
 #elif defined(__riscv)
 #define JB_SIGFLAG_OFFSET 0
+#define JB_CHECKSUM_OFFSET 29
 #elif defined(__x86_64)
 #define JB_SIGFLAG_OFFSET 8
+#define JB_CHECKSUM_OFFSET 10
 #endif
 
 TEST_F(setjmp_DeathTest, setjmp_cookie) {
+#if defined(__BIONIC__)
   jmp_buf jb;
   int value = setjmp(jb);
   ASSERT_EQ(0, value);
 
-  long* sigflag = reinterpret_cast<long*>(jb) + JB_SIGFLAG_OFFSET;
+#if defined(__i386__) || defined(__x86_64__)
+  long* raw_words = reinterpret_cast<long*>(jb);
+  size_t word_count = sizeof(jmp_buf) / sizeof(long);
 
-  // Make sure there's actually a cookie.
-  EXPECT_NE(0, *sigflag & ~1);
+  // Corrupt the cookie.
+  raw_words[JB_SIGFLAG_OFFSET] = 0xfeedface;
+  // Recompute the checksum.
+  // This assumes that the checksum is the last word,
+  // which is true for all our architectures.
+  long cs = 0;
+  for (size_t i = 0; i < word_count - 1; i++) {
+    cs ^= raw_words[i];
+  }
+  raw_words[JB_CHECKSUM_OFFSET] = cs;
 
-  // Wipe it out
-  *sigflag &= 1;
-  // TODO: we can't make this EXPECT_EXIT() because all the implementations are wrong!
+  EXPECT_EXIT(longjmp(jb, 0), testing::KilledBySignal(SIGABRT), "setjmp cookie mismatch");
+#else
+  // TODO: we can't make this EXPECT_EXIT() because the implementations are wrong!
   // TODO: we need to fix longjmp() to check the cookie _before_ corrupting sp + pc!
   EXPECT_DEATH(longjmp(jb, 0), "");
+#endif
+#else
+  GTEST_SKIP() << "bionic-only test";
+#endif
 }
 
-TEST_F(setjmp_DeathTest, setjmp_cookie_checksum) {
+TEST_F(setjmp_DeathTest, setjmp_checksum) {
+#if defined(__BIONIC__)
   jmp_buf jb;
   int value = setjmp(jb);
+  ASSERT_EQ(0, value);
 
-  if (value == 0) {
-    // Flip a bit.
-    reinterpret_cast<long*>(jb)[1] ^= 1;
+  // Flip a bit.
+  reinterpret_cast<long*>(jb)[1] ^= 1;
 
-    EXPECT_EXIT(longjmp(jb, 1), testing::KilledBySignal(SIGABRT), "checksum mismatch");
-  } else {
-    fprintf(stderr, "setjmp_cookie_checksum: longjmp succeeded?");
-  }
+  EXPECT_EXIT(longjmp(jb, 1), testing::KilledBySignal(SIGABRT), "setjmp checksum mismatch");
+#else
+  GTEST_SKIP() << "bionic-only test";
+#endif
 }
 
 __attribute__((noinline)) void call_longjmp(jmp_buf buf) {

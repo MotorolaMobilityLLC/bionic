@@ -135,12 +135,18 @@ END(sigsetjmp)
 
 // void siglongjmp(sigjmp_buf env, int value);
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
-  movq %rdi,%r12
+  movq %rdi, %r12 // Save 'env'.
   pushq %rsi // Push 'value'.
 
+  // Check the checksum.
   m_calculate_checksum %rax, %rdi
   xorq (_JB_CHECKSUM * 8)(%rdi), %rax
   jnz L(checksum_failure)
+
+  // Check the cookie.
+  movq (_JB_SIGFLAG * 8)(%rdi), %rdi
+  call __bionic_setjmp_cookie_check
+  movq %r12, %rdi // Restore 'env'.
 
   // Do we need to restore the signal mask?
   movq (_JB_SIGFLAG * 8)(%rdi), %rdi
@@ -159,7 +165,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   popq %rcx
   andq $-2, %rcx
 
-  popq %rax // Pop 'value'.
+  popq %rax // Pop 'value' before we update %rsp.
 
   // Restore the callee-save registers.
 
@@ -176,23 +182,13 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   m_unmangle_register %r14, _JB_R14
   m_unmangle_register %r15, _JB_R15
   m_unmangle_register %rsp, _JB_RSP
-  m_unmangle_register %r11, _JB_PC
+  m_unmangle_register 0(%rsp), _JB_PC
   m_unmangle_register %r12, _JB_R12
 
-  // Check the cookie.
-  pushq %rax
-  pushq %r11
-  movq %rcx, %rdi
-  call __bionic_setjmp_cookie_check
-  popq %r11
-  popq %rax
-
-  // Return 1 if value is 0, value otherwise.
-  movq $1,%r10
-  testl %eax,%eax
-  cmovzq %r10,%rax
-  // Overwrite the return address with our stashed %rip value and return.
-  movq %r11,0(%rsp)
+  // Return 1 if 'value' is 0, value otherwise.
+  movq $1, %r10
+  testl %eax, %eax
+  cmovzq %r10, %rax
   ret
 
 L(checksum_failure):
