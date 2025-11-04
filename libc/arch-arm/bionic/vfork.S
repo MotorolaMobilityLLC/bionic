@@ -49,8 +49,5 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(vfork)
 
     // rc != 0: reset cached_pid_ and vforked_.
     str     r1, [r3, #12]
-    cmn     r0, #(MAX_ERRNO + 1)
-
-    bxls    lr
-    b       __set_errno_internal
+    DO_SYSCALL_RETURN
 END(vfork)

@@ -44,7 +44,5 @@ ENTRY(syscall)
     swi     #0
     ldmfd   sp!, {r4, r5, r6, r7}
     .cfi_def_cfa_offset 0
-    cmn     r0, #(MAX_ERRNO + 1)
-    bxls    lr
-    b       __set_errno_internal
+    DO_SYSCALL_RETURN
 END(syscall)
