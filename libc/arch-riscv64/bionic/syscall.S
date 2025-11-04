@@ -40,13 +40,7 @@ ENTRY(syscall)
   mv a4, a5
   mv a5, a6
 
+  // Make the system call.
   ecall
-
-  // Did it fail?
-  li a7, -MAX_ERRNO
-  bgtu a0, a7, L(failure)
-  ret
-
-L(failure):
-  tail __set_errno_internal
+  DO_SYSCALL_RETURN
 END(syscall)
