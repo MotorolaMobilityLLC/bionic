@@ -42,8 +42,8 @@ ENTRY_PRIVATE(__bionic_clone)
     cbz     x0, L(child)
 
     # Set errno if something went wrong.
-    cmn     x0, #(MAX_ERRNO + 1)
-    b.hi    __set_errno_internal
+    cmp     x0, #-MAX_ERRNO
+    b.hs    __set_errno_internal
 
     ret
 
