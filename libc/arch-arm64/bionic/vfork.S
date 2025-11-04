@@ -72,15 +72,14 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(vfork)
     mov     x8, __NR_clone
     svc     #0
 
-    cbz     x0, L(done)
-
-    // rc != 0: reset cached_pid_ and vforked_.
-    str     w10, [x9, #20]
-    cmp     x0, #-MAX_ERRNO
-    b.hs    __set_errno_internal
-
-L(done):
+    // Are we the child? Return if so.
+    cbnz    x0, 1f
     ret
+
+    // Not the child: restore the previous cached_pid_/vforked_ values
+    // and then report syscall success/failure as normal.
+1:  str     w10, [x9, #20]
+    DO_SYSCALL_RETURN
 END(vfork)
 
 NOTE_GNU_PROPERTY()

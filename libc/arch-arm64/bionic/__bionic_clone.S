@@ -41,11 +41,8 @@ ENTRY_PRIVATE(__bionic_clone)
     # Are we the child?
     cbz     x0, L(child)
 
-    # Set errno if something went wrong.
-    cmp     x0, #-MAX_ERRNO
-    b.hs    __set_errno_internal
-
-    ret
+    # We're either the parent or the syscall failed.
+    DO_SYSCALL_RETURN
 
 L(child):
     # We're in the child now. Set the end of the frame record chain.
