@@ -49,13 +49,9 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(vfork)
   jnz     L(not_child)
   ret
 
-  // Not the child: restore the previous cached_pid_/vforked_ values.
+  // Not the child: restore the previous cached_pid_/vforked_ values
+  // and then report syscall success/failure as normal.
 L(not_child):
   movl    %r9d, 20(%r8)
-
-  cmpq    $-MAX_ERRNO, %rax
-  jae     1f
-  ret
-1:movl    %eax, %edi
-  jmp     __set_errno_internal
+  DO_SYSCALL_RETURN
 END(vfork)
