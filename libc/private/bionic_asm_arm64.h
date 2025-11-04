@@ -77,3 +77,9 @@
 #define NT_MEMTAG_LEVEL_SYNC 2
 #define NT_MEMTAG_HEAP 4
 #define NT_MEMTAG_STACK 8
+
+#define DO_SYSCALL_RETURN \
+    cmp     x0, #-MAX_ERRNO ; \
+    b.hs    __set_errno_internal ; \
+    ret \
+

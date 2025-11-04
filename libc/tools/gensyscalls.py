@@ -61,11 +61,7 @@ END(%(func)s)
 arm64_call = syscall_stub_header + """\
     mov     x8, %(__NR_name)s
     svc     #0
-
-    cmp     x0, #-MAX_ERRNO
-    b.hs    __set_errno_internal
-
-    ret
+    DO_SYSCALL_RETURN
 END(%(func)s)
 """
 
