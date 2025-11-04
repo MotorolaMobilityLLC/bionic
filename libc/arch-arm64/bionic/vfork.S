@@ -73,12 +73,13 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(vfork)
     svc     #0
 
     // Are we the child? Return if so.
-    cbnz    x0, 1f
+    cbnz    x0, L(not_child)
     ret
 
     // Not the child: restore the previous cached_pid_/vforked_ values
     // and then report syscall success/failure as normal.
-1:  str     w10, [x9, #20]
+L(not_child):
+    str     w10, [x9, #20]
     DO_SYSCALL_RETURN
 END(vfork)
 
