@@ -46,3 +46,9 @@
 
 #undef __bionic_asm_function_type
 #define __bionic_asm_function_type #function
+
+#define DO_SYSCALL_RETURN \
+    cmn     r0, #(MAX_ERRNO + 1) ; \
+    bxls    lr ; \
+    b       __set_errno_internal \
+

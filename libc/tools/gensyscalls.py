@@ -27,9 +27,7 @@ arm_call_default = syscall_stub_header + """\
     swi     #0
     mov     r7, ip
     .cfi_restore r7
-    cmn     r0, #(MAX_ERRNO + 1)
-    bxls    lr
-    b       __set_errno_internal
+    DO_SYSCALL_RETURN
 END(%(func)s)
 """
 
@@ -47,9 +45,7 @@ arm_call_long = syscall_stub_header + """\
     swi     #0
     ldmfd   sp!, {r4, r5, r6, r7}
     .cfi_def_cfa_offset 0
-    cmn     r0, #(MAX_ERRNO + 1)
-    bxls    lr
-    b       __set_errno_internal
+    DO_SYSCALL_RETURN
 END(%(func)s)
 """
 
