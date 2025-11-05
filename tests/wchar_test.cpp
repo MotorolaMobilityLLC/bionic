@@ -27,7 +27,11 @@
 
 #include <limits>
 
+#include "buffer_tests.h"
 #include "utils.h"
+
+constexpr static auto KB = 1024;
+constexpr static auto LARGE = 64 * KB;
 
 #define NUM_WCHARS(num_bytes) ((num_bytes)/sizeof(wchar_t))
 
@@ -1175,6 +1179,45 @@ TEST(wchar, wcwidth_hangeul_compatibility_jamo) {
   // from Hangeul Compatibility Jamo.
   EXPECT_EQ(2, wcwidth(L'ㄱ'));
   EXPECT_EQ(2, wcwidth(L'ㅅ'));
+}
+
+TEST(wchar, wcslen) {
+  constexpr size_t array_len = 256 / sizeof(wchar_t);
+  wchar_t wide_str[array_len];
+  for (size_t i = 0; i < array_len; ++i) {
+    wide_str[i] = i + 1;
+  }
+
+  for (size_t i = 0; i < array_len - 1; ++i) {
+    const wchar_t old = wide_str[i];
+    wide_str[i] = 0;
+    EXPECT_EQ(wcslen(wide_str), i);
+    wide_str[i] = old;
+  }
+}
+
+static void DoWcslenTest(uint8_t* byte_buf, size_t byte_len) {
+  // NOTE: This is intentionally left potentially-misaligned, because
+  // historically bionic (and other BSD-derived libcs including iOS) allowed
+  // it, though glibc does not.
+  size_t len = byte_len / sizeof(wchar_t);
+  if (len >= 1) {
+    size_t pre_nul_len = len * sizeof(wchar_t) - sizeof(wchar_t);
+    memset(byte_buf, (32 + (byte_len % 96)), pre_nul_len);
+    // Because this is unaligned, use `memset` to set the 0, rather than
+    // casting to `wchar_t *` and doing an unaligned store. The `memset` is
+    // preferred by the standard & sanitizers.
+    memset(byte_buf + pre_nul_len, 0, sizeof(wchar_t));
+    EXPECT_EQ(len - 1, wcslen(reinterpret_cast<const wchar_t*>(byte_buf)));
+  }
+}
+
+TEST(wchar, wcslen_align) {
+  RunSingleBufferAlignTest(LARGE, DoWcslenTest);
+}
+
+TEST(wchar, wcslen_overread) {
+  RunSingleBufferOverreadTest(DoWcslenTest);
 }
 
 TEST(wchar, wcswidth) {
