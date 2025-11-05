@@ -192,3 +192,7 @@ typedef size_t strnlen_func_t(const char*, size_t);
 typedef char* strrchr_func_t(const char*, int);
 #define STRRCHR_SHIM() \
   DEFINE_STATIC_SHIM(char* strrchr(const char* src, int ch) { FORWARD(strrchr)(src, ch); })
+
+typedef size_t wcslen_func_t(const wchar_t*);
+#define WCSLEN_SHIM() \
+  DEFINE_STATIC_SHIM(size_t wcslen(const wchar_t* src) { FORWARD(wcslen)(src); })
