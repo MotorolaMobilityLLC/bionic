@@ -50,16 +50,13 @@ ENTRY(vfork)
   li      a7, __NR_clone
   ecall
 
-  // if (rc == 0) we're the child, and finished...
-  beqz    a0, L(success)
-
-  // else if (rc != 0): reset cached_pid_ and vforked_...
-  sw      t2, 20(t0)
-  // ...and work out whether we succeeded or failed.
-  bltz    a0, L(failure)
-L(success):
+  // Are we the child? Return if so.
+  bnez    a0, L(not_child)
   ret
 
-L(failure):
-  tail    __set_errno_internal
+  // Not the child: restore the previous cached_pid_/vforked_ values
+  // and then report syscall success/failure as normal.
+L(not_child):
+  sw      t2, 20(t0)
+  DO_SYSCALL_RETURN
 END(vfork)

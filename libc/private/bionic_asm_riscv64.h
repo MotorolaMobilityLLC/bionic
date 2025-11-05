@@ -41,3 +41,10 @@
 
 #undef __bionic_asm_function_type
 #define __bionic_asm_function_type %function
+
+#define DO_SYSCALL_RETURN \
+    li   a7, -MAX_ERRNO ; \
+    bgeu a0, a7, 1f ; \
+    ret ; \
+1:  tail __set_errno_internal \
+

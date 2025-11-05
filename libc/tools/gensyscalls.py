@@ -69,13 +69,7 @@ END(%(func)s)
 riscv64_call = syscall_stub_header + """\
     li      a7, %(__NR_name)s
     ecall
-
-    li      a7, -MAX_ERRNO
-    bgeu    a0, a7, 1f
-
-    ret
-1:
-    tail    __set_errno_internal
+    DO_SYSCALL_RETURN
 END(%(func)s)
 """
 

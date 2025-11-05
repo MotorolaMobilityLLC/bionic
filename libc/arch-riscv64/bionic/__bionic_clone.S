@@ -43,14 +43,8 @@ ENTRY_PRIVATE(__bionic_clone)
   # Are we the child?
   beqz a0, L(child)
 
-  # Did the clone(2) fail?
-  bltz a0, L(failure)
-  # Nope, we're the parent, and our work here is done.
-  ret
-
-L(failure):
-  # Set errno if something went wrong.
-  tail __set_errno_internal
+  # We're either the parent or the syscall failed.
+  DO_SYSCALL_RETURN
 
 L(child):
   # We're in the child now. Set the end of the frame record chain.
