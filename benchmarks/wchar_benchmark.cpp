@@ -31,6 +31,11 @@
 #include <benchmark/benchmark.h>
 #include <util.h>
 
+// NOTE: While we support wchar functions being passed unaligned pointers for
+// compatibility purposes, we intentionally do not benchmark that case, because
+// it's expected to be extremely rare. If devs want fast wchar, they can align
+// their buffers correctly.
+
 static void BM_wchar_wcslen(benchmark::State& state) {
   const size_t nbytes = state.range(0) * sizeof(wchar_t);
   const size_t alignment = state.range(1);
@@ -46,3 +51,22 @@ static void BM_wchar_wcslen(benchmark::State& state) {
   state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_wchar_wcslen, "AT_ALIGNED_ONEBUF");
+
+static void BM_wchar_wmemchr(benchmark::State& state) {
+  const size_t nchars = state.range(0);
+  const size_t alignment = state.range(1);
+
+  const size_t nbytes = nchars * sizeof(wchar_t);
+  std::vector<char> buf;
+  char* buf_aligned = GetAlignedPtrFilled(&buf, alignment, nbytes + 1, 'x');
+
+  wchar_t needle = L'a';
+  memcpy(buf_aligned + nbytes - sizeof(wchar_t), &needle, sizeof(needle));
+  while (state.KeepRunning()) {
+    benchmark::DoNotOptimize(
+        wmemchr(reinterpret_cast<const wchar_t*>(buf_aligned), needle, nchars));
+  }
+
+  state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_wchar_wmemchr, "AT_ALIGNED_ONEBUF");
