@@ -1125,3 +1125,63 @@ TEST(stdlib, setprogname) {
   ASSERT_STREQ("muppet", getprogname());
 #endif
 }
+
+TEST(stdlib, div) {
+  div_t r;
+
+  r = div(5, 3);
+  EXPECT_EQ(1, r.quot);
+  EXPECT_EQ(2, r.rem);
+
+  r = div(5, -3);
+  EXPECT_EQ(-1, r.quot);
+  EXPECT_EQ(2, r.rem);
+
+  r = div(-5, 3);
+  EXPECT_EQ(-1, r.quot);
+  EXPECT_EQ(-2, r.rem);
+
+  r = div(-5, -3);
+  EXPECT_EQ(1, r.quot);
+  EXPECT_EQ(-2, r.rem);
+}
+
+TEST(stdlib, ldiv) {
+  ldiv_t r;
+
+  r = ldiv(5, 3);
+  EXPECT_EQ(1, r.quot);
+  EXPECT_EQ(2, r.rem);
+
+  r = ldiv(5, -3);
+  EXPECT_EQ(-1, r.quot);
+  EXPECT_EQ(2, r.rem);
+
+  r = ldiv(-5, 3);
+  EXPECT_EQ(-1, r.quot);
+  EXPECT_EQ(-2, r.rem);
+
+  r = ldiv(-5, -3);
+  EXPECT_EQ(1, r.quot);
+  EXPECT_EQ(-2, r.rem);
+}
+
+TEST(stdlib, lldiv) {
+  lldiv_t r;
+
+  r = lldiv(5, 3);
+  EXPECT_EQ(1, r.quot);
+  EXPECT_EQ(2, r.rem);
+
+  r = lldiv(5, -3);
+  EXPECT_EQ(-1, r.quot);
+  EXPECT_EQ(2, r.rem);
+
+  r = lldiv(-5, 3);
+  EXPECT_EQ(-1, r.quot);
+  EXPECT_EQ(-2, r.rem);
+
+  r = lldiv(-5, -3);
+  EXPECT_EQ(1, r.quot);
+  EXPECT_EQ(-2, r.rem);
+}

@@ -189,66 +189,6 @@ TEST(inttypes, wcstoumax_EINVAL) {
   ASSERT_ERRNO(EINVAL);
 }
 
-TEST(inttypes, div) {
-  div_t r;
-
-  r = div(5, 3);
-  EXPECT_EQ(1, r.quot);
-  EXPECT_EQ(2, r.rem);
-
-  r = div(5, -3);
-  EXPECT_EQ(-1, r.quot);
-  EXPECT_EQ(2, r.rem);
-
-  r = div(-5, 3);
-  EXPECT_EQ(-1, r.quot);
-  EXPECT_EQ(-2, r.rem);
-
-  r = div(-5, -3);
-  EXPECT_EQ(1, r.quot);
-  EXPECT_EQ(-2, r.rem);
-}
-
-TEST(inttypes, ldiv) {
-  ldiv_t r;
-
-  r = ldiv(5, 3);
-  EXPECT_EQ(1, r.quot);
-  EXPECT_EQ(2, r.rem);
-
-  r = ldiv(5, -3);
-  EXPECT_EQ(-1, r.quot);
-  EXPECT_EQ(2, r.rem);
-
-  r = ldiv(-5, 3);
-  EXPECT_EQ(-1, r.quot);
-  EXPECT_EQ(-2, r.rem);
-
-  r = ldiv(-5, -3);
-  EXPECT_EQ(1, r.quot);
-  EXPECT_EQ(-2, r.rem);
-}
-
-TEST(inttypes, lldiv) {
-  lldiv_t r;
-
-  r = lldiv(5, 3);
-  EXPECT_EQ(1, r.quot);
-  EXPECT_EQ(2, r.rem);
-
-  r = lldiv(5, -3);
-  EXPECT_EQ(-1, r.quot);
-  EXPECT_EQ(2, r.rem);
-
-  r = lldiv(-5, 3);
-  EXPECT_EQ(-1, r.quot);
-  EXPECT_EQ(-2, r.rem);
-
-  r = lldiv(-5, -3);
-  EXPECT_EQ(1, r.quot);
-  EXPECT_EQ(-2, r.rem);
-}
-
 TEST(inttypes, imaxdiv) {
   imaxdiv_t r;
 
