@@ -57,17 +57,17 @@
 
 #define pStr a0
 #define iCh a1
-#define iEndOffset a2
-#define iChOffset a3
-#define iTemp1 a4
-#define iTemp2 a5
-#define iCurrentVL a6
 #define iVL t0
+#define iEndOffset t1
+#define iChOffset t0
+#define iCurrentVL t0
 
+/* This strchr implementation supports m1-m8, can tune to hardware */
 #define ELEM_LMUL_SETTING m1
-#define vStr v0
-#define vMaskEnd v8
-#define vMaskCh v9
+#define vMask v0
+#define vStr v8
+#define vMaskEnd v16
+#define vMaskCh v16
 
 ENTRY(strchr)
 
@@ -75,13 +75,11 @@ L(strchr_loop):
     vsetvli iVL, zero, e8, ELEM_LMUL_SETTING, ta, ma
     vle8ff.v vStr, (pStr)
     vmseq.vi vMaskEnd, vStr, 0
-    vmseq.vx vMaskCh, vStr, iCh
     vfirst.m iEndOffset, vMaskEnd /* first occurrence of \0 */
-    vfirst.m iChOffset, vMaskCh /* first occurrence of ch */
-    sltz iTemp1, iChOffset
-    sltu iTemp2, iEndOffset, iChOffset
-    or iTemp1, iTemp1, iTemp2
-    beqz iTemp1, L(found_ch) /* Found ch, not preceded by \0? */
+    vmsif.m vMask, vMaskEnd  /* mask up to and including \0 */
+    vmseq.vx vMaskCh, vStr, iCh, vMask.t
+    vfirst.m iChOffset, vMaskCh, vMask.t /* first occurrence of ch */
+    bgez iChOffset, L(found_ch) /* Found ch? */
     csrr iCurrentVL, vl
     add pStr, pStr, iCurrentVL
     bltz iEndOffset, L(strchr_loop) /* Didn't find \0? */
