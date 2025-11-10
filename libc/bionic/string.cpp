@@ -66,7 +66,7 @@ char* strcat(char* dst, const char* src) {
 }
 #endif
 
-#if defined(__arm__) || defined(__aarch64__) || defined(__riscv)
+#if defined(__arm__) || defined(__aarch64__)
 __attribute__((__flatten__))
 char* stpncpy(char* dst, const char* src, size_t dst_n) {
   size_t src_n = strnlen(src, dst_n);
@@ -76,7 +76,7 @@ char* stpncpy(char* dst, const char* src, size_t dst_n) {
 }
 #endif
 
-#if defined(__arm__) || defined(__aarch64__)
+#if defined(__arm__) || defined(__aarch64__) || defined(__riscv)
 __attribute__((__flatten__))
 char* strncpy(char* dst, const char* src, size_t n) {
   stpncpy(dst, src, n);

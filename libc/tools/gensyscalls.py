@@ -27,9 +27,7 @@ arm_call_default = syscall_stub_header + """\
     swi     #0
     mov     r7, ip
     .cfi_restore r7
-    cmn     r0, #(MAX_ERRNO + 1)
-    bxls    lr
-    b       __set_errno_internal
+    DO_SYSCALL_RETURN
 END(%(func)s)
 """
 
@@ -47,9 +45,7 @@ arm_call_long = syscall_stub_header + """\
     swi     #0
     ldmfd   sp!, {r4, r5, r6, r7}
     .cfi_def_cfa_offset 0
-    cmn     r0, #(MAX_ERRNO + 1)
-    bxls    lr
-    b       __set_errno_internal
+    DO_SYSCALL_RETURN
 END(%(func)s)
 """
 
@@ -61,11 +57,7 @@ END(%(func)s)
 arm64_call = syscall_stub_header + """\
     mov     x8, %(__NR_name)s
     svc     #0
-
-    cmn     x0, #(MAX_ERRNO + 1)
-    b.hi    __set_errno_internal
-
-    ret
+    DO_SYSCALL_RETURN
 END(%(func)s)
 """
 
@@ -77,13 +69,7 @@ END(%(func)s)
 riscv64_call = syscall_stub_header + """\
     li      a7, %(__NR_name)s
     ecall
-
-    li      a7, -MAX_ERRNO
-    bgeu    a0, a7, 1f
-
-    ret
-1:
-    tail    __set_errno_internal
+    DO_SYSCALL_RETURN
 END(%(func)s)
 """
 
@@ -128,12 +114,7 @@ END(%(func)s)
 x86_64_call = """\
     movl    $%(__NR_name)s, %%eax
     syscall
-    cmpq    $-MAX_ERRNO, %%rax
-    jb      1f
-    movl    %%eax, %%edi
-    call    __set_errno_internal
-1:
-    ret
+    DO_SYSCALL_RETURN
 END(%(func)s)
 """
 

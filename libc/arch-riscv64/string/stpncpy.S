@@ -58,7 +58,7 @@
 #define pDst a0
 #define pSrc a1
 #define iLength a2
-#define pDstPtr a3
+#define pZeros a3
 
 #define iVL a4
 #define iCurrentVL a5
@@ -71,11 +71,9 @@
 #define vStr1 v8
 #define vStr2 v16
 
-ENTRY(strncpy)
+ENTRY(stpncpy)
 
-    mv pDstPtr, pDst
-
-    // copy pSrc to pDstPtr
+    // copy pSrc to pDst
 L(strcpy_loop):
     vsetvli iVL, iLength, e8, ELEM_LMUL_SETTING, ta, ma
     vle8ff.v vStr1, (pSrc)
@@ -85,8 +83,8 @@ L(strcpy_loop):
     vmsif.m vMask1, vMask2
     add pSrc, pSrc, iCurrentVL
     sub iLength, iLength, iCurrentVL
-    vse8.v vStr1, (pDstPtr), vMask1.t
-    add pDstPtr, pDstPtr, iCurrentVL
+    vse8.v vStr1, (pDst), vMask1.t
+    add pDst, pDst, iCurrentVL
     bgez iActiveElemPos, L(fill_zero)
     bnez iLength, L(strcpy_loop)
     ret
@@ -94,21 +92,23 @@ L(strcpy_loop):
     # fill the tail zero.
 L(fill_zero):
     sub iVL, iCurrentVL, iActiveElemPos
+    // stpncpy() returns a pointer to byte after the last non-NUL char
+    sub pDst, pDst, iVL
+    mv pZeros, pDst
     add iLength, iLength, iVL
     bnez iLength, 1f
     ret
 1:
-    sub pDstPtr, pDstPtr, iVL
     vsetvli zero, iLength, e8, ZERO_FILL_ELEM_LMUL_SETTING, ta, ma
     vmv.v.x vStr2, zero
 
 L(fill_zero_loop):
     vsetvli iVL, iLength, e8, ZERO_FILL_ELEM_LMUL_SETTING, ta, ma
-    vse8.v vStr2, (pDstPtr)
+    vse8.v vStr2, (pZeros)
     sub iLength, iLength, iVL
-    add pDstPtr, pDstPtr, iVL
+    add pZeros, pZeros, iVL
     bnez iLength, L(fill_zero_loop)
 
     ret
 
-END(strncpy)
+END(stpncpy)

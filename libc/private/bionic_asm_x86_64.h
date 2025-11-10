@@ -40,3 +40,12 @@
 #define PIC_GOT(x)	x@GOTPCREL(%rip)
 
 #define __bionic_asm_align 16
+
+#define DO_SYSCALL_RETURN \
+    cmpq    $-MAX_ERRNO, %rax ; \
+    jae     1f ; \
+    ret ; \
+    \
+1:  movl    %eax, %edi ; \
+    jmp     __set_errno_internal \
+

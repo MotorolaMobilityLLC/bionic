@@ -61,6 +61,10 @@ static void pthread_h() {
   TYPE(pthread_spinlock_t);
   TYPE(pthread_t);
 
+#if defined(__BIONIC__) // Our host glibc is too old.
+  pthread_t t = PTHREAD_NULL;
+#endif
+
   FUNCTION(pthread_atfork, int (*f)(void (*)(void), void (*)(void), void (*)(void)));
   FUNCTION(pthread_attr_destroy, int (*f)(pthread_attr_t*));
   FUNCTION(pthread_attr_getdetachstate, int (*f)(const pthread_attr_t*, int*));

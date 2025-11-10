@@ -94,6 +94,9 @@ enum {
 #define PTHREAD_SCOPE_SYSTEM 0
 #define PTHREAD_SCOPE_PROCESS 1
 
+/** A value for pthread_t that does not compare equal to any thread. */
+#define PTHREAD_NULL __BIONIC_CAST(static_cast, pthread_t, NULL)
+
 int pthread_atfork(void (* _Nullable __prepare)(void), void (* _Nullable __parent)(void), void (* _Nullable __child)(void));
 
 int pthread_attr_destroy(pthread_attr_t* _Nonnull __attr);

@@ -55,9 +55,7 @@ ENTRY_PRIVATE(__bionic_clone)
 
     # In the parent, reload saved registers then either return or set errno.
     ldmfd   sp!, {r4, r5, r6, r7}
-    cmn     r0, #(MAX_ERRNO + 1)
-    bxls    lr
-    b       __set_errno_internal
+    DO_SYSCALL_RETURN
 
 .L_bc_child:
     # We're in the child now. Set the end of the frame record chain.

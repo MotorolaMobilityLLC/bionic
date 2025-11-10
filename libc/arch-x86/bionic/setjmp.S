@@ -128,13 +128,19 @@ L(_sigsetjmp):
   ret
 END(sigsetjmp)
 
+// void siglongjmp(sigjmp_buf env, int value);
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
-  movl 4(%esp),%edx
+  movl 4(%esp),%edx // Get 'env'.
 
   // Check the checksum before doing anything.
   m_calculate_checksum %eax, %edx
   xorl (_JB_CHECKSUM * 4)(%edx), %eax
   jnz L(checksum_failure)
+
+  // Check the cookie.
+  pushl (_JB_SIGFLAG * 4)(%edx)
+  call __bionic_setjmp_cookie_check
+  addl $4,%esp
 
   // Do we have a signal mask to restore?
   movl (_JB_SIGFLAG * 4)(%edx), %eax
@@ -178,14 +184,6 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   xorl (_JB_EBX * 4)(%edx),%ebx
   xorl (_JB_ESI * 4)(%edx),%esi
   xorl (_JB_EDI * 4)(%edx),%edi
-
-  pushl %eax
-  pushl %ecx
-  pushl (_JB_SIGFLAG * 4)(%edx)
-  call __bionic_setjmp_cookie_check
-  addl $4,%esp
-  popl %ecx
-  popl %eax
 
   // Return 1 if value is 0, value otherwise.
   movl $1,%edx

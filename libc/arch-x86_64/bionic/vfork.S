@@ -44,16 +44,14 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(vfork)
   syscall
   pushq   %rdi  // Restore the return address.
 
+  // Are we the child? Return if so.
   test    %eax, %eax
-  jz      1f
-
-  // rc != 0: restore the previous cached_pid_/vforked_ values.
-  movl    %r9d, 20(%r8)
-
-  cmpq    $-MAX_ERRNO, %rax
-  jb      1f
-  movl    %eax, %edi
-  call    __set_errno_internal
-1:
+  jnz     L(not_child)
   ret
+
+  // Not the child: restore the previous cached_pid_/vforked_ values
+  // and then report syscall success/failure as normal.
+L(not_child):
+  movl    %r9d, 20(%r8)
+  DO_SYSCALL_RETURN
 END(vfork)
