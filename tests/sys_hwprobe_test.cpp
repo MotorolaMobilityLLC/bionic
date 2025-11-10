@@ -110,6 +110,7 @@ TEST(sys_hwprobe, __riscv_hwprobe_extensions) {
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_EXT_ZBA) != 0);
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_EXT_ZBB) != 0);
   EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_EXT_ZBS) != 0);
+  EXPECT_TRUE((probes[0].value & RISCV_HWPROBE_EXT_ZVBB) != 0);
 #else
   GTEST_SKIP() << "__riscv_hwprobe requires riscv64";
 #endif
