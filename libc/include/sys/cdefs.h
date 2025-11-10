@@ -361,4 +361,7 @@
 #include <android/api-level.h>
 #if __has_include(<android/ndk-version.h>)
 #include <android/ndk-version.h>
+#if !defined(__ANDROID_MIN_SDK_VERSION__)
+#error Unversioned target triples are not supported!
+#endif
 #endif
