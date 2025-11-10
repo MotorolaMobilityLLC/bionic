@@ -50,11 +50,6 @@ static __inline int __bionic_thrd_error(int __pthread_code) {
   }
 }
 
-__BIONIC_THREADS_INLINE void call_once(once_flag* _Nonnull __flag,
-                                       void (* _Nonnull __function)(void)) {
-  pthread_once(__flag, __function);
-}
-
 
 
 __BIONIC_THREADS_INLINE int cnd_broadcast(cnd_t* _Nonnull __cnd) {
