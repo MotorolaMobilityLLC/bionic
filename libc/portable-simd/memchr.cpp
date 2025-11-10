@@ -47,8 +47,6 @@ using VectorTag = portable_simd::FullVector<CharType>;
 // Both memchr and memrchr share an implementation, with a `Traits` object to
 // encapsulate their differences.
 struct MemchrTraits {
-  constexpr static bool kIsMaxLengthGuaranteed = true;
-
   // Advance `ptr` in the direction of this memchr.
   PSIMD_FLATTEN static const CharType* advance_ptr(const CharType* p, size_t n = 1) {
     constexpr VectorTag d;
@@ -102,8 +100,6 @@ struct MemchrTraits {
 };
 
 struct MemrchrTraits {
-  constexpr static bool kIsMaxLengthGuaranteed = true;
-
   // Advance `ptr` in the direction of this memchr.
   PSIMD_FLATTEN static const CharType* advance_ptr(const CharType* p, size_t n = 1) {
     constexpr VectorTag d;
@@ -179,18 +175,6 @@ struct MemrchrTraits {
   }
 };
 
-struct StrnlenTraits : MemchrTraits {
-  // `strnlen` is `memchr`, with the caveat that we can't assume that `count`
-  // bytes *must be* available at the given pointer.
-  constexpr static bool kIsMaxLengthGuaranteed = false;
-
-  PSIMD_FLATTEN __attribute__((diagnose_if(true, "This is unsafe, and should never be called",
-                                           "error"))) static auto
-  align_ptr_to_vec_known_safe(auto...) {
-    __builtin_unreachable();
-  }
-};
-
 template <typename Traits>
 PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType ch, size_t count) {
   constexpr VectorTag d;
@@ -247,26 +231,20 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
     return result_from_final_vec(ptr, Load(d, ptr), count);
   }
 
-  // As long as `count` bytes are guaranteed to be available, we know the full
-  // load is safe, since `count` is larger than a full vector.
-  auto align_func = [&](auto val, optional<size_t> bytes_to_skip, optional<size_t> overlap_bytes)
-                        PSIMD_FLATTEN -> optional<const void*> {
-    if (const optional<const void*> x =
-            Traits::ptr_of_first(s, val, ch, /*count=*/{}, bytes_to_skip)) {
-      // No need to bounds-check, due to `count`'s size.
-      return optional<const void*>{*x};
-    }
-    count -= d.MaxBytes() - overlap_bytes.unwrap_or(0);
-    return {};
-  };
-
-  GenericAlignResult<VectorTag, optional<const void*>> first_align_result;
-  if constexpr (Traits::kIsMaxLengthGuaranteed) {
-    first_align_result = Traits::align_ptr_to_vec_known_safe(s, align_func);
-  } else {
-    first_align_result = Traits::align_ptr_to_vec(s, align_func);
-  }
-  auto [ptr, maybe_result] = first_align_result;
+  // We know the full load is safe, since `count` is larger than a full vector.
+  auto [ptr, maybe_result] = Traits::align_ptr_to_vec_known_safe(
+      s,
+      [&](auto val, optional<size_t> bytes_to_skip, optional<size_t> overlap_bytes)
+          PSIMD_FLATTEN -> optional<const void*> {
+            PSIMD_DCHECK(!bytes_to_skip.has_value());
+            PSIMD_DCHECK(overlap_bytes.has_value());
+            if (const optional<const void*> x = Traits::ptr_of_first(s, val, ch)) {
+              // No need to bounds-check, due to `count`'s size.
+              return optional<const void*>{*x};
+            }
+            count -= d.MaxBytes() - *overlap_bytes;
+            return {};
+          });
   if (maybe_result) {
     return *maybe_result;
   }
@@ -285,40 +263,13 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
   size_t full_vector_loads_remaining = count / d.MaxBytes();
   constexpr size_t unrolled_loop_size = 4;
 
-  const auto check_ptr_and_advance = [&]() PSIMD_FLATTEN -> optional<const void*> {
-    if (const optional<const void*> x = Traits::ptr_of_first(ptr, Load(d, ptr), ch)) {
-      return optional{*x};
-    }
-    ptr = Traits::advance_ptr(ptr);
-    return {};
-  };
-
   if (full_vector_loads_remaining >= unrolled_loop_size) {
     const auto needle = Set(d, ch);
     // NOTE: "3 checks per loop," was chosen based on experimentation on Brya,
     // which ships with chips like the 2024 Intel Core 3 100U. 2 loads was as
     // much as 1.1x slower on very long inputs. There was no obvious
     // improvement in doing 4 per loop.
-    //
-    // That said, just arbitrarily do 2 checks per loop is the size isn't a
-    // guaranteed upper-bound. It needs to be _some_ power of two, since this
-    // loop can't safely cross a page boundary.
-    constexpr size_t checks_per_loop = Traits::kIsMaxLengthGuaranteed ? 3 : 2;
-
-    if constexpr (!Traits::kIsMaxLengthGuaranteed) {
-      // If we can't trust the total size, the following loops needs to avoid
-      // loading across page boundaries.
-      constexpr size_t misaligned_mask = vector_align(d) * 2 - 1;
-      if (reinterpret_cast<uintptr_t>(ptr) & misaligned_mask) {
-        if (const optional<const void*> x = check_ptr_and_advance()) {
-          return *x;
-        }
-        full_vector_loads_remaining -= 1;
-      }
-      // (Guard against refactors subtly messing this up).
-      PSIMD_DCHECK(full_vector_loads_remaining >= checks_per_loop);
-    }
-
+    constexpr size_t checks_per_loop = 3;
     do {
       // So highway may represent masks as _either_:
       // - a vector which you can convert to a scalar through
@@ -373,6 +324,14 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
     } while (full_vector_loads_remaining >= unrolled_loop_size);
   }
 
+  const auto check_ptr_and_advance = [&]() PSIMD_FLATTEN -> optional<const void*> {
+    if (const optional<const void*> x = Traits::ptr_of_first(ptr, Load(d, ptr), ch)) {
+      return optional{*x};
+    }
+    ptr = Traits::advance_ptr(ptr);
+    return {};
+  };
+
   switch (full_vector_loads_remaining) {
     case 3:
       if (const optional<const void*> x = check_ptr_and_advance()) {
@@ -409,14 +368,4 @@ PSIMD_LIBC_FUNCTION(void*, memchr, const void* ptr, int ch, size_t count) {
 PSIMD_LIBC_FUNCTION(void*, memrchr, const void* ptr, int ch, size_t count) {
   return const_cast<void*>(portable_simd::memchr_vectorized<portable_simd::MemrchrTraits>(
       reinterpret_cast<const portable_simd::CharType*>(ptr), ch, count));
-}
-
-PSIMD_LIBC_FUNCTION(size_t, strnlen, const char* ptr, size_t count) {
-  const char* s =
-      static_cast<const char*>(portable_simd::memchr_vectorized<portable_simd::StrnlenTraits>(
-          reinterpret_cast<const portable_simd::CharType*>(ptr), '\0', count));
-  if (!s) {
-    return count;
-  }
-  return static_cast<size_t>(s - ptr);
 }
