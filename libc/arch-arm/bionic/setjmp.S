@@ -116,7 +116,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
 
   // Do we need to save the signal mask?
   tst r1, #1
-  beq 1f
+  beq L(save_registers)
 
   // Align the stack.
   sub sp, #4
@@ -132,7 +132,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   add sp, #4
   .cfi_adjust_cfa_offset -4
 
-1:
+L(save_registers):
   ldmfd sp!, {r2}
   .cfi_adjust_cfa_offset -4
   ldmfd sp!, {r0, lr}
@@ -202,7 +202,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
 
   // Do we need to restore the signal mask?
   ands r1, r1, #1
-  beq 1f
+  beq L(load_registers)
 
   // Restore the signal mask.
   mov r2, #0
@@ -210,7 +210,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   mov r0, #2 // SIG_SETMASK
   bl sigprocmask64
 
-1:
+L(load_registers):
   ldmfd sp!, {r0, r1, lr}
   .cfi_adjust_cfa_offset -12
   .cfi_restore r0

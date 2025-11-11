@@ -125,7 +125,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   str x1, [x0, #(_JB_SIGFLAG * 8)]
 
   // Do we need to save the signal mask?
-  tbz w1, #0, 1f
+  tbz w1, #0, L(save_registers)
 
   // Save the cookie for later.
   stp x1, xzr, [sp, #-16]!
@@ -140,7 +140,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   ldp x1, xzr, [sp], #16
   .cfi_adjust_cfa_offset -16
 
-1:
+L(save_registers):
   // Restore original x0 and lr.
   ldp x0, x30, [sp], #16
   .cfi_adjust_cfa_offset -16
@@ -221,7 +221,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
 
   // Do we need to restore the signal mask?
   ldr x2, [x19, #(_JB_SIGFLAG * 8)]
-  tbz w2, #0, L(flip_registers)
+  tbz w2, #0, L(load_registers)
 
   // Restore signal mask.
   mov x21, x2
@@ -231,7 +231,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   bl sigprocmask
   mov x2, x21
 
-L(flip_registers):
+L(load_registers):
   // We're about to overwrite lr (x30) anyway from the jmp_buf.
   ldr lr, [sp], #16
   .cfi_adjust_cfa_offset -16
