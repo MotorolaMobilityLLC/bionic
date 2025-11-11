@@ -1320,6 +1320,30 @@ TEST(wchar, wmemchr) {
   ASSERT_EQ(nullptr, wmemchr(s, L'a', 13));
 }
 
+static void DoWmemchrTest(uint8_t* byte_buf, size_t byte_len) {
+  // Much like DoWcslenTest, this intentionally supports unaligned buffers, for
+  // compatibility with other libcs.
+  const size_t len = byte_len / sizeof(wchar_t);
+  if (!len) {
+    return;
+  }
+
+  const size_t pre_nul_len = len * sizeof(wchar_t) - sizeof(wchar_t);
+  memset(byte_buf, (32 + (byte_len % 96)), pre_nul_len);
+  const wchar_t needle = L'a';
+  memcpy(byte_buf + pre_nul_len, &needle, sizeof(needle));
+  EXPECT_EQ(reinterpret_cast<const wchar_t*>(byte_buf + pre_nul_len),
+            wmemchr(reinterpret_cast<const wchar_t*>(byte_buf), L'a', len));
+}
+
+TEST(wchar, wmemchr_align) {
+  RunSingleBufferAlignTest(LARGE, DoWmemchrTest);
+}
+
+TEST(wchar, wmemchr_overread) {
+  RunSingleBufferOverreadTest(DoWmemchrTest);
+}
+
 TEST(wchar, wmemcmp) {
   ASSERT_EQ(0, wmemcmp(L"aaaa", L"aaab", 3));
   ASSERT_TRUE(wmemcmp(L"aaaa", L"aaab", 4) < 0);
