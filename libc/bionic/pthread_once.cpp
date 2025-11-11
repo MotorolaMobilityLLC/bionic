@@ -83,3 +83,7 @@ int pthread_once(pthread_once_t* once_control, void (*init_routine)(void)) {
     old_value = atomic_load_explicit(once_control_ptr, memory_order_acquire);
   }
 }
+// call_once() became mandatory in <stdlib.h> in C23,
+// by which time we'd already offered it for API level >= 30 in <threads.h>.
+// We use __RENAME() in the header now, but keep an ELF alias for any existing binaries.
+__strong_alias(call_once, pthread_once);

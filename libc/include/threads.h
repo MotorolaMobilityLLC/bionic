@@ -80,13 +80,11 @@ enum {
 # define thread_local _Thread_local
 #endif
 
+/** Uses `__flag` to ensure that `__function` is called exactly once. */
+void call_once(once_flag* _Nonnull __flag, void (* _Nonnull __function)(void)) __RENAME(pthread_once);
+
 #if __ANDROID_API__ >= 30
 // This file is implemented as static inlines before API level 30.
-
-/** Uses `__flag` to ensure that `__function` is called exactly once. */
-void call_once(once_flag* _Nonnull __flag, void (* _Nonnull __function)(void)) __INTRODUCED_IN(30);
-
-
 
 /**
  * Unblocks all threads blocked on `__cond`.
