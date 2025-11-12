@@ -36,17 +36,19 @@
 namespace portable_simd {
 namespace {
 
-// Highway doesn't support direct `char` usage in vector types, presumably
-// because it can vary in signed-ness. `memchr` does not care at all; choose
-// signed because hwy docs say it's slightly more efficient on older x86_64
-// CPUs. If there's any better argument for unsigned, that should probably be
-// preferred.
-using CharType = int8_t;
-using VectorTag = portable_simd::FullVector<CharType>;
+struct CharTraits {
+  // Highway doesn't support direct `char` usage in vector types, presumably
+  // because it can vary in signed-ness. `memchr` does not care at all; choose
+  // signed because hwy docs say it's slightly more efficient on older x86_64
+  // CPUs. If there's any better argument for unsigned, that should probably be
+  // preferred.
+  using CharType = int8_t;
+  using VectorTag = portable_simd::FullVector<CharType>;
+};
 
-// Both memchr and memrchr share an implementation, with a `Traits` object to
-// encapsulate their differences.
-struct MemchrTraits {
+// All functions here share a 'driver' implementation, with a `Traits` object
+// to encapsulate their differences.
+struct MemchrTraits : CharTraits {
   // Advance `ptr` in the direction of this memchr.
   PSIMD_FLATTEN static const CharType* advance_ptr(const CharType* p, size_t n = 1) {
     constexpr VectorTag d;
@@ -99,7 +101,7 @@ struct MemchrTraits {
   }
 };
 
-struct MemrchrTraits {
+struct MemrchrTraits : CharTraits {
   // Advance `ptr` in the direction of this memchr.
   PSIMD_FLATTEN static const CharType* advance_ptr(const CharType* p, size_t n = 1) {
     constexpr VectorTag d;
@@ -176,7 +178,11 @@ struct MemrchrTraits {
 };
 
 template <typename Traits>
-PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType ch, size_t count) {
+PSIMD_FLATTEN static const void* memchr_vectorized(const typename Traits::CharType* s,
+                                                   typename Traits::CharType ch, size_t count) {
+  using CharType = Traits::CharType;
+  using VectorTag = Traits::VectorTag;
+
   constexpr VectorTag d;
 
   s = Traits::initial_adjust_ptr(s, count);
@@ -360,11 +366,13 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const CharType* s, CharType c
 }  // namespace portable_simd
 
 PSIMD_LIBC_FUNCTION(void*, memchr, const void* ptr, int ch, size_t count) {
-  return const_cast<void*>(portable_simd::memchr_vectorized<portable_simd::MemchrTraits>(
-      reinterpret_cast<const portable_simd::CharType*>(ptr), ch, count));
+  using portable_simd::MemchrTraits;
+  return const_cast<void*>(portable_simd::memchr_vectorized<MemchrTraits>(
+      reinterpret_cast<const MemchrTraits::CharType*>(ptr), ch, count));
 }
 
 PSIMD_LIBC_FUNCTION(void*, memrchr, const void* ptr, int ch, size_t count) {
-  return const_cast<void*>(portable_simd::memchr_vectorized<portable_simd::MemrchrTraits>(
-      reinterpret_cast<const portable_simd::CharType*>(ptr), ch, count));
+  using portable_simd::MemrchrTraits;
+  return const_cast<void*>(portable_simd::memchr_vectorized<MemrchrTraits>(
+      reinterpret_cast<const MemrchrTraits::CharType*>(ptr), ch, count));
 }
