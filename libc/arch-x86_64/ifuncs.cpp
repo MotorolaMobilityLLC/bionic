@@ -103,4 +103,10 @@ DEFINE_IFUNC_FOR(wcslen) {
   RETURN_FUNC(wcslen_func_t, portable_simd_wcslen_sse);
 }
 WCSLEN_SHIM()
+
+DEFINE_IFUNC_FOR(wmemchr) {
+  if (cpu_supports_x86_64_v3()) RETURN_FUNC(wmemchr_func_t, portable_simd_wmemchr_avx2);
+  RETURN_FUNC(wmemchr_func_t, portable_simd_wmemchr_sse);
+}
+WMEMCHR_SHIM()
 }  // extern "C"
