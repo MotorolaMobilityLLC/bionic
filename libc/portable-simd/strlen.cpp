@@ -38,19 +38,15 @@ namespace {
 
 struct StrlenTraits {
   // Highway doesn't support direct `char` usage in vector types, presumably
-  // because it can vary in signed-ness. `strlen` theoretically doesn't care,
-  // since all we're comparing against is 0.
+  // because it can vary in signed-ness. `strlen` uses `min` to find `\0`, so
+  // unsigned is simplest.
   //
-  // TODO(gbiv): **That said**,
+  // It's notable that the highway quick_reference advises against unsigned
+  // `min` operations for older CPUs:
   // https://google.github.io/highway/en/master/quick_reference.html#speeding-up-code-for-older-x86-platforms
-  // notes:
   //
-  // > If possible, use signed 8..32 bit types instead of unsigned types for
-  // > comparisons and Min/Max.
-  //
-  // At present, this is written to compare `uint8_t`s, which only really matters
-  // in the 'long' case loop. Could be interesting to see if swapping to int8_t
-  // (with any requisite changes in the algorithm below) helps.
+  // But it's unclear why; instruction timing tables indicate that unsigned and
+  // signed bytewise `min` have identical timings.
   using CharType = uint8_t;
   using VectorTag = portable_simd::FullVector<CharType>;
   using VectorType = hn::VFromD<VectorTag>;
