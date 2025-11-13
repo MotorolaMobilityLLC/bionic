@@ -70,3 +70,28 @@ static void BM_wchar_wmemchr(benchmark::State& state) {
   state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_wchar_wmemchr, "AT_ALIGNED_ONEBUF");
+
+static void WMemSetBenchmark(benchmark::State& state, wchar_t wc) {
+  const size_t nchars = state.range(0);
+  const size_t alignment = state.range(1);
+
+  const size_t nbytes = nchars * sizeof(wchar_t);
+  std::vector<char> buf;
+  char* buf_aligned = GetAlignedPtr(&buf, alignment, nbytes + 1);
+
+  while (state.KeepRunning()) {
+    wmemset(reinterpret_cast<wchar_t*>(buf_aligned), wc, nchars);
+  }
+
+  state.SetBytesProcessed(uint64_t(state.iterations()) * uint64_t(nbytes));
+}
+
+static void BM_wchar_wmemset_0(benchmark::State& state) {
+  WMemSetBenchmark(state, 0);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_wchar_wmemset_0, "AT_ALIGNED_ONEBUF");
+
+static void BM_wchar_wmemset_666(benchmark::State& state) {
+  WMemSetBenchmark(state, 666);
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_wchar_wmemset_666, "AT_ALIGNED_ONEBUF");

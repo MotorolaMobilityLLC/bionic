@@ -1369,7 +1369,22 @@ TEST(wchar, wmemset) {
   ASSERT_EQ(dst[1], wchar_t(0x12345678));
   ASSERT_EQ(dst[2], wchar_t(0x12345678));
   ASSERT_EQ(dst[3], wchar_t(0));
+  // A zero length touches nothing.
   ASSERT_EQ(dst, wmemset(dst, L'y', 0));
+  ASSERT_EQ(dst[0], wchar_t(0x12345678));
+}
+
+// We special-case wmemset() to 0, so we need to test that explicitly.
+TEST(wchar, wmemset_0) {
+  wchar_t dst[4] = { 0x12345678, 0x12345678, 0x12345678, 0x12345678 };
+  ASSERT_EQ(dst, wmemset(dst, 0, 3));
+  ASSERT_EQ(dst[0], wchar_t(0));
+  ASSERT_EQ(dst[1], wchar_t(0));
+  ASSERT_EQ(dst[2], wchar_t(0));
+  ASSERT_EQ(dst[3], wchar_t(0x12345678));
+  // A zero length touches nothing.
+  dst[0] = wchar_t(0x12345678);
+  ASSERT_EQ(dst, wmemset(dst, 0, 0));
   ASSERT_EQ(dst[0], wchar_t(0x12345678));
 }
 
