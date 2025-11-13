@@ -499,7 +499,6 @@ TEST_F(setjmp_DeathTest, setjmp_cookie) {
 
 #if defined(__aarch64__) || defined(__i386__) || defined(__x86_64__)
   long* raw_words = reinterpret_cast<long*>(jb);
-  size_t word_count = sizeof(jmp_buf) / sizeof(long);
 
   // Corrupt the cookie.
   raw_words[JB_SIGFLAG_OFFSET] = 0xfeedface;
