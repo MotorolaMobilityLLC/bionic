@@ -99,7 +99,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   // Save current signal mask.
   pushq %rdi // Push 'env'.
   // The 'how' argument is ignored if new_mask is NULL.
-  xorq %rsi,%rsi // NULL.
+  xorl %esi,%esi // NULL.
   leaq (_JB_SIGMASK * 8)(%rdi),%rdx // old_mask.
   call sigprocmask
   popq %rdi // Pop 'env'.
@@ -157,7 +157,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   // Restore the signal mask.
   movq $2,%rdi // SIG_SETMASK.
   leaq (_JB_SIGMASK * 8)(%r12),%rsi // new_mask.
-  xorq %rdx,%rdx // NULL.
+  xorl %edx,%edx // NULL.
   call sigprocmask
 
 L(load_registers):
