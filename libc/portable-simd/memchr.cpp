@@ -34,6 +34,8 @@
 #include "portable_simd_detail.h"
 #include "portable_simd_exports.h"
 
+extern "C" wchar_t* __wmemchr_misaligned(const wchar_t*, wchar_t, size_t);
+
 namespace portable_simd {
 namespace {
 
@@ -403,17 +405,6 @@ PSIMD_LIBC_FUNCTION(void*, memrchr, const void* ptr, int ch, size_t count) {
       reinterpret_cast<const MemrchrTraits::CharType*>(ptr), ch, count));
 }
 
-static wchar_t* simplistic_misaligned_wmemchr(const wchar_t* ptr, wchar_t ch, size_t count) {
-  while (count) {
-    if (*ptr == ch) {
-      return const_cast<wchar_t*>(ptr);
-    }
-    ++ptr;
-    --count;
-  }
-  return nullptr;
-}
-
 PSIMD_LIBC_FUNCTION(wchar_t*, wmemchr, const wchar_t* ptr, wchar_t ch, size_t count) {
   using portable_simd::WmemchrTraits;
 
@@ -421,7 +412,7 @@ PSIMD_LIBC_FUNCTION(wchar_t*, wmemchr, const wchar_t* ptr, wchar_t ch, size_t co
   // if needed. It's expected that the 99% case will be properly-aligned, so no
   // meaningful effort is put into making the misaligned case fast.
   if (reinterpret_cast<uintptr_t>(ptr) % alignof(wchar_t)) [[unlikely]] {
-    return simplistic_misaligned_wmemchr(ptr, ch, count);
+    return __wmemchr_misaligned(ptr, ch, count);
   }
 
   return const_cast<wchar_t*>(
