@@ -196,3 +196,9 @@ typedef char* strrchr_func_t(const char*, int);
 typedef size_t wcslen_func_t(const wchar_t*);
 #define WCSLEN_SHIM() \
   DEFINE_STATIC_SHIM(size_t wcslen(const wchar_t* src) { FORWARD(wcslen)(src); })
+
+typedef wchar_t* wmemchr_func_t(const wchar_t*, wchar_t, size_t);
+#define WMEMCHR_SHIM()                                                                \
+  DEFINE_STATIC_SHIM(wchar_t* wmemchr(const wchar_t* src, wchar_t needle, size_t n) { \
+    FORWARD(wmemchr)(src, needle, n);                                                 \
+  })
