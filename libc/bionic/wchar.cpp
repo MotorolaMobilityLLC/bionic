@@ -233,3 +233,14 @@ wchar_t* wcsdup(const wchar_t* s) {
   }
   return result;
 }
+
+wchar_t* wmemset(wchar_t* s, wchar_t c, size_t n) {
+  // Unicode characters are 21 bits, so there's only one value we can pass to memset().
+  // Luckily, that's the only value that actually matters.
+  if (c == 0) [[likely]] {
+    memset(s, 0, n * sizeof(wchar_t));
+  } else {
+    for (size_t i = 0; i < n; i++) s[i] = c;
+  }
+  return s;
+}
