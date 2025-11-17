@@ -56,7 +56,7 @@ class RecordData {
   const std::string& file() { return file_; }
   pthread_key_t key() { return key_; }
 
-  int64_t GetPresentBytes(void* pointer, size_t size);
+  static int64_t GetPresentBytes(void* pointer, size_t size);
 
   static void WriteEntriesOnExit();
 
@@ -76,7 +76,6 @@ class RecordData {
   std::vector<memory_trace::Entry> entries_;
   size_t cur_index_;
   std::string file_;
-  int pagemap_fd_ = -1;
 
   BIONIC_DISALLOW_COPY_AND_ASSIGN(RecordData);
 };

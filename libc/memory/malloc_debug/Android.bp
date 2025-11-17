@@ -162,18 +162,6 @@ cc_defaults {
 }
 
 cc_test {
-    name: "malloc_debug_system_record_unit_tests",
-    defaults: ["malloc_debug_tests"],
-    test_suites: ["device-tests"],
-    isolated: true,
-
-    srcs: [
-        "tests/malloc_debug_config_tests.cpp",
-        "tests/malloc_debug_record_data_tests.cpp",
-    ],
-}
-
-cc_test {
     name: "malloc_debug_unit_tests",
     defaults: ["malloc_debug_tests"],
     test_suites: ["device-tests"],
@@ -181,6 +169,8 @@ cc_test {
 
     srcs: [
         "tests/backtrace_fake.cpp",
+        "tests/malloc_debug_config_tests.cpp",
+        "tests/malloc_debug_record_data_tests.cpp",
         "tests/malloc_debug_unit_tests.cpp",
     ],
 
