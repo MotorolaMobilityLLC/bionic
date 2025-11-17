@@ -497,17 +497,17 @@ TEST_F(setjmp_DeathTest, setjmp_cookie) {
   int value = setjmp(jb);
   ASSERT_EQ(0, value);
 
-#if defined(__i386__) || defined(__x86_64__)
+#if defined(__aarch64__) || defined(__i386__) || defined(__x86_64__)
   long* raw_words = reinterpret_cast<long*>(jb);
-  size_t word_count = sizeof(jmp_buf) / sizeof(long);
 
   // Corrupt the cookie.
   raw_words[JB_SIGFLAG_OFFSET] = 0xfeedface;
   // Recompute the checksum.
-  // This assumes that the checksum is the last word,
+  // This assumes that the checksum is the last non-reserved word,
+  // and that we don't checksum the reserved words,
   // which is true for all our architectures.
   long cs = 0;
-  for (size_t i = 0; i < word_count - 1; i++) {
+  for (size_t i = 0; i < JB_CHECKSUM_OFFSET; i++) {
     cs ^= raw_words[i];
   }
   raw_words[JB_CHECKSUM_OFFSET] = cs;

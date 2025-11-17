@@ -233,3 +233,30 @@ wchar_t* wcsdup(const wchar_t* s) {
   }
   return result;
 }
+
+// Currently only x86-64 has a psimd wmemchr(),
+// but even that falls back to this for misaligned pointers.
+#if defined(__x86_64__)
+#define wmemchr __wmemchr_misaligned
+extern "C"
+#endif
+wchar_t* wmemchr(const wchar_t* s, wchar_t c, size_t n) {
+  for (size_t i = 0; i < n; i++) {
+    if (s[i] == c) {
+      return const_cast<wchar_t*>(&s[i]);
+    }
+  }
+  return nullptr;
+}
+#undef wmemchr
+
+wchar_t* wmemset(wchar_t* s, wchar_t c, size_t n) {
+  // Unicode characters are 21 bits, so there's only one value we can pass to memset().
+  // Luckily, that's the only value that actually matters.
+  if (c == 0) [[likely]] {
+    memset(s, 0, n * sizeof(wchar_t));
+  } else {
+    for (size_t i = 0; i < n; i++) s[i] = c;
+  }
+  return s;
+}

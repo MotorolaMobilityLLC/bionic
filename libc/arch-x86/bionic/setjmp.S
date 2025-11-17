@@ -88,7 +88,7 @@ L(_sigsetjmp):
 
   // Do we need to save the signal mask?
   testl $1,%eax
-  jz 1f
+  jz L(save_registers)
 
   // Save the current signal mask.
   pushl %ecx
@@ -102,7 +102,7 @@ L(_sigsetjmp):
   PIC_EPILOGUE
   popl %ecx
 
-1:
+L(save_registers):
   // Fetch the setjmp cookie and clear the signal flag bit.
   movl (_JB_SIGFLAG * 4)(%ecx),%eax
   andl $-2,%eax
@@ -145,7 +145,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   // Do we have a signal mask to restore?
   movl (_JB_SIGFLAG * 4)(%edx), %eax
   testl $1,%eax
-  jz 1f
+  jz L(load_registers)
 
   // Restore the signal mask.
   leal (_JB_SIGMASK * 4)(%edx),%eax
@@ -157,7 +157,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   addl $12,%esp
   PIC_EPILOGUE
 
-1:
+L(load_registers):
   // Restore the callee-save registers.
   movl 4(%esp),%edx
   movl 8(%esp),%eax

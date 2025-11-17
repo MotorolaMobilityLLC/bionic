@@ -125,7 +125,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   str x1, [x0, #(_JB_SIGFLAG * 8)]
 
   // Do we need to save the signal mask?
-  tbz w1, #0, 1f
+  tbz w1, #0, L(save_registers)
 
   // Save the cookie for later.
   stp x1, xzr, [sp, #-16]!
@@ -140,7 +140,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(sigsetjmp)
   ldp x1, xzr, [sp], #16
   .cfi_adjust_cfa_offset -16
 
-1:
+L(save_registers):
   // Restore original x0 and lr.
   ldp x0, x30, [sp], #16
   .cfi_adjust_cfa_offset -16
@@ -186,74 +186,60 @@ END(sigsetjmp)
 
 // void siglongjmp(sigjmp_buf env, int value);
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
+  // Stash lr to enable unwinds from within siglongjmp() at least until we
+  // overwrite lr with the value from the jmp_buf later.
+  str lr, [sp, #-16]!
+  .cfi_adjust_cfa_offset 16
+  .cfi_rel_offset lr, 0
+
   // First of all, disable SME's ZA, so that it does not interfere
   // with anything else. Note that __arm_za_disable is guaranteed to
   // preserve x0 and x1.
-  str x30, [sp, #-16]!
-  .cfi_adjust_cfa_offset 16
-  .cfi_rel_offset x30, 0
   bl __arm_za_disable
-  ldr x30, [sp], #16
-  .cfi_adjust_cfa_offset -16
-  .cfi_restore x30
+
+  mov x19, x0 // Save 'env'.
+  mov x20, x1 // Save 'value'.
 
   // Check the checksum before doing anything.
-  m_calculate_checksum x12, x0, x2
-  ldr x2, [x0, #(_JB_CHECKSUM * 8)]
+  m_calculate_checksum x12, x19, x2
+  ldr x2, [x19, #(_JB_CHECKSUM * 8)]
   cmp x2, x12
   bne __bionic_setjmp_checksum_mismatch
 
-  // Update stack memory tags (MTE + hwasan).
-  stp x0, x30, [sp, #-16]!
-  .cfi_adjust_cfa_offset 16
-  .cfi_rel_offset x0, 0
-  .cfi_rel_offset x30, 8
-  mov x19, x1 // Save 'value'.
+  // Check the cookie next.
+  ldr x0, [x19, #(_JB_SIGFLAG * 8)]
+  bl __bionic_setjmp_cookie_check
 
-  // load and unmangle destination SP
-  ldr x2, [x0, #(_JB_SIGFLAG * 8)]
+  // Update stack memory tags (MTE + hwasan).
+  // Load and unmangle destination SP.
+  ldr x2, [x19, #(_JB_SIGFLAG * 8)]
   bic x2, x2, #1
-  ldr x0, [x0, #(_JB_X30_SP  * 8 + 8)]
+  ldr x0, [x19, #(_JB_X30_SP  * 8 + 8)]
   eor x0, x0, x2
   add x1, sp, #16
   bl memtag_handle_longjmp
 
-  mov x1, x19 // Restore 'value'.
-  // Restore original x0 and lr.
-  ldp x0, x30, [sp], #16
-  .cfi_adjust_cfa_offset -16
-  .cfi_restore x0
-  .cfi_restore x30
-
   // Do we need to restore the signal mask?
-  ldr x2, [x0, #(_JB_SIGFLAG * 8)]
-  tbz w2, #0, 1f
-
-  stp x0, x30, [sp, #-16]!
-  .cfi_adjust_cfa_offset 16
-  .cfi_rel_offset x0, 0
-  .cfi_rel_offset x30, 8
+  ldr x2, [x19, #(_JB_SIGFLAG * 8)]
+  tbz w2, #0, L(load_registers)
 
   // Restore signal mask.
-  mov x19, x1 // Save 'value'.
-
-  mov x2, x0
-  mov x0, #2 // SIG_SETMASK
-  add x1, x2, #(_JB_SIGMASK * 8) // new_mask.
+  mov x21, x2
+  mov x0, #2 // SIG_SETMASK.
+  add x1, x19, #(_JB_SIGMASK * 8) // new_mask.
   mov x2, #0 // NULL.
   bl sigprocmask
-  mov x1, x19 // Restore 'value'.
+  mov x2, x21
 
-  // Restore original x0 and lr.
-  ldp x0, x30, [sp], #16
+L(load_registers):
+  // We're about to overwrite lr (x30) anyway from the jmp_buf.
+  ldr lr, [sp], #16
   .cfi_adjust_cfa_offset -16
-  .cfi_restore x0
-  .cfi_restore x30
-
-  ldr x2, [x0, #(_JB_SIGFLAG * 8)]
-1:
+  .cfi_restore lr
+  // Restore 'env' and 'value' before we overwrite x19/x20.
+  mov x0, x19
+  mov x1, x20
   // Restore core registers.
-  bic x2, x2, #1
   // x30 was saved with PAC to jmp_buf in sigsetjmp().
   ldp x30, x10, [x0, #(_JB_X30_SP  * 8)]
   .cfi_negate_ra_state
@@ -263,6 +249,7 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   ldp x22, x23, [x0, #(_JB_X22_X23 * 8)]
   ldp x20, x21, [x0, #(_JB_X20_X21 * 8)]
   ldp x3,  x19, [x0, #(_JB_SCS_X19 * 8)]
+  bic x2, x2, #1 // Clear the sigflag bit from the cookie before using it.
   m_unmangle_registers x2, sp_reg=x10
   mov sp, x10
 
@@ -270,30 +257,13 @@ ENTRY_WEAK_FOR_NATIVE_BRIDGE(siglongjmp)
   and x18, x18, #~SCS_MASK
   orr x18, x3, x18
 
-  stp x0, x1, [sp, #-16]!
-  .cfi_adjust_cfa_offset 16
-  .cfi_rel_offset x0, 0
-  .cfi_rel_offset x1, 8
-  stp x30, xzr, [sp, #-16]!
-  .cfi_adjust_cfa_offset 16
-  .cfi_rel_offset x30, 0
-  ldr x0, [x0, #(_JB_SIGFLAG * 8)]
-  bl __bionic_setjmp_cookie_check
-  ldp x30, xzr, [sp], #16
-  .cfi_adjust_cfa_offset -16
-  .cfi_restore x30
-  ldp x0, x1, [sp], #16
-  .cfi_adjust_cfa_offset -16
-  .cfi_restore x0
-  .cfi_restore x1
-
   // Restore floating point registers.
   ldp d14, d15, [x0, #(_JB_D14_D15 * 8)]
   ldp d12, d13, [x0, #(_JB_D12_D13 * 8)]
   ldp d10, d11, [x0, #(_JB_D10_D11 * 8)]
   ldp d8,  d9,  [x0, #(_JB_D8_D9   * 8)]
 
-  // Return 1 if value (in w1) is 0, value otherwise.
+  // Return 1 if 'value' is 0, value otherwise.
   cmp w1, wzr
   csinc w0, w1, wzr, ne
 

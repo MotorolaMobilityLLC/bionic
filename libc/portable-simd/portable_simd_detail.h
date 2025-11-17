@@ -173,8 +173,6 @@ struct optional {
 
   optional(const optional&) = default;
   optional(optional&&) = default;
-  optional& operator=(const optional&) = default;
-  optional& operator=(optional&&) = default;
 
   const T& operator*() const {
     PSIMD_DCHECK(has_value());
@@ -256,13 +254,13 @@ PSIMD_FLATTEN inline GenericAlignResult<VectorTag, T> align_forward_to_vec_known
   constexpr VectorTag d;
   const auto loaded = LoadU(d, reinterpret_cast<const VectorElem*>(s));
   auto aligned_ptr = reinterpret_cast<uintptr_t>(s);
-  const auto overlap_bytes = aligned_ptr & static_cast<uintptr_t>(d.MaxLanes() - 1);
+  const auto overlap_bytes = aligned_ptr & static_cast<uintptr_t>(d.MaxBytes() - 1);
   if (const T x = f(loaded, /*skip_bytes=*/optional<size_t>{}, optional<size_t>{overlap_bytes})) {
     return {nullptr, x};
   }
 
   aligned_ptr -= overlap_bytes;
-  aligned_ptr += d.MaxLanes();
+  aligned_ptr += d.MaxBytes();
   const auto* ptr = reinterpret_cast<const VectorElem*>(aligned_ptr);
   PSIMD_DCHECK(hn::IsAligned(d, ptr));
   return {ptr, {}};

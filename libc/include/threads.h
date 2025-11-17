@@ -38,9 +38,10 @@
 #include <pthread.h>
 #include <time.h>
 
+#include <bits/call_once.h>
+
 __BEGIN_DECLS
 
-#define ONCE_FLAG_INIT PTHREAD_ONCE_INIT
 #define TSS_DTOR_ITERATIONS PTHREAD_DESTRUCTOR_ITERATIONS
 
 /** The type for a condition variable. */
@@ -56,9 +57,6 @@ typedef pthread_mutex_t mtx_t;
 typedef void (*tss_dtor_t)(void* _Nullable);
 /** The type of the function passed to thrd_create() to create a new thread. */
 typedef int (*thrd_start_t)(void* _Nullable);
-
-/** The type used by call_once(). */
-typedef pthread_once_t once_flag;
 
 enum {
   mtx_plain = 0x1,
@@ -82,11 +80,6 @@ enum {
 
 #if __ANDROID_API__ >= 30
 // This file is implemented as static inlines before API level 30.
-
-/** Uses `__flag` to ensure that `__function` is called exactly once. */
-void call_once(once_flag* _Nonnull __flag, void (* _Nonnull __function)(void)) __INTRODUCED_IN(30);
-
-
 
 /**
  * Unblocks all threads blocked on `__cond`.

@@ -57,6 +57,7 @@ L(bc_child):
         # We don't want anyone to unwind past this point.
         .cfi_undefined %rip
         .cfi_undefined %rbp
+        xorl    %ebp, %ebp
 
         # We're in the child now, so call __start_thread
         # with the arguments from the child stack moved into

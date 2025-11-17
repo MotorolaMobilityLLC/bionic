@@ -27,7 +27,11 @@
 
 #include <limits>
 
+#include "buffer_tests.h"
 #include "utils.h"
+
+constexpr static auto KB = 1024;
+constexpr static auto LARGE = 64 * KB;
 
 #define NUM_WCHARS(num_bytes) ((num_bytes)/sizeof(wchar_t))
 
@@ -1177,6 +1181,45 @@ TEST(wchar, wcwidth_hangeul_compatibility_jamo) {
   EXPECT_EQ(2, wcwidth(L'ㅅ'));
 }
 
+TEST(wchar, wcslen) {
+  constexpr size_t array_len = 256 / sizeof(wchar_t);
+  wchar_t wide_str[array_len];
+  for (size_t i = 0; i < array_len; ++i) {
+    wide_str[i] = i + 1;
+  }
+
+  for (size_t i = 0; i < array_len - 1; ++i) {
+    const wchar_t old = wide_str[i];
+    wide_str[i] = 0;
+    EXPECT_EQ(wcslen(wide_str), i);
+    wide_str[i] = old;
+  }
+}
+
+static void DoWcslenTest(uint8_t* byte_buf, size_t byte_len) {
+  // NOTE: This is intentionally left potentially-misaligned, because
+  // historically bionic (and other BSD-derived libcs including iOS) allowed
+  // it, though glibc does not.
+  size_t len = byte_len / sizeof(wchar_t);
+  if (len >= 1) {
+    size_t pre_nul_len = len * sizeof(wchar_t) - sizeof(wchar_t);
+    memset(byte_buf, (32 + (byte_len % 96)), pre_nul_len);
+    // Because this is unaligned, use `memset` to set the 0, rather than
+    // casting to `wchar_t *` and doing an unaligned store. The `memset` is
+    // preferred by the standard & sanitizers.
+    memset(byte_buf + pre_nul_len, 0, sizeof(wchar_t));
+    EXPECT_EQ(len - 1, wcslen(reinterpret_cast<const wchar_t*>(byte_buf)));
+  }
+}
+
+TEST(wchar, wcslen_align) {
+  RunSingleBufferAlignTest(LARGE, DoWcslenTest);
+}
+
+TEST(wchar, wcslen_overread) {
+  RunSingleBufferOverreadTest(DoWcslenTest);
+}
+
 TEST(wchar, wcswidth) {
   EXPECT_EQ(2, wcswidth(L"abc", 2));
   EXPECT_EQ(2, wcswidth(L"ab\t", 2));
@@ -1277,6 +1320,30 @@ TEST(wchar, wmemchr) {
   ASSERT_EQ(nullptr, wmemchr(s, L'a', 13));
 }
 
+static void DoWmemchrTest(uint8_t* byte_buf, size_t byte_len) {
+  // Much like DoWcslenTest, this intentionally supports unaligned buffers, for
+  // compatibility with other libcs.
+  const size_t len = byte_len / sizeof(wchar_t);
+  if (!len) {
+    return;
+  }
+
+  const size_t pre_nul_len = len * sizeof(wchar_t) - sizeof(wchar_t);
+  memset(byte_buf, (32 + (byte_len % 96)), pre_nul_len);
+  const wchar_t needle = L'a';
+  memcpy(byte_buf + pre_nul_len, &needle, sizeof(needle));
+  EXPECT_EQ(reinterpret_cast<const wchar_t*>(byte_buf + pre_nul_len),
+            wmemchr(reinterpret_cast<const wchar_t*>(byte_buf), L'a', len));
+}
+
+TEST(wchar, wmemchr_align) {
+  RunSingleBufferAlignTest(LARGE, DoWmemchrTest);
+}
+
+TEST(wchar, wmemchr_overread) {
+  RunSingleBufferOverreadTest(DoWmemchrTest);
+}
+
 TEST(wchar, wmemcmp) {
   ASSERT_EQ(0, wmemcmp(L"aaaa", L"aaab", 3));
   ASSERT_TRUE(wmemcmp(L"aaaa", L"aaab", 4) < 0);
@@ -1302,7 +1369,22 @@ TEST(wchar, wmemset) {
   ASSERT_EQ(dst[1], wchar_t(0x12345678));
   ASSERT_EQ(dst[2], wchar_t(0x12345678));
   ASSERT_EQ(dst[3], wchar_t(0));
+  // A zero length touches nothing.
   ASSERT_EQ(dst, wmemset(dst, L'y', 0));
+  ASSERT_EQ(dst[0], wchar_t(0x12345678));
+}
+
+// We special-case wmemset() to 0, so we need to test that explicitly.
+TEST(wchar, wmemset_0) {
+  wchar_t dst[4] = { 0x12345678, 0x12345678, 0x12345678, 0x12345678 };
+  ASSERT_EQ(dst, wmemset(dst, 0, 3));
+  ASSERT_EQ(dst[0], wchar_t(0));
+  ASSERT_EQ(dst[1], wchar_t(0));
+  ASSERT_EQ(dst[2], wchar_t(0));
+  ASSERT_EQ(dst[3], wchar_t(0x12345678));
+  // A zero length touches nothing.
+  dst[0] = wchar_t(0x12345678);
+  ASSERT_EQ(dst, wmemset(dst, 0, 0));
   ASSERT_EQ(dst[0], wchar_t(0x12345678));
 }
 
