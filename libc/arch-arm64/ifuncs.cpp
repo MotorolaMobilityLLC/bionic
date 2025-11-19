@@ -26,6 +26,7 @@
  * SUCH DAMAGE.
  */
 
+#include <portable-simd/portable_simd_exports.h>
 #include <private/bionic_ifuncs.h>
 #include <stddef.h>
 
@@ -173,5 +174,14 @@ DEFINE_IFUNC_FOR(strrchr) {
   }
 }
 STRRCHR_SHIM()
+
+DEFINE_IFUNC_FOR(wcslen) {
+  if (arg->_hwcap2 & HWCAP2_MTE) {
+    RETURN_FUNC(wcslen_func_t, portable_simd_wcslen_neon_mte);
+  } else {
+    RETURN_FUNC(wcslen_func_t, portable_simd_wcslen_neon);
+  }
+}
+WCSLEN_SHIM()
 
 }  // extern "C"

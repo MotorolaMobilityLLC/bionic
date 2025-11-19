@@ -730,6 +730,14 @@ cc_defaults {
         "-fno-stack-protector",
         "-ftrivial-auto-var-init=uninitialized",
     ],
+    sanitize: {
+        hwaddress: false,
+    },
+}
+
+cc_defaults {
+    name: "libc_bionic_portable_simd_x86_64_defaults",
+    defaults: ["libc_bionic_portable_simd_defaults"],
     arch: {
         x86_64: {
             srcs: [
@@ -742,7 +750,7 @@ cc_defaults {
 
 cc_defaults {
     name: "libc_bionic_portable_simd_x86_64_v2_defaults",
-    defaults: ["libc_bionic_portable_simd_defaults"],
+    defaults: ["libc_bionic_portable_simd_x86_64_defaults"],
     arch: {
         x86_64: {
             cflags: [
@@ -773,7 +781,7 @@ cc_library_static {
 
 cc_library_static {
     name: "libc_bionic_portable_simd_x86_64_v3",
-    defaults: ["libc_bionic_portable_simd_defaults"],
+    defaults: ["libc_bionic_portable_simd_x86_64_defaults"],
     arch: {
         x86_64: {
             cflags: [
@@ -795,6 +803,54 @@ cc_library_static {
                 "-mlzcnt",
                 "-mmovbe",
                 "-mxsave",
+            ],
+        },
+    },
+}
+
+cc_defaults {
+    name: "libc_bionic_portable_simd_arm64_neon_defaults",
+    defaults: ["libc_bionic_portable_simd_defaults"],
+    arch: {
+        arm64: {
+            cflags: [
+                "-DPSIMD_TARGET_NEON=1",
+                // Since this is the Android build system's default ABI, don't
+                // bother setting CFLAGS for neon.
+            ],
+            srcs: [
+                "portable-simd/strlen.cpp",
+            ],
+        },
+    },
+}
+
+cc_library_static {
+    name: "libc_bionic_portable_simd_arm64_neon_no_mte",
+    defaults: ["libc_bionic_portable_simd_arm64_neon_defaults"],
+}
+
+cc_library_static {
+    name: "libc_bionic_portable_simd_arm64_neon_mte",
+    defaults: ["libc_bionic_portable_simd_arm64_neon_defaults"],
+    arch: {
+        arm64: {
+            cflags: [
+                "-DPSIMD_MTE_ENABLED=1",
+            ],
+        },
+    },
+}
+
+cc_library_static {
+    name: "libc_bionic_portable_simd_arm64_no_ifuncs",
+    defaults: ["libc_bionic_portable_simd_arm64_neon_defaults"],
+    arch: {
+        arm64: {
+            cflags: [
+                // Conservatively assume MTE.
+                "-DPSIMD_MTE_ENABLED=1",
+                "-DPSIMD_ADD_LIBC_ALIASES=1",
             ],
         },
     },
@@ -1088,6 +1144,10 @@ cc_library_static {
                 "arch-arm64/bionic/vfork.S",
                 "arch-arm64/oryon/memcpy-nt.S",
                 "arch-arm64/oryon/memset-nt.S",
+            ],
+            whole_static_libs: [
+                "libc_bionic_portable_simd_arm64_neon_no_mte",
+                "libc_bionic_portable_simd_arm64_neon_mte",
             ],
         },
 
@@ -2137,6 +2197,9 @@ cc_library_static {
         arm64: {
             srcs: [
                 "arch-arm64/string/__memcpy_chk.S",
+            ],
+            whole_static_libs: [
+                "libc_bionic_portable_simd_arm64_no_ifuncs",
             ],
         },
         x86: {
