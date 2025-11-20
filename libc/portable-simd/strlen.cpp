@@ -239,3 +239,8 @@ PSIMD_LIBC_FUNCTION(size_t, wcslen, const wchar_t* s) {
   return portable_simd::strlen_vectorized<WcslenTraits>(
       reinterpret_cast<const WcslenTraits::CharType*>(s));
 }
+
+#if defined(__x86_64__)
+PSIMD_MAYBE_STRONG_ALIAS(strlen);
+PSIMD_MAYBE_STRONG_ALIAS(wcslen);
+#endif
