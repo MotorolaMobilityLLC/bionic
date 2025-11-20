@@ -149,19 +149,17 @@ void fdtrack_iterate(fdtrack_callback_t callback, void* arg) {
       continue;
     }
 
-    if (!entry->mutex.try_lock()) {
+    std::unique_lock<std::mutex> lock(entry->mutex, std::defer_lock);
+    if (!lock.try_lock()) {
       async_safe_format_log(ANDROID_LOG_WARN, "fdtrack", "fd %d locked, skipping", fd);
       continue;
     }
 
     if (entry->backtrace.empty()) {
-      entry->mutex.unlock();
       continue;
     } else if (entry->backtrace.size() < 2) {
       async_safe_format_log(ANDROID_LOG_WARN, "fdtrack", "fd %d missing frames: size = %zu", fd,
                             entry->backtrace.size());
-
-      entry->mutex.unlock();
       continue;
     }
 
@@ -170,12 +168,7 @@ void fdtrack_iterate(fdtrack_callback_t callback, void* arg) {
       function_offsets[i] = entry->backtrace[i].function_offset;
     }
 
-    bool should_continue =
-        callback(fd, function_names, function_offsets, entry->backtrace.size(), arg);
-
-    entry->mutex.unlock();
-
-    if (!should_continue) {
+    if (!callback(fd, function_names, function_offsets, entry->backtrace.size(), arg)) {
       break;
     }
   }
