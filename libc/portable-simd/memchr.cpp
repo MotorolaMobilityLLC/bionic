@@ -419,3 +419,9 @@ PSIMD_LIBC_FUNCTION(wchar_t*, wmemchr, const wchar_t* ptr, wchar_t ch, size_t co
       static_cast<const wchar_t*>(portable_simd::memchr_vectorized<WmemchrTraits>(
           reinterpret_cast<const WmemchrTraits::CharType*>(ptr), ch, count)));
 }
+
+#if defined(__x86_64__)
+PSIMD_MAYBE_STRONG_ALIAS(memchr);
+PSIMD_MAYBE_STRONG_ALIAS(memrchr);
+PSIMD_MAYBE_STRONG_ALIAS(wmemchr);
+#endif
