@@ -44,7 +44,20 @@ static void DivideByZero() {
 TEST(fenv, fesetround_fegetround_FE_TONEAREST) {
   fesetround(FE_TONEAREST);
   ASSERT_EQ(FE_TONEAREST, fegetround());
+  // "To nearest, ties to even".
   TestRounding(8388610.0f, 2.0f);
+}
+
+TEST(fenv, fesetround_fegetround_FE_TONEARESTFROMZERO) {
+#if defined(FE_TONEARESTFROMZERO)
+  fesetround(FE_TONEARESTFROMZERO);
+  ASSERT_EQ(FE_TONEARESTFROMZERO, fegetround());
+  // "To nearest, ties away from zero".
+  TestRounding(8388610.0f, 2.0f);
+  // TODO: add missing test here and above to distinguish between "to nearest, ties to even" and "to nearest, ties away from zero"
+#else
+  GTEST_SKIP() << "no hardware FE_TONEARESTFROMZERO rounding mode";
+#endif
 }
 
 TEST(fenv, fesetround_fegetround_FE_TOWARDZERO) {
