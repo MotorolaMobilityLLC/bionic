@@ -27,30 +27,38 @@
 
 class MallocDebugRecordDataTest : public ::testing::Test {
  protected:
-  void SetUp() override {
-    page_size_ = getpagesize();
-    Config config;
-    ASSERT_TRUE(config.Init("record_allocs"));
-    ASSERT_TRUE(record_.Initialize(config));
-  }
+  void SetUp() override { page_size_ = getpagesize(); }
 
   uint8_t* AllocPageAligned(size_t alloc_pages) {
-    uint8_t* ptr = reinterpret_cast<uint8_t*>(memalign(page_size_, alloc_pages * page_size_));
+    size_t alloc_size = page_size_ * alloc_pages;
+    uint8_t* ptr = reinterpret_cast<uint8_t*>(memalign(page_size_, alloc_size));
     if (ptr == nullptr) {
       return nullptr;
     }
     // Release all the pages so the test can make them present.
-    EXPECT_EQ(0, madvise(ptr, page_size_ * alloc_pages, MADV_DONTNEED));
+    EXPECT_EQ(0, madvise(ptr, alloc_size, MADV_DONTNEED));
+    // Verify that the memory is all paged out. Empirically, it is always
+    // instananeous, but allow it to take up to 10 tries to be released due
+    // to reports of failures related to the memory not being released.
+    // See b/461065038.
+    bool memory_released = false;
+    for (size_t i = 0; i < 10; i++) {
+      if (RecordData::GetPresentBytes(ptr, alloc_size) == 0) {
+        memory_released = true;
+        break;
+      }
+      usleep(10000);
+    }
+    EXPECT_TRUE(memory_released) << "The memory of the allocation was not released properly.";
     return ptr;
   }
 
   size_t page_size_;
-  RecordData record_;
 };
 
 TEST_F(MallocDebugRecordDataTest, get_present_bytes_error) {
-  EXPECT_EQ(-1, record_.GetPresentBytes(nullptr, 1000));
-  EXPECT_EQ(-1, record_.GetPresentBytes(reinterpret_cast<void*>(1000), 0));
+  EXPECT_EQ(-1, RecordData::GetPresentBytes(nullptr, 1000));
+  EXPECT_EQ(-1, RecordData::GetPresentBytes(reinterpret_cast<void*>(1000), 0));
 }
 
 TEST_F(MallocDebugRecordDataTest, get_present_bytes_edge_cases) {
@@ -60,12 +68,12 @@ TEST_F(MallocDebugRecordDataTest, get_present_bytes_edge_cases) {
   ASSERT_TRUE(ptr != nullptr);
   memset(ptr, 1, alloc_pages * page_size_);
 
-  EXPECT_EQ(20, record_.GetPresentBytes(ptr, 20));
-  EXPECT_EQ(page_size_ + 20, record_.GetPresentBytes(ptr, page_size_ + 20));
-  EXPECT_EQ(17, record_.GetPresentBytes(&ptr[page_size_ - 20], 17));
-  EXPECT_EQ(32, record_.GetPresentBytes(&ptr[page_size_ - 16], 32));
-  EXPECT_EQ(page_size_, record_.GetPresentBytes(ptr, page_size_));
-  EXPECT_EQ(page_size_ * 2, record_.GetPresentBytes(ptr, page_size_ * 2));
+  EXPECT_EQ(20, RecordData::GetPresentBytes(ptr, 20));
+  EXPECT_EQ(page_size_ + 20, RecordData::GetPresentBytes(ptr, page_size_ + 20));
+  EXPECT_EQ(17, RecordData::GetPresentBytes(&ptr[page_size_ - 20], 17));
+  EXPECT_EQ(32, RecordData::GetPresentBytes(&ptr[page_size_ - 16], 32));
+  EXPECT_EQ(page_size_, RecordData::GetPresentBytes(ptr, page_size_));
+  EXPECT_EQ(page_size_ * 2, RecordData::GetPresentBytes(ptr, page_size_ * 2));
 }
 
 TEST_F(MallocDebugRecordDataTest, get_present_bytes_first_page_not_present) {
@@ -73,8 +81,8 @@ TEST_F(MallocDebugRecordDataTest, get_present_bytes_first_page_not_present) {
   ASSERT_TRUE(ptr != nullptr);
   ptr[page_size_] = 1;
 
-  EXPECT_EQ(0, record_.GetPresentBytes(ptr, page_size_));
-  EXPECT_EQ(3996, record_.GetPresentBytes(&ptr[100], page_size_ * 2 - 200));
+  EXPECT_EQ(0, RecordData::GetPresentBytes(ptr, page_size_));
+  EXPECT_EQ(3996, RecordData::GetPresentBytes(&ptr[100], page_size_ * 2 - 200));
 }
 
 TEST_F(MallocDebugRecordDataTest, get_present_bytes_last_page_not_present) {
@@ -82,13 +90,13 @@ TEST_F(MallocDebugRecordDataTest, get_present_bytes_last_page_not_present) {
   ASSERT_TRUE(ptr != nullptr);
   ptr[0] = 1;
 
-  EXPECT_EQ(3596, record_.GetPresentBytes(&ptr[500], page_size_ * 2 - 600));
+  EXPECT_EQ(3596, RecordData::GetPresentBytes(&ptr[500], page_size_ * 2 - 600));
 }
 
 TEST_F(MallocDebugRecordDataTest, get_present_bytes_large) {
   // Needs to match the kMaxReadPages from GetPresentBytes
   constexpr size_t kMaxReadPages = 1024;
-  // Allocate large enough that it requires at least two preads.
+  // Allocate large enough that it requires at least two calls to mincore.
   size_t alloc_pages = 2 * kMaxReadPages;
   uint8_t* ptr = AllocPageAligned(alloc_pages);
   ASSERT_TRUE(ptr != nullptr);
@@ -104,18 +112,19 @@ TEST_F(MallocDebugRecordDataTest, get_present_bytes_large) {
   ptr[start + page_size_ * 8] = 1;
   ptr[start + page_size_ * 9] = 1;
 
-  EXPECT_EQ(page_size_ * 7, record_.GetPresentBytes(ptr, alloc_pages * page_size_));
+  EXPECT_EQ(page_size_ * 7, RecordData::GetPresentBytes(ptr, alloc_pages * page_size_));
 
   // Make the entire allocation resident for the next few tests.
   for (size_t i = 0; i < alloc_pages; i++) {
     ptr[i * page_size_] = 1;
   }
 
-  EXPECT_EQ(page_size_ * kMaxReadPages, record_.GetPresentBytes(ptr, page_size_ * kMaxReadPages));
+  EXPECT_EQ(page_size_ * kMaxReadPages,
+            RecordData::GetPresentBytes(ptr, page_size_ * kMaxReadPages));
   EXPECT_EQ(page_size_ * (kMaxReadPages + 1),
-            record_.GetPresentBytes(ptr, page_size_ * (kMaxReadPages + 1)));
+            RecordData::GetPresentBytes(ptr, page_size_ * (kMaxReadPages + 1)));
   EXPECT_EQ(page_size_ * kMaxReadPages - 50,
-            record_.GetPresentBytes(ptr, page_size_ * kMaxReadPages - 50));
+            RecordData::GetPresentBytes(ptr, page_size_ * kMaxReadPages - 50));
   EXPECT_EQ(page_size_ * (kMaxReadPages + 1) - 50,
-            record_.GetPresentBytes(ptr, page_size_ * (kMaxReadPages + 1) - 50));
+            RecordData::GetPresentBytes(ptr, page_size_ * (kMaxReadPages + 1) - 50));
 }
