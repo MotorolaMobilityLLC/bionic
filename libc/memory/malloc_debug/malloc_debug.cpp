@@ -707,7 +707,7 @@ void debug_free(void* pointer) {
 
     // Need to get the present bytes before the pointer is freed in case the
     // memory is released during the free call.
-    present_bytes = g_debug->record->GetPresentBytes(pointer, size);
+    present_bytes = RecordData::GetPresentBytes(pointer, size);
   }
 
   TimedResult result = InternalFree(pointer);
@@ -868,7 +868,7 @@ void* debug_realloc(void* pointer, size_t bytes) {
   if (g_debug->config().options() & RECORD_ALLOCS) {
     // Need to get the present bytes before the pointer is freed in case the
     // memory is released during the free call.
-    present_bytes = g_debug->record->GetPresentBytes(pointer, old_size);
+    present_bytes = RecordData::GetPresentBytes(pointer, old_size);
   }
 
   if (bytes == 0) {

@@ -250,6 +250,17 @@ wchar_t* wmemchr(const wchar_t* s, wchar_t c, size_t n) {
 }
 #undef wmemchr
 
+wchar_t* wmemmove(wchar_t* dst, const wchar_t* src, size_t n) {
+  memmove(dst, src, n * sizeof(wchar_t));
+  return dst;
+}
+__strong_alias(wmemcpy, wmemmove);
+
+wchar_t* wmempcpy(wchar_t* dst, const wchar_t* src, size_t n) {
+  memmove(dst, src, n * sizeof(wchar_t));
+  return dst + n;
+}
+
 wchar_t* wmemset(wchar_t* s, wchar_t c, size_t n) {
   // Unicode characters are 21 bits, so there's only one value we can pass to memset().
   // Luckily, that's the only value that actually matters.
