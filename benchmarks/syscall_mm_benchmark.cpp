@@ -51,7 +51,7 @@ void MmapBenchmarkImpl(benchmark::State& state, const struct MmapParams& params,
     if (type == kBenchmarkMunmapOnly) state.PauseTiming();
     void* addr = mmap(area, params.size, params.prot, params.flags, fd, 0);
     if (addr == MAP_FAILED) {
-      state.SkipWithError(android::base::StringPrintf("mmap failed: %s", strerror(errno)).c_str());
+      state.SkipWithError(android::base::StringPrintf("mmap failed: %m").c_str());
       break;
     }
 
@@ -65,7 +65,7 @@ void MmapBenchmarkImpl(benchmark::State& state, const struct MmapParams& params,
 
     if (munmap(addr, params.size) != 0) {
       state.SkipWithError(
-          android::base::StringPrintf("munmap failed: %s", strerror(errno)).c_str());
+          android::base::StringPrintf("munmap failed: %m").c_str());
       break;
     }
     if (type == kBenchmarkMmapOnly) state.ResumeTiming();
@@ -88,14 +88,14 @@ static void MmapFixedBenchmark(benchmark::State& state, const struct MmapParams&
   uint8_t* area = reinterpret_cast<uint8_t*>(
       mmap(nullptr, area_size, params.prot, params.flags & ~MAP_FIXED, fd, 0));
   if (area == MAP_FAILED) {
-    state.SkipWithError(android::base::StringPrintf("mmap failed: %s", strerror(errno)).c_str());
+    state.SkipWithError(android::base::StringPrintf("mmap failed: %m").c_str());
     return;
   }
 
   MmapBenchmark(state, params, fd, area + offs);
 
   if (munmap(area, area_size) != 0) {
-    state.SkipWithError(android::base::StringPrintf("munmap failed: %s", strerror(errno)).c_str());
+    state.SkipWithError(android::base::StringPrintf("munmap failed: %m").c_str());
     return;
   }
 }
@@ -106,14 +106,12 @@ static void MmapFileBenchmark(benchmark::State& state, const struct MmapParams& 
 
   if (tf.fd < 0) {
     state.SkipWithError(
-        android::base::StringPrintf("failed to create a temporary file: %s", strerror(errno))
-            .c_str());
+        android::base::StringPrintf("failed to create a temporary file: %m").c_str());
     return;
   }
 
   if (area_size > 0 && ftruncate(tf.fd, area_size)) {
-    state.SkipWithError(
-        android::base::StringPrintf("ftruncate failed: %s", strerror(errno)).c_str());
+    state.SkipWithError(android::base::StringPrintf("ftruncate failed: %m").c_str());
     return;
   }
 
@@ -266,7 +264,7 @@ BIONIC_BENCHMARK_WITH_ARG(BM_syscall_mmap_anon_munmap_only, "AT_MULTI_PAGE_SIZES
 void MadviseBenchmark(benchmark::State& state, const struct MmapParams& params, int madvise_flags) {
   void* addr = mmap(nullptr, params.size, params.prot, params.flags, 0, 0);
   if (addr == MAP_FAILED) {
-    state.SkipWithError(android::base::StringPrintf("mmap failed: %s", strerror(errno)).c_str());
+    state.SkipWithError(android::base::StringPrintf("mmap failed: %m").c_str());
     return;
   }
   for (auto _ : state) {
@@ -280,7 +278,7 @@ void MadviseBenchmark(benchmark::State& state, const struct MmapParams& params, 
   }
 
   if (munmap(addr, params.size) != 0) {
-    state.SkipWithError(android::base::StringPrintf("munmap failed: %s", strerror(errno)).c_str());
+    state.SkipWithError(android::base::StringPrintf("munmap failed: %m").c_str());
   }
 }
 

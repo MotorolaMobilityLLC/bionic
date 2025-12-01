@@ -49,13 +49,13 @@ void BM_unistd_fork_call(benchmark::State& state) {
     }
     state.PauseTiming();
     if (pid == -1) {
-      std::string err = android::base::StringPrintf("Fork failed: %s", strerror(errno));
+      std::string err = android::base::StringPrintf("Fork failed: %m");
       state.SkipWithError(err.c_str());
     }
     pid_t wait_pid = waitpid(pid, 0, 0);
     if (wait_pid != pid) {
       if (wait_pid == -1) {
-        std::string err = android::base::StringPrintf("waitpid call failed: %s", strerror(errno));
+        std::string err = android::base::StringPrintf("waitpid call failed: %m");
         state.SkipWithError(err.c_str());
       } else {
         std::string err = android::base::StringPrintf(
