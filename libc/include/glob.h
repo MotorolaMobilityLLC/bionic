@@ -81,47 +81,47 @@ typedef struct {
 #define GLOB_ABORTED	(-2)	/* Unignored error. */
 #define GLOB_NOMATCH	(-3)	/* No match and GLOB_NOCHECK was not set. */
 
-/** Use alternately specified directory funcs. */
 #if __USE_BSD
+/** Use alternately specified directory funcs. */
 #define GLOB_ALTDIRFUNC	0x0040
 #endif
 
-/** Expand braces like csh. */
 #if __USE_BSD
+/** Expand braces like csh. */
 #define GLOB_BRACE	0x0080
 #endif
 
-/** Set in `gl_flags` if the pattern had globbing characters. */
 #if __USE_BSD
+/** Set in `gl_flags` if the pattern had globbing characters. */
 #define GLOB_MAGCHAR	0x0100
 #endif
 
-/** GLOB_NOCHECK without magic chars (csh). */
 #if __USE_BSD
+/** GLOB_NOCHECK without magic chars (csh). */
 #define GLOB_NOMAGIC	0x0200
 #endif
 
-/** Quote special chars with \. */
 #if __USE_BSD
+/** Quote special chars with \. */
 #define GLOB_QUOTE	0x0400
 #endif
 
-/** Expand tilde names from the passwd file. */
 #if __USE_BSD
+/** Expand tilde names from the passwd file. */
 #define GLOB_TILDE	0x0800
 #endif
 
-/** Limit number of returned paths. */
 #if __USE_BSD
+/** Limit number of returned paths. */
 #define GLOB_LIMIT	0x1000
 #endif
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int glob(const char* _Nonnull __pattern, int __flags, int (* _Nullable __error_callback)(const char* _Nonnull __failure_path, int __failure_errno), glob_t* _Nonnull __result_ptr) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 void globfree(glob_t* _Nonnull __result_ptr) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 __END_DECLS

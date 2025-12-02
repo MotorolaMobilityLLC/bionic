@@ -121,6 +121,7 @@ struct utmp* _Nullable pututline(const struct utmp* _Nonnull __entry);
  */
 void endutent(void);
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [login_tty(3)](https://www.man7.org/linux/man-pages/man3/login_tty.3.html)
  * prepares for login on the given file descriptor.
@@ -131,8 +132,7 @@ void endutent(void);
  *
  * Available since API level 23.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 int login_tty(int __fd) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 __END_DECLS

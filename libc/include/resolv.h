@@ -64,7 +64,7 @@ int res_search(const char* _Nonnull __name, int __class, int __type, u_char* _No
 
 #if __BIONIC_AVAILABILITY_GUARD(29)
 u_int __res_randomid(void) __INTRODUCED_IN(29);
-#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
+#endif
 
 __END_DECLS
 

@@ -65,8 +65,7 @@ FILE* _Nullable setmntent(const char* _Nonnull __filename, const char* _Nonnull 
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 char* _Nullable hasmntopt(const struct mntent* _Nonnull __entry, const char* _Nonnull __option) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
-
+#endif
 
 __END_DECLS
 

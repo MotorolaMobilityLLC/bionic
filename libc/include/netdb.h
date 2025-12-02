@@ -215,7 +215,7 @@ struct hostent* _Nullable gethostbyaddr(const void* _Nonnull __addr, socklen_t _
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int gethostbyaddr_r(const void* _Nonnull __addr, socklen_t __length, int __type, struct hostent* _Nonnull __ret, char* _Nonnull __buf, size_t __buf_size, struct hostent* _Nullable * _Nonnull __result, int* _Nonnull __h_errno_ptr) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 struct hostent* _Nullable gethostbyname(const char* _Nonnull __name);
 int gethostbyname_r(const char* _Nonnull __name, struct hostent* _Nonnull __ret, char* _Nonnull __buf, size_t __buf_size, struct hostent* _Nullable * _Nonnull __result, int* _Nonnull __h_errno_ptr);
@@ -223,50 +223,51 @@ struct hostent* _Nullable gethostbyname2(const char* _Nonnull __name, int __af);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int gethostbyname2_r(const char* _Nonnull __name, int __af, struct hostent* _Nonnull __ret, char* _Nonnull __buf, size_t __buf_size, struct hostent* _Nullable * _Nonnull __result, int* _Nonnull __h_errno_ptr) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 void endhostent(void) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 struct hostent* _Nullable gethostent(void);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 void sethostent(int __stay_open) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 /* These functions are obsolete. None of these functions return anything but nullptr. */
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 void endnetent(void) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 struct netent* _Nullable getnetbyaddr(uint32_t __net, int __type);
 struct netent* _Nullable getnetbyname(const char* _Nonnull __name);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 struct netent* _Nullable getnetent(void) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
+
 #if __BIONIC_AVAILABILITY_GUARD(28)
 void setnetent(int __stay_open) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 /* None of these functions return anything but nullptr. */
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 void endprotoent(void) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 struct protoent* _Nullable getprotobyname(const char* _Nonnull __name);
 struct protoent* _Nullable getprotobynumber(int __proto);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 struct protoent* _Nullable getprotoent(void) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
+
 #if __BIONIC_AVAILABILITY_GUARD(28)
 void setprotoent(int __stay_open) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
-
+#endif
 
 /* These functions return entries from a built-in database. */
 void endservent(void);

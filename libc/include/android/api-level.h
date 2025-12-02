@@ -164,6 +164,7 @@ __BEGIN_DECLS
 /* This file is included in <features.h>, and might be used from .S files. */
 #if !defined(__ASSEMBLER__)
 
+#if __BIONIC_AVAILABILITY_GUARD(24)
 /**
  * Returns the `targetSdkVersion` of the caller, or `__ANDROID_API_FUTURE__` if
  * there is no known target SDK version (for code not running in the context of
@@ -175,9 +176,8 @@ __BEGIN_DECLS
  *
  * Available since API level 24.
  */
-#if __BIONIC_AVAILABILITY_GUARD(24)
 int android_get_application_target_sdk_version() __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 
 #if __ANDROID_API__ < 29
 

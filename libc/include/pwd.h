@@ -87,15 +87,15 @@ struct passwd* _Nullable getpwuid(uid_t __uid);
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 struct passwd* _Nullable getpwent(void) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 void setpwent(void) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 void endpwent(void) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 int getpwnam_r(const char* _Nonnull __name, struct passwd* _Nonnull __pwd, char* _Nonnull __buf, size_t __n, struct passwd* _Nullable * _Nonnull __result);
 int getpwuid_r(uid_t __uid, struct passwd* _Nonnull __pwd, char* _Nonnull __buf, size_t __n, struct passwd* _Nullable * _Nonnull __result);

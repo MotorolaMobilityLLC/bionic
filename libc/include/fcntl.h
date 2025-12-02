@@ -208,6 +208,7 @@ int posix_fallocate(int __fd, off_t __offset, off_t __length) __RENAME_IF_FILE_O
 /** See posix_fallocate(). */
 int posix_fallocate64(int __fd, off64_t __offset, off64_t __length);
 
+#if defined(__USE_GNU)
 /**
  * [readahead(2)](https://man7.org/linux/man-pages/man2/readahead.2.html)
  * initiates readahead for the given file.
@@ -216,10 +217,10 @@ int posix_fallocate64(int __fd, off64_t __offset, off64_t __length);
  *
  * Available when compiling with `_GNU_SOURCE`.
  */
-#if defined(__USE_GNU)
 ssize_t readahead(int __fd, off64_t __offset, size_t __length);
 #endif
 
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(26)
 /**
  * [sync_file_range(2)](https://man7.org/linux/man-pages/man2/sync_file_range.2.html)
  * syncs part of a file with disk.
@@ -231,7 +232,6 @@ ssize_t readahead(int __fd, off64_t __offset, size_t __length);
  *
  * Available since API level 26 when compiling with `_GNU_SOURCE`.
  */
-#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(26)
 int sync_file_range(int __fd, off64_t __offset, off64_t __length, unsigned int __flags) __INTRODUCED_IN(26);
 #endif
 
