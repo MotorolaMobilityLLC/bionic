@@ -184,4 +184,13 @@ DEFINE_IFUNC_FOR(wcslen) {
 }
 WCSLEN_SHIM()
 
+DEFINE_IFUNC_FOR(wmemchr) {
+  if (arg->_hwcap2 & HWCAP2_MTE) {
+    RETURN_FUNC(wmemchr_func_t, portable_simd_wmemchr_neon_mte);
+  } else {
+    RETURN_FUNC(wmemchr_func_t, portable_simd_wmemchr_neon);
+  }
+}
+WMEMCHR_SHIM()
+
 }  // extern "C"

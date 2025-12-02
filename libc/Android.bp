@@ -819,6 +819,7 @@ cc_defaults {
                 // bother setting CFLAGS for neon.
             ],
             srcs: [
+                "portable-simd/memchr.cpp",
                 "portable-simd/strlen.cpp",
             ],
         },

@@ -110,7 +110,11 @@ struct CharAgnosticMemchrTraits {
 
   // `align_forward_to_vec_known_safe`.
   PSIMD_FLATTEN static auto align_ptr_to_vec_known_safe(const CharType* s, auto f) {
-    return align_forward_to_vec_known_safe<VectorTag>(s, f);
+    if constexpr (kReadAheadToPageBoundaryIsOK) {
+      return align_forward_to_vec_known_safe<VectorTag>(s, f);
+    } else {
+      return align_forward_to_vec<VectorTag>(s, f);
+    }
   }
 };
 
@@ -283,6 +287,29 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const typename Traits::CharTy
     return *maybe_result;
   }
 
+  const auto check_ptr_and_advance = [&]() PSIMD_FLATTEN -> optional<const void*> {
+    if (const optional<const void*> x = Traits::ptr_of_first(ptr, Load(d, ptr), ch)) {
+      return optional{*x};
+    }
+    ptr = Traits::advance_ptr(ptr);
+    return {};
+  };
+
+  // Can't do fancy unrolling tricks if we can't read ahead.
+  if constexpr (!kReadAheadToPageBoundaryIsOK) {
+    while (count >= d.MaxLanes()) {
+      if (const optional<const void*> x = check_ptr_and_advance()) {
+        return *x;
+      }
+      count -= d.MaxLanes();
+    }
+
+    if (const size_t residual_count = count % d.MaxLanes()) {
+      return result_from_final_vec(ptr, Load(d, ptr), residual_count);
+    }
+    return nullptr;
+  }
+
   // The simplest implementation from here would be:
   //
   // while (true) {
@@ -325,14 +352,10 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const typename Traits::CharTy
         equal_results[i] = v == needle;
       }
 
-      const auto mask_or = [](const auto a, const auto b) PSIMD_FLATTEN {
-        return MaskFromVec(VecFromMask(a) | VecFromMask(b));
-      };
-
-      auto merged_eq = mask_or(equal_results[0], equal_results[1]);
+      auto merged_eq = Or(equal_results[0], equal_results[1]);
 #pragma unroll
       for (size_t i = 2; i < checks_per_loop; ++i) {
-        merged_eq = mask_or(merged_eq, equal_results[i]);
+        merged_eq = Or(merged_eq, equal_results[i]);
       }
 
       const size_t eq_bits = BitsFromMask(d, merged_eq);
@@ -356,14 +379,6 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const typename Traits::CharTy
       return ptr + Traits::lane_offset_of_first(eq_bits);
     } while (full_vector_loads_remaining >= unrolled_loop_size);
   }
-
-  const auto check_ptr_and_advance = [&]() PSIMD_FLATTEN -> optional<const void*> {
-    if (const optional<const void*> x = Traits::ptr_of_first(ptr, Load(d, ptr), ch)) {
-      return optional{*x};
-    }
-    ptr = Traits::advance_ptr(ptr);
-    return {};
-  };
 
   switch (full_vector_loads_remaining) {
     case 3:
@@ -420,7 +435,9 @@ PSIMD_LIBC_FUNCTION(wchar_t*, wmemchr, const wchar_t* ptr, wchar_t ch, size_t co
           reinterpret_cast<const WmemchrTraits::CharType*>(ptr), ch, count)));
 }
 
-#if defined(__x86_64__)
+#if defined(__aarch64__)
+PSIMD_MAYBE_STRONG_ALIAS(wmemchr);
+#elif defined(__x86_64__)
 PSIMD_MAYBE_STRONG_ALIAS(memchr);
 PSIMD_MAYBE_STRONG_ALIAS(memrchr);
 PSIMD_MAYBE_STRONG_ALIAS(wmemchr);

@@ -234,9 +234,9 @@ wchar_t* wcsdup(const wchar_t* s) {
   return result;
 }
 
-// Currently only x86-64 has a psimd wmemchr(),
-// but even that falls back to this for misaligned pointers.
-#if defined(__x86_64__)
+// Currently only ARM64 and x86-64 have a psimd wmemchr(),
+// but even those fall back to this for misaligned pointers.
+#if defined(__aarch64__) || defined(__x86_64__)
 #define wmemchr __wmemchr_misaligned
 extern "C"
 #endif
