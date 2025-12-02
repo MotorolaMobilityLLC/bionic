@@ -501,6 +501,7 @@ enum nft_meta_keys {
   NFT_META_SDIFNAME,
   NFT_META_BRI_BROUTE,
   __NFT_META_IIFTYPE,
+  NFT_META_BRI_IIFHWADDR,
 };
 enum nft_rt_keys {
   NFT_RT_CLASSID,

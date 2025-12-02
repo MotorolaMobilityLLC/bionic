@@ -10,7 +10,7 @@
 #define RISCV_V_MAGIC 0x53465457
 #define END_MAGIC 0x0
 #define END_HDR_SIZE 0x0
-#ifndef __ASSEMBLY__
+#ifndef __ASSEMBLER__
 struct __sc_riscv_v_state {
   struct __riscv_v_ext_state v_state;
 } __attribute__((aligned(16)));

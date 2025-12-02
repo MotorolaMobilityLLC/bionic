@@ -29,6 +29,7 @@ extern "C" {
 #define DRM_AMDGPU_USERQ 0x16
 #define DRM_AMDGPU_USERQ_SIGNAL 0x17
 #define DRM_AMDGPU_USERQ_WAIT 0x18
+#define DRM_AMDGPU_GEM_LIST_HANDLES 0x19
 #define DRM_IOCTL_AMDGPU_GEM_CREATE DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_GEM_CREATE, union drm_amdgpu_gem_create)
 #define DRM_IOCTL_AMDGPU_GEM_MMAP DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_GEM_MMAP, union drm_amdgpu_gem_mmap)
 #define DRM_IOCTL_AMDGPU_CTX DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_CTX, union drm_amdgpu_ctx)
@@ -48,6 +49,7 @@ extern "C" {
 #define DRM_IOCTL_AMDGPU_USERQ DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_USERQ, union drm_amdgpu_userq)
 #define DRM_IOCTL_AMDGPU_USERQ_SIGNAL DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_USERQ_SIGNAL, struct drm_amdgpu_userq_signal)
 #define DRM_IOCTL_AMDGPU_USERQ_WAIT DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_USERQ_WAIT, struct drm_amdgpu_userq_wait)
+#define DRM_IOCTL_AMDGPU_GEM_LIST_HANDLES DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_GEM_LIST_HANDLES, struct drm_amdgpu_gem_list_handles)
 #define AMDGPU_GEM_DOMAIN_CPU 0x1
 #define AMDGPU_GEM_DOMAIN_GTT 0x2
 #define AMDGPU_GEM_DOMAIN_VRAM 0x4
@@ -55,7 +57,8 @@ extern "C" {
 #define AMDGPU_GEM_DOMAIN_GWS 0x10
 #define AMDGPU_GEM_DOMAIN_OA 0x20
 #define AMDGPU_GEM_DOMAIN_DOORBELL 0x40
-#define AMDGPU_GEM_DOMAIN_MASK (AMDGPU_GEM_DOMAIN_CPU | AMDGPU_GEM_DOMAIN_GTT | AMDGPU_GEM_DOMAIN_VRAM | AMDGPU_GEM_DOMAIN_GDS | AMDGPU_GEM_DOMAIN_GWS | AMDGPU_GEM_DOMAIN_OA | AMDGPU_GEM_DOMAIN_DOORBELL)
+#define AMDGPU_GEM_DOMAIN_MMIO_REMAP 0x80
+#define AMDGPU_GEM_DOMAIN_MASK (AMDGPU_GEM_DOMAIN_CPU | AMDGPU_GEM_DOMAIN_GTT | AMDGPU_GEM_DOMAIN_VRAM | AMDGPU_GEM_DOMAIN_GDS | AMDGPU_GEM_DOMAIN_GWS | AMDGPU_GEM_DOMAIN_OA | AMDGPU_GEM_DOMAIN_DOORBELL | AMDGPU_GEM_DOMAIN_MMIO_REMAP)
 #define AMDGPU_GEM_CREATE_CPU_ACCESS_REQUIRED (1 << 0)
 #define AMDGPU_GEM_CREATE_NO_CPU_ACCESS (1 << 1)
 #define AMDGPU_GEM_CREATE_CPU_GTT_USWC (1 << 2)
@@ -381,10 +384,33 @@ union drm_amdgpu_wait_fences {
 };
 #define AMDGPU_GEM_OP_GET_GEM_CREATE_INFO 0
 #define AMDGPU_GEM_OP_SET_PLACEMENT 1
+#define AMDGPU_GEM_OP_GET_MAPPING_INFO 2
+struct drm_amdgpu_gem_vm_entry {
+  __u64 addr;
+  __u64 size;
+  __u64 offset;
+  __u64 flags;
+};
 struct drm_amdgpu_gem_op {
   __u32 handle;
   __u32 op;
   __u64 value;
+  __u32 num_entries;
+  __u32 padding;
+};
+#define AMDGPU_GEM_LIST_HANDLES_FLAG_IS_IMPORT (1 << 0)
+struct drm_amdgpu_gem_list_handles {
+  __u64 entries;
+  __u32 num_entries;
+  __u32 padding;
+};
+struct drm_amdgpu_gem_list_handles_entry {
+  __u32 gem_handle;
+  __u32 flags;
+  __u64 size;
+  __u64 preferred_domains;
+  __u64 alloc_flags;
+  __u64 alignment;
 };
 #define AMDGPU_VA_OP_MAP 1
 #define AMDGPU_VA_OP_UNMAP 2
@@ -518,10 +544,11 @@ struct drm_amdgpu_cs_chunk_cp_gfx_shadow {
   __u64 gds_va;
   __u64 flags;
 };
-#define AMDGPU_IDS_FLAGS_FUSION 0x1
-#define AMDGPU_IDS_FLAGS_PREEMPTION 0x2
-#define AMDGPU_IDS_FLAGS_TMZ 0x4
-#define AMDGPU_IDS_FLAGS_CONFORMANT_TRUNC_COORD 0x8
+#define AMDGPU_IDS_FLAGS_FUSION 0x01
+#define AMDGPU_IDS_FLAGS_PREEMPTION 0x02
+#define AMDGPU_IDS_FLAGS_TMZ 0x04
+#define AMDGPU_IDS_FLAGS_CONFORMANT_TRUNC_COORD 0x08
+#define AMDGPU_IDS_FLAGS_GANG_SUBMIT 0x10
 #define AMDGPU_IDS_FLAGS_MODE_MASK 0x300
 #define AMDGPU_IDS_FLAGS_MODE_SHIFT 0x8
 #define AMDGPU_IDS_FLAGS_MODE_PF 0x0
@@ -782,17 +809,6 @@ struct drm_amdgpu_info_hw_ip {
   __u32 available_rings;
   __u32 ip_discovery_version;
   __u32 userq_num_slots;
-};
-struct drm_amdgpu_info_uq_fw_areas_gfx {
-  __u32 shadow_size;
-  __u32 shadow_alignment;
-  __u32 csa_size;
-  __u32 csa_alignment;
-};
-struct drm_amdgpu_info_uq_fw_areas {
-  union {
-    struct drm_amdgpu_info_uq_fw_areas_gfx gfx;
-  };
 };
 struct drm_amdgpu_info_num_handles {
   __u32 uvd_max_handles;

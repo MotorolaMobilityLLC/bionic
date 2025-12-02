@@ -184,6 +184,7 @@ enum rdma_driver_id {
   RDMA_DRIVER_SIW,
   RDMA_DRIVER_ERDMA,
   RDMA_DRIVER_MANA,
+  RDMA_DRIVER_IONIC,
 };
 enum ib_uverbs_gid_type {
   IB_UVERBS_GID_TYPE_IB,

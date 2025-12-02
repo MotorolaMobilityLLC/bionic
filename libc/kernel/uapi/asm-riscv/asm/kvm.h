@@ -6,7 +6,7 @@
  */
 #ifndef __LINUX_KVM_RISCV_H
 #define __LINUX_KVM_RISCV_H
-#ifndef __ASSEMBLY__
+#ifndef __ASSEMBLER__
 #include <linux/types.h>
 #include <asm/bitsperlong.h>
 #include <asm/ptrace.h>
@@ -35,6 +35,7 @@ struct kvm_riscv_config {
   unsigned long mimpid;
   unsigned long zicboz_block_size;
   unsigned long satp_mode;
+  unsigned long zicbop_block_size;
 };
 struct kvm_riscv_core {
   struct user_regs_struct regs;
@@ -145,6 +146,10 @@ enum KVM_RISCV_ISA_EXT_ID {
   KVM_RISCV_ISA_EXT_ZICCRSE,
   KVM_RISCV_ISA_EXT_ZAAMO,
   KVM_RISCV_ISA_EXT_ZALRSC,
+  KVM_RISCV_ISA_EXT_ZICBOP,
+  KVM_RISCV_ISA_EXT_ZFBFMIN,
+  KVM_RISCV_ISA_EXT_ZVFBFMIN,
+  KVM_RISCV_ISA_EXT_ZVFBFWMA,
   KVM_RISCV_ISA_EXT_MAX,
 };
 enum KVM_RISCV_SBI_EXT_ID {
@@ -160,11 +165,21 @@ enum KVM_RISCV_SBI_EXT_ID {
   KVM_RISCV_SBI_EXT_DBCN,
   KVM_RISCV_SBI_EXT_STA,
   KVM_RISCV_SBI_EXT_SUSP,
+  KVM_RISCV_SBI_EXT_FWFT,
   KVM_RISCV_SBI_EXT_MAX,
 };
 struct kvm_riscv_sbi_sta {
   unsigned long shmem_lo;
   unsigned long shmem_hi;
+};
+struct kvm_riscv_sbi_fwft_feature {
+  unsigned long enable;
+  unsigned long flags;
+  unsigned long value;
+};
+struct kvm_riscv_sbi_fwft {
+  struct kvm_riscv_sbi_fwft_feature misaligned_deleg;
+  struct kvm_riscv_sbi_fwft_feature pointer_masking;
 };
 #define KVM_RISCV_TIMER_STATE_OFF 0
 #define KVM_RISCV_TIMER_STATE_ON 1
@@ -209,6 +224,8 @@ struct kvm_riscv_sbi_sta {
 #define KVM_REG_RISCV_SBI_STATE (0x0a << KVM_REG_RISCV_TYPE_SHIFT)
 #define KVM_REG_RISCV_SBI_STA (0x0 << KVM_REG_RISCV_SUBTYPE_SHIFT)
 #define KVM_REG_RISCV_SBI_STA_REG(name) (offsetof(struct kvm_riscv_sbi_sta, name) / sizeof(unsigned long))
+#define KVM_REG_RISCV_SBI_FWFT (0x1 << KVM_REG_RISCV_SUBTYPE_SHIFT)
+#define KVM_REG_RISCV_SBI_FWFT_REG(name) (offsetof(struct kvm_riscv_sbi_fwft, name) / sizeof(unsigned long))
 #define KVM_DEV_RISCV_APLIC_ALIGN 0x1000
 #define KVM_DEV_RISCV_APLIC_SIZE 0x4000
 #define KVM_DEV_RISCV_APLIC_MAX_HARTS 0x4000

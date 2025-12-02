@@ -22,6 +22,8 @@ extern "C" {
 #define DRM_XE_EXEC 0x09
 #define DRM_XE_WAIT_USER_FENCE 0x0a
 #define DRM_XE_OBSERVATION 0x0b
+#define DRM_XE_MADVISE 0x0c
+#define DRM_XE_VM_QUERY_MEM_RANGE_ATTRS 0x0d
 #define DRM_IOCTL_XE_DEVICE_QUERY DRM_IOWR(DRM_COMMAND_BASE + DRM_XE_DEVICE_QUERY, struct drm_xe_device_query)
 #define DRM_IOCTL_XE_GEM_CREATE DRM_IOWR(DRM_COMMAND_BASE + DRM_XE_GEM_CREATE, struct drm_xe_gem_create)
 #define DRM_IOCTL_XE_GEM_MMAP_OFFSET DRM_IOWR(DRM_COMMAND_BASE + DRM_XE_GEM_MMAP_OFFSET, struct drm_xe_gem_mmap_offset)
@@ -34,6 +36,8 @@ extern "C" {
 #define DRM_IOCTL_XE_EXEC DRM_IOW(DRM_COMMAND_BASE + DRM_XE_EXEC, struct drm_xe_exec)
 #define DRM_IOCTL_XE_WAIT_USER_FENCE DRM_IOWR(DRM_COMMAND_BASE + DRM_XE_WAIT_USER_FENCE, struct drm_xe_wait_user_fence)
 #define DRM_IOCTL_XE_OBSERVATION DRM_IOW(DRM_COMMAND_BASE + DRM_XE_OBSERVATION, struct drm_xe_observation_param)
+#define DRM_IOCTL_XE_MADVISE DRM_IOW(DRM_COMMAND_BASE + DRM_XE_MADVISE, struct drm_xe_madvise)
+#define DRM_IOCTL_XE_VM_QUERY_MEM_RANGE_ATTRS DRM_IOWR(DRM_COMMAND_BASE + DRM_XE_VM_QUERY_MEM_RANGE_ATTRS, struct drm_xe_vm_query_mem_range_attr)
 struct drm_xe_user_extension {
   __u64 next_extension;
   __u32 name;
@@ -237,7 +241,9 @@ struct drm_xe_vm_bind_op {
 #define DRM_XE_VM_BIND_FLAG_DUMPABLE (1 << 3)
 #define DRM_XE_VM_BIND_FLAG_CHECK_PXP (1 << 4)
 #define DRM_XE_VM_BIND_FLAG_CPU_ADDR_MIRROR (1 << 5)
+#define DRM_XE_VM_BIND_FLAG_MADVISE_AUTORESET (1 << 6)
   __u32 flags;
+#define DRM_XE_CONSULT_MEM_ADVISE_PREF_LOC - 1
   __u32 prefetch_mem_region_instance;
   __u32 pad2;
   __u64 reserved[3];
@@ -446,6 +452,71 @@ struct drm_xe_query_eu_stall {
   __u64 reserved[5];
   __u64 num_sampling_rates;
   __u64 sampling_rates[];
+};
+struct drm_xe_madvise {
+  __u64 extensions;
+  __u64 start;
+  __u64 range;
+  __u32 vm_id;
+#define DRM_XE_MEM_RANGE_ATTR_PREFERRED_LOC 0
+#define DRM_XE_MEM_RANGE_ATTR_ATOMIC 1
+#define DRM_XE_MEM_RANGE_ATTR_PAT 2
+  __u32 type;
+  union {
+    struct {
+#define DRM_XE_PREFERRED_LOC_DEFAULT_DEVICE 0
+#define DRM_XE_PREFERRED_LOC_DEFAULT_SYSTEM - 1
+      __u32 devmem_fd;
+#define DRM_XE_MIGRATE_ALL_PAGES 0
+#define DRM_XE_MIGRATE_ONLY_SYSTEM_PAGES 1
+      __u16 migration_policy;
+      __u16 pad;
+      __u64 reserved;
+    } preferred_mem_loc;
+    struct {
+#define DRM_XE_ATOMIC_UNDEFINED 0
+#define DRM_XE_ATOMIC_DEVICE 1
+#define DRM_XE_ATOMIC_GLOBAL 2
+#define DRM_XE_ATOMIC_CPU 3
+      __u32 val;
+      __u32 pad;
+      __u64 reserved;
+    } atomic;
+    struct {
+      __u32 val;
+      __u32 pad;
+      __u64 reserved;
+    } pat_index;
+  };
+  __u64 reserved[2];
+};
+struct drm_xe_mem_range_attr {
+  __u64 extensions;
+  __u64 start;
+  __u64 end;
+  struct {
+    __u32 devmem_fd;
+    __u32 migration_policy;
+  } preferred_mem_loc;
+  struct {
+    __u32 val;
+    __u32 reserved;
+  } atomic;
+  struct {
+    __u32 val;
+    __u32 reserved;
+  } pat_index;
+  __u64 reserved[2];
+};
+struct drm_xe_vm_query_mem_range_attr {
+  __u64 extensions;
+  __u32 vm_id;
+  __u32 num_mem_ranges;
+  __u64 start;
+  __u64 range;
+  __u64 sizeof_mem_range_attr;
+  __u64 vector_of_mem_attr;
+  __u64 reserved[2];
 };
 #ifdef __cplusplus
 }

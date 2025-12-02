@@ -1001,6 +1001,7 @@ enum {
 #define RXH_L4_B_0_1 (1 << 6)
 #define RXH_L4_B_2_3 (1 << 7)
 #define RXH_GTP_TEID (1 << 8)
+#define RXH_IP6_FL (1 << 9)
 #define RXH_DISCARD (1 << 31)
 #define RX_CLS_FLOW_DISC 0xffffffffffffffffULL
 #define RX_CLS_FLOW_WAKE 0xfffffffffffffffeULL

@@ -337,6 +337,10 @@ struct drm_gem_open {
   __u32 handle;
   __u64 size;
 };
+struct drm_gem_change_handle {
+  __u32 handle;
+  __u32 new_handle;
+};
 #define DRM_CAP_DUMB_BUFFER 0x1
 #define DRM_CAP_VBLANK_HIGH_CRTC 0x2
 #define DRM_CAP_DUMB_PREFERRED_DEPTH 0x3
@@ -585,6 +589,7 @@ extern "C" {
 #define DRM_IOCTL_SYNCOBJ_EVENTFD DRM_IOWR(0xCF, struct drm_syncobj_eventfd)
 #define DRM_IOCTL_MODE_CLOSEFB DRM_IOWR(0xD0, struct drm_mode_closefb)
 #define DRM_IOCTL_SET_CLIENT_NAME DRM_IOWR(0xD1, struct drm_set_client_name)
+#define DRM_IOCTL_GEM_CHANGE_HANDLE DRM_IOWR(0xD2, struct drm_gem_change_handle)
 #define DRM_COMMAND_BASE 0x40
 #define DRM_COMMAND_END 0xA0
 struct drm_event {

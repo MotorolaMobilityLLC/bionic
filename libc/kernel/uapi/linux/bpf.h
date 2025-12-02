@@ -413,6 +413,8 @@ union bpf_attr {
     __u64 map_extra;
     __s32 value_type_btf_obj_fd;
     __s32 map_token_fd;
+    __aligned_u64 excl_prog_hash;
+    __u32 excl_prog_hash_size;
   };
   struct {
     __u32 map_fd;
@@ -465,6 +467,9 @@ union bpf_attr {
     __u32 log_true_size;
     __s32 prog_token_fd;
     __u32 fd_array_cnt;
+    __aligned_u64 signature;
+    __u32 signature_size;
+    __s32 keyring_id;
   };
   struct {
     __aligned_u64 pathname;
@@ -1063,6 +1068,8 @@ struct bpf_map_info {
   __u32 btf_value_type_id;
   __u32 btf_vmlinux_id;
   __u64 map_extra;
+  __aligned_u64 hash;
+  __u32 hash_size;
 } __attribute__((aligned(8)));
 struct bpf_btf_info {
   __aligned_u64 btf;
@@ -1480,6 +1487,9 @@ struct bpf_spin_lock {
 };
 struct bpf_timer {
   __u64 __opaque[2];
+} __attribute__((aligned(8)));
+struct bpf_task_work {
+  __u64 __opaque;
 } __attribute__((aligned(8)));
 struct bpf_wq {
   __u64 __opaque[2];

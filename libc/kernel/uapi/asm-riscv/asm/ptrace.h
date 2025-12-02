@@ -6,7 +6,7 @@
  */
 #ifndef _UAPI_ASM_RISCV_PTRACE_H
 #define _UAPI_ASM_RISCV_PTRACE_H
-#ifndef __ASSEMBLY__
+#ifndef __ASSEMBLER__
 #include <linux/types.h>
 #define PTRACE_GETFDPIC 33
 #define PTRACE_GETFDPIC_EXEC 0

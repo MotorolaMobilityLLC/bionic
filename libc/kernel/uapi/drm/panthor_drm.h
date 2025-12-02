@@ -90,6 +90,7 @@ struct drm_panthor_gpu_info {
   __u64 tiler_present;
   __u32 core_features;
   __u32 pad;
+  __u64 gpu_features;
 };
 struct drm_panthor_csif_info {
   __u32 csg_slot_count;
