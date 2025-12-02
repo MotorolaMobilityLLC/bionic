@@ -32,16 +32,16 @@ ENTRY_PRIVATE(__bionic_clone)
 
         # Check result.
         testl    %eax, %eax
-        jz      .L_bc_child
-        jg      .L_bc_parent
+        jz      L(child)
+        jg      L(parent)
 
         # An error occurred, so set errno and return -1.
         pushl   %eax
         call    __set_errno_internal
         addl    $4, %esp
-        jmp     .L_bc_return
+        jmp     L(return)
 
-.L_bc_child:
+L(child):
         # We don't want anyone to unwind past this point.
         .cfi_undefined %eip
         .cfi_undefined %ebp
@@ -49,9 +49,9 @@ ENTRY_PRIVATE(__bionic_clone)
         call    __start_thread
         hlt
 
-.L_bc_parent:
+L(parent):
         # We're the parent; nothing to do.
-.L_bc_return:
+L(return):
         popl    %edi
         .cfi_adjust_cfa_offset -4
         .cfi_restore edi

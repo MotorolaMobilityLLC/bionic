@@ -51,13 +51,13 @@ ENTRY_PRIVATE(__bionic_clone)
 
     # Are we the child?
     movs    r0, r0
-    beq     .L_bc_child
+    beq     L(child)
 
     # In the parent, reload saved registers then either return or set errno.
     ldmfd   sp!, {r4, r5, r6, r7}
     DO_SYSCALL_RETURN
 
-.L_bc_child:
+L(child):
     # We're in the child now. Set the end of the frame record chain.
     mov    fp, #0
     # Setting lr to 0 will make the unwinder stop at __start_thread.
