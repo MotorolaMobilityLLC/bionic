@@ -38,65 +38,65 @@
 
 __BEGIN_DECLS
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [__fbufsize(3)](https://man7.org/linux/man-pages/man3/__fbufsize.3.html) returns the size of
  * the stream's buffer.
  *
  * Available since API level 23.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 size_t __fbufsize(FILE* _Nonnull __fp) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [__freadable(3)](https://man7.org/linux/man-pages/man3/__freadable.3.html) returns non-zero if
  * the stream allows reading, 0 otherwise.
  *
  * Available since API level 23.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 int __freadable(FILE* _Nonnull __fp) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(28)
 /**
  * [__freading(3)](https://man7.org/linux/man-pages/man3/__freading.3.html) returns non-zero if
  * the stream's last operation was a read, 0 otherwise.
  *
  * Available since API level 28.
  */
-#if __BIONIC_AVAILABILITY_GUARD(28)
 int __freading(FILE* _Nonnull __fp) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [__fwritable(3)](https://man7.org/linux/man-pages/man3/__fwritable.3.html) returns non-zero if
  * the stream allows writing, 0 otherwise.
  *
  * Available since API level 23.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 int __fwritable(FILE* _Nonnull __fp) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(28)
 /**
  * [__fwriting(3)](https://man7.org/linux/man-pages/man3/__fwriting.3.html) returns non-zero if
  * the stream's last operation was a write, 0 otherwise.
  *
  * Available since API level 28.
  */
-#if __BIONIC_AVAILABILITY_GUARD(28)
 int __fwriting(FILE* _Nonnull __fp) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [__flbf(3)](https://man7.org/linux/man-pages/man3/__flbf.3.html) returns non-zero if
  * the stream is line-buffered, 0 otherwise.
  *
  * Available since API level 23.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 int __flbf(FILE* _Nonnull __fp) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 /**
  * [__fpurge(3)](https://man7.org/linux/man-pages/man3/__fpurge.3.html) discards the contents of
@@ -104,45 +104,45 @@ int __flbf(FILE* _Nonnull __fp) __INTRODUCED_IN(23);
  */
 void __fpurge(FILE* _Nonnull __fp) __RENAME(fpurge);
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [__fpending(3)](https://man7.org/linux/man-pages/man3/__fpending.3.html) returns the number of
  * bytes in the output buffer. See __freadahead() for the input buffer.
  *
  * Available since API level 23.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 size_t __fpending(FILE* _Nonnull __fp) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(34)
 /**
  * __freadahead(3) returns the number of bytes in the input buffer.
  * See __fpending() for the output buffer.
  *
  * Available since API level 34.
  */
-#if __BIONIC_AVAILABILITY_GUARD(34)
 size_t __freadahead(FILE* _Nonnull __fp) __INTRODUCED_IN(34);
-#endif /* __BIONIC_AVAILABILITY_GUARD(34) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [_flushlbf(3)](https://man7.org/linux/man-pages/man3/_flushlbf.3.html) flushes all
  * line-buffered streams.
  *
  * Available since API level 23.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 void _flushlbf(void) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(28)
 /**
  * `__fseterr` sets the
  * stream's error flag (as tested by ferror() and cleared by fclearerr()).
  *
  * Available since API level 28.
  */
-#if __BIONIC_AVAILABILITY_GUARD(28)
 void __fseterr(FILE* _Nonnull __fp) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 /** __fsetlocking() constant to query locking type. */
 #define FSETLOCKING_QUERY 0
@@ -151,6 +151,7 @@ void __fseterr(FILE* _Nonnull __fp) __INTRODUCED_IN(28);
 /** __fsetlocking() constant to set locking to be maintained by the caller. */
 #define FSETLOCKING_BYCALLER 2
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [__fsetlocking(3)](https://man7.org/linux/man-pages/man3/__fsetlocking.3.html) sets the
  * stream's locking mode to one of the `FSETLOCKING_` types.
@@ -159,8 +160,7 @@ void __fseterr(FILE* _Nonnull __fp) __INTRODUCED_IN(28);
  *
  * Available since API level 23.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 int __fsetlocking(FILE* _Nonnull __fp, int __type) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 __END_DECLS

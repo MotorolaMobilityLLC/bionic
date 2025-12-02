@@ -148,6 +148,7 @@ int select(int __max_fd_plus_one, fd_set* _Nullable __read_fds, fd_set* _Nullabl
  */
 int pselect(int __max_fd_plus_one, fd_set* _Nullable __read_fds, fd_set* _Nullable __write_fds, fd_set* _Nullable __exception_fds, const struct timespec* _Nullable __timeout, const sigset_t* _Nullable __mask);
 
+#if __BIONIC_AVAILABILITY_GUARD(28)
 /**
  * [pselect64(2)](https://man7.org/linux/man-pages/man2/select.2.html) waits on a
  * set of file descriptors.
@@ -160,8 +161,7 @@ int pselect(int __max_fd_plus_one, fd_set* _Nullable __read_fds, fd_set* _Nullab
  *
  * Available since API level 28.
  */
-#if __BIONIC_AVAILABILITY_GUARD(28)
 int pselect64(int __max_fd_plus_one, fd_set* _Nullable __read_fds, fd_set* _Nullable __write_fds, fd_set* _Nullable __exception_fds, const struct timespec* _Nullable __timeout, const sigset64_t* _Nullable __mask) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 __END_DECLS

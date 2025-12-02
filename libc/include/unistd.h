@@ -89,6 +89,7 @@ __noreturn void _exit(int __status);
  */
 pid_t fork(void);
 
+#if __BIONIC_AVAILABILITY_GUARD(35)
 /**
  * _Fork() creates a new process. _Fork() differs from fork() in that it does
  * not run any handlers set by pthread_atfork(). In addition to any user-defined
@@ -102,9 +103,8 @@ pid_t fork(void);
  *
  * Available since API level 35.
  */
-#if __BIONIC_AVAILABILITY_GUARD(35)
 pid_t _Fork(void) __INTRODUCED_IN(35);
-#endif /* __BIONIC_AVAILABILITY_GUARD(35) */
+#endif
 
 /**
  * [vfork(2)](https://man7.org/linux/man-pages/man2/vfork.2.html) creates a new
@@ -152,7 +152,7 @@ int execle(const char* _Nonnull __path, const char* _Nullable __arg0, ... /*,  c
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int fexecve(int __fd, char* _Nullable const* _Nullable __argv, char* _Nullable const* _Nullable __envp) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int nice(int __incr);
 
@@ -256,7 +256,7 @@ char* _Nullable getlogin(void);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int getlogin_r(char* _Nonnull __buffer, size_t __buffer_size) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 long fpathconf(int __fd, int __name);
 long pathconf(const char* _Nonnull __path, int __name);
@@ -324,6 +324,7 @@ char* _Nullable getcwd(char* _Nullable __buf, size_t __size);
  */
 void sync(void);
 
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(28)
 /**
  * [syncfs(2)](https://man7.org/linux/man-pages/man2/sync.2.html) syncs changes
  * to disk, for the file system corresponding to the given file descriptor.
@@ -332,7 +333,6 @@ void sync(void);
  *
  * Available since API level 28 when compiling with `_GNU_SOURCE`.
  */
-#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(28)
 int syncfs(int __fd) __INTRODUCED_IN(28);
 #endif
 
@@ -369,6 +369,7 @@ int fsync(int __fd);
 int fdatasync(int __fd);
 
 /* See https://android.googlesource.com/platform/bionic/+/main/docs/32-bit-abi.md */
+
 #if defined(__USE_FILE_OFFSET64)
 int truncate(const char* _Nonnull __path, off_t __length) __RENAME(truncate64);
 off_t lseek(int __fd, off_t __offset, int __whence) __RENAME(lseek64);
@@ -405,11 +406,11 @@ int usleep(useconds_t __microseconds);
  * Returns 0 on success, and returns -1 and sets `errno` on failure.
  */
 int getdomainname(char* _Nonnull __buf, size_t __buf_size) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int setdomainname(const char* _Nonnull __name, size_t __n) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 /**
  * [gethostname(2)](https://man7.org/linux/man-pages/man2/gethostname.2.html)
@@ -425,7 +426,7 @@ int gethostname(char* _Nonnull _buf, size_t __buf_size);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int sethostname(const char* _Nonnull __name, size_t __n) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 int brk(void* _Nonnull __addr);
 void* _Nullable sbrk(ptrdiff_t __increment);
@@ -468,6 +469,7 @@ int tcsetpgrp(int __fd, pid_t __pid);
     } while (_rc == -1 && errno == EINTR); \
     _rc; })
 
+#if __BIONIC_AVAILABILITY_GUARD(34)
 /**
  * [copy_file_range(2)](https://man7.org/linux/man-pages/man2/copy_file_range.2.html) copies
  * a range of data from one file descriptor to another.
@@ -477,15 +479,14 @@ int tcsetpgrp(int __fd, pid_t __pid);
  * Returns the number of bytes copied on success, and returns -1 and sets
  * `errno` on failure.
  */
-#if __BIONIC_AVAILABILITY_GUARD(34)
 ssize_t copy_file_range(int __fd_in, off64_t* _Nullable __off_in, int __fd_out, off64_t* _Nullable __off_out, size_t __length, unsigned int __flags) __INTRODUCED_IN(34);
-#endif /* __BIONIC_AVAILABILITY_GUARD(34) */
-
+#endif
 
 #if __ANDROID_API__ >= 28
 void swab(const void* _Nonnull __src, void* _Nonnull __dst, ssize_t __byte_count) __INTRODUCED_IN(28);
 #endif
 
+#if __BIONIC_AVAILABILITY_GUARD(34)
 /**
  * [close_range(2)](https://man7.org/linux/man-pages/man2/close_range.2.html)
  * performs an action (which depends on value of flags) on an inclusive range
@@ -500,10 +501,8 @@ void swab(const void* _Nonnull __src, void* _Nonnull __dst, ssize_t __byte_count
  *
  * Returns 0 on success, and returns -1 and sets `errno` on failure.
  */
-#if __BIONIC_AVAILABILITY_GUARD(34)
 int close_range(unsigned int __min_fd, unsigned int __max_fd, int __flags) __INTRODUCED_IN(34);
-#endif /* __BIONIC_AVAILABILITY_GUARD(34) */
-
+#endif
 
 #if defined(__BIONIC_INCLUDE_FORTIFY_HEADERS)
 #define _UNISTD_H_

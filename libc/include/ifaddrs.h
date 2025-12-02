@@ -71,6 +71,7 @@ struct ifaddrs {
 /** Synonym for `ifa_ifu.ifu_dstaddr` in `struct ifaddrs`. */
 #define ifa_dstaddr ifa_ifu.ifu_dstaddr
 
+#if __BIONIC_AVAILABILITY_GUARD(24)
 /**
  * [getifaddrs(3)](https://man7.org/linux/man-pages/man3/getifaddrs.3.html) creates a linked list
  * of `struct ifaddrs`. The list must be freed by freeifaddrs().
@@ -80,18 +81,17 @@ struct ifaddrs {
  *
  * Available since API level 24.
  */
-#if __BIONIC_AVAILABILITY_GUARD(24)
 int getifaddrs(struct ifaddrs* _Nullable * _Nonnull __list_ptr) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(24)
 /**
  * [freeifaddrs(3)](https://man7.org/linux/man-pages/man3/freeifaddrs.3.html) frees a linked list
  * of `struct ifaddrs` returned by getifaddrs().
  *
  * Available since API level 24.
  */
-#if __BIONIC_AVAILABILITY_GUARD(24)
 void freeifaddrs(struct ifaddrs* _Nullable __ptr) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 
 __END_DECLS

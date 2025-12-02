@@ -40,6 +40,7 @@
 
 __BEGIN_DECLS
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [openpty(3)](https://man7.org/linux/man-pages/man3/openpty.3.html) finds
  * a free pseudoterminal and configures it with the given terminal and window
@@ -49,10 +50,10 @@ __BEGIN_DECLS
  *
  * Available since API level 23.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 int openpty(int* _Nonnull __pty_fd, int* _Nonnull __tty_fd, char* _Nullable __tty_name, const struct termios* _Nullable __termios_ptr, const struct winsize* _Nullable __winsize_ptr) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [forkpty(3)](https://man7.org/linux/man-pages/man3/forkpty.3.html) creates
  * a new process connected to a pseudoterminal from openpty().
@@ -62,8 +63,7 @@ int openpty(int* _Nonnull __pty_fd, int* _Nonnull __tty_fd, char* _Nullable __tt
  *
  * Available since API level 23.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 int forkpty(int* _Nonnull __parent_pty_fd, char* _Nullable __child_tty_name, const struct termios* _Nullable __termios_ptr, const struct winsize* _Nullable __winsize_ptr) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 __END_DECLS

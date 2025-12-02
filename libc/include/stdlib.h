@@ -63,23 +63,26 @@ char* _Nullable mktemp(char* _Nonnull __template) __attribute__((__deprecated__(
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int mkostemp64(char* _Nonnull __template, int __flags) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
+
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int mkostemp(char* _Nonnull __template, int __flags) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
+
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int mkostemps64(char* _Nonnull __template, int __suffix_length, int __flags) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
+
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int mkostemps(char* _Nonnull __template, int __suffix_length, int __flags) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 int mkstemp64(char* _Nonnull __template);
 int mkstemp(char* _Nonnull __template);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int mkstemps64(char* _Nonnull __template, int __flags) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 int mkstemps(char* _Nonnull __template, int __flags);
 
@@ -99,6 +102,7 @@ void free_aligned_sized(void* _Nullable __ptr, size_t __alignment, size_t __size
 
 int posix_memalign(void* _Nullable * _Nullable __memptr, size_t __alignment, size_t __size);
 
+#if __BIONIC_AVAILABILITY_GUARD(28)
 /**
  * [aligned_alloc(3)](https://man7.org/linux/man-pages/man3/aligned_alloc.3.html)
  * allocates the given number of bytes with the given alignment.
@@ -108,11 +112,8 @@ int posix_memalign(void* _Nullable * _Nullable __memptr, size_t __alignment, siz
  *
  * Available since API level 28.
  */
-
-#if __BIONIC_AVAILABILITY_GUARD(28)
 __nodiscard void* _Nullable aligned_alloc(size_t __alignment, size_t __size) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
-
+#endif
 
 __nodiscard char* _Nullable realpath(const char* _Nonnull __path, char* _Nullable __resolved);
 
@@ -151,6 +152,7 @@ __nodiscard void* _Nullable bsearch(const void* _Nonnull __key, const void* _Nul
  */
 void qsort(void* _Nullable __array, size_t __n, size_t __size, int (* _Nonnull __comparator)(const void* _Nullable __lhs, const void* _Nullable __rhs));
 
+#if __BIONIC_AVAILABILITY_GUARD(36)
 /**
  * [qsort_r(3)](https://man7.org/linux/man-pages/man3/qsort_r.3.html) sorts an
  * array of n elements each of the given size, using the given comparator,
@@ -162,9 +164,8 @@ void qsort(void* _Nullable __array, size_t __n, size_t __size, int (* _Nonnull _
  * Available since API level 36.
  * std::sort() is available at all API levels.
  */
-#if __BIONIC_AVAILABILITY_GUARD(36)
 void qsort_r(void* _Nullable __array, size_t __n, size_t __size, int (* _Nonnull __comparator)(const void* _Nullable __lhs, const void* _Nullable __rhs, void* _Nullable __context), void* _Nullable __context) __INTRODUCED_IN(36);
-#endif /* __BIONIC_AVAILABILITY_GUARD(36) */
+#endif
 
 uint32_t arc4random(void);
 uint32_t arc4random_uniform(uint32_t __upper_bound);
@@ -180,7 +181,7 @@ long jrand48(unsigned short __xsubi[_Nonnull 3]);
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 void lcong48(unsigned short __param[_Nonnull 7]) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 long lrand48(void);
 long mrand48(void);
@@ -199,7 +200,7 @@ int unlockpt(int __fd);
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int getsubopt(char* _Nonnull * _Nonnull __option, char* _Nonnull const* _Nonnull __tokens, char* _Nullable * _Nonnull __value_ptr) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 typedef struct {
   int quot;
@@ -243,6 +244,7 @@ typedef struct {
  */
 lldiv_t lldiv(long long __numerator, long long __denominator) __attribute_const__;
 
+#if __BIONIC_AVAILABILITY_GUARD(29)
 /**
  * [getloadavg(3)](https://man7.org/linux/man-pages/man3/getloadavg.3.html) queries the
  * number of runnable processes averaged over time. The Linux kernel supports averages
@@ -250,9 +252,8 @@ lldiv_t lldiv(long long __numerator, long long __denominator) __attribute_const_
  *
  * Returns the number of samples written to `__averages` (at most 3), and returns -1 on failure.
  */
-#if __BIONIC_AVAILABILITY_GUARD(29)
 int getloadavg(double __averages[_Nonnull], int __n) __INTRODUCED_IN(29);
-#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
+#endif
 
 
 /* BSD compatibility. */
@@ -261,7 +262,7 @@ void setprogname(const char* _Nonnull __name);
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int mblen(const char* _Nullable __s, size_t __n) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 size_t mbstowcs(wchar_t* _Nullable __dst, const char* _Nullable __src, size_t __n);
 int mbtowc(wchar_t* _Nullable __wc_ptr, const char*  _Nullable __s, size_t __n);

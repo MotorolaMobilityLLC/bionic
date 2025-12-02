@@ -48,11 +48,11 @@ __BEGIN_DECLS
  */
 int signalfd(int __fd, const sigset_t* _Nonnull __mask, int __flags);
 
+#if __BIONIC_AVAILABILITY_GUARD(28)
 /**
  * Like signalfd() but allows setting a signal mask with RT signals even from a 32-bit process.
  */
-#if __BIONIC_AVAILABILITY_GUARD(28)
 int signalfd64(int __fd, const sigset64_t* _Nonnull __mask, int __flags) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 __END_DECLS

@@ -63,7 +63,7 @@ int sigaction(int __signal, const struct sigaction* _Nullable __new_action, stru
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int sigaction64(int __signal, const struct sigaction64* _Nullable __new_action, struct sigaction64* _Nullable __old_action) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int siginterrupt(int __signal, int __flag);
 
@@ -72,83 +72,83 @@ int sigaddset(sigset_t* _Nonnull __set, int __signal);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int sigaddset64(sigset64_t* _Nonnull __set, int __signal) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int sigdelset(sigset_t* _Nonnull __set, int __signal);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int sigdelset64(sigset64_t* _Nonnull __set, int __signal) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int sigemptyset(sigset_t* _Nonnull __set);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int sigemptyset64(sigset64_t* _Nonnull __set) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int sigfillset(sigset_t* _Nonnull __set);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int sigfillset64(sigset64_t* _Nonnull __set) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int sigismember(const sigset_t* _Nonnull __set, int __signal);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int sigismember64(const sigset64_t* _Nonnull __set, int __signal) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 
 int sigpending(sigset_t* _Nonnull __set);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int sigpending64(sigset64_t* _Nonnull __set) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int sigprocmask(int __how, const sigset_t* _Nullable __new_set, sigset_t* _Nullable __old_set);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int sigprocmask64(int __how, const sigset64_t* _Nullable __new_set, sigset64_t* _Nullable __old_set) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int sigsuspend(const sigset_t* _Nonnull __mask);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int sigsuspend64(const sigset64_t* _Nonnull __mask) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int sigwait(const sigset_t* _Nonnull __set, int* _Nonnull __signal);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int sigwait64(const sigset64_t* _Nonnull __set, int* _Nonnull __signal) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int sighold(int __signal)
   __attribute__((__deprecated__("use sigprocmask() or pthread_sigmask() instead")))
   __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int sigignore(int __signal)
   __attribute__((__deprecated__("use sigaction() instead"))) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int sigpause(int __signal)
   __attribute__((__deprecated__("use sigsuspend() instead"))) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 int sigrelse(int __signal)
   __attribute__((__deprecated__("use sigprocmask() or pthread_sigmask() instead")))
   __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 sighandler_t _Nonnull sigset(int __signal, sighandler_t _Nullable __handler)
   __attribute__((__deprecated__("use sigaction() instead"))) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 int raise(int __signal);
 int kill(pid_t __pid, int __signal);
@@ -170,33 +170,34 @@ int pthread_sigmask(int __how, const sigset_t* _Nullable __new_set, sigset_t* _N
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int pthread_sigmask64(int __how, const sigset64_t* _Nullable __new_set, sigset64_t* _Nullable __old_set) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int sigqueue(pid_t __pid, int __signal, const union sigval __value) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int sigtimedwait(const sigset_t* _Nonnull __set, siginfo_t* _Nullable __info, const struct timespec* _Nullable __timeout) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int sigtimedwait64(const sigset64_t* _Nonnull __set, siginfo_t* _Nullable __info, const struct timespec* _Nullable __timeout) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int sigwaitinfo(const sigset_t* _Nonnull __set, siginfo_t* _Nullable __info) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int sigwaitinfo64(const sigset64_t* _Nonnull __set, siginfo_t* _Nullable __info) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 /**
  * Buffer size suitable for any call to sig2str().
  */
 #define SIG2STR_MAX 32
 
+#if __BIONIC_AVAILABILITY_GUARD(36)
 /**
  * [sig2str(3)](https://man7.org/linux/man-pages/man3/sig2str.3.html)
  * converts the integer corresponding to SIGSEGV (say) into a string
@@ -210,10 +211,10 @@ int sigwaitinfo64(const sigset64_t* _Nonnull __set, siginfo_t* _Nullable __info)
  *
  * Available since API level 36 (but see also strsignal()).
  */
-#if __BIONIC_AVAILABILITY_GUARD(36)
 int sig2str(int __signal, char* _Nonnull __buf) __INTRODUCED_IN(36);
-#endif /* __BIONIC_AVAILABILITY_GUARD(36) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(36)
 /**
  * [str2sig(3)](https://man7.org/linux/man-pages/man3/str2sig.3.html)
  * converts a string like "SEGV" (not including the "SIG" used in the constants)
@@ -223,9 +224,8 @@ int sig2str(int __signal, char* _Nonnull __buf) __INTRODUCED_IN(36);
  *
  * Available since API level 36.
  */
-#if __BIONIC_AVAILABILITY_GUARD(36)
 int str2sig(const char* _Nonnull __name, int* _Nonnull __signal) __INTRODUCED_IN(36);
-#endif /* __BIONIC_AVAILABILITY_GUARD(36) */
+#endif
 
 __END_DECLS
 

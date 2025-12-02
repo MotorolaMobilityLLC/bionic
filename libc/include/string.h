@@ -66,6 +66,7 @@ void* _Nonnull memmove(void* _Nonnull __dst, const void* _Nonnull __src, size_t 
  */
 void* _Nonnull memset(void* _Nonnull __dst, int __ch, size_t __n);
 
+#if __ANDROID_API__ >= 34
 /**
  * [memset_explicit(3)](https://man7.org/linux/man-pages/man3/memset_explicit.3.html)
  * writes the bottom 8 bits of the given int to the next `n` bytes of `dst`,
@@ -75,7 +76,6 @@ void* _Nonnull memset(void* _Nonnull __dst, int __ch, size_t __n);
  *
  * Available from API level 34, or with __ANDROID_UNAVAILABLE_SYMBOLS_ARE_WEAK__.
  */
-#if __ANDROID_API__ >= 34
 void* _Nonnull memset_explicit(void* _Nonnull __dst, int __ch, size_t __n) __INTRODUCED_IN(34);
 #elif defined(__ANDROID_UNAVAILABLE_SYMBOLS_ARE_WEAK__)
 #define __BIONIC_MEMSET_EXPLICIT_INLINE static __inline
@@ -150,6 +150,7 @@ char* _Nonnull strerror(int __errno_value);
  */
 char* _Nonnull strerror_l(int __errno_value, locale_t _Nonnull __l) __RENAME(strerror);
 
+#if defined(__USE_GNU) && __ANDROID_API__ >= 23
 /**
  * [strerror_r(3)](https://man7.org/linux/man-pages/man3/strerror_r.3.html)
  * writes a string describing the given errno value into the given buffer.
@@ -161,12 +162,12 @@ char* _Nonnull strerror_l(int __errno_value, locale_t _Nonnull __l) __RENAME(str
  * The GNU variant is available since API level 23 if `_GNU_SOURCE` is defined.
  * The POSIX variant is available otherwise.
  */
-#if defined(__USE_GNU) && __ANDROID_API__ >= 23
 char* _Nonnull strerror_r(int __errno_value, char* _Nullable __buf, size_t __n) __RENAME(__gnu_strerror_r) __INTRODUCED_IN(23);
 #else /* POSIX */
 int strerror_r(int __errno_value, char* _Nonnull __buf, size_t __n);
 #endif
 
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(35)
 /**
  * [strerrorname_np(3)](https://man7.org/linux/man-pages/man3/strerrorname_np.3.html)
  * returns the name of the errno constant corresponding to its argument.
@@ -179,10 +180,10 @@ int strerror_r(int __errno_value, char* _Nonnull __buf, size_t __n);
  *
  * Available since API level 35 when compiling with `_GNU_SOURCE`.
  */
-#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(35)
 const char* _Nullable strerrorname_np(int __errno_value) __INTRODUCED_IN(35);
 #endif
 
+#if defined(__USE_GNU)
 /**
  * [strerrordesc_np(3)](https://man7.org/linux/man-pages/man3/strerrordesc_np.3.html)
  * is like strerror() but without localization. Since Android's strerror()
@@ -192,7 +193,6 @@ const char* _Nullable strerrorname_np(int __errno_value) __INTRODUCED_IN(35);
  *
  * Available when compiling with `_GNU_SOURCE`.
  */
-#if defined(__USE_GNU)
 const char* _Nonnull strerrordesc_np(int __errno_value) __RENAME(strerror);
 #endif
 

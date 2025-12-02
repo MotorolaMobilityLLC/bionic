@@ -35,7 +35,7 @@
 
 __BEGIN_DECLS
 
-/*
+/**
  * Error checking for close(2).
  *
  * Mishandling of file descriptor ownership is a common source of errors that
@@ -70,14 +70,14 @@ __BEGIN_DECLS
  * closing fd with the tag 0.
  */
 
-/*
+/**
  * For improved diagnostics, the type of a file descriptors owner can be
  * encoded in the most significant byte of the owner tag. Values of 0 and 0xff
  * are ignored, which allows for raw pointers to be used as owner tags without
  * modification.
  */
 enum android_fdsan_owner_type {
-  /*
+  /**
    * Generic Java or native owners.
    *
    * Generic Java objects always use 255 as their type, using identityHashCode
@@ -89,98 +89,98 @@ enum android_fdsan_owner_type {
   ANDROID_FDSAN_OWNER_TYPE_GENERIC_00 = 0,
   ANDROID_FDSAN_OWNER_TYPE_GENERIC_FF = 255,
 
-  /* FILE* */
+  /** FILE* */
   ANDROID_FDSAN_OWNER_TYPE_FILE = 1,
 
-  /* DIR* */
+  /** DIR* */
   ANDROID_FDSAN_OWNER_TYPE_DIR = 2,
 
-  /* android::base::unique_fd */
+  /** android::base::unique_fd */
   ANDROID_FDSAN_OWNER_TYPE_UNIQUE_FD = 3,
 
-  /* sqlite-owned file descriptors */
+  /** sqlite-owned file descriptors */
   ANDROID_FDSAN_OWNER_TYPE_SQLITE = 4,
 
-  /* java.io.FileInputStream */
+  /** java.io.FileInputStream */
   ANDROID_FDSAN_OWNER_TYPE_FILEINPUTSTREAM = 5,
 
-  /* java.io.FileOutputStream */
+  /** java.io.FileOutputStream */
   ANDROID_FDSAN_OWNER_TYPE_FILEOUTPUTSTREAM = 6,
 
-  /* java.io.RandomAccessFile */
+  /** java.io.RandomAccessFile */
   ANDROID_FDSAN_OWNER_TYPE_RANDOMACCESSFILE = 7,
 
-  /* android.os.ParcelFileDescriptor */
+  /** android.os.ParcelFileDescriptor */
   ANDROID_FDSAN_OWNER_TYPE_PARCELFILEDESCRIPTOR = 8,
 
-  /* ART FdFile */
+  /** ART FdFile */
   ANDROID_FDSAN_OWNER_TYPE_ART_FDFILE = 9,
 
-  /* java.net.DatagramSocketImpl */
+  /** java.net.DatagramSocketImpl */
   ANDROID_FDSAN_OWNER_TYPE_DATAGRAMSOCKETIMPL = 10,
 
-  /* java.net.SocketImpl */
+  /** java.net.SocketImpl */
   ANDROID_FDSAN_OWNER_TYPE_SOCKETIMPL = 11,
 
-  /* libziparchive's ZipArchive */
+  /** libziparchive's ZipArchive */
   ANDROID_FDSAN_OWNER_TYPE_ZIPARCHIVE = 12,
 
-  /* native_handle_t */
+  /** native_handle_t */
   ANDROID_FDSAN_OWNER_TYPE_NATIVE_HANDLE = 13,
 
-  /* android::Parcel */
+  /** android::Parcel */
   ANDROID_FDSAN_OWNER_TYPE_PARCEL = 14,
 };
 
-/*
+#if __BIONIC_AVAILABILITY_GUARD(29)
+/**
  * Create an owner tag with the specified type and least significant 56 bits of tag.
  */
-#if __BIONIC_AVAILABILITY_GUARD(29)
 uint64_t android_fdsan_create_owner_tag(enum android_fdsan_owner_type type, uint64_t tag) __INTRODUCED_IN(29) __attribute__((__weak__));
-#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
+#endif
 
-/*
+#if __BIONIC_AVAILABILITY_GUARD(29)
+/**
  * Exchange a file descriptor's tag.
  *
  * Logs and aborts if the fd's tag does not match expected_tag.
  */
-#if __BIONIC_AVAILABILITY_GUARD(29)
 void android_fdsan_exchange_owner_tag(int fd, uint64_t expected_tag, uint64_t new_tag) __INTRODUCED_IN(29) __attribute__((__weak__));
-#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
+#endif
 
-/*
+#if __BIONIC_AVAILABILITY_GUARD(29)
+/**
  * Close a file descriptor with a tag, and resets the tag to 0.
  *
  * Logs and aborts if the tag is incorrect.
  */
-#if __BIONIC_AVAILABILITY_GUARD(29)
 int android_fdsan_close_with_tag(int fd, uint64_t tag) __INTRODUCED_IN(29) __attribute__((__weak__));
-#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
+#endif
 
-/*
+#if __BIONIC_AVAILABILITY_GUARD(29)
+/**
  * Get a file descriptor's current owner tag.
  *
  * Returns 0 for untagged and invalid file descriptors.
  */
-#if __BIONIC_AVAILABILITY_GUARD(29)
 uint64_t android_fdsan_get_owner_tag(int fd) __INTRODUCED_IN(29);
-#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
+#endif
 
-/*
+#if __BIONIC_AVAILABILITY_GUARD(29)
+/**
  * Get an owner tag's string representation.
  *
  * The return value points to memory with static lifetime, do not attempt to modify it.
  */
-#if __BIONIC_AVAILABILITY_GUARD(29)
 const char* _Nonnull android_fdsan_get_tag_type(uint64_t tag) __INTRODUCED_IN(29);
-#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
+#endif
 
-/*
+#if __BIONIC_AVAILABILITY_GUARD(29)
+/**
  * Get an owner tag's value, with the type masked off.
  */
-#if __BIONIC_AVAILABILITY_GUARD(29)
 uint64_t android_fdsan_get_tag_value(uint64_t tag) __INTRODUCED_IN(29);
-#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
+#endif
 
 enum android_fdsan_error_level {
   // No errors.
@@ -196,14 +196,15 @@ enum android_fdsan_error_level {
   ANDROID_FDSAN_ERROR_LEVEL_FATAL,
 };
 
-/*
+#if __BIONIC_AVAILABILITY_GUARD(29)
+/**
  * Get the error level.
  */
+enum android_fdsan_error_level android_fdsan_get_error_level() __INTRODUCED_IN(29) __attribute__((__weak__));
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(29)
-enum android_fdsan_error_level android_fdsan_get_error_level() __INTRODUCED_IN(29) __attribute__((__weak__));
-
-/*
+/**
  * Set the error level and return the previous state.
  *
  * Error checking is automatically disabled in the child of a fork, to maintain
@@ -218,15 +219,13 @@ enum android_fdsan_error_level android_fdsan_get_error_level() __INTRODUCED_IN(2
  * (e.g. postfork).
  */
 enum android_fdsan_error_level android_fdsan_set_error_level(enum android_fdsan_error_level new_level) __INTRODUCED_IN(29) __attribute__((__weak__));
-#endif /* __BIONIC_AVAILABILITY_GUARD(29) */
-
-
-/*
- * Set the error level to the global setting if available, or a default value.
- */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(30)
+/**
+ * Set the error level to the global setting if available, or a default value.
+ */
 enum android_fdsan_error_level android_fdsan_set_error_level_from_property(enum android_fdsan_error_level default_level) __INTRODUCED_IN(30) __attribute__((__weak__));
-#endif /* __BIONIC_AVAILABILITY_GUARD(30) */
+#endif
 
 __END_DECLS

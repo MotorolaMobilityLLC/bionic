@@ -38,6 +38,7 @@
 
 __BEGIN_DECLS
 
+#if __BIONIC_AVAILABILITY_GUARD(28)
 /**
  * [getentropy(3)](https://man7.org/linux/man-pages/man3/getentropy.3.html) fills the given buffer
  * with random bytes.
@@ -48,8 +49,7 @@ __BEGIN_DECLS
  *
  * See also arc4random_buf() which is available in all API levels.
  */
-#if __BIONIC_AVAILABILITY_GUARD(28)
 __nodiscard int getentropy(void* _Nonnull __buffer, size_t __buffer_size) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 __END_DECLS

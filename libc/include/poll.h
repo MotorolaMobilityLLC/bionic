@@ -61,13 +61,12 @@ int poll(struct pollfd* _Nullable __fds, nfds_t __count, int __timeout_ms);
  */
 int ppoll(struct pollfd* _Nullable __fds, nfds_t __count, const struct timespec* _Nullable __timeout, const sigset_t* _Nullable __mask);
 
+#if __BIONIC_AVAILABILITY_GUARD(28)
 /**
  * Like ppoll() but allows setting a signal mask with RT signals even from a 32-bit process.
  */
-
-#if __BIONIC_AVAILABILITY_GUARD(28)
 int ppoll64(struct pollfd* _Nullable  __fds, nfds_t __count, const struct timespec* _Nullable __timeout, const sigset64_t* _Nullable __mask) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 #if defined(__BIONIC_INCLUDE_FORTIFY_HEADERS)
 #define _POLL_H_

@@ -105,7 +105,7 @@ int pthread_attr_getguardsize(const pthread_attr_t* _Nonnull __attr, size_t* _No
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int pthread_attr_getinheritsched(const pthread_attr_t* _Nonnull __attr, int* _Nonnull __flag) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int pthread_attr_getschedparam(const pthread_attr_t* _Nonnull __attr, struct sched_param* _Nonnull __param);
 int pthread_attr_getschedpolicy(const pthread_attr_t* _Nonnull __attr, int* _Nonnull __policy);
@@ -118,7 +118,7 @@ int pthread_attr_setguardsize(pthread_attr_t* _Nonnull __attr, size_t __size);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int pthread_attr_setinheritsched(pthread_attr_t* _Nonnull __attr, int __flag) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int pthread_attr_setschedparam(pthread_attr_t* _Nonnull __attr, const struct sched_param* _Nonnull __param);
 int pthread_attr_setschedpolicy(pthread_attr_t* _Nonnull __attr, int __policy);
@@ -138,7 +138,7 @@ int pthread_cond_broadcast(pthread_cond_t* _Nonnull __cond);
 #if __BIONIC_AVAILABILITY_GUARD(30)
 int pthread_cond_clockwait(pthread_cond_t* _Nonnull __cond, pthread_mutex_t* _Nonnull __mutex, clockid_t __clock,
                            const struct timespec* _Nullable __timeout) __INTRODUCED_IN(30);
-#endif /* __BIONIC_AVAILABILITY_GUARD(30) */
+#endif
 
 int pthread_cond_destroy(pthread_cond_t* _Nonnull __cond);
 int pthread_cond_init(pthread_cond_t* _Nonnull __cond, const pthread_condattr_t* _Nullable __attr);
@@ -228,7 +228,7 @@ int pthread_mutexattr_gettype(const pthread_mutexattr_t* _Nonnull __attr, int* _
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int pthread_mutexattr_getprotocol(const pthread_mutexattr_t* _Nonnull __attr, int* _Nonnull __protocol) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int pthread_mutexattr_init(pthread_mutexattr_t* _Nonnull __attr);
 int pthread_mutexattr_setpshared(pthread_mutexattr_t* _Nonnull __attr, int __shared);
@@ -236,21 +236,24 @@ int pthread_mutexattr_settype(pthread_mutexattr_t* _Nonnull __attr, int __type);
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int pthread_mutexattr_setprotocol(pthread_mutexattr_t* _Nonnull __attr, int __protocol) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 
 
 #if __BIONIC_AVAILABILITY_GUARD(30)
 int pthread_mutex_clocklock(pthread_mutex_t* _Nonnull __mutex, clockid_t __clock,
                             const struct timespec* _Nullable __abstime) __INTRODUCED_IN(30);
-#endif /* __BIONIC_AVAILABILITY_GUARD(30) */
+#endif
 
 int pthread_mutex_destroy(pthread_mutex_t* _Nonnull __mutex);
 int pthread_mutex_init(pthread_mutex_t* _Nonnull __mutex, const pthread_mutexattr_t* _Nullable __attr);
 int pthread_mutex_lock(pthread_mutex_t* _Nonnull __mutex);
 int pthread_mutex_timedlock(pthread_mutex_t* _Nonnull __mutex, const struct timespec* _Nullable __timeout);
 
-/*
+#if __BIONIC_AVAILABILITY_GUARD(28)
+/**
+ * Equivalent to pthread_mutex_clocklock() with CLOCK_MONOTONIC.
+ *
  * POSIX historically only supported using pthread_mutex_timedlock() with CLOCK_REALTIME, however
  * that is typically inappropriate, since that clock can change dramatically, causing the timeout to
  * either expire earlier or much later than intended.
@@ -258,12 +261,12 @@ int pthread_mutex_timedlock(pthread_mutex_t* _Nonnull __mutex, const struct time
  * from this issue.
  * Note that pthread_mutex_clocklock() allows specifying an arbitrary clock and has superseded this
  * function.
+ *
+ * Available since API level 28.
  */
-
-#if __BIONIC_AVAILABILITY_GUARD(28)
 int pthread_mutex_timedlock_monotonic_np(pthread_mutex_t* _Nonnull __mutex, const struct timespec* _Nullable __timeout)
     __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int pthread_mutex_trylock(pthread_mutex_t* _Nonnull __mutex);
 int pthread_mutex_unlock(pthread_mutex_t* _Nonnull __mutex);
@@ -278,85 +281,86 @@ int pthread_rwlockattr_setpshared(pthread_rwlockattr_t* _Nonnull __attr, int __s
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int pthread_rwlockattr_getkind_np(const pthread_rwlockattr_t* _Nonnull __attr, int* _Nonnull __kind)
   __INTRODUCED_IN(23);
+#endif
+#if __BIONIC_AVAILABILITY_GUARD(23)
 int pthread_rwlockattr_setkind_np(pthread_rwlockattr_t* _Nonnull __attr, int __kind) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
-
-
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(30)
 int pthread_rwlock_clockrdlock(pthread_rwlock_t* _Nonnull __rwlock, clockid_t __clock,
                                const struct timespec* _Nullable __timeout) __INTRODUCED_IN(30);
+#endif
+#if __BIONIC_AVAILABILITY_GUARD(30)
 int pthread_rwlock_clockwrlock(pthread_rwlock_t* _Nonnull __rwlock, clockid_t __clock,
                                const struct timespec* _Nullable __timeout) __INTRODUCED_IN(30);
-#endif /* __BIONIC_AVAILABILITY_GUARD(30) */
+#endif
 
 int pthread_rwlock_destroy(pthread_rwlock_t* _Nonnull __rwlock);
 int pthread_rwlock_init(pthread_rwlock_t* _Nonnull __rwlock, const pthread_rwlockattr_t* _Nullable __attr);
 int pthread_rwlock_rdlock(pthread_rwlock_t* _Nonnull __rwlock);
 int pthread_rwlock_timedrdlock(pthread_rwlock_t* _Nonnull __rwlock, const struct timespec* _Nullable __timeout);
-/* See the comment on pthread_mutex_timedlock_monotonic_np for usage of this function. */
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
+/** See the comment on pthread_mutex_timedlock_monotonic_np for usage of this function. */
 int pthread_rwlock_timedrdlock_monotonic_np(pthread_rwlock_t* _Nonnull __rwlock,
                                             const struct timespec* _Nullable __timeout) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int pthread_rwlock_timedwrlock(pthread_rwlock_t* _Nonnull __rwlock, const struct timespec* _Nullable __timeout);
-/* See the comment on pthread_mutex_timedlock_monotonic_np for usage of this function. */
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
+/** See the comment on pthread_mutex_timedlock_monotonic_np for usage of this function. */
 int pthread_rwlock_timedwrlock_monotonic_np(pthread_rwlock_t* _Nonnull __rwlock,
                                             const struct timespec* _Nullable __timeout) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 int pthread_rwlock_tryrdlock(pthread_rwlock_t* _Nonnull __rwlock);
 int pthread_rwlock_trywrlock(pthread_rwlock_t* _Nonnull __rwlock);
 int pthread_rwlock_unlock(pthread_rwlock_t* _Nonnull __rwlock);
 int pthread_rwlock_wrlock(pthread_rwlock_t* _Nonnull __rwlock);
 
-
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int pthread_barrierattr_init(pthread_barrierattr_t* _Nonnull __attr) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int pthread_barrierattr_destroy(pthread_barrierattr_t* _Nonnull __attr) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int pthread_barrierattr_getpshared(const pthread_barrierattr_t* _Nonnull __attr, int* _Nonnull __shared) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int pthread_barrierattr_setpshared(pthread_barrierattr_t* _Nonnull __attr, int __shared) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int pthread_barrier_init(pthread_barrier_t* _Nonnull __barrier, const pthread_barrierattr_t* _Nullable __attr, unsigned __count) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int pthread_barrier_destroy(pthread_barrier_t* _Nonnull __barrier) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int pthread_barrier_wait(pthread_barrier_t* _Nonnull __barrier) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int pthread_spin_destroy(pthread_spinlock_t* _Nonnull __spinlock) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int pthread_spin_init(pthread_spinlock_t* _Nonnull __spinlock, int __shared) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int pthread_spin_lock(pthread_spinlock_t* _Nonnull __spinlock) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int pthread_spin_trylock(pthread_spinlock_t* _Nonnull __spinlock) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int pthread_spin_unlock(pthread_spinlock_t* _Nonnull __spinlock) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
-
+#endif
 
 pthread_t pthread_self(void) __attribute_const__;
 
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(26)
 /**
  * [pthread_getname_np(3)](https://man7.org/linux/man-pages/man3/pthread_getname_np.3.html)
  * gets the name of the given thread.
@@ -366,7 +370,6 @@ pthread_t pthread_self(void) __attribute_const__;
  *
  * Available since API level 26 when compiling with `_GNU_SOURCE`.
  */
-#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(26)
 int pthread_getname_np(pthread_t __pthread, char* _Nonnull __buf, size_t __n) __INTRODUCED_IN(26);
 #endif
 
@@ -384,6 +387,7 @@ int pthread_getname_np(pthread_t __pthread, char* _Nonnull __buf, size_t __n) __
  */
 int pthread_setname_np(pthread_t __pthread, const char* _Nonnull __name);
 
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(36)
 /**
  * [pthread_getaffinity_np(3)](https://man7.org/linux/man-pages/man3/pthread_getaffinity_np.3.html)
  * gets the CPU affinity mask for the given thread.
@@ -393,10 +397,10 @@ int pthread_setname_np(pthread_t __pthread, const char* _Nonnull __name);
  * Available since API level 36 when compiling with `_GNU_SOURCE`.
  * See sched_getaffinity() and pthread_gettid_np() for greater portability.
  */
-#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(36)
 int pthread_getaffinity_np(pthread_t __pthread, size_t __cpu_set_size, cpu_set_t* __cpu_set) __INTRODUCED_IN(36);
 #endif
 
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(36)
 /**
  * [pthread_setaffinity_np(3)](https://man7.org/linux/man-pages/man3/pthread_setaffinity_np.3.html)
  * sets the CPU affinity mask for the given thread.
@@ -406,7 +410,6 @@ int pthread_getaffinity_np(pthread_t __pthread, size_t __cpu_set_size, cpu_set_t
  * Available since API level 36 when compiling with `_GNU_SOURCE`.
  * See sched_getaffinity() and pthread_gettid_np() for greater portability.
  */
-#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(36)
 int pthread_setaffinity_np(pthread_t __pthread, size_t __cpu_set_size, const cpu_set_t* __cpu_set) __INTRODUCED_IN(36);
 #endif
 
@@ -447,7 +450,7 @@ int pthread_getschedparam(pthread_t __pthread, int* _Nonnull __policy, struct sc
 
 #if __BIONIC_AVAILABILITY_GUARD(28)
 int pthread_setschedprio(pthread_t __pthread, int __priority) __INTRODUCED_IN(28);
-#endif /* __BIONIC_AVAILABILITY_GUARD(28) */
+#endif
 
 typedef void (* _Nullable __pthread_cleanup_func_t)(void* _Nullable);
 

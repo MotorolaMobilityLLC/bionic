@@ -42,6 +42,7 @@ __BEGIN_DECLS
 /** Return value for mmap(). */
 #define MAP_FAILED __BIONIC_CAST(reinterpret_cast, void*, -1)
 
+#if defined(__USE_FILE_OFFSET64)
 /**
  * [mmap(2)](https://man7.org/linux/man-pages/man2/mmap.2.html)
  * creates a memory mapping for the given range.
@@ -49,7 +50,6 @@ __BEGIN_DECLS
  * Returns the address of the mapping on success,
  * and returns `MAP_FAILED` and sets `errno` on failure.
  */
-#if defined(__USE_FILE_OFFSET64)
 void* _Nonnull mmap(void* _Nullable __addr, size_t __size, int __prot, int __flags, int __fd, off_t __offset) __RENAME(mmap64);
 #else
 void* _Nonnull mmap(void* _Nullable __addr, size_t __size, int __prot, int __flags, int __fd, off_t __offset);
@@ -119,6 +119,7 @@ int munlockall(void);
  */
 int mlock(const void* _Nonnull __addr, size_t __size);
 
+#if __BIONIC_AVAILABILITY_GUARD(30)
 /**
  * [mlock2(2)](https://man7.org/linux/man-pages/man2/mlock2.2.html)
  * locks pages (preventing swapping), with optional flags.
@@ -127,9 +128,8 @@ int mlock(const void* _Nonnull __addr, size_t __size);
  *
  * Returns 0 on success, and returns -1 and sets `errno` on failure.
  */
-#if __BIONIC_AVAILABILITY_GUARD(30)
 int mlock2(const void* _Nonnull __addr, size_t __size, int __flags) __INTRODUCED_IN(30);
-#endif /* __BIONIC_AVAILABILITY_GUARD(30) */
+#endif
 
 /**
  * [munlock(2)](https://man7.org/linux/man-pages/man2/munlock.2.html)
@@ -155,6 +155,7 @@ int mincore(void* _Nonnull __addr, size_t __size, unsigned char* _Nonnull __vect
  */
 int madvise(void* _Nonnull __addr, size_t __size, int __advice);
 
+#if __BIONIC_AVAILABILITY_GUARD(31)
 /**
  * [process_madvise(2)](https://man7.org/linux/man-pages/man2/process_madvise.2.html)
  * works just like madvise(2) but applies to the process specified by the given
@@ -167,10 +168,10 @@ int madvise(void* _Nonnull __addr, size_t __size, int __advice);
  *
  * Returns the number of bytes advised on success, and returns -1 and sets `errno` on failure.
  */
-#if __BIONIC_AVAILABILITY_GUARD(31)
 ssize_t process_madvise(int __pid_fd, const struct iovec* _Nonnull __iov, size_t __count, int __advice, unsigned __flags) __INTRODUCED_IN(31);
-#endif /* __BIONIC_AVAILABILITY_GUARD(31) */
+#endif
 
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(30)
 /**
  * [memfd_create(2)](https://man7.org/linux/man-pages/man2/memfd_create.2.html)
  * creates an anonymous file.
@@ -179,7 +180,6 @@ ssize_t process_madvise(int __pid_fd, const struct iovec* _Nonnull __iov, size_t
  *
  * Available since API level 30 when compiling with `_GNU_SOURCE`.
  */
-#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(30)
 int memfd_create(const char* _Nonnull __name, unsigned __flags) __INTRODUCED_IN(30);
 #endif
 
@@ -207,6 +207,7 @@ int memfd_create(const char* _Nonnull __name, unsigned __flags) __INTRODUCED_IN(
 
 #endif
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [posix_madvise(3)](https://man7.org/linux/man-pages/man3/posix_madvise.3.html)
  * gives the kernel advice about future usage patterns.
@@ -216,10 +217,10 @@ int memfd_create(const char* _Nonnull __name, unsigned __flags) __INTRODUCED_IN(
  *
  * Returns 0 on success, and returns a positive error number on failure.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 int posix_madvise(void* _Nonnull __addr, size_t __size, int __advice) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(36)
 /**
  * [mseal(2)](https://man7.org/linux/man-pages/man2/mseal.2.html)
  * seals the given range to prevent modifications such as mprotect() calls.
@@ -230,8 +231,7 @@ int posix_madvise(void* _Nonnull __addr, size_t __size, int __advice) __INTRODUC
  *
  * Returns 0 on success, and returns -1 and sets `errno` on failure.
  */
-#if __BIONIC_AVAILABILITY_GUARD(36)
 int mseal(void* _Nonnull __addr, size_t __size, unsigned long __flags) __INTRODUCED_IN(36);
-#endif /* __BIONIC_AVAILABILITY_GUARD(36) */
+#endif
 
 __END_DECLS

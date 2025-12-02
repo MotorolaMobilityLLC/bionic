@@ -143,6 +143,7 @@ int closedir(DIR* _Nonnull __dir);
  */
 void rewinddir(DIR* _Nonnull __dir);
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [seekdir(3)](https://man7.org/linux/man-pages/man3/seekdir.3.html)
  * seeks a directory stream to the given entry, which must be a value returned
@@ -150,10 +151,10 @@ void rewinddir(DIR* _Nonnull __dir);
  *
  * Available since API level 23.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 void seekdir(DIR* _Nonnull __dir, long __location) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [telldir(3)](https://man7.org/linux/man-pages/man3/telldir.3.html)
  * returns a value representing the current position in the directory
@@ -163,10 +164,8 @@ void seekdir(DIR* _Nonnull __dir, long __location) __INTRODUCED_IN(23);
  *
  * Available since API level 23.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 long telldir(DIR* _Nonnull __dir) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
-
+#endif
 
 /**
  * [dirfd(3)](https://man7.org/linux/man-pages/man3/dirfd.3.html)
@@ -212,6 +211,7 @@ int scandir(const char* _Nonnull __path, struct dirent* _Nonnull * _Nonnull * _N
  */
 int scandir64(const char* _Nonnull __path, struct dirent64* _Nonnull * _Nonnull * _Nonnull __name_list, int (* _Nullable __filter)(const struct dirent64* _Nonnull), int (* _Nullable __comparator)(const struct dirent64* _Nonnull * _Nonnull, const struct dirent64* _Nonnull * _Nonnull));
 
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(24)
 /**
  * [scandirat64(3)](https://man7.org/linux/man-pages/man3/scandirat.3.html)
  * scans all the directory referenced by the pair of `__dir_fd` and `__path`,
@@ -225,10 +225,10 @@ int scandir64(const char* _Nonnull __path, struct dirent64* _Nonnull * _Nonnull 
  *
  * Available since API level 24 when compiling with `_GNU_SOURCE`.
  */
-#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(24)
 int scandirat64(int __dir_fd, const char* _Nonnull __path, struct dirent64* _Nonnull * _Nonnull * _Nonnull __name_list, int (* _Nullable __filter)(const struct dirent64* _Nonnull), int (* _Nullable __comparator)(const struct dirent64* _Nonnull * _Nonnull, const struct dirent64* _Nonnull * _Nonnull)) __INTRODUCED_IN(24);
 #endif
 
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(24)
 /**
  * [scandirat(3)](https://man7.org/linux/man-pages/man3/scandirat.3.html)
  * scans all the directory referenced by the pair of `__dir_fd` and `__path`,
@@ -242,7 +242,6 @@ int scandirat64(int __dir_fd, const char* _Nonnull __path, struct dirent64* _Non
  *
  * Available since API level 24 when compiling with `_GNU_SOURCE`.
  */
-#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(24)
 int scandirat(int __dir_fd, const char* _Nonnull __path, struct dirent* _Nonnull * _Nonnull * _Nonnull __name_list, int (* _Nullable __filter)(const struct dirent* _Nonnull), int (* _Nullable __comparator)(const struct dirent* _Nonnull * _Nonnull, const struct dirent* _Nonnull * _Nonnull)) __INTRODUCED_IN(24);
 #endif
 
