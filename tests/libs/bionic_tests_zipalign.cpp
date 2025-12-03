@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
 
   FILE* zip_dst = fopen(argv[3], "we");
   if (zip_dst == nullptr) {
-    fprintf(stderr, "Unable to create '%s': %s\n", argv[3], strerror(errno));
+    fprintf(stderr, "Unable to create '%s': %m\n", argv[3]);
     return 1;
   }
 

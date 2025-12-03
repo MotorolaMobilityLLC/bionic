@@ -52,8 +52,7 @@ void BM_spawn_test(benchmark::State& state, const char* const* argv) {
     const pid_t wait_result = TEMP_FAILURE_RETRY(waitpid(child, &wstatus, 0));
     if (wait_result != child) {
       state.SkipWithError(android::base::StringPrintf(
-          "waitpid on pid %d for %s failed: %s",
-          static_cast<int>(child), argv[0], strerror(errno)).c_str());
+          "waitpid on pid %d for %s failed: %m", static_cast<int>(child), argv[0]).c_str());
       break;
     }
     if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) == 127) {

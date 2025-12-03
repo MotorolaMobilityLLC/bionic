@@ -107,7 +107,7 @@ bool PointerData::Initialize(const Config& config) NO_THREAD_SAFETY_ANALYSIS {
     enable_act.sa_sigaction = ToggleBacktraceEnable;
     enable_act.sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK;
     if (sigaction64(config.backtrace_signal(), &enable_act, nullptr) != 0) {
-      error_log("Unable to set up backtrace signal enable function: %s", strerror(errno));
+      error_log("Unable to set up backtrace signal enable function: %m");
       return false;
     }
     if (config.options() & VERBOSE) {
@@ -121,7 +121,7 @@ bool PointerData::Initialize(const Config& config) NO_THREAD_SAFETY_ANALYSIS {
     act.sa_sigaction = EnableDump;
     act.sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK;
     if (sigaction64(config.backtrace_dump_signal(), &act, nullptr) != 0) {
-      error_log("Unable to set up backtrace dump signal function: %s", strerror(errno));
+      error_log("Unable to set up backtrace dump signal function: %m");
       return false;
     }
     if (config.options() & VERBOSE) {

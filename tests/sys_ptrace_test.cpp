@@ -438,7 +438,7 @@ class PtraceResumptionTest : public ::testing::Test {
     int result;
     pid_t rc = TEMP_FAILURE_RETRY(waitpid(tracer, &result, 0));
     if (rc != tracer) {
-      printf("waitpid returned %d (%s)\n", rc, strerror(errno));
+      fprintf(stderr, "waitpid returned %d: %m\n", rc);
       return false;
     }
 
@@ -473,7 +473,7 @@ class PtraceResumptionTest : public ::testing::Test {
 
     rc = TEMP_FAILURE_RETRY(waitpid(worker, &result, 0));
     if (rc != worker) {
-      printf("waitpid for worker returned %d (%s)\n", rc, strerror(errno));
+      fprintf(stderr, "waitpid for worker returned %d: %m\n", rc);
       return false;
     }
 

@@ -67,7 +67,7 @@ bool Unreachable::Initialize(const Config& config) {
   unreachable_act.sa_sigaction = EnableUnreachableCheck;
   unreachable_act.sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK;
   if (sigaction64(config.check_unreachable_signal(), &unreachable_act, nullptr) != 0) {
-    error_log("Unable to set up check unreachable signal function: %s", strerror(errno));
+    error_log("Unable to set up check unreachable signal function: %m");
     return false;
   }
 

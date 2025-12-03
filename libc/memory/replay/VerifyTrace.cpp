@@ -47,7 +47,7 @@ static bool WriteRepairEntries(const std::string& repair_file, memory_trace::Ent
                                size_t num_entries) {
   int fd = open(repair_file.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0644);
   if (fd == -1) {
-    printf("  Failed to create repair file %s: %s\n", repair_file.c_str(), strerror(errno));
+    printf("  Failed to create repair file %s: %m\n", repair_file.c_str());
     return false;
   }
   bool valid = true;
