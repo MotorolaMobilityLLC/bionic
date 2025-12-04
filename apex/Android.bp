@@ -5,7 +5,6 @@
 
 package {
     default_applicable_licenses: ["bionic_apex_license"],
-    default_team: "trendy_team_native_tools_libraries",
 }
 
 license {
