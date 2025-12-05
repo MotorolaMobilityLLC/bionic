@@ -68,6 +68,8 @@ TEST(threads, call_once) {
 #if !defined(HAVE_THREADS_H)
   GTEST_SKIP() << "<threads.h> unavailable";
 #else
+  static_assert(ONCE_FLAG_INIT == PTHREAD_ONCE_INIT);
+
   once_flag flag = ONCE_FLAG_INIT;
   call_once(&flag, increment_call_count);
   call_once(&flag, increment_call_count);

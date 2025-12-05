@@ -35,7 +35,7 @@
 
 #include <sys/cdefs.h>
 
-#include <pthread.h>
+#include <bits/pthread_types.h>
 
 __BEGIN_DECLS
 

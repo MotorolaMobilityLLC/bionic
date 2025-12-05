@@ -78,6 +78,7 @@ typedef struct {
 typedef long pthread_mutexattr_t;
 
 typedef int pthread_once_t;
+#define PTHREAD_ONCE_INIT 0
 
 typedef struct {
 #if defined(__LP64__)

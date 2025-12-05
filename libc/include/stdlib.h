@@ -37,6 +37,12 @@
 #include <stddef.h>
 #include <xlocale.h>
 
+#if !defined(__cplusplus)
+// C23 has call_once() in <stdlib.h> as well as <threads.h>,
+// but that conflicts with C++'s std::call_once() in <mutex>.
+#include <bits/call_once.h>
+#endif
+
 __BEGIN_DECLS
 
 #define EXIT_FAILURE 1
