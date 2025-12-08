@@ -125,6 +125,16 @@ PSIMD_FLATTEN static size_t strlen_vectorized(const typename Traits::CharType* s
     return {};
   };
 
+  // Of course, we can only work in batches if it's safe to read more than one
+  // vector at a time.
+  if (!kReadAheadToPageBoundaryIsOK) {
+    while (true) {
+      if (const optional<size_t> x = check_ptr_and_inc()) {
+        return *x;
+      }
+    }
+  }
+
   // Here, we have a trade-off to make: "how many very simple checks do we want
   // to do before hitting the loop that's really fast for long strings?"
   //
@@ -242,5 +252,7 @@ PSIMD_LIBC_FUNCTION(size_t, wcslen, const wchar_t* s) {
 
 #if defined(__x86_64__)
 PSIMD_MAYBE_STRONG_ALIAS(strlen);
+PSIMD_MAYBE_STRONG_ALIAS(wcslen);
+#elif defined(__aarch64__)
 PSIMD_MAYBE_STRONG_ALIAS(wcslen);
 #endif

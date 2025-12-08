@@ -31,6 +31,14 @@
 #include <stddef.h>
 
 extern "C" {
+
+// arm64
+size_t portable_simd_wcslen_neon(const wchar_t*);
+size_t portable_simd_wcslen_neon_mte(const wchar_t*);
+wchar_t* portable_simd_wmemchr_neon(const wchar_t*, wchar_t, size_t);
+wchar_t* portable_simd_wmemchr_neon_mte(const wchar_t*, wchar_t, size_t);
+
+// x86_64
 void* portable_simd_memchr_sse(const void*, int, size_t);
 void* portable_simd_memchr_avx2(const void*, int, size_t);
 void* portable_simd_memrchr_sse(const void*, int, size_t);

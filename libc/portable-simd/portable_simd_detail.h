@@ -34,7 +34,14 @@
 
 #include <async_safe/CHECK.h>
 
-// TODO(b/452714218): 'Portable' really should mean more than 'AVX2 and SSE'.
+// Clang's HWASAN implementation adds additional runtime checks for catching
+// even single-byte overruns. If we can't safely overread by even a single byte,
+// psimd is pointless, so require no hwasan. This isn't a concern with
+// handwritten assembly (e.g., from arm-optimized-routines) because the assembler
+// won't add bounds-check instructions, only the compiler.
+#if __has_feature(hwaddress_sanitizer)
+#error "hwasan is too strict for psimd; please disable it."
+#endif
 
 // Users are expected to `#define` the level of vectorization they want to emit
 // a declaration for (e.g., AVX2, SSE).
@@ -54,8 +61,18 @@
 // SSE4.
 #define HWY_DISABLE_PCLMUL_AES 1
 #define HWY_BASELINE_TARGETS HWY_SSE4
+#elif PSIMD_TARGET_NEON
+// Note that AES isn't guaranteed in the baseline ARM64 ABI (practically,
+// `aarch64-linux-android10000` builds will break if `HWY_NEON` is used).
+// It shouldn't matter for things like `wcslen`, anyway.
+#define HWY_BASELINE_TARGETS HWY_NEON_WITHOUT_AES
+#ifdef PSIMD_MTE_ENABLED
+#define PSIMD_EXPORT_SUFFIX _neon_mte
 #else
-#error "unknown PSIMD_TARGET - want SSE or AVX2"
+#define PSIMD_EXPORT_SUFFIX _neon
+#endif
+#else
+#error "unknown PSIMD_TARGET - want SSE, NEON, or AVX2"
 #endif
 
 // Highway config.
@@ -211,8 +228,21 @@ template <typename T, typename... Ts>
 using invoke_result_t = decltype(declval<T>()(declval<Ts>()...));
 }  // namespace
 
+// Set to false on builds with strict memory operation tagging, e.g., MTE.
+constexpr static bool kReadAheadToPageBoundaryIsOK =
+#if defined(PSIMD_MTE_ENABLED)
+    false
+#else
+    true
+#endif
+    ;
+
 template <typename VectorTag>
 PSIMD_FLATTEN bool can_safely_unaligned_read(const void* ptr) {
+  if (!kReadAheadToPageBoundaryIsOK) {
+    return false;
+  }
+
   constexpr VectorTag d;
   constexpr size_t max_offset_for_safe_read = kPageSize - d.MaxBytes();
   const uintptr_t offset_in_page = reinterpret_cast<uintptr_t>(ptr) & (kPageSize - 1);
