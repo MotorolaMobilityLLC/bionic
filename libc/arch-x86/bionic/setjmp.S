@@ -66,7 +66,7 @@
 
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(setjmp)
   mov $1,%eax
-  jmp .L_sigsetjmp
+  jmp L(_sigsetjmp)
 END(setjmp)
 
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(_setjmp)

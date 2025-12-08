@@ -105,7 +105,7 @@ void RecordData::WriteEntries(const std::string& file) {
 
   int dump_fd = open(file.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0755);
   if (dump_fd == -1) {
-    error_log("Cannot create record alloc file %s: %s", file.c_str(), strerror(errno));
+    error_log("Cannot create record alloc file %s: %m", file.c_str());
     return;
   }
 
@@ -116,7 +116,7 @@ void RecordData::WriteEntries(const std::string& file) {
       continue;
     }
     if (!memory_trace::WriteEntryToFd(dump_fd, entries_[i])) {
-      error_log("Failed to write record alloc information: %s", strerror(errno));
+      error_log("Failed to write record alloc information: %m");
       break;
     }
   }
@@ -136,7 +136,7 @@ bool RecordData::Initialize(const Config& config) {
   dump_act.sa_sigaction = RecordData::WriteData;
   dump_act.sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK;
   if (sigaction64(config.record_allocs_signal(), &dump_act, nullptr) != 0) {
-    error_log("Unable to set up record dump signal function: %s", strerror(errno));
+    error_log("Unable to set up record dump signal function: %m");
     return false;
   }
   pthread_setspecific(key_, nullptr);
@@ -208,7 +208,7 @@ int64_t RecordData::GetPresentBytes(void* ptr, size_t alloc_size) {
     }
 
     if (mincore(reinterpret_cast<void*>(cur_addr), length, present) == -1) {
-      error_log("mincore failed: %s", strerror(errno));
+      error_log("mincore failed: %m");
       break;
     }
 

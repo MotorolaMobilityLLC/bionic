@@ -47,24 +47,24 @@ __BEGIN_DECLS
 
 typedef unsigned long shmatt_t;
 
-/** Not useful on Android; disallowed by SELinux. */
 #if __BIONIC_AVAILABILITY_GUARD(26)
+/** Not useful on Android; disallowed by SELinux. */
 void* _Nonnull shmat(int __shm_id, const void* _Nullable __addr, int __flags) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
-/** Not useful on Android; disallowed by SELinux. */
 #if __BIONIC_AVAILABILITY_GUARD(26)
+/** Not useful on Android; disallowed by SELinux. */
 int shmctl(int __shm_id, int __op, struct shmid_ds* _Nullable __buf) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
-/** Not useful on Android; disallowed by SELinux. */
 #if __BIONIC_AVAILABILITY_GUARD(26)
+/** Not useful on Android; disallowed by SELinux. */
 int shmdt(const void* _Nonnull __addr) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
-/** Not useful on Android; disallowed by SELinux. */
 #if __BIONIC_AVAILABILITY_GUARD(26)
+/** Not useful on Android; disallowed by SELinux. */
 int shmget(key_t __key, size_t __size, int __flags) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 __END_DECLS

@@ -91,7 +91,7 @@ class WriteProtected {
     addr = untag_address(addr);
 #endif
     if (mprotect(reinterpret_cast<void*>(addr), max_android_page_size(), prot) == -1) {
-      async_safe_fatal("WriteProtected mprotect %x failed: %s", prot, strerror(errno));
+      async_safe_fatal("WriteProtected mprotect %x failed: %m", prot);
     }
   }
 };

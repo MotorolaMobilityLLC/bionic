@@ -249,7 +249,7 @@ const char* ElfReader::get_string(ElfW(Word) index) const {
 bool ElfReader::ReadElfHeader() {
   ssize_t rc = TEMP_FAILURE_RETRY(pread64(fd_, &header_, sizeof(header_), file_offset_));
   if (rc < 0) {
-    DL_ERR("can't read file \"%s\": %s", name_.c_str(), strerror(errno));
+    DL_ERR("can't read file \"%s\": %m", name_.c_str());
     return false;
   }
 

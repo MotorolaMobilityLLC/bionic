@@ -54,23 +54,23 @@ struct group* _Nullable getgrnam(const char* _Nonnull __name);
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 struct group* _Nullable getgrent(void) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 void setgrent(void) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(26)
 void endgrent(void) __INTRODUCED_IN(26);
-#endif /* __BIONIC_AVAILABILITY_GUARD(26) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int getgrgid_r(gid_t __gid, struct group* __BIONIC_COMPLICATED_NULLNESS __group, char* _Nonnull __buf, size_t __n, struct group* _Nullable * _Nonnull __result) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 
 #if __BIONIC_AVAILABILITY_GUARD(24)
 int getgrnam_r(const char* _Nonnull __name, struct group* __BIONIC_COMPLICATED_NULLNESS __group, char* _Nonnull __buf, size_t __n, struct group* _Nullable *_Nonnull __result) __INTRODUCED_IN(24);
-#endif /* __BIONIC_AVAILABILITY_GUARD(24) */
+#endif
 
 int getgrouplist(const char* _Nonnull __user, gid_t __group, gid_t* __BIONIC_COMPLICATED_NULLNESS __groups, int* _Nonnull __group_count);
 int initgroups(const char* _Nonnull __user, gid_t __group);

@@ -54,6 +54,7 @@ int futimes(int __fd, const struct timeval __times[_Nullable 2]) __INTRODUCED_IN
 int lutimes(const char* _Nonnull __path, const struct timeval __times[_Nullable 2]) __INTRODUCED_IN(26);
 #endif
 
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(26)
 /**
  * [futimesat(2)](https://man7.org/linux/man-pages/man2/futimesat.2.html) sets
  * file timestamps.
@@ -67,7 +68,6 @@ int lutimes(const char* _Nonnull __path, const struct timeval __times[_Nullable 
  *
  * Available since API level 26 when compiling with `_GNU_SOURCE`.
  */
-#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(26)
 int futimesat(int __dir_fd, const char* __BIONIC_COMPLICATED_NULLNESS __path, const struct timeval __times[_Nullable 2]) __INTRODUCED_IN(26);
 #endif
 

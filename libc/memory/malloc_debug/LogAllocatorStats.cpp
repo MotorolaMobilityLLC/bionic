@@ -64,7 +64,7 @@ bool Initialize(const Config& config) {
   log_stats_act.sa_sigaction = CallMalloptLogStats;
   log_stats_act.sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK;
   if (sigaction64(config.log_allocator_stats_signal(), &log_stats_act, nullptr) != 0) {
-    error_log("Unable to set up log allocator stats signal function: %s", strerror(errno));
+    error_log("Unable to set up log allocator stats signal function: %m");
     return false;
   }
 

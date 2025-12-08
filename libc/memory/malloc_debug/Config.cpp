@@ -227,7 +227,7 @@ bool Config::ParseValue(const std::string& option, const std::string& value, siz
   char* end;
   long long_value = strtol(value.c_str(), &end, 10);
   if (errno != 0) {
-    error_log("%s: bad value for option '%s': %s", getprogname(), option.c_str(), strerror(errno));
+    error_log("%s: bad value for option '%s': %m", getprogname(), option.c_str());
     return false;
   }
   if (end == value.c_str()) {

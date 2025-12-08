@@ -124,33 +124,33 @@ struct stat64 { __STAT64_BODY };
 #define st_mtime_nsec st_mtim.tv_nsec
 #define st_ctime_nsec st_ctim.tv_nsec
 
-/** BSD macro corresponding to `a+rwx`, useful as a mask of just the permission bits. */
 #if defined(__USE_BSD)
+/** BSD macro corresponding to `a+rwx`, useful as a mask of just the permission bits. */
 #define ACCESSPERMS (S_IRWXU | S_IRWXG | S_IRWXO) /* 0777 */
 #endif
 
-/** BSD macro useful as a mask of the permission bits and setuid/setgid/sticky bits. */
 #if defined(__USE_BSD)
+/** BSD macro useful as a mask of the permission bits and setuid/setgid/sticky bits. */
 #define ALLPERMS    (S_ISUID | S_ISGID | S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO) /* 07777 */
 #endif
 
-/** BSD macro corresponding to `a+rw`, useful as a default. */
 #if defined(__USE_BSD)
+/** BSD macro corresponding to `a+rw`, useful as a default. */
 #define DEFFILEMODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) /* 0666 */
 #endif
 
-/** BSD/GNU synonym for S_IRUSR. */
 #if defined(__USE_BSD) || defined(__USE_GNU)
+/** BSD/GNU synonym for S_IRUSR. */
 #define S_IREAD S_IRUSR
 #endif
 
-/** BSD/GNU synonym for S_IWUSR. */
 #if defined(__USE_BSD) || defined(__USE_GNU)
+/** BSD/GNU synonym for S_IWUSR. */
 #define S_IWRITE S_IWUSR
 #endif
 
-/** BSD/GNU synonym for S_IXUSR. */
 #if defined(__USE_BSD) || defined(__USE_GNU)
+/** BSD/GNU synonym for S_IXUSR. */
 #define S_IEXEC S_IXUSR
 #endif
 
@@ -184,6 +184,7 @@ int fchmod(int __fd, mode_t __mode);
  */
 int fchmodat(int __dir_fd, const char* _Nonnull __path, mode_t __mode, int __flags);
 
+#if __BIONIC_AVAILABILITY_GUARD(36)
 /**
  * [chmod(2)](https://man7.org/linux/man-pages/man2/chmod.2.html)
  * changes the mode of a file given a path, without following symlinks.
@@ -194,9 +195,8 @@ int fchmodat(int __dir_fd, const char* _Nonnull __path, mode_t __mode, int __fla
  *
  * Returns 0 on success and returns -1 and sets `errno` on failure.
  */
-#if __BIONIC_AVAILABILITY_GUARD(36)
 int lchmod(const char* _Nonnull __path, mode_t __mode) __INTRODUCED_IN(36);
-#endif /* __BIONIC_AVAILABILITY_GUARD(36) */
+#endif
 
 /**
  * [mkdir(2)](https://man7.org/linux/man-pages/man2/mkdir.2.html)
@@ -294,16 +294,15 @@ mode_t umask(mode_t __mask);
  */
 int mkfifo(const char* _Nonnull __path, mode_t __mode);
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [mkfifoat(2)](https://man7.org/linux/man-pages/man2/mkfifoat.2.html)
  * creates a FIFO.
  *
  * Returns 0 on success and returns -1 and sets `errno` on failure.
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 int mkfifoat(int __dir_fd, const char* _Nonnull __path, mode_t __mode) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
-
+#endif
 
 /**
  * Used in the tv_nsec field of an argument to utimensat()/futimens()
@@ -345,6 +344,7 @@ int utimensat(int __dir_fd, const char* __BIONIC_COMPLICATED_NULLNESS __path, co
  */
 int futimens(int __fd, const struct timespec __times[_Nullable 2]);
 
+#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(30)
 /**
  * [statx(2)](https://man7.org/linux/man-pages/man2/statx.2.html) returns
  * extended file status information.
@@ -353,7 +353,6 @@ int futimens(int __fd, const struct timespec __times[_Nullable 2]);
  *
  * Available since API level 30 when compiling with `_GNU_SOURCE`.
  */
-#if defined(__USE_GNU) && __BIONIC_AVAILABILITY_GUARD(30)
 int statx(int __dir_fd, const char* _Nullable __path, int __flags, unsigned __mask, struct statx* _Nonnull __buf) __INTRODUCED_IN(30);
 #endif
 

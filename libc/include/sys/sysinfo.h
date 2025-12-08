@@ -45,6 +45,7 @@ __BEGIN_DECLS
  */
 int sysinfo(struct sysinfo* _Nonnull __info);
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [get_nprocs_conf(3)](https://man7.org/linux/man-pages/man3/get_nprocs_conf.3.html) returns
  * the total number of processors in the system.
@@ -53,10 +54,10 @@ int sysinfo(struct sysinfo* _Nonnull __info);
  *
  * See also sysconf().
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 int get_nprocs_conf(void) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [get_nprocs(3)](https://man7.org/linux/man-pages/man3/get_nprocs.3.html) returns
  * the number of processors in the system that are currently on-line.
@@ -65,10 +66,10 @@ int get_nprocs_conf(void) __INTRODUCED_IN(23);
  *
  * See also sysconf().
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 int get_nprocs(void) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [get_phys_pages(3)](https://man7.org/linux/man-pages/man3/get_phys_pages.3.html) returns
  * the total number of physical pages in the system.
@@ -77,10 +78,10 @@ int get_nprocs(void) __INTRODUCED_IN(23);
  *
  * See also sysconf().
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 long get_phys_pages(void) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
+#if __BIONIC_AVAILABILITY_GUARD(23)
 /**
  * [get_avphys_pages(3)](https://man7.org/linux/man-pages/man3/get_avphys_pages.3.html) returns
  * the number of physical pages in the system that are currently available.
@@ -89,8 +90,7 @@ long get_phys_pages(void) __INTRODUCED_IN(23);
  *
  * See also sysconf().
  */
-#if __BIONIC_AVAILABILITY_GUARD(23)
 long get_avphys_pages(void) __INTRODUCED_IN(23);
-#endif /* __BIONIC_AVAILABILITY_GUARD(23) */
+#endif
 
 __END_DECLS
