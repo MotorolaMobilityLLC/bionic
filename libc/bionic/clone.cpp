@@ -27,6 +27,9 @@
  */
 
 #define _GNU_SOURCE 1
+#if defined(__aarch64__)
+#include <arm_sme.h>
+#endif
 #include <sched.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -96,6 +99,15 @@ int clone(int (*fn)(void*), void* child_stack, int flags, void* arg, ...) {
   if (!(flags & (CLONE_VM|CLONE_VFORK))) {
     self->tid = -1;
   }
+
+#if defined(__aarch64__)
+  // AAPCS64 defines SME ZA interface as private for clone(), which means that ZA state on entry
+  // can be "dormant" or "off", while on return it can be unchanged or "off".
+  // https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst#za-interfaces
+  // Handling the dormant state would make the code unnecessary complex, so for simplicity turn
+  // ZA state off on entry which ensures that the state on return will be "off" as well.
+  __arm_za_disable();
+#endif
 
   // Actually do the clone.
   int clone_result;

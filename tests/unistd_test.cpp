@@ -1755,49 +1755,151 @@ TEST(UNISTD_TEST, copy_file_range) {
 
 #if defined(__aarch64__)
 
-static bool expect_sme_off_after_fork{true};
+static bool use_vfork{false};
 
 static void fork_process() {
-  const pid_t pid = fork();
+  pid_t pid;
+  if (use_vfork) {
+    pid = vfork();
+  } else {
+    pid = fork();
+  }
   ASSERT_NE(-1, pid);
 
   if (pid == 0) {
-    if (expect_sme_off_after_fork) {
-      EXPECT_FALSE(sme_is_za_on());
-      EXPECT_EQ(sme_tpidr2_el0(), 0UL);
-    } else {
-      EXPECT_TRUE(sme_is_za_on());
-      EXPECT_NE(sme_tpidr2_el0(), 0UL);
-    }
-
-    exit(::testing::Test::HasFailure() ? 1 : 0);
-  } else {
-    int status;
-    ASSERT_EQ(pid, waitpid(pid, &status, 0));
-    ASSERT_TRUE(WIFEXITED(status));
-    ASSERT_EQ(0, WEXITSTATUS(status));
+    EXPECT_FALSE(sme_is_za_on());
+    EXPECT_EQ(sme_tpidr2_el0(), 0UL);
+    _exit(::testing::Test::HasFailure() ? 1 : 0);
   }
+  AssertChildExited(pid, 0);
+  EXPECT_FALSE(sme_is_za_on());
+  EXPECT_EQ(sme_tpidr2_el0(), 0UL);
 }
 
-TEST(UNISTD_TEST, fork_with_sme_off) {
+static void clone_process() {
+  int pid = clone(nullptr, nullptr, CLONE_CHILD_SETTID | SIGCHLD, nullptr);
+  EXPECT_NE(-1, pid);
+  if (pid == 0) {
+    EXPECT_FALSE(sme_is_za_on());
+    EXPECT_EQ(0UL, sme_tpidr2_el0());
+    _exit(::testing::Test::HasFailure() ? 1 : 0);
+  }
+  AssertChildExited(pid, 0);
+  EXPECT_FALSE(sme_is_za_on());
+  EXPECT_EQ(0UL, sme_tpidr2_el0());
+}
+
+TEST(UNISTD_TEST, fork_with_sme_za_active) {
   if (!sme_is_enabled()) {
     GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
   }
 
   __arm_za_disable();
-  expect_sme_off_after_fork = true;
+  uint64_t svl = sme_get_svl();
+  uint8_t za_save_buffer[svl * svl] __attribute__((aligned(16)));
+  sme_enable_za_active_state(za_save_buffer, svl);
+
+  EXPECT_TRUE(sme_is_za_on());
+  EXPECT_TRUE(sme_tpidr2_el0() == 0);
+  use_vfork = false;
   fork_process();
   sme_state_cleanup();
 }
 
-TEST(UNISTD_TEST, fork_with_sme_dormant_state) {
+TEST(UNISTD_TEST, fork_with_sme_za_off) {
   if (!sme_is_enabled()) {
     GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
   }
 
   __arm_za_disable();
-  expect_sme_off_after_fork = false;
+  use_vfork = false;
+  fork_process();
+  sme_state_cleanup();
+}
+
+TEST(UNISTD_TEST, fork_with_sme_za_dormant_state) {
+  if (!sme_is_enabled()) {
+    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
+  }
+
+  __arm_za_disable();
+  use_vfork = false;
   sme_dormant_caller(&fork_process);
+  sme_state_cleanup();
+}
+
+TEST(UNISTD_TEST, vfork_with_sme_za_active) {
+  if (!sme_is_enabled()) {
+    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
+  }
+
+  __arm_za_disable();
+  uint64_t svl = sme_get_svl();
+  uint8_t za_save_buffer[svl * svl] __attribute__((aligned(16)));
+  sme_enable_za_active_state(za_save_buffer, svl);
+
+  EXPECT_TRUE(sme_is_za_on());
+  EXPECT_TRUE(sme_tpidr2_el0() == 0);
+  use_vfork = true;
+  fork_process();
+  sme_state_cleanup();
+}
+
+TEST(UNISTD_TEST, vfork_with_sme_za_off) {
+  if (!sme_is_enabled()) {
+    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
+  }
+
+  __arm_za_disable();
+  use_vfork = true;
+  fork_process();
+  sme_state_cleanup();
+}
+
+TEST(UNISTD_TEST, vfork_with_sme_za_dormant_state) {
+  if (!sme_is_enabled()) {
+    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
+  }
+
+  __arm_za_disable();
+  use_vfork = true;
+  sme_dormant_caller(&fork_process);
+  sme_state_cleanup();
+}
+
+TEST(UNISTD_TEST, clone_with_sme_za_active) {
+  if (!sme_is_enabled()) {
+    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
+  }
+
+  __arm_za_disable();
+  uint64_t svl = sme_get_svl();
+  uint8_t za_save_buffer[svl * svl] __attribute__((aligned(16)));
+  sme_enable_za_active_state(za_save_buffer, svl);
+
+  EXPECT_TRUE(sme_is_za_on());
+  EXPECT_TRUE(sme_tpidr2_el0() == 0);
+  clone_process();
+  sme_state_cleanup();
+}
+
+TEST(UNISTD_TEST, clone_with_sme_za_off) {
+  if (!sme_is_enabled()) {
+    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
+  }
+
+  __arm_za_disable();
+  clone_process();
+  sme_state_cleanup();
+}
+
+TEST(UNISTD_TEST, clone_with_sme_za_dormant_state) {
+  if (!sme_is_enabled()) {
+    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
+  }
+
+  __arm_za_disable();
+  sme_dormant_caller(&clone_process);
   sme_state_cleanup();
 }
 
