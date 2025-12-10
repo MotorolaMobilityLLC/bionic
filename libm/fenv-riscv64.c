@@ -79,7 +79,8 @@ int fegetround(void) {
 }
 
 int fesetround(int round) {
-  if (round < FE_TONEAREST || round > FE_UPWARD) return -1;
+  // 'rm' is three bits, but 7 is "dynamic", and 5/6 are reserved for future use.
+  if (round < FE_TONEAREST || round > FE_TONEARESTFROMZERO) return -1;
   __asm__ __volatile__("fsrm %z0" : : "r"(round));
   return 0;
 }

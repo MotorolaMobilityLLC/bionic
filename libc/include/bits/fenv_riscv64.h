@@ -44,9 +44,10 @@ typedef __uint32_t fexcept_t;
 #define FE_ALL_EXCEPT (FE_DIVBYZERO | FE_INEXACT | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW)
 
 /* Rounding modes. */
-#define FE_TONEAREST  0x0
-#define FE_TOWARDZERO 0x1
-#define FE_DOWNWARD   0x2
-#define FE_UPWARD     0x3
+#define FE_TONEAREST         0x0
+#define FE_TOWARDZERO        0x1
+#define FE_DOWNWARD          0x2
+#define FE_UPWARD            0x3
+#define FE_TONEARESTFROMZERO 0x4
 
 __END_DECLS
