@@ -2369,7 +2369,10 @@ bool do_dlsym(void* handle,
         }
         void* tls_block = get_tls_block_for_this_thread(tls_module, /*should_alloc=*/true);
         *symbol = static_cast<char*>(tls_block) + sym->st_value;
-      } else if (__libc_mte_enabled()) {
+      } else if (type == STT_OBJECT && __libc_mte_enabled()) {
+        // STT_OBJECT types are data objects, such as variables, arrays, etc...
+        // If MTE is enabled, global variables may be tagged, and so we must access them
+        // appropriately.
         *symbol = get_tagged_address(reinterpret_cast<void*>(found->resolve_symbol_address(sym)));
       } else {
         *symbol = reinterpret_cast<void*>(found->resolve_symbol_address(sym));
