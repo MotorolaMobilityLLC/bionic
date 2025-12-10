@@ -24,17 +24,6 @@
 
 #include <android-base/test_utils.h>
 
-static void TestRounding(float expectation1, float expectation2) {
-  // Volatile to prevent compile-time evaluation.
-  volatile float f = 1.968750f;
-  volatile float m = 0x1.0p23f;
-  float x;
-  android::base::DoNotOptimize(x = f + m);
-  ASSERT_FLOAT_EQ(expectation1, x);
-  android::base::DoNotOptimize(x = x - m);
-  ASSERT_EQ(expectation2, x);
-}
-
 static void DivideByZero() {
   // Volatile to prevent compile-time evaluation.
   volatile float zero = 0.0f;
@@ -44,17 +33,39 @@ static void DivideByZero() {
 TEST(fenv, fesetround_fegetround_FE_TONEAREST) {
   fesetround(FE_TONEAREST);
   ASSERT_EQ(FE_TONEAREST, fegetround());
+
   // "To nearest, ties to even".
-  TestRounding(8388610.0f, 2.0f);
+  // 1.5f + 2^-24 = 1.5f           for FE_TONEAREST, FE_DOWNWARD, FE_TOWARDZERO
+  //              = 0x1.100002p0f  for FE_UPWARD
+  // 1.5f - 2^-24 = 1.5f           for FE_TONEAREST, FE_UPWARD
+  //              = 0x1.0ffffep-1f for FE_DOWNWARD, FE_TOWARDZERO
+
+  // Volatile to prevent compile-time evaluation.
+  volatile float x = 0x1.0p-24f;
+  float y, z;
+  android::base::DoNotOptimize(y = 1.5f + x);
+  android::base::DoNotOptimize(z = 1.5f - x);
+  EXPECT_EQ(y, z);
 }
 
 TEST(fenv, fesetround_fegetround_FE_TONEARESTFROMZERO) {
 #if defined(FE_TONEARESTFROMZERO)
   fesetround(FE_TONEARESTFROMZERO);
   ASSERT_EQ(FE_TONEARESTFROMZERO, fegetround());
+
   // "To nearest, ties away from zero".
-  TestRounding(8388610.0f, 2.0f);
-  // TODO: add missing test here and above to distinguish between "to nearest, ties to even" and "to nearest, ties away from zero"
+  //  1.0f + 2^-24 =  0x1.000004p0f for FE_UPWARD, FE_TONEARESTFROMZERO
+  //               =  0x1.000002p0f for FE_DOWNWARD, FE_TOWARDZERO, FE_TONEAREST
+  // -1.0f - 2^-24 = -0x1.000004p0f for FE_DOWNWARD, FE_TONEARESTFROMZERO
+  //               = -0x1.000002p0f for FE_UPWARD, FE_TOWARDZERO, FE_TONEAREST
+
+  // Volatile to prevent compile-time evaluation.
+  volatile float x = 0x1.0p-24f;
+  float y, z;
+  android::base::DoNotOptimize(y = 1.0f + x);
+  android::base::DoNotOptimize(z = -1.0f - x);
+  EXPECT_EQ(y, 0x1.000002p0f);
+  EXPECT_EQ(z, -0x1.000002p0f);
 #else
   GTEST_SKIP() << "no hardware FE_TONEARESTFROMZERO rounding mode";
 #endif
@@ -63,19 +74,50 @@ TEST(fenv, fesetround_fegetround_FE_TONEARESTFROMZERO) {
 TEST(fenv, fesetround_fegetround_FE_TOWARDZERO) {
   fesetround(FE_TOWARDZERO);
   ASSERT_EQ(FE_TOWARDZERO, fegetround());
-  TestRounding(8388609.0f, 1.0f);
+
+  //  1.0f + 2^-23 + 2^-24 = 0x1.000002p0f for FE_DOWNWARD, FE_TOWARDZERO
+  //                       = 0x1.000004p0f for FE_TONEAREST, FE_UPWARD,
+  // -1.0f - 2^-24 = -1.0f          for FE_TONEAREST, FE_UPWARD, FE_TOWARDZERO
+  //               = -0x1.000002p0f for FE_DOWNWARD
+  //
+  // (0x1.000002p0f + 2^-24) + (-1.0f - 2^-24) = 2^-23 for FE_TOWARDZERO
+  //                                           = 2^-22 for FE_TONEAREST, FE_UPWARD
+  //                                           = 0 for FE_DOWNWARD
+
+  // Volatile to prevent compile-time evaluation.
+  volatile float x = 0x1.0p-24f;
+  float y, z;
+  android::base::DoNotOptimize(y = 0x1.000002p0f + x);
+  android::base::DoNotOptimize(z = -1.0f - x);
+  EXPECT_EQ(y + z, 0x1.0p-23f);
 }
 
 TEST(fenv, fesetround_fegetround_FE_UPWARD) {
   fesetround(FE_UPWARD);
   ASSERT_EQ(FE_UPWARD, fegetround());
-  TestRounding(8388610.0f, 2.0f);
+
+  // 1.0f + 2^-25 = 1.0f        for FE_TONEAREST, FE_DOWNWARD, FE_TOWARDZERO
+  //              = 0x1.000002f for FE_UPWARD
+
+  // Volatile to prevent compile-time evaluation.
+  volatile float x = 0x1.0p-25f;
+  float y;
+  android::base::DoNotOptimize(y = x + 1.0f);
+  EXPECT_NE(x, y);
 }
 
 TEST(fenv, fesetround_fegetround_FE_DOWNWARD) {
   fesetround(FE_DOWNWARD);
   ASSERT_EQ(FE_DOWNWARD, fegetround());
-  TestRounding(8388609.0f, 1.0f);
+
+  // -1.0f - 2^-25 = -1.0f        for FE_TONEAREST, FE_UPWARD, FE_TOWARDZERO
+  //               = -0x1.000002f for FE_DOWNWARD
+
+  // Volatile to prevent compile-time evaluation.
+  volatile float x = 0x1.0p-25f;
+  float y;
+  android::base::DoNotOptimize(y = -1.0f - x);
+  EXPECT_NE(y, -1.0f);
 }
 
 TEST(fenv, feclearexcept_fetestexcept) {
