@@ -1755,15 +1755,8 @@ TEST(UNISTD_TEST, copy_file_range) {
 
 #if defined(__aarch64__)
 
-static bool use_vfork{false};
-
-static void fork_process() {
-  pid_t pid;
-  if (use_vfork) {
-    pid = vfork();
-  } else {
-    pid = fork();
-  }
+static void do_fork_process(pid_t (*fork_fn)()) {
+  pid_t pid = fork_fn();
   ASSERT_NE(-1, pid);
 
   if (pid == 0) {
@@ -1775,6 +1768,9 @@ static void fork_process() {
   EXPECT_FALSE(sme_is_za_on());
   EXPECT_EQ(sme_tpidr2_el0(), 0UL);
 }
+
+static void fork_process() { do_fork_process(fork); }
+static void vfork_process() { do_fork_process(vfork); }
 
 static void clone_process() {
   int pid = clone(nullptr, nullptr, CLONE_CHILD_SETTID | SIGCHLD, nullptr);
@@ -1795,13 +1791,12 @@ TEST(UNISTD_TEST, fork_with_sme_za_active) {
   }
 
   __arm_za_disable();
-  uint64_t svl = sme_get_svl();
+  uint16_t svl = sme_get_svl();
   uint8_t za_save_buffer[svl * svl] __attribute__((aligned(16)));
   sme_enable_za_active_state(za_save_buffer, svl);
 
   EXPECT_TRUE(sme_is_za_on());
   EXPECT_TRUE(sme_tpidr2_el0() == 0);
-  use_vfork = false;
   fork_process();
   sme_state_cleanup();
 }
@@ -1812,7 +1807,6 @@ TEST(UNISTD_TEST, fork_with_sme_za_off) {
   }
 
   __arm_za_disable();
-  use_vfork = false;
   fork_process();
   sme_state_cleanup();
 }
@@ -1823,7 +1817,6 @@ TEST(UNISTD_TEST, fork_with_sme_za_dormant_state) {
   }
 
   __arm_za_disable();
-  use_vfork = false;
   sme_dormant_caller(&fork_process);
   sme_state_cleanup();
 }
@@ -1834,14 +1827,13 @@ TEST(UNISTD_TEST, vfork_with_sme_za_active) {
   }
 
   __arm_za_disable();
-  uint64_t svl = sme_get_svl();
+  uint16_t svl = sme_get_svl();
   uint8_t za_save_buffer[svl * svl] __attribute__((aligned(16)));
   sme_enable_za_active_state(za_save_buffer, svl);
 
   EXPECT_TRUE(sme_is_za_on());
   EXPECT_TRUE(sme_tpidr2_el0() == 0);
-  use_vfork = true;
-  fork_process();
+  vfork_process();
   sme_state_cleanup();
 }
 
@@ -1851,8 +1843,7 @@ TEST(UNISTD_TEST, vfork_with_sme_za_off) {
   }
 
   __arm_za_disable();
-  use_vfork = true;
-  fork_process();
+  vfork_process();
   sme_state_cleanup();
 }
 
@@ -1862,8 +1853,7 @@ TEST(UNISTD_TEST, vfork_with_sme_za_dormant_state) {
   }
 
   __arm_za_disable();
-  use_vfork = true;
-  sme_dormant_caller(&fork_process);
+  sme_dormant_caller(&vfork_process);
   sme_state_cleanup();
 }
 
@@ -1873,7 +1863,7 @@ TEST(UNISTD_TEST, clone_with_sme_za_active) {
   }
 
   __arm_za_disable();
-  uint64_t svl = sme_get_svl();
+  uint16_t svl = sme_get_svl();
   uint8_t za_save_buffer[svl * svl] __attribute__((aligned(16)));
   sme_enable_za_active_state(za_save_buffer, svl);
 
