@@ -182,6 +182,15 @@ struct tcp_info {
   __u16 tcpi_total_rto;
   __u16 tcpi_total_rto_recoveries;
   __u32 tcpi_total_rto_time;
+  __u32 tcpi_received_ce;
+  __u32 tcpi_delivered_e1_bytes;
+  __u32 tcpi_delivered_e0_bytes;
+  __u32 tcpi_delivered_ce_bytes;
+  __u32 tcpi_received_e1_bytes;
+  __u32 tcpi_received_e0_bytes;
+  __u32 tcpi_received_ce_bytes;
+  __u16 tcpi_accecn_fail_mode;
+  __u16 tcpi_accecn_opt_seen;
 };
 enum {
   TCP_NLA_PAD,

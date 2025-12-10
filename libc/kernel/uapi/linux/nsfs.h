@@ -13,7 +13,6 @@
 #define NS_GET_PARENT _IO(NSIO, 0x2)
 #define NS_GET_NSTYPE _IO(NSIO, 0x3)
 #define NS_GET_OWNER_UID _IO(NSIO, 0x4)
-#define NS_GET_MNTNS_ID _IOR(NSIO, 0x5, __u64)
 #define NS_GET_PID_FROM_PIDNS _IOR(NSIO, 0x6, int)
 #define NS_GET_TGID_FROM_PIDNS _IOR(NSIO, 0x7, int)
 #define NS_GET_PID_IN_PIDNS _IOR(NSIO, 0x8, int)
@@ -27,6 +26,8 @@ struct mnt_ns_info {
 #define NS_MNT_GET_INFO _IOR(NSIO, 10, struct mnt_ns_info)
 #define NS_MNT_GET_NEXT _IOR(NSIO, 11, struct mnt_ns_info)
 #define NS_MNT_GET_PREV _IOR(NSIO, 12, struct mnt_ns_info)
+#define NS_GET_MNTNS_ID _IOR(NSIO, 5, __u64)
+#define NS_GET_ID _IOR(NSIO, 13, __u64)
 enum init_ns_ino {
   IPC_NS_INIT_INO = 0xEFFFFFFFU,
   UTS_NS_INIT_INO = 0xEFFFFFFEU,
@@ -37,4 +38,11 @@ enum init_ns_ino {
   NET_NS_INIT_INO = 0xEFFFFFF9U,
   MNT_NS_INIT_INO = 0xEFFFFFF8U,
 };
+struct nsfs_file_handle {
+  __u64 ns_id;
+  __u32 ns_type;
+  __u32 ns_inum;
+};
+#define NSFS_FILE_HANDLE_SIZE_VER0 16
+#define NSFS_FILE_HANDLE_SIZE_LATEST sizeof(struct nsfs_file_handle)
 #endif

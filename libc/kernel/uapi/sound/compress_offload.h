@@ -9,7 +9,7 @@
 #include <linux/types.h>
 #include <sound/asound.h>
 #include <sound/compress_params.h>
-#define SNDRV_COMPRESS_VERSION SNDRV_PROTOCOL_VERSION(0, 3, 0)
+#define SNDRV_COMPRESS_VERSION SNDRV_PROTOCOL_VERSION(0, 4, 1)
 struct snd_compressed_buffer {
   __u32 fragment_size;
   __u32 fragments;
@@ -26,9 +26,20 @@ struct snd_compr_tstamp {
   __u32 pcm_io_frames;
   __u32 sampling_rate;
 } __attribute__((packed, aligned(4)));
+struct snd_compr_tstamp64 {
+  __u32 byte_offset;
+  __u64 copied_total;
+  __u64 pcm_frames;
+  __u64 pcm_io_frames;
+  __u32 sampling_rate;
+} __attribute__((packed, aligned(4)));
 struct snd_compr_avail {
   __u64 avail;
   struct snd_compr_tstamp tstamp;
+} __attribute__((packed, aligned(4)));
+struct snd_compr_avail64 {
+  __u64 avail;
+  struct snd_compr_tstamp64 tstamp;
 } __attribute__((packed, aligned(4)));
 enum snd_compr_direction {
   SND_COMPRESS_PLAYBACK = 0,
@@ -90,6 +101,8 @@ struct snd_compr_task_status {
 #define SNDRV_COMPRESS_GET_METADATA _IOWR('C', 0x15, struct snd_compr_metadata)
 #define SNDRV_COMPRESS_TSTAMP _IOR('C', 0x20, struct snd_compr_tstamp)
 #define SNDRV_COMPRESS_AVAIL _IOR('C', 0x21, struct snd_compr_avail)
+#define SNDRV_COMPRESS_TSTAMP64 _IOR('C', 0x22, struct snd_compr_tstamp64)
+#define SNDRV_COMPRESS_AVAIL64 _IOR('C', 0x23, struct snd_compr_avail64)
 #define SNDRV_COMPRESS_PAUSE _IO('C', 0x30)
 #define SNDRV_COMPRESS_RESUME _IO('C', 0x31)
 #define SNDRV_COMPRESS_START _IO('C', 0x32)

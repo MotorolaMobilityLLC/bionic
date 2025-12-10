@@ -120,4 +120,5 @@
 #define HWCAP2_POE (1UL << 63)
 #define HWCAP3_MTE_FAR (1UL << 0)
 #define HWCAP3_MTE_STORE_ONLY (1UL << 1)
+#define HWCAP3_LSFE (1UL << 2)
 #endif

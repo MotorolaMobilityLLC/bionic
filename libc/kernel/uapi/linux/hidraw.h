@@ -30,6 +30,7 @@ struct hidraw_devinfo {
 #define HIDIOCSOUTPUT(len) _IOC(_IOC_WRITE | _IOC_READ, 'H', 0x0B, len)
 #define HIDIOCGOUTPUT(len) _IOC(_IOC_WRITE | _IOC_READ, 'H', 0x0C, len)
 #define HIDIOCREVOKE _IOW('H', 0x0D, int)
+#define HIDIOCTL_LAST _IOC_NR(HIDIOCREVOKE)
 #define HIDRAW_FIRST_MINOR 0
 #define HIDRAW_MAX_DEVICES 64
 #define HIDRAW_BUFFER_SIZE 64
