@@ -142,6 +142,7 @@ static tpidr2_blk_ tpidr2_blk;
     // Bytes 8-9: num_za_save_slices
     // Other bytes are cleared.
     "stp      x9, x8, [fp, #-16]\n\r"
+    "sub      x9, fp, #16\n\r"
     // Finalize the lazy-save buffer.
     "msr      TPIDR2_EL0, x9\n\r"
     // Call the given function with dormant SME state.
