@@ -37,9 +37,12 @@
 #include <stddef.h>
 #include <xlocale.h>
 
-#if !defined(__cplusplus)
+#if !defined(__cplusplus) && __STDC_VERSION__ >= 202311L
 // C23 has call_once() in <stdlib.h> as well as <threads.h>,
 // but that conflicts with C++'s std::call_once() in <mutex>.
+// We don't make this available for earlier C versions
+// because that conflicts with code (such as mesa) that tries
+// to implement <threads.h> itself.
 #include <bits/call_once.h>
 #endif
 
