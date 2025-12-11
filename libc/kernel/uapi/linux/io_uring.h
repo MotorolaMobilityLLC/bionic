@@ -139,6 +139,7 @@ enum io_uring_sqe_flags_bit {
 #define IORING_SETUP_REGISTERED_FD_ONLY (1U << 15)
 #define IORING_SETUP_NO_SQARRAY (1U << 16)
 #define IORING_SETUP_HYBRID_IOPOLL (1U << 17)
+#define IORING_SETUP_CQE_MIXED (1U << 18)
 enum io_uring_op {
   IORING_OP_NOP,
   IORING_OP_READV,
@@ -206,7 +207,8 @@ enum io_uring_op {
   IORING_OP_LAST,
 };
 #define IORING_URING_CMD_FIXED (1U << 0)
-#define IORING_URING_CMD_MASK IORING_URING_CMD_FIXED
+#define IORING_URING_CMD_MULTISHOT (1U << 1)
+#define IORING_URING_CMD_MASK (IORING_URING_CMD_FIXED | IORING_URING_CMD_MULTISHOT)
 #define IORING_FSYNC_DATASYNC (1U << 0)
 #define IORING_TIMEOUT_ABS (1U << 0)
 #define IORING_TIMEOUT_UPDATE (1U << 1)
@@ -250,6 +252,7 @@ enum io_uring_msg_ring_flags {
 #define IORING_NOP_FIXED_FILE (1U << 2)
 #define IORING_NOP_FIXED_BUFFER (1U << 3)
 #define IORING_NOP_TW (1U << 4)
+#define IORING_NOP_CQE32 (1U << 5)
 struct io_uring_cqe {
   __u64 user_data;
   __s32 res;
@@ -261,6 +264,8 @@ struct io_uring_cqe {
 #define IORING_CQE_F_SOCK_NONEMPTY (1U << 2)
 #define IORING_CQE_F_NOTIF (1U << 3)
 #define IORING_CQE_F_BUF_MORE (1U << 4)
+#define IORING_CQE_F_SKIP (1U << 5)
+#define IORING_CQE_F_32 (1U << 15)
 #define IORING_CQE_BUFFER_SHIFT 16
 #define IORING_OFF_SQ_RING 0ULL
 #define IORING_OFF_CQ_RING 0x8000000ULL
@@ -368,6 +373,7 @@ enum io_uring_register_op {
   IORING_REGISTER_ZCRX_IFQ = 32,
   IORING_REGISTER_RESIZE_RINGS = 33,
   IORING_REGISTER_MEM_REGION = 34,
+  IORING_REGISTER_QUERY = 35,
   IORING_REGISTER_LAST,
   IORING_REGISTER_USE_REGISTERED_RING = 1U << 31
 };

@@ -95,7 +95,7 @@ struct fastrpc_mem_unmap {
   __s32 reserved[5];
 };
 struct fastrpc_ioctl_capability {
-  __u32 domain;
+  __u32 unused;
   __u32 attribute_id;
   __u32 capability;
   __u32 reserved[4];

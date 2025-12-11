@@ -10,15 +10,18 @@
 #include <linux/types.h>
 #define TEE_IOC_MAGIC 0xa4
 #define TEE_IOC_BASE 0
-#define TEE_MAX_ARG_SIZE 1024
+#define TEE_MAX_ARG_SIZE 4096
 #define TEE_GEN_CAP_GP (1 << 0)
 #define TEE_GEN_CAP_PRIVILEGED (1 << 1)
 #define TEE_GEN_CAP_REG_MEM (1 << 2)
 #define TEE_GEN_CAP_MEMREF_NULL (1 << 3)
-#define TEE_MEMREF_NULL (__u64) (- 1)
+#define TEE_GEN_CAP_OBJREF (1 << 4)
+#define TEE_MEMREF_NULL ((__u64) (- 1))
+#define TEE_OBJREF_NULL ((__u64) (- 1))
 #define TEE_IMPL_ID_OPTEE 1
 #define TEE_IMPL_ID_AMDTEE 2
 #define TEE_IMPL_ID_TSTEE 3
+#define TEE_IMPL_ID_QTEE 4
 #define TEE_OPTEE_CAP_TZ (1 << 0)
 struct tee_ioctl_version_data {
   __u32 impl_id;
@@ -43,6 +46,12 @@ struct tee_ioctl_buf_data {
 #define TEE_IOCTL_PARAM_ATTR_TYPE_MEMREF_INPUT 5
 #define TEE_IOCTL_PARAM_ATTR_TYPE_MEMREF_OUTPUT 6
 #define TEE_IOCTL_PARAM_ATTR_TYPE_MEMREF_INOUT 7
+#define TEE_IOCTL_PARAM_ATTR_TYPE_UBUF_INPUT 8
+#define TEE_IOCTL_PARAM_ATTR_TYPE_UBUF_OUTPUT 9
+#define TEE_IOCTL_PARAM_ATTR_TYPE_UBUF_INOUT 10
+#define TEE_IOCTL_PARAM_ATTR_TYPE_OBJREF_INPUT 11
+#define TEE_IOCTL_PARAM_ATTR_TYPE_OBJREF_OUTPUT 12
+#define TEE_IOCTL_PARAM_ATTR_TYPE_OBJREF_INOUT 13
 #define TEE_IOCTL_PARAM_ATTR_TYPE_MASK 0xff
 #define TEE_IOCTL_PARAM_ATTR_META 0x100
 #define TEE_IOCTL_PARAM_ATTR_MASK (TEE_IOCTL_PARAM_ATTR_TYPE_MASK | TEE_IOCTL_PARAM_ATTR_META)
@@ -111,5 +120,20 @@ struct tee_ioctl_shm_register_data {
   __u32 flags;
   __s32 id;
 };
+struct tee_ioctl_shm_register_fd_data {
+  __s64 fd;
+  __u64 size;
+  __u32 flags;
+  __s32 id;
+};
+#define TEE_IOC_SHM_REGISTER_FD _IOWR(TEE_IOC_MAGIC, TEE_IOC_BASE + 8, struct tee_ioctl_shm_register_fd_data)
 #define TEE_IOC_SHM_REGISTER _IOWR(TEE_IOC_MAGIC, TEE_IOC_BASE + 9, struct tee_ioctl_shm_register_data)
+struct tee_ioctl_object_invoke_arg {
+  __u64 id;
+  __u32 op;
+  __u32 ret;
+  __u32 num_params;
+  struct tee_ioctl_param params[];
+};
+#define TEE_IOC_OBJECT_INVOKE _IOR(TEE_IOC_MAGIC, TEE_IOC_BASE + 10, struct tee_ioctl_buf_data)
 #endif

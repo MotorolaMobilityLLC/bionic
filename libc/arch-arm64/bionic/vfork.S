@@ -32,6 +32,19 @@
 #include <linux/sched.h>
 
 ENTRY_WEAK_FOR_NATIVE_BRIDGE(vfork)
+    // AAPCS64 defines SME ZA interface as private for vfork(), which means that ZA state on entry
+    // can be "dormant" or "off", while on return it can be unchanged or "off".
+    // https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst#za-interfaces
+    // Handling the dormant state would make the code unnecessary complex, so for simplicity turn
+    // ZA state off on entry which ensures that the state on return will be "off" as well.
+    str x30, [sp, #-16]!
+    .cfi_adjust_cfa_offset 16
+    .cfi_rel_offset x30, 0
+    bl __arm_za_disable
+    ldr x30, [sp], #16
+    .cfi_adjust_cfa_offset -16
+    .cfi_restore x30
+
     // x9 = __get_tls()[TLS_SLOT_THREAD_ID]
     mrs     x9, tpidr_el0
     ldr     x9, [x9, #(TLS_SLOT_THREAD_ID * 8)]

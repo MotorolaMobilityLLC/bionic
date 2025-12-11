@@ -212,7 +212,7 @@ extern "C" {
 #define VIVANTE_MOD_COMP_MASK (0xfULL << 52)
 #define VIVANTE_MOD_EXT_MASK (VIVANTE_MOD_TS_MASK | VIVANTE_MOD_COMP_MASK)
 #define DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED fourcc_mod_code(NVIDIA, 1)
-#define DRM_FORMAT_MOD_NVIDIA_BLOCK_LINEAR_2D(c,s,g,k,h) fourcc_mod_code(NVIDIA, (0x10 | ((h) & 0xf) | (((k) & 0xff) << 12) | (((g) & 0x3) << 20) | (((s) & 0x1) << 22) | (((c) & 0x7) << 23)))
+#define DRM_FORMAT_MOD_NVIDIA_BLOCK_LINEAR_2D(c,s,g,k,h) fourcc_mod_code(NVIDIA, (0x10 | ((h) & 0xf) | (((k) & 0xff) << 12) | (((g) & 0x3) << 20) | (((s) & 0x1) << 22) | (((s) & 0x6) << 25) | (((c) & 0x7) << 23)))
 #define DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK(v) DRM_FORMAT_MOD_NVIDIA_BLOCK_LINEAR_2D(0, 0, 0, 0, (v))
 #define DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK(0)
 #define DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK(1)

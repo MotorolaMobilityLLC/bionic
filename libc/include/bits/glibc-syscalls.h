@@ -1386,6 +1386,9 @@
 #if defined(__NR_unshare)
   #define SYS_unshare __NR_unshare
 #endif
+#if defined(__NR_uprobe)
+  #define SYS_uprobe __NR_uprobe
+#endif
 #if defined(__NR_uretprobe)
   #define SYS_uretprobe __NR_uretprobe
 #endif

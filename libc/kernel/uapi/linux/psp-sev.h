@@ -110,7 +110,11 @@ struct sev_user_data_snp_status {
   __u32 mask_chip_id : 1;
   __u32 mask_chip_key : 1;
   __u32 vlek_en : 1;
-  __u32 rsvd1 : 29;
+  __u32 feature_info : 1;
+  __u32 rapl_dis : 1;
+  __u32 ciphertext_hiding_cap : 1;
+  __u32 ciphertext_hiding_en : 1;
+  __u32 rsvd1 : 25;
   __u32 guest_count;
   __u64 current_tcb_version;
   __u64 reported_tcb_version;

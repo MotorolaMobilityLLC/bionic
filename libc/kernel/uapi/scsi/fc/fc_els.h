@@ -8,6 +8,7 @@
 #define _FC_ELS_H_
 #include <linux/types.h>
 #include <asm/byteorder.h>
+#include <stddef.h>
 enum fc_els_cmd {
   ELS_LS_RJT = 0x01,
   ELS_LS_ACC = 0x02,
@@ -642,21 +643,24 @@ struct fc_els_fpin {
   struct fc_tlv_desc fpin_desc[];
 };
 struct fc_df_desc_fpin_reg {
-  __be32 desc_tag;
+  __struct_group(fc_df_desc_fpin_reg_hdr, __hdr,, __be32 desc_tag;
   __be32 desc_len;
   __be32 count;
+ );
   __be32 desc_tags[];
 };
 struct fc_els_rdf {
-  __u8 fpin_cmd;
+  __struct_group(fc_els_rdf_hdr, __hdr,, __u8 fpin_cmd;
   __u8 fpin_zero[3];
   __be32 desc_len;
+ );
   struct fc_tlv_desc desc[];
 };
 struct fc_els_rdf_resp {
-  struct fc_els_ls_acc acc_hdr;
+  __struct_group(fc_els_rdf_resp_hdr, __hdr,, struct fc_els_ls_acc acc_hdr;
   __be32 desc_list_len;
   struct fc_els_lsri_desc lsri;
+ );
   struct fc_tlv_desc desc[];
 };
 struct fc_diag_lnkflt_desc {
