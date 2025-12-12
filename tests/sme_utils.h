@@ -38,19 +38,6 @@
 
 extern "C" void __arm_tpidr2_restore(uint64_t blk);
 
-struct tpidr2_blk_ {
-  uint8_t* za_save_buffer;
-  uint16_t num_za_save_slices;
-  uint8_t pad[6];
-};
-static tpidr2_blk_ tpidr2_blk;
-
-[[maybe_unused]] static void sme_fill_tpidr2_blk(uint8_t* buf, uint16_t svl) {
-  tpidr2_blk.za_save_buffer = buf;
-  tpidr2_blk.num_za_save_slices = svl;
-  std::memset(tpidr2_blk.pad, 0, 6);  // Padding bytes must be set to 0.
-}
-
 // Detects whether FEAT_SME is available.
 //
 // FEAT_SME is optional from Armv9.2.
@@ -103,7 +90,7 @@ static tpidr2_blk_ tpidr2_blk;
 // Reads Streaming SVE vector size in bytes.
 //
 // Requires FEAT_SME, which is optional from Armv9.2.
-[[maybe_unused]] __attribute__((naked)) static uint64_t sme_get_svl() {
+[[maybe_unused]] __attribute__((naked)) static uint16_t sme_get_svl() {
   __asm__ __volatile__(".arch_extension sme; bti c; rdsvl x0, 1; ret;");
 }
 
@@ -158,20 +145,20 @@ static tpidr2_blk_ tpidr2_blk;
   // clang-format on
 }
 
-// This function does the followings:
-//  - Enables PSTATE.ZA.
-//  - Creates a TPIDR2 block.
-//  - Restores ZA from the buffer stored in TPIDR2 block.
-//  - Sets TPIDR2 to 0.
-//
-// The input parameter is an svl*svl size 16 byte aligned buffer, pointed by buf.
-[[maybe_unused]] static void sme_enable_za_active_state(uint8_t* buf, uint64_t svl) {
+// 'buf' is an 'svl'*'svl' size ZA save buffer (must be aligned to 16 bytes).
+[[maybe_unused]] static void sme_enable_za_active_state(uint8_t* buf, uint16_t svl) {
+  // Enable PSTATE.ZA.
   sme_enable_za();
-  sme_fill_tpidr2_blk(buf, static_cast<uint16_t>(svl));
   // Fill za_save_buffer with some data.
-  std::memset(buf, 0xa, svl * svl);
+  memset(buf, 0xa, svl * svl);
   // Restore ZA from the save buffer.
+  struct tpidr2_blk {
+    uint8_t* za_save_buffer;
+    uint16_t num_za_save_slices;
+    uint8_t pad[6];
+  } tpidr2_blk = { .za_save_buffer = buf, .num_za_save_slices = svl };
   __arm_tpidr2_restore(reinterpret_cast<uint64_t>(&tpidr2_blk));
+  // Set TPIDR2 to 0.
   sme_set_tpidr2_el0(0UL);
 }
 

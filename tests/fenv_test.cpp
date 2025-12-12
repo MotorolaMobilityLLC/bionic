@@ -67,7 +67,9 @@ TEST(fenv, fesetround_fegetround_FE_TONEARESTFROMZERO) {
   EXPECT_EQ(y, 0x1.000002p0f);
   EXPECT_EQ(z, -0x1.000002p0f);
 #else
-  GTEST_SKIP() << "no hardware FE_TONEARESTFROMZERO rounding mode";
+  // To be clear: arm64 and x86-64 do support this rounding mode for _some_ instructions.
+  // What they don't have is a way to set this as the _default_ rounding mode.
+  GTEST_SKIP() << "no hardware FE_TONEARESTFROMZERO default rounding mode";
 #endif
 }
 
