@@ -30,6 +30,7 @@
 #include <stdint.h>
 
 #include <array>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <string_view>
@@ -53,20 +54,28 @@ struct FdEntry {
   std::vector<unwindstack::FrameData> backtrace GUARDED_BY(mutex);
 };
 
+// Only unwind up to 32 frames outside of libfdtrack.so.
+static constexpr size_t kStackDepth = 32;
+
+struct CallbackData {
+  const char* function_names[kStackDepth];
+  uint64_t function_offsets[kStackDepth];
+  unwindstack::FrameData* frames[kStackDepth];
+  size_t size;
+};
+
 extern "C" void fdtrack_dump();
 extern "C" void fdtrack_dump_fatal();
 
 using fdtrack_callback_t = bool (*)(int fd, const char* const* function_names,
                                     const uint64_t* function_offsets, size_t count, void* arg);
+
 extern "C" void fdtrack_iterate(fdtrack_callback_t callback, void* arg);
 
 static void fd_hook(android_fdtrack_event* event);
 
 // Backtraces for the first 4k file descriptors ought to be enough to diagnose an fd leak.
 static constexpr size_t kFdTableSize = 4096;
-
-// Only unwind up to 32 frames outside of libfdtrack.so.
-static constexpr size_t kStackDepth = 32;
 
 static bool installed = false;
 static std::array<FdEntry, kFdTableSize> stack_traces [[clang::no_destroy]];
@@ -127,6 +136,7 @@ static void fd_hook(android_fdtrack_event* event) {
 
       unwindstack::AndroidUnwinderData data(kStackDepth);
       if (Unwinder().Unwind(data)) {
+        data.DemangleFunctionNames();
         entry->backtrace = std::move(data.frames);
       }
     }
@@ -138,12 +148,11 @@ static void fd_hook(android_fdtrack_event* event) {
   }
 }
 
-void fdtrack_iterate(fdtrack_callback_t callback, void* arg) {
+static void iterate_internal(std::function<bool(int fd, const CallbackData*, void*)> callback,
+                             void* arg) {
   bool prev = android_fdtrack_set_enabled(false);
 
   for (int fd = 0; fd < static_cast<int>(stack_traces.size()); ++fd) {
-    const char* function_names[kStackDepth];
-    uint64_t function_offsets[kStackDepth];
     FdEntry* entry = GetFdEntry(fd);
     if (!entry) {
       continue;
@@ -163,17 +172,27 @@ void fdtrack_iterate(fdtrack_callback_t callback, void* arg) {
       continue;
     }
 
-    for (size_t i = 0; i < entry->backtrace.size(); ++i) {
-      function_names[i] = entry->backtrace[i].function_name.c_str();
-      function_offsets[i] = entry->backtrace[i].function_offset;
+    CallbackData data = {.size = entry->backtrace.size()};
+    for (size_t i = 0; i < data.size; ++i) {
+      data.function_names[i] = entry->backtrace[i].function_name.c_str();
+      data.function_offsets[i] = entry->backtrace[i].function_offset;
+      data.frames[i] = &entry->backtrace[i];
     }
 
-    if (!callback(fd, function_names, function_offsets, entry->backtrace.size(), arg)) {
+    if (!callback(fd, &data, arg)) {
       break;
     }
   }
 
   android_fdtrack_set_enabled(prev);
+}
+
+void fdtrack_iterate(fdtrack_callback_t callback, void* arg) {
+  return iterate_internal(
+      [&callback](int fd, const CallbackData* data, void* arg) {
+        return callback(fd, data->function_names, data->function_offsets, data->size, arg);
+      },
+      arg);
 }
 
 static size_t hash_stack(const char* const* function_names, const uint64_t* function_offsets,
@@ -203,20 +222,18 @@ static void fdtrack_dump_impl(bool fatal) {
     size_t hash = 0;
     size_t count = 0;
 
-    size_t stack_depth = 0;
-    const char* function_names[kStackDepth];
-    uint64_t function_offsets[kStackDepth];
+    size_t size = 0;
+    unwindstack::FrameData* frames[kStackDepth];
   };
   struct StackList {
     size_t count = 0;
     std::array<StackInfo, 128> data;
   };
-  static StackList stacks;
 
-  fdtrack_iterate(
-      [](int fd, const char* const* function_names, const uint64_t* function_offsets,
-         size_t stack_depth, void* stacks_ptr) {
-        auto stacks = static_cast<StackList*>(stacks_ptr);
+  static StackList stacks = {};
+
+  iterate_internal(
+      [fatal](int fd, const CallbackData* data, void*) {
         uint64_t fdsan_owner = android_fdsan_get_owner_tag(fd);
         if (fdsan_owner != 0) {
           async_safe_format_log(ANDROID_LOG_INFO, "fdtrack", "fd %d: (owner = 0x%" PRIx64 ")", fd,
@@ -225,79 +242,92 @@ static void fdtrack_dump_impl(bool fatal) {
           async_safe_format_log(ANDROID_LOG_INFO, "fdtrack", "fd %d: (unowned)", fd);
         }
 
-        for (size_t i = 0; i < stack_depth; ++i) {
-          async_safe_format_log(ANDROID_LOG_INFO, "fdtrack", "  %zu: %s+%" PRIu64, i,
-                                function_names[i], function_offsets[i]);
+        for (size_t i = 0; i < data->size; ++i) {
+          if (data->frames[i]->map_info.get() == nullptr) {
+            async_safe_format_log(ANDROID_LOG_INFO, "fdtrack",
+                                  "  %zu: %s+%" PRIx64 " pc 0x%" PRIx64 " <unknown>", i,
+                                  data->frames[i]->function_name.c_str(),
+                                  data->frames[i]->function_offset, data->frames[i]->rel_pc);
+          } else {
+            async_safe_format_log(
+                ANDROID_LOG_INFO, "fdtrack", "  %zu: %s+%" PRIx64 " pc 0x%" PRIx64 " %s", i,
+                data->frames[i]->function_name.c_str(), data->frames[i]->function_offset,
+                data->frames[i]->rel_pc, data->frames[i]->map_info->name().c_str());
+          }
         }
 
-        if (stacks) {
-          size_t hash = hash_stack(function_names, function_offsets, stack_depth);
-          bool found_stack = false;
-          for (size_t i = 0; i < stacks->count; ++i) {
-            if (stacks->data[i].hash == hash) {
-              ++stacks->data[i].count;
-              found_stack = true;
-              break;
-            }
-          }
+        if (!fatal) {
+          return true;
+        }
 
-          if (!found_stack) {
-            if (stacks->count < stacks->data.size()) {
-              auto& stack = stacks->data[stacks->count++];
-              stack.hash = hash;
-              stack.count = 1;
-              stack.stack_depth = stack_depth;
-              for (size_t i = 0; i < stack_depth; ++i) {
-                stack.function_names[i] = function_names[i];
-                stack.function_offsets[i] = function_offsets[i];
-              }
+        size_t hash = hash_stack(data->function_names, data->function_offsets, data->size);
+        bool found_stack = false;
+        for (size_t i = 0; i < stacks.count; ++i) {
+          if (stacks.data[i].hash == hash) {
+            ++stacks.data[i].count;
+            found_stack = true;
+            break;
+          }
+        }
+
+        if (!found_stack) {
+          if (stacks.count < stacks.data.size()) {
+            auto& stack = stacks.data[stacks.count++];
+            stack.hash = hash;
+            stack.count = 1;
+            stack.size = data->size;
+            for (size_t i = 0; i < data->size; ++i) {
+              stack.frames[i] = data->frames[i];
             }
           }
         }
 
         return true;
       },
-      fatal ? &stacks : nullptr);
+      nullptr);
 
-  if (fatal) {
-    // Find the most common stack.
-    size_t max = 0;
-    size_t total = 0;
-    StackInfo* stack = nullptr;
-    for (size_t i = 0; i < stacks.count; ++i) {
-      total += stacks.data[i].count;
-      if (stacks.data[i].count > max) {
-        stack = &stacks.data[i];
-        max = stack->count;
-      }
-    }
-
-    static char buf[1024];
-
-    if (!stack) {
-      async_safe_format_buffer(buf, sizeof(buf),
-                               "aborting due to fd leak: see \"open files\" in the tombstone; "
-                               "no stacks?!");
-    } else {
-      char* p = buf;
-      p += async_safe_format_buffer(buf, sizeof(buf),
-                                    "aborting due to fd leak: see \"open files\" in the tombstone; "
-                                    "most common stack (%zu/%zu) is\n", max, total);
-
-      for (size_t i = 0; i < stack->stack_depth; ++i) {
-        ssize_t bytes_left = buf + sizeof(buf) - p;
-        if (bytes_left > 0) {
-          p += async_safe_format_buffer(p, buf + sizeof(buf) - p, "  %zu: %s+%" PRIu64 "\n", i,
-                                        stack->function_names[i], stack->function_offsets[i]);
-        }
-      }
-    }
-
-    android_set_abort_message(buf);
-
-    // Abort on a different thread to avoid ART dumping runtime stacks.
-    std::thread([]() { abort(); }).join();
+  if (!fatal) {
+    return;
   }
+
+  // Find the most common stack.
+  size_t max = 0;
+  size_t total = 0;
+  StackInfo* stack = nullptr;
+  for (size_t i = 0; i < stacks.count; ++i) {
+    total += stacks.data[i].count;
+    if (stacks.data[i].count > max) {
+      stack = &stacks.data[i];
+      max = stack->count;
+    }
+  }
+
+  static char buf[1024];
+  if (!stack) {
+    async_safe_format_buffer(buf, sizeof(buf),
+                             "aborting due to fd leak: see \"open files\" in the tombstone; "
+                             "no stacks?!");
+  } else {
+    char* p = buf;
+    p += async_safe_format_buffer(buf, sizeof(buf),
+                                  "aborting due to fd leak: see \"open files\" in the tombstone; "
+                                  "most common stack (%zu/%zu) is\n",
+                                  max, total);
+
+    for (size_t i = 0; i < stack->size; ++i) {
+      ssize_t bytes_left = buf + sizeof(buf) - p;
+      if (bytes_left > 0) {
+        p += async_safe_format_buffer(p, buf + sizeof(buf) - p, "  %zu: %s+%" PRIu64 "\n", i,
+                                      stack->frames[i]->function_name.c_str(),
+                                      stack->frames[i]->function_offset);
+      }
+    }
+  }
+
+  android_set_abort_message(buf);
+
+  // Abort on a different thread to avoid ART dumping runtime stacks.
+  std::thread([]() { abort(); }).join();
 }
 
 void fdtrack_dump() {
@@ -305,5 +335,9 @@ void fdtrack_dump() {
 }
 
 void fdtrack_dump_fatal() {
+  // Make sure that only one fatal is occurring at a time since static global
+  // buffers are used in the fatal path.
+  static std::mutex fatal_lock;
+  std::lock_guard<std::mutex> guard(fatal_lock);
   fdtrack_dump_impl(true);
 }
