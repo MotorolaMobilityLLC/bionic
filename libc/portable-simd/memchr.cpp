@@ -62,6 +62,12 @@ struct CharAgnosticMemchrTraits {
   using CharType = Traits::CharType;
   using VectorTag = Traits::VectorTag;
 
+  // As of C11, calling `memchr` with a length greater than the size of the
+  // buffer pointed to is well-defined _if_ the needle can be found in that
+  // buffer. `wmemchr` provides no such guarantee, but treat it similarly
+  // anyway for simplicity.
+  constexpr static bool kIsMaxLengthGuaranteed = false;
+
   // Advance `ptr` in the direction of this memchr.
   PSIMD_FLATTEN static const CharType* advance_ptr(const CharType* p, size_t n = 1) {
     constexpr VectorTag d;
@@ -108,13 +114,11 @@ struct CharAgnosticMemchrTraits {
     return align_forward_to_vec<VectorTag>(s, f);
   }
 
-  // `align_forward_to_vec_known_safe`.
-  PSIMD_FLATTEN static auto align_ptr_to_vec_known_safe(const CharType* s, auto f) {
-    if constexpr (kReadAheadToPageBoundaryIsOK) {
-      return align_forward_to_vec_known_safe<VectorTag>(s, f);
-    } else {
-      return align_forward_to_vec<VectorTag>(s, f);
-    }
+  // Since the max length is never guaranteed, 'known safe' isn't possible.
+  __attribute__((diagnose_if(true, "This is unsafe, and should never be called",
+                             "error"))) static auto
+  align_ptr_to_vec_known_safe(auto...) {
+    __builtin_unreachable();
   }
 };
 
@@ -124,6 +128,10 @@ struct MemchrTraits : CharAgnosticMemchrTraits<CharTraits> {};
 struct WmemchrTraits : CharAgnosticMemchrTraits<WcharTraits> {};
 
 struct MemrchrTraits : CharTraits {
+  // memrchr always walks to its maximum length, so we can treat it as a
+  // guarantee.
+  constexpr static bool kIsMaxLengthGuaranteed = true;
+
   // Advance `ptr` in the direction of this memchr.
   PSIMD_FLATTEN static const CharType* advance_ptr(const CharType* p, size_t n = 1) {
     constexpr VectorTag d;
@@ -264,25 +272,42 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const typename Traits::CharTy
     return result_from_final_vec(ptr, Load(d, ptr), count);
   }
 
-  // We know the full load is safe, since `count` is larger than a full vector.
-  auto [ptr, maybe_result] = Traits::align_ptr_to_vec_known_safe(
-      s,
-      [&](auto val, optional<size_t> bytes_to_skip, optional<size_t> overlap_bytes)
-          PSIMD_FLATTEN -> optional<const void*> {
-            PSIMD_DCHECK(!bytes_to_skip.has_value());
-            PSIMD_DCHECK(overlap_bytes.has_value());
-            if (const optional<const void*> x = Traits::ptr_of_first(s, val, ch)) {
-              // No need to bounds-check, due to `count`'s size.
-              return optional<const void*>{*x};
-            }
-            // If pointers are properly aligned, we should never load a partial
-            // CharType, since vector alignments are all multiples of `char`
-            // and `wchar_t`.
-            PSIMD_DCHECK(*overlap_bytes % sizeof(CharType) == 0);
-            const size_t overlap_lanes = *overlap_bytes / sizeof(CharType);
-            count -= d.MaxLanes() - overlap_lanes;
-            return {};
-          });
+  auto align_func = [&](auto val, optional<size_t> bytes_to_skip, optional<size_t> overlap_bytes)
+                        PSIMD_FLATTEN -> optional<const void*> {
+    // If pointers are properly aligned, we should never load a partial
+    // CharType, since vector alignments are all multiples of `char`
+    // and `wchar_t`.
+    optional<size_t> lanes_to_skip;
+    optional<size_t> overlap_lanes;
+    size_t lanes_consumed = d.MaxLanes();
+    if (bytes_to_skip) {
+      PSIMD_DCHECK(*bytes_to_skip % sizeof(CharType) == 0);
+      lanes_to_skip = optional<size_t>{*bytes_to_skip / sizeof(CharType)};
+      lanes_consumed -= *lanes_to_skip;
+    } else {
+      PSIMD_DCHECK(overlap_bytes.has_value());
+      PSIMD_DCHECK(*overlap_bytes % sizeof(CharType) == 0);
+      overlap_lanes = optional<size_t>{*overlap_bytes / sizeof(CharType)};
+      lanes_consumed -= *overlap_lanes;
+    }
+
+    if (const optional<const void*> x =
+            Traits::ptr_of_first(s, val, ch, /*count=*/{}, lanes_to_skip)) {
+      // No need to bounds-check, due to `count`'s size.
+      return optional<const void*>{*x};
+    }
+
+    count -= lanes_consumed;
+    return {};
+  };
+
+  GenericAlignResult<VectorTag, optional<const void*>> first_align_result;
+  if constexpr (Traits::kIsMaxLengthGuaranteed) {
+    first_align_result = Traits::align_ptr_to_vec_known_safe(s, align_func);
+  } else {
+    first_align_result = Traits::align_ptr_to_vec(s, align_func);
+  }
+  auto [ptr, maybe_result] = first_align_result;
   if (maybe_result) {
     return *maybe_result;
   }
@@ -330,8 +355,29 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const typename Traits::CharTy
     // which ships with chips like the 2024 Intel Core 3 100U. 2 loads was as
     // much as 1.1x slower on very long inputs. There was no obvious
     // improvement in doing 4 per loop.
-    constexpr size_t checks_per_loop = 3;
-    do {
+    //
+    // That said, do 4 checks per loop if the size isn't a guaranteed
+    // upper-bound. It needs to be _some_ power of two, since the batches below
+    // can't safely cross a page boundary.
+    constexpr size_t checks_per_loop = Traits::kIsMaxLengthGuaranteed ? 3 : 4;
+
+    if constexpr (!Traits::kIsMaxLengthGuaranteed) {
+      constexpr size_t misaligned_mask = vector_align(d) * checks_per_loop - 1;
+      // Bring us to a correct multiple-of-vector-size alignment...
+#pragma unroll
+      for (size_t i = 0; i < checks_per_loop - 1; ++i) {
+        bool is_misaligned = reinterpret_cast<uintptr_t>(ptr) & misaligned_mask;
+        if (!is_misaligned) {
+          break;
+        }
+        if (const optional<const void*> x = check_ptr_and_advance()) {
+          return *x;
+        }
+        full_vector_loads_remaining -= 1;
+      }
+      PSIMD_DCHECK(!(reinterpret_cast<uintptr_t>(ptr) & misaligned_mask));
+    }
+    while (full_vector_loads_remaining >= unrolled_loop_size) {
       // So highway may represent masks as _either_:
       // - a vector which you can convert to a scalar through MaskFromVec(), or
       // - a scalar.
@@ -377,7 +423,7 @@ PSIMD_FLATTEN static const void* memchr_vectorized(const typename Traits::CharTy
       // If earlier masks were empty, `eq_bits` only contains bits relevant to
       // the last vector.
       return ptr + Traits::lane_offset_of_first(eq_bits);
-    } while (full_vector_loads_remaining >= unrolled_loop_size);
+    }
   }
 
   switch (full_vector_loads_remaining) {
