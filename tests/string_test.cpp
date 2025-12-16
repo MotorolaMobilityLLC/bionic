@@ -1393,10 +1393,15 @@ static void DoMemchrTest(uint8_t* buf, size_t len) {
       ASSERT_EQ(&buf[0], memchr(buf, search_value, len));
 
       buf[0] = value;
-      buf[len - 1] = search_value;
-      // The search value is the last element in the buffer.
-      ASSERT_EQ(&buf[len - 1], memchr(buf, search_value, len));
     }
+
+    // The search value is the last element in the buffer.
+    buf[len - 1] = search_value;
+    ASSERT_EQ(&buf[len - 1], memchr(buf, search_value, len));
+
+    // The search value is the last element in the buffer, and the length
+    // spans well beyond the buffer's end. C11 explicitly allows this.
+    ASSERT_EQ(&buf[len - 1], memchr(buf, search_value, len + 4096));
   }
 }
 

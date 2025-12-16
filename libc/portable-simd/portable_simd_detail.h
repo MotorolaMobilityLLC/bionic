@@ -194,6 +194,8 @@ struct optional {
 
   optional(const optional&) = default;
   optional(optional&&) = default;
+  optional& operator=(const optional&) = default;
+  optional& operator=(optional&&) = default;
 
   const T& operator*() const {
     PSIMD_DCHECK(has_value());
