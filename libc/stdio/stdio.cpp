@@ -664,11 +664,6 @@ int __sflush(FILE* fp) {
   return 0;
 }
 
-int __sflush_locked(FILE* fp) {
-  ScopedFileLock sfl(fp);
-  return __sflush(fp);
-}
-
 int __sread(void* cookie, char* buf, int n) {
   FILE* fp = reinterpret_cast<FILE*>(cookie);
   return TEMP_FAILURE_RETRY(read(fp->_file, buf, n));
@@ -1388,7 +1383,7 @@ int wscanf(const wchar_t* fmt, ...) {
 }
 
 static int fflush_all() {
-  return _fwalk(__sflush_locked);
+  return _fwalk(__sflush);
 }
 
 int fflush(FILE* fp) {
