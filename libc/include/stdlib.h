@@ -60,15 +60,88 @@ int atexit(void (* _Nonnull __fn)(void));
 int at_quick_exit(void (* _Nonnull __fn)(void));
 void quick_exit(int __status) __noreturn;
 
+/**
+ * [getenv(3)](https://man7.org/linux/man-pages/man3/getenv.3.html)
+ * returns a pointer to the value of the given environment variable.
+ *
+ * Returns a pointer to the value on success and returns a null
+ * pointer on failure.
+ *
+ * This function is not thread safe:
+ * 1. Calls to getenv() -- including those made by the implementation itself,
+ *    such as <time.h> functions checking $TZ -- may crash if made while the
+ *    environment is being modified.
+ * 2. Pointers returned by getenv() may be invalidated by calls to
+ *    putenv()/setenv()/unsetenv()/clearenv().
+ */
 char* _Nullable getenv(const char* _Nonnull __name);
+
+/**
+ * [putenv(3)](https://man7.org/linux/man-pages/man3/putenv.3.html)
+ * adds/updates an environment variable.
+ *
+ * Returns 0 on success and returns non-zero and sets `errno` on failure.
+ *
+ * This function is not thread safe:
+ * 1. Calls to getenv() -- including those made by the implementation itself,
+ *    such as <time.h> functions checking $TZ -- may crash if made while the
+ *    environment is being modified.
+ * 2. Pointers returned by getenv() may be invalidated by calls to putenv().
+ * 3. The given pointer is added directly to the environment,
+ *    so the caller must ensure it is neither freed nor modified.
+ */
 int putenv(char* _Nonnull __assignment);
+
+/**
+ * [setenv(3)](https://man7.org/linux/man-pages/man3/setenv.3.html)
+ * adds/updates an environment variable.
+ *
+ * Returns 0 on success and returns non-zero and sets `errno` on failure.
+ * (If the environment variable already exists and `overwrite` is 0,
+ * the environment is left unchanged and this is considered success.)
+ *
+ * This function is not thread safe:
+ * 1. Calls to getenv() -- including those made by the implementation itself,
+ *    such as <time.h> functions checking $TZ -- may crash if made while the
+ *    environment is being modified.
+ * 2. This function leaks memory (by allocating a new name=value string),
+ *    but this does mean that the caller's pointers only need be valid and
+ *    immutable for the duration of the call to setenv().
+ */
 int setenv(const char* _Nonnull __name, const char* _Nonnull __value, int __overwrite);
+
+/**
+ * [unsetenv(3)](https://man7.org/linux/man-pages/man3/unsetenv.3.html)
+ * removes an environment variable.
+ *
+ * Returns 0 on success and returns non-zero and sets `errno` on failure.
+ *
+ * This function is not thread safe:
+ * 1. Calls to getenv() -- including those made by the implementation itself,
+ *    such as <time.h> functions checking $TZ -- may crash if made while the
+ *    environment is being modified.
+ * 2. This function leaks memory rather than free anything so that pointers
+ *    already handed out by getenv() are not invalidated.
+ */
 int unsetenv(const char* _Nonnull __name);
+
+/**
+ * [clearenv(3)](https://man7.org/linux/man-pages/man3/unsetenv.3.html)
+ * removes all environment variables.
+ *
+ * Returns 0 on success and returns non-zero and sets `errno` on failure.
+ *
+ * This function is not thread safe:
+ * 1. Calls to getenv() -- including those made by the implementation itself,
+ *    such as <time.h> functions checking $TZ -- may crash if made while the
+ *    environment is being modified.
+ * 2. This function leaks memory rather than free anything so that pointers
+ *    already handed out by getenv() are not invalidated.
+ */
 int clearenv(void);
 
 char* _Nullable mkdtemp(char* _Nonnull __template);
 char* _Nullable mktemp(char* _Nonnull __template) __attribute__((__deprecated__("mktemp is unsafe, use mkstemp or tmpfile instead")));
-
 
 #if __BIONIC_AVAILABILITY_GUARD(23)
 int mkostemp64(char* _Nonnull __template, int __flags) __INTRODUCED_IN(23);
