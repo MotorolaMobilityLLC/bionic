@@ -1,7 +1,6 @@
-/*	$OpenBSD: setenv.c,v 1.20 2022/08/08 22:40:03 millert Exp $ */
 /*
- * Copyright (c) 1987 Regents of the University of California.
- * All rights reserved.
+ * Copyright (c) 1987, 1993
+ *	The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,8 +30,53 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static char **lastenv;				/* last value of environ */
+
+/*
+ * __findenv --
+ *	Returns pointer to value associated with name, if any, else NULL.
+ *	Starts searching within the environmental array at offset.
+ *	Sets offset to be the offset of the name/value combination in the
+ *	environmental array, for use by putenv(3), setenv(3) and unsetenv(3).
+ *	Explicitly removes '=' in argument name.
+ */
+char *
+__findenv(const char *name, int len, int *offset)
+{
+	int i;
+	const char *np;
+	char **p, *cp;
+
+	if (name == NULL || environ == NULL)
+		return (NULL);
+	for (p = environ + *offset; (cp = *p) != NULL; ++p) {
+		for (np = name, i = len; i && *cp; i--)
+			if (*cp++ != *np++)
+				break;
+		if (i == 0 && *cp++ == '=') {
+			*offset = p - environ;
+			return (cp);
+		}
+	}
+	return (NULL);
+}
+
+/*
+ * getenv --
+ *	Returns ptr to value associated with name, if any, else NULL.
+ */
+char *
+getenv(const char *name)
+{
+	int offset = 0;
+	const char *np;
+
+	for (np = name; *np && *np != '='; ++np)
+		;
+	return (__findenv(name, static_cast<int>(np - name), &offset));
+}
 
 /*
  * putenv --
@@ -54,10 +98,10 @@ putenv(char *str)
 		return (-1);
 	}
 
-	if (__findenv(str, (int)(cp - str), &offset) != NULL) {
+	if (__findenv(str, static_cast<int>(cp - str), &offset) != NULL) {
 		environ[offset++] = str;
 		/* could be set multiple times */
-		while (__findenv(str, (int)(cp - str), &offset)) {
+		while (__findenv(str, static_cast<int>(cp - str), &offset)) {
 			for (P = &environ[offset];; ++P)
 				if (!(*P = *(P + 1)))
 					break;
@@ -71,7 +115,7 @@ putenv(char *str)
 			;
 		cnt = P - environ;
 	}
-	P = reallocarray(lastenv, cnt + 2, sizeof(char *));
+	P = static_cast<char**>(reallocarray(lastenv, cnt + 2, sizeof(char *)));
 	if (!P)
 		return (-1);
 	if (lastenv != environ && environ != NULL)
@@ -81,7 +125,6 @@ putenv(char *str)
 	environ[cnt + 1] = NULL;
 	return (0);
 }
-DEF_WEAK(putenv);
 
 /*
  * setenv --
@@ -107,7 +150,7 @@ setenv(const char *name, const char *value, int rewrite)
 	}
 
 	l_value = strlen(value);
-	if ((C = __findenv(name, (int)(np - name), &offset)) != NULL) {
+	if ((C = __findenv(name, static_cast<int>(np - name), &offset)) != NULL) {
 		int tmpoff = offset + 1;
 		if (!rewrite)
 			return (0);
@@ -119,7 +162,7 @@ setenv(const char *name, const char *value, int rewrite)
 		}
 #endif
 		/* could be set multiple times */
-		while (__findenv(name, (int)(np - name), &tmpoff)) {
+		while (__findenv(name, static_cast<int>(np - name), &tmpoff)) {
 			for (P = &environ[tmpoff];; ++P)
 				if (!(*P = *(P + 1)))
 					break;
@@ -132,7 +175,7 @@ setenv(const char *name, const char *value, int rewrite)
 				;
 			cnt = P - environ;
 		}
-		P = reallocarray(lastenv, cnt + 2, sizeof(char *));
+		P = static_cast<char**>(reallocarray(lastenv, cnt + 2, sizeof(char *)));
 		if (!P)
 			return (-1);
 		if (lastenv != environ && environ != NULL)
@@ -142,7 +185,7 @@ setenv(const char *name, const char *value, int rewrite)
 		environ[cnt + 1] = NULL;
 	}
 	if (!(environ[offset] =			/* name + `=' + value */
-	    malloc((int)(np - name) + l_value + 2)))
+	    static_cast<char*>(malloc(static_cast<int>(np - name) + l_value + 2))))
 		return (-1);
 	for (C = environ[offset]; (*C = *name++) && *C != '='; ++C)
 		;
@@ -150,7 +193,6 @@ setenv(const char *name, const char *value, int rewrite)
 		;
 	return (0);
 }
-DEF_WEAK(setenv);
 
 /*
  * unsetenv(name) --
@@ -175,11 +217,21 @@ unsetenv(const char *name)
 	}
 
 	/* could be set multiple times */
-	while (__findenv(name, (int)(np - name), &offset)) {
+	while (__findenv(name, static_cast<int>(np - name), &offset)) {
 		for (P = &environ[offset];; ++P)
 			if (!(*P = *(P + 1)))
 				break;
 	}
 	return (0);
 }
-DEF_WEAK(unsetenv);
+
+int clearenv() {
+  // TODO: this should also set environ to null.
+  char** e = environ;
+  if (e != nullptr) {
+    for (; *e; ++e) {
+      *e = nullptr;
+    }
+  }
+  return 0;
+}
