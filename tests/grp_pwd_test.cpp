@@ -496,6 +496,19 @@ static void expect_ids(T ids, bool is_group) {
     }
   }
 
+  // AID_PMGD (1098) was added in API level 37, but "trunk stable" means
+  // that the 2025Q* builds are tested with the _previous_ release's CTS.
+  if (android::base::GetIntProperty("ro.build.version.sdk", 0) == 36) {
+#if !defined(AID_PMGD)
+#define AID_PMGD 1098
+#endif
+    ids.erase(AID_PMGD);
+    expected_ids.erase(AID_PMGD);
+    if (getpwuid(AID_PMGD)) {
+      EXPECT_STREQ(getpwuid(AID_PMGD)->pw_name, "pmgd");
+    }
+  }
+
   EXPECT_EQ(expected_ids, ids) << return_differences();
 }
 #endif
