@@ -3901,3 +3901,19 @@ TEST(STDIO_TEST, glibc_bug_26557_open_memstream) {
   size_t size = 32;
   glibc_bug_26557_helper(open_memstream(&p, &size));
 }
+
+TEST(STDIO_TEST, fflush_POSIX_2008) {
+  // C23 still has fflush() on a read-only stream as undefined behavior.
+  // POSIX 2008 has "For a stream open for reading with an underlying file description,
+  // if the file is not already at EOF, and the file is one capable of seeking,
+  // the file offset of the underlying open file description shall be set to the file position of the stream,
+  // and any characters pushed back onto the stream by ungetc() or ungetwc()
+  // that have not subsequently been read from the stream shall be discarded
+  // (without further changing the file offset)".
+  // It doesn't look like macOS or glibc actually implement the "discard the unget buffer" part,
+  // but all the implementations seem to agree that fflush() should return success at least.
+  FILE* fp = fopen("/proc/version", "r");
+  ASSERT_TRUE(fp != nullptr);
+  ASSERT_EQ(0, fflush(fp));
+  fclose(fp);
+}
