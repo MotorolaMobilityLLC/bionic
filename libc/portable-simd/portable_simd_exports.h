@@ -45,6 +45,8 @@ void* portable_simd_memrchr_sse(const void*, int, size_t);
 void* portable_simd_memrchr_avx2(const void*, int, size_t);
 size_t portable_simd_strlen_sse(const char*);
 size_t portable_simd_strlen_avx2(const char*);
+size_t portable_simd_strnlen_sse(const char*, size_t);
+size_t portable_simd_strnlen_avx2(const char*, size_t);
 size_t portable_simd_wcslen_sse(const wchar_t*);
 size_t portable_simd_wcslen_avx2(const wchar_t*);
 wchar_t* portable_simd_wmemchr_sse(const wchar_t*, wchar_t, size_t);
