@@ -469,6 +469,29 @@ void ElfReader::FixMinAlignFor16KiB() {
       min_align_ = std::min(min_align_, relro_min_align);
     }
   }
+
+  if (min_align_ < 16 * 1024) {
+    return;
+  }
+
+  // In some apps we also observe binaries where the LOAD segments overlap when loaded with 16KiB
+  // pages, even though they have p_align >= 16KiB. Strictly speaking this is not a violation of the
+  // ELF specification, but it causes parts of the earlier LOAD segment to be discarded, which can
+  // cause issues. Therefore we check for this case as well, and set min_align_ to 4KiB if we detect
+  // it, ensuring that the binary is loaded in 16KiB compatibility mode.
+  ElfW(Addr) prev_load_end = 0;
+  for (size_t i = 0; i < phdr_num_; ++i) {
+    const ElfW(Phdr)* phdr = &phdr_table_[i];
+    if (phdr->p_type != PT_LOAD) {
+      continue;
+    }
+
+    if (prev_load_end > page_start(phdr->p_vaddr)) {
+      min_align_ = 4 * 1024;
+      break;
+    }
+    prev_load_end = phdr->p_vaddr + phdr->p_memsz;
+  }
 }
 
 /*
