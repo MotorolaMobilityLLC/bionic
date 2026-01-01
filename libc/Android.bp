@@ -1823,6 +1823,7 @@ cc_library_headers {
     visibility: [
         "//external/musl",
         "//external/rust/crates/v4l2r/android",
+        "//system/memory/libmeminfo/libelfutils",
     ],
     llndk: {
         llndk_headers: true,
@@ -1874,6 +1875,12 @@ cc_library_headers {
         },
         x86_64: {
             export_system_include_dirs: ["kernel/uapi/asm-x86"],
+        },
+    },
+
+    target: {
+        windows: {
+            enabled: true,
         },
     },
 }
