@@ -18,24 +18,24 @@
 
 #include <sys/vfs.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <string>
 
+#include <meminfo/kernel_page_size.h>
 #include "utils.h"
 
 template <typename StatFsT> void Check(StatFsT& sb) {
-#if defined(__x86_64__)
-  // On x86_64 based 16kb page size targets, the page size in userspace is simulated to 16kb but
-  // the underlying filesystem block size would remain unchanged, i.e., 4kb.
+  // On x86_64 based 16kb page size targets, the page size in userspace is simulated
+  // to 16kb but the underlying filesystem block size would remain the same as the
+  // underlying kernel page size. On all other targets the kernel page size is the
+  // same as the userspace page size.
   // For more info:
   // https://source.android.com/docs/core/architecture/16kb-page-size/getting-started-cf-x86-64-pgagnostic
-  EXPECT_EQ(4096, static_cast<int>(sb.f_bsize));
-#else
-  EXPECT_EQ(getpagesize(), static_cast<int>(sb.f_bsize));
-#endif
+  EXPECT_EQ(::android::meminfo::kernel_page_size(), static_cast<int>(sb.f_bsize));
   EXPECT_EQ(0U, sb.f_bfree);
   EXPECT_EQ(0U, sb.f_ffree);
   EXPECT_EQ(255, static_cast<int>(sb.f_namelen));

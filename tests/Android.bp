@@ -310,6 +310,7 @@ cc_test_library {
         "bionic_tests_defaults",
         "large_system_property_node_defaults",
     ],
+    header_libs: ["libmeminfo_headers"],
     srcs: [
         "__aeabi_read_tp_test.cpp",
         "__cxa_atexit_test.cpp",
