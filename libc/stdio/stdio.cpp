@@ -1389,15 +1389,11 @@ static int fflush_all() {
 int fflush(FILE* fp) {
   if (fp == nullptr) return fflush_all();
   ScopedFileLock sfl(fp);
-  return fflush_unlocked(fp);
+  return __sflush(fp);
 }
 
 int fflush_unlocked(FILE* fp) {
   if (fp == nullptr) return fflush_all();
-  if ((fp->_flags & (__SWR | __SRW)) == 0) {
-    errno = EBADF;
-    return EOF;
-  }
   return __sflush(fp);
 }
 
