@@ -674,11 +674,6 @@ int __swrite(void* cookie, const char* buf, int n) {
   return TEMP_FAILURE_RETRY(write(fp->_file, buf, n));
 }
 
-fpos_t __sseek(void* cookie, fpos_t offset, int whence) {
-  FILE* fp = reinterpret_cast<FILE*>(cookie);
-  return TEMP_FAILURE_RETRY(lseek(fp->_file, offset, whence));
-}
-
 off64_t __sseek64(void* cookie, off64_t offset, int whence) {
   FILE* fp = reinterpret_cast<FILE*>(cookie);
   return TEMP_FAILURE_RETRY(lseek64(fp->_file, offset, whence));

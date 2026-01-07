@@ -387,6 +387,12 @@ int putw(int value, FILE* fp) {
     return fwrite(&value, sizeof(value), 1, fp) == 1 ? 0 : EOF;
 }
 
+// LP32's <stdio.h> exposed this; LP64 uses __sseek64() which is private.
+fpos_t __sseek(void* cookie, fpos_t offset, int whence) {
+  FILE* fp = reinterpret_cast<FILE*>(cookie);
+  return TEMP_FAILURE_RETRY(lseek(fileno(fp), offset, whence));
+}
+
 } // extern "C"
 
 #endif // !defined (__LP64__)
