@@ -98,6 +98,12 @@ DEFINE_IFUNC_FOR(strlen) {
 }
 STRLEN_SHIM()
 
+DEFINE_IFUNC_FOR(strnlen) {
+  if (cpu_supports_x86_64_v3()) RETURN_FUNC(strnlen_func_t, portable_simd_strnlen_avx2);
+  RETURN_FUNC(strnlen_func_t, portable_simd_strnlen_sse);
+}
+STRNLEN_SHIM()
+
 DEFINE_IFUNC_FOR(wcslen) {
   if (cpu_supports_x86_64_v3()) RETURN_FUNC(wcslen_func_t, portable_simd_wcslen_avx2);
   RETURN_FUNC(wcslen_func_t, portable_simd_wcslen_sse);
@@ -109,4 +115,5 @@ DEFINE_IFUNC_FOR(wmemchr) {
   RETURN_FUNC(wmemchr_func_t, portable_simd_wmemchr_sse);
 }
 WMEMCHR_SHIM()
+
 }  // extern "C"

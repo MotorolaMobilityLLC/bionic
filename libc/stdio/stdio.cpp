@@ -674,11 +674,6 @@ int __swrite(void* cookie, const char* buf, int n) {
   return TEMP_FAILURE_RETRY(write(fp->_file, buf, n));
 }
 
-fpos_t __sseek(void* cookie, fpos_t offset, int whence) {
-  FILE* fp = reinterpret_cast<FILE*>(cookie);
-  return TEMP_FAILURE_RETRY(lseek(fp->_file, offset, whence));
-}
-
 off64_t __sseek64(void* cookie, off64_t offset, int whence) {
   FILE* fp = reinterpret_cast<FILE*>(cookie);
   return TEMP_FAILURE_RETRY(lseek64(fp->_file, offset, whence));
@@ -1389,15 +1384,11 @@ static int fflush_all() {
 int fflush(FILE* fp) {
   if (fp == nullptr) return fflush_all();
   ScopedFileLock sfl(fp);
-  return fflush_unlocked(fp);
+  return __sflush(fp);
 }
 
 int fflush_unlocked(FILE* fp) {
   if (fp == nullptr) return fflush_all();
-  if ((fp->_flags & (__SWR | __SRW)) == 0) {
-    errno = EBADF;
-    return EOF;
-  }
   return __sflush(fp);
 }
 

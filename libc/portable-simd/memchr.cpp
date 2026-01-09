@@ -466,6 +466,15 @@ PSIMD_LIBC_FUNCTION(void*, memrchr, const void* ptr, int ch, size_t count) {
       reinterpret_cast<const MemrchrTraits::CharType*>(ptr), ch, count));
 }
 
+PSIMD_LIBC_FUNCTION(size_t, strnlen, const char* ptr, size_t count) {
+  // strnlen is just `memchr(ptr, '\0', count)` with an extra step.
+  const auto* s = static_cast<const char*>(PSIMD_LIBC_FUNCTION_NAME(memchr)(ptr, '\0', count));
+  if (!s) {
+    return count;
+  }
+  return static_cast<size_t>(s - ptr);
+}
+
 PSIMD_LIBC_FUNCTION(wchar_t*, wmemchr, const wchar_t* ptr, wchar_t ch, size_t count) {
   using portable_simd::WmemchrTraits;
 
@@ -486,5 +495,6 @@ PSIMD_MAYBE_STRONG_ALIAS(wmemchr);
 #elif defined(__x86_64__)
 PSIMD_MAYBE_STRONG_ALIAS(memchr);
 PSIMD_MAYBE_STRONG_ALIAS(memrchr);
+PSIMD_MAYBE_STRONG_ALIAS(strnlen);
 PSIMD_MAYBE_STRONG_ALIAS(wmemchr);
 #endif
