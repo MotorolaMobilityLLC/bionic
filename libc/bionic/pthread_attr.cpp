@@ -203,8 +203,9 @@ int pthread_getattr_np(pthread_t t, pthread_attr_t* attr) {
   if (atomic_load(&thread->join_state) == THREAD_DETACHED) {
     attr->flags |= PTHREAD_ATTR_FLAG_DETACHED;
   }
-  // The main thread's stack information is not stored in thread->attr, and we need to
-  // collect that at runtime.
+  // The main thread's stack information is not stored in thread->attr,
+  // and we need to query it at runtime because it can change:
+  // the kernel will automatically expand the main thread's stack up to RLIMIT_STACK.
   if (thread->tid == getpid()) {
     return __pthread_attr_getstack_main_thread(&attr->stack_base, &attr->stack_size);
   }
