@@ -1751,6 +1751,29 @@ TEST(STRING_TEST, strspn) {
   EXPECT_EQ(6u, strspn("hello\x80world", "helo\x80rld"));
 }
 
+static void DoStrspnTest(uint8_t* raw_buf, size_t len) {
+  if (!len) {
+    return;
+  }
+
+  char* buf = reinterpret_cast<char*>(raw_buf);
+
+  if (len == 1) {
+    buf[0] = '\0';
+    EXPECT_EQ(0ul, strspn(buf, "abc"));
+    EXPECT_EQ(0ul, strspn("abc", buf));
+    return;
+  }
+
+  memset(buf, 'a', len - 1);
+  buf[len - 1] = '\0';
+  EXPECT_EQ(strspn(buf, buf), len - 1);
+}
+
+TEST(STRING_TEST, strspn_overread) {
+  RunSingleBufferOverreadTest(DoStrspnTest);
+}
+
 TEST(STRING_TEST, strcspn) {
   EXPECT_EQ(5u, strcspn("hello", ""));
   EXPECT_EQ(0u, strcspn("hello", "ehl"));
@@ -1759,6 +1782,35 @@ TEST(STRING_TEST, strcspn) {
 
   // Check that the implementation copes with top bit set characters.
   EXPECT_EQ(5u, strcspn("hello\x80world", "\x80"));
+}
+
+static void DoStrcspnTest(uint8_t* raw_buf, size_t len) {
+  if (len <= 2) {
+    return;
+  }
+
+  char* buf = reinterpret_cast<char*>(raw_buf);
+
+  // Split the buffer into two equal parts with different contents, and then
+  // run both configurations on strcspn. This should provide sufficient variety
+  // in sizes.
+  const size_t split_point = len / 2;
+  char* buf_1_start = buf;
+  char* buf_1_nul = buf + split_point;
+  char* buf_2_start = buf_1_nul + 1;
+  char* buf_2_nul = buf + len - 1;
+
+  memset(buf_1_start, 'a', buf_1_nul - buf_1_start);
+  *buf_1_nul = '\0';
+  memset(buf_2_start, 'b', buf_2_nul - buf_2_start);
+  *buf_2_nul = '\0';
+
+  EXPECT_EQ(strcspn(buf_2_start, buf_1_start), len - split_point - 2);
+  EXPECT_EQ(strcspn(buf_1_start, buf_2_start), split_point);
+}
+
+TEST(STRING_TEST, strcspn_overread) {
+  RunSingleBufferOverreadTest(DoStrcspnTest);
 }
 
 TEST(STRING_TEST, strsep) {
