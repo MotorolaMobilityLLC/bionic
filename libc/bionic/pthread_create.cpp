@@ -106,23 +106,25 @@ static void __init_alternate_signal_stack(pthread_internal_t* thread) {
   }
 #endif
   void* stack_base = mmap(nullptr, SIGNAL_STACK_SIZE, prot, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (stack_base != MAP_FAILED) {
-    // Create a guard to catch stack overflows in signal handlers.
-    if (mprotect(stack_base, PTHREAD_GUARD_SIZE, PROT_NONE) == -1) {
-      munmap(stack_base, SIGNAL_STACK_SIZE);
-      return;
-    }
-    stack_t ss;
-    ss.ss_sp = reinterpret_cast<uint8_t*>(stack_base) + PTHREAD_GUARD_SIZE;
-    ss.ss_size = SIGNAL_STACK_SIZE - PTHREAD_GUARD_SIZE;
-    ss.ss_flags = 0;
-    sigaltstack(&ss, nullptr);
-    thread->alternate_signal_stack = stack_base;
-
-    // We can only use const static allocated string for mapped region name, as Android kernel
-    // uses the string pointer directly when dumping /proc/pid/maps.
-    prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, ss.ss_sp, ss.ss_size, "thread signal stack");
+  if (stack_base == MAP_FAILED) {
+    async_safe_fatal("failed to allocate signal stack: %m");
   }
+
+  // Create a guard to catch stack overflows in signal handlers.
+  if (mprotect(stack_base, PTHREAD_GUARD_SIZE, PROT_NONE) == -1) {
+    async_safe_fatal("signal stack guard mprotect(%p, %zu) failed: %m", stack_base, PTHREAD_GUARD_SIZE);
+  }
+
+  stack_t ss;
+  ss.ss_sp = reinterpret_cast<uint8_t*>(stack_base) + PTHREAD_GUARD_SIZE;
+  ss.ss_size = SIGNAL_STACK_SIZE - PTHREAD_GUARD_SIZE;
+  ss.ss_flags = 0;
+  sigaltstack(&ss, nullptr);
+  thread->alternate_signal_stack = stack_base;
+
+  // We can only use const static allocated string for mapped region name, as Android kernel
+  // uses the string pointer directly when dumping /proc/pid/maps.
+  prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, ss.ss_sp, ss.ss_size, "thread signal stack");
 }
 
 static void __init_shadow_call_stack(pthread_internal_t* thread __unused) {
