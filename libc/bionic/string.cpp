@@ -122,6 +122,14 @@ size_t strlcpy(char* dst, const char* src, size_t n) {
 // The approach here is to optimize strcspn()/strspn() and write everything
 // else in terms of those two.
 
+// x86_64 has a psimd strspn.
+#if defined(__aarch64__) || defined(__arm__) || defined(__i386__) || defined(__riscv)
+#define NEED_GENERIC_STRSPN 1
+#else
+#define NEED_GENERIC_STRSPN 0
+#endif
+
+#if NEED_GENERIC_STRSPN
 // Benchmarking shows that bool[] works better than a bitset,
 // and 256 bytes of stack (the latter half of which is never used in practice)
 // doesn't seem unreasonable.
@@ -131,7 +139,9 @@ static inline void init_delimiter_set(bool* set, const char* delims) {
     set[*d] = true;
   }
 }
+#endif
 
+#if NEED_GENERIC_STRSPN
 __attribute__((__flatten__))
 size_t strspn(const char* ss, const char* delims) {
   const uint8_t* s = reinterpret_cast<const uint8_t*>(ss);
@@ -147,7 +157,9 @@ size_t strspn(const char* ss, const char* delims) {
   }
   return p - s;
 }
+#endif
 
+#if NEED_GENERIC_STRSPN
 __attribute__((__flatten__))
 size_t strcspn(const char* ss, const char* delims) {
   const uint8_t* s = reinterpret_cast<const uint8_t*>(ss);
@@ -164,6 +176,7 @@ size_t strcspn(const char* ss, const char* delims) {
   }
   return p - s;
 }
+#endif
 
 __attribute__((__flatten__))
 char* strpbrk(const char* s, const char* delims) {
