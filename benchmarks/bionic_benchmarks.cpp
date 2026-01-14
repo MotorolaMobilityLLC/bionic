@@ -523,8 +523,9 @@ std::map<std::string, args_vector_t> GetShorthand() {
 
   int page_sz = getpagesize();
   std::vector<int> sub_page_sizes = {page_sz / 2, page_sz / 4, page_sz / 8};
-  std::vector<int> multi_page_sizes = {page_sz,      page_sz * 2,  page_sz * 3,  page_sz * 10,
-                                       page_sz * 25, page_sz * 50, page_sz * 75, page_sz * 100};
+  std::vector<int> multi_page_sizes = {page_sz,       page_sz * 2,   page_sz * 3,   page_sz * 10,
+                                       page_sz * 25,  page_sz * 50,  page_sz * 75,  page_sz * 100,
+                                       page_sz * 128, page_sz * 256, page_sz * 512, page_sz * 1024};
   std::vector<int> all_page_sizes(sub_page_sizes);
   all_page_sizes.insert(all_page_sizes.end(), multi_page_sizes.begin(), multi_page_sizes.end());
 
