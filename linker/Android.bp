@@ -370,6 +370,7 @@ cc_defaults {
     },
 
     compile_multilib: "both",
+    xom: false,
 
     apex_available: [
         "//apex_available:platform",
