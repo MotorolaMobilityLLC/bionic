@@ -1688,7 +1688,6 @@ cc_defaults {
         export_llndk_headers: ["libc_headers"],
     },
     afdo: true,
-
 }
 
 cc_library {
