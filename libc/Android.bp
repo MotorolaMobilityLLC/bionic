@@ -1688,6 +1688,7 @@ cc_defaults {
         export_llndk_headers: ["libc_headers"],
     },
     afdo: true,
+
 }
 
 cc_library {
@@ -1695,8 +1696,6 @@ cc_library {
     defaults: [
         "libc_ndk_defaults",
     ],
-    // TODO(b/463733379)
-    xom: false,
 }
 
 cc_library_static {
