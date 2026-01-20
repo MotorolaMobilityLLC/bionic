@@ -742,6 +742,7 @@ cc_defaults {
             srcs: [
                 "portable-simd/memchr.cpp",
                 "portable-simd/strlen.cpp",
+                "portable-simd/strspn.cpp",
             ],
         },
     },
