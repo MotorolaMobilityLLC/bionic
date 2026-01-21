@@ -33,6 +33,10 @@
 extern "C" {
 
 // arm64
+size_t portable_simd_strcspn_neon(const char*, const char*);
+size_t portable_simd_strcspn_neon_mte(const char*, const char*);
+size_t portable_simd_strspn_neon(const char*, const char*);
+size_t portable_simd_strspn_neon_mte(const char*, const char*);
 size_t portable_simd_wcslen_neon(const wchar_t*);
 size_t portable_simd_wcslen_neon_mte(const wchar_t*);
 wchar_t* portable_simd_wmemchr_neon(const wchar_t*, wchar_t, size_t);
