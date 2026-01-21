@@ -502,6 +502,9 @@ ndk_library {
     name: "libm",
     symbol_file: "libm.map.txt",
     first_version: "9",
+    // This runtime library does not depend on ART at all, so it simply gets an
+    // empty denylist.
+    bypass_artless_denylist: true,
 }
 
 genrule {

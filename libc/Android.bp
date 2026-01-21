@@ -2362,12 +2362,18 @@ ndk_library {
     name: "libc",
     symbol_file: "libc.map.txt",
     first_version: "9",
+    // This runtime library does not depend on ART at all, so it simply gets an
+    // empty denylist.
+    bypass_artless_denylist: true,
 }
 
 ndk_library {
     name: "libstdc++",
     symbol_file: "libstdc++.map.txt",
     first_version: "9",
+    // This runtime library does not depend on ART at all, so it simply gets an
+    // empty denylist.
+    bypass_artless_denylist: true,
 }
 
 // Export these headers for toolbox to process
