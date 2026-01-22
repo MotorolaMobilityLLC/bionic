@@ -89,6 +89,28 @@ bool ElfReader::HasAtMostOneRelroSegment(const ElfW(Phdr)** relro_phdr) {
   return true;
 }
 
+static uint64_t get_max_section_alignment(const ElfW(Shdr) * shdr_table, size_t shdr_num) {
+  ElfW(Xword) max_align = 1;
+  for (size_t i = 0; i < shdr_num; ++i) {
+    if (shdr_table[i].sh_flags & SHF_ALLOC) {
+      max_align = std::max(static_cast<ElfW(Xword)>(max_align),
+                           static_cast<ElfW(Xword)>(shdr_table[i].sh_addralign));
+    }
+  }
+
+  return static_cast<uint64_t>(max_align);
+}
+
+/*
+ * Returns the offset/shift needed to align @vaddr to a page boundary
+ * for RX|RW compat loading.
+ */
+static inline ElfW(Addr) perm_boundary_offset(const ElfW(Addr) addr) {
+  ElfW(Addr) offset = page_offset(addr);
+
+  return offset ? page_size() - offset : 0;
+}
+
 /*
  * In 16KiB compatibility mode ELFs with the following segment layout
  * can be loaded successfully:
@@ -174,36 +196,36 @@ bool ElfReader::IsEligibleForRXRWAppCompat(ElfW(Addr)* vaddr) {
     }
   }
 
-  if (!relro_phdr) {
+  if (relro_phdr) {
+    // The RELRO segment is present, it must be the prefix of the first RW segment.
+    if (!segment_contains_prefix(first_rw, relro_phdr)) {
+      DL_WARN("\"%s\": RX|RW compat loading failed: RELRO is not in the first RW segment",
+              name_.c_str());
+      return false;
+    }
+
+    uint64_t end;
+    if (__builtin_add_overflow(relro_phdr->p_vaddr, relro_phdr->p_memsz, &end)) {
+      DL_WARN("\"%s\": RX|RW compat loading failed: relro vaddr + memsz overflowed", name_.c_str());
+      return false;
+    }
+    *vaddr = __builtin_align_up(end, kCompatPageSize);
+  } else {
     *vaddr = __builtin_align_down(first_rw->p_vaddr, kCompatPageSize);
-    return true;
   }
 
-  // The RELRO segment is present, it must be the prefix of the first RW segment.
-  if (!segment_contains_prefix(first_rw, relro_phdr)) {
-    DL_WARN("\"%s\": RX|RW compat loading failed: RELRO is not in the first RW segment",
-            name_.c_str());
+  // The extra offset applied to the compat-loaded binary must respect its maximum required
+  // alignment, otherwise we should use RWX compat mode, which doesn't apply any extra offsets.
+  uint64_t max_section_align = get_max_section_alignment(shdr_table_, shdr_num_);
+  uint64_t offset = perm_boundary_offset(*vaddr);
+  if (offset % max_section_align != 0) {
+    DL_WARN("\"%s\": RX|RW compat loading failed: maximum section alignment requirement of %" PRIu64
+            " is too strict to apply an offset of %" PRIu64 " bytes",
+            name_.c_str(), max_section_align, offset);
     return false;
   }
 
-  uint64_t end;
-  if (__builtin_add_overflow(relro_phdr->p_vaddr, relro_phdr->p_memsz, &end)) {
-    DL_WARN("\"%s\": RX|RW compat loading failed: relro vaddr + memsz overflowed", name_.c_str());
-    return false;
-  }
-
-  *vaddr = __builtin_align_up(end, kCompatPageSize);
   return true;
-}
-
-/*
- * Returns the offset/shift needed to align @vaddr to a page boundary
- * for RX|RW compat loading.
- */
-static inline ElfW(Addr) perm_boundary_offset(const ElfW(Addr) addr) {
-  ElfW(Addr) offset = page_offset(addr);
-
-  return offset ? page_size() - offset : 0;
 }
 
 enum relro_pos_t {
