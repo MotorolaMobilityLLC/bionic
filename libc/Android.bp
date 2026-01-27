@@ -827,6 +827,13 @@ cc_defaults {
 cc_library_static {
     name: "libc_bionic_portable_simd_arm64_neon_no_mte",
     defaults: ["libc_bionic_portable_simd_arm64_neon_defaults"],
+    arch: {
+        arm64: {
+            srcs: [
+                "portable-simd/strspn.cpp",
+            ],
+        },
+    },
 }
 
 cc_library_static {
@@ -837,6 +844,9 @@ cc_library_static {
             cflags: [
                 "-DPSIMD_MTE_ENABLED=1",
             ],
+            // N.B., strspn's regular implementation is MTE-compatible, so it
+            // exports strspn/strcspn symbols directly. No need to include
+            // here.
         },
     },
 }
