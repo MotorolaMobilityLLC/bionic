@@ -122,8 +122,8 @@ size_t strlcpy(char* dst, const char* src, size_t n) {
 // The approach here is to optimize strcspn()/strspn() and write everything
 // else in terms of those two.
 
-// x86_64 has a psimd strspn.
-#if defined(__aarch64__) || defined(__arm__) || defined(__i386__) || defined(__riscv)
+// arm64 and x86_64 have a psimd strspn.
+#if defined(__arm__) || defined(__i386__) || defined(__riscv)
 #define NEED_GENERIC_STRSPN 1
 #else
 #define NEED_GENERIC_STRSPN 0

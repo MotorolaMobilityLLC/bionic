@@ -503,10 +503,8 @@ cc_library_static {
         "upstream-openbsd/lib/libc/stdio/vswprintf.c",
         "upstream-openbsd/lib/libc/stdio/wbuf.c",
         "upstream-openbsd/lib/libc/stdio/wsetup.c",
-        "upstream-openbsd/lib/libc/stdlib/getenv.c",
         "upstream-openbsd/lib/libc/stdlib/getsubopt.c",
         "upstream-openbsd/lib/libc/stdlib/recallocarray.c",
-        "upstream-openbsd/lib/libc/stdlib/setenv.c",
         "upstream-openbsd/lib/libc/stdlib/tfind.c",
         "upstream-openbsd/lib/libc/stdlib/tsearch.c",
         "upstream-openbsd/lib/libc/string/strcasestr.c",
@@ -829,6 +827,13 @@ cc_defaults {
 cc_library_static {
     name: "libc_bionic_portable_simd_arm64_neon_no_mte",
     defaults: ["libc_bionic_portable_simd_arm64_neon_defaults"],
+    arch: {
+        arm64: {
+            srcs: [
+                "portable-simd/strspn.cpp",
+            ],
+        },
+    },
 }
 
 cc_library_static {
@@ -839,6 +844,9 @@ cc_library_static {
             cflags: [
                 "-DPSIMD_MTE_ENABLED=1",
             ],
+            // N.B., strspn's regular implementation is MTE-compatible, so it
+            // exports strspn/strcspn symbols directly. No need to include
+            // here.
         },
     },
 }
@@ -898,7 +906,6 @@ cc_library_static {
         "bionic/casecmp.cpp",
         "bionic/chmod.cpp",
         "bionic/chown.cpp",
-        "bionic/clearenv.cpp",
         "bionic/clock.cpp",
         "bionic/clock_getcpuclockid.cpp",
         "bionic/clock_nanosleep.cpp",
@@ -908,6 +915,7 @@ cc_library_static {
         "bionic/div.cpp",
         "bionic/dup.cpp",
         "bionic/endian.cpp",
+        "bionic/env.cpp",
         "bionic/environ.cpp",
         "bionic/err.cpp",
         "bionic/error.cpp",
