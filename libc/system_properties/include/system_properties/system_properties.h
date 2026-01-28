@@ -52,7 +52,7 @@ class SystemProperties {
   BIONIC_DISALLOW_COPY_AND_ASSIGN(SystemProperties);
 
   bool Init(const char* filename);
-  bool Reload(bool load_default_path);
+  bool EnableOverrides();
   bool AreaInit(const char* filename, bool* fsetxattr_failed);
   bool AreaInit(const char* filename, bool* fsetxattr_failed, bool load_default_path);
   uint32_t AreaSerial();
@@ -90,6 +90,7 @@ class SystemProperties {
   bool InitContexts(bool load_default_path);
 
   bool initialized_;
+  bool use_appcompat_override_;
   PropertiesFilename properties_filename_;
   PropertiesFilename appcompat_filename_;
 };
