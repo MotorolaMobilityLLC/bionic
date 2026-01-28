@@ -114,7 +114,16 @@ int fprintf(FILE* _Nonnull __fp , const char* _Nonnull __fmt, ...) __printflike(
 int fputc(int __ch, FILE* _Nonnull __fp);
 int fputs(const char* _Nonnull __s, FILE* _Nonnull __fp);
 size_t fread(void* _Nonnull __buf, size_t __size, size_t __count, FILE* _Nonnull __fp);
+
+/**
+ * [fscanf(3)](https://man7.org/linux/man-pages/man3/fscanf.3.html)
+ * parses input from a file using a format string.
+ *
+ * Returns the number of successful matches,
+ * or EOF if there are no matches before end of file.
+ */
 int fscanf(FILE* _Nonnull __fp, const char* _Nonnull __fmt, ...) __scanflike(2, 3);
+
 size_t fwrite(const void* _Nonnull __buf, size_t __size, size_t __count, FILE* _Nonnull __fp);
 __nodiscard int getc(FILE* _Nonnull __fp);
 __nodiscard int getchar(void);
@@ -146,10 +155,30 @@ int putchar(int __ch);
 int puts(const char* _Nonnull __s);
 int remove(const char* _Nonnull __path);
 void rewind(FILE* _Nonnull __fp);
+
+/**
+ * Equivalent to fscanf() with stdin as the file.
+ */
 int scanf(const char* _Nonnull __fmt, ...) __scanflike(1, 2);
+
 void setbuf(FILE* _Nonnull __fp, char* _Nullable __buf);
 int setvbuf(FILE* _Nonnull __fp, char* _Nullable __buf, int __mode, size_t __size);
+
+/**
+ * [sscanf(3)](https://man7.org/linux/man-pages/man3/sscanf.3.html)
+ * parses input from a string using a format string.
+ *
+ * Note that many sscanf() implementations, including Android's,
+ * call strlen() on the input which can lead to quadratic behavior on long strings.
+ * In particular, this means that if you're working with a file,
+ * you should prefer to call fscanf() rather than read a line into a string
+ * and then using sscanf().
+ *
+ * Returns the number of successful matches,
+ * or EOF if there are no matches before the end of the string.
+ */
 int sscanf(const char* _Nonnull __s, const char* _Nonnull __fmt, ...) __scanflike(2, 3);
+
 int ungetc(int __ch, FILE* _Nonnull __fp);
 int vfprintf(FILE* _Nonnull __fp, const char* _Nonnull __fmt, va_list __args) __printflike(2, 0);
 int vprintf(const char* _Nonnull __fp, va_list __args) __printflike(1, 0);
