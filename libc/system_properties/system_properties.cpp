@@ -137,10 +137,12 @@ bool SystemProperties::AreaInit(const char* filename, bool* fsetxattr_failed,
   return true;
 }
 
-bool SystemProperties::EnableOverrides() {
-  CHECK(initialized_);
-  use_appcompat_override_ = true;
-  return true;
+bool SystemProperties::Reload(bool load_default_path) {
+  if (!initialized_) {
+    return true;
+  }
+
+  return InitContexts(load_default_path);
 }
 
 uint32_t SystemProperties::AreaSerial() {
@@ -160,23 +162,6 @@ uint32_t SystemProperties::AreaSerial() {
 const prop_info* SystemProperties::Find(const char* name) {
   if (!initialized_) {
     return nullptr;
-  }
-
-  // if appcompat override is enabled, we first try finding APPCOMPAT_PREFIXed system
-  // property
-  if (use_appcompat_override_) {
-    const size_t totalLength = strlen(APPCOMPAT_PREFIX) + strlen(name) + 1;
-    char overrideName[totalLength];
-
-    snprintf(overrideName, totalLength, "%s%s", APPCOMPAT_PREFIX, name);
-
-    prop_area* pa = contexts_->GetPropAreaForName(overrideName);
-    if (pa) {
-      const prop_info* pi = pa->find(overrideName);
-      if (pi) {
-        return pi;
-      }
-    }
   }
 
   prop_area* pa = contexts_->GetPropAreaForName(name);

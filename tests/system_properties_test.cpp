@@ -179,7 +179,7 @@ TEST(properties, __system_property_add_appcompat) {
     if (ret != 0) {
       ASSERT_ERRNO(0);
     }
-    system_properties.EnableOverrides();
+    system_properties.Reload(true);
 
     ASSERT_EQ(6, system_properties.Get(name, propvalue));
     ASSERT_STREQ(propvalue, "value2");
