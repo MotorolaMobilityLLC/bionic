@@ -5,7 +5,7 @@
 #
 # Each non-blank, non-comment line has the following format:
 #
-#     func_name[|alias_list][:syscall_name]([parameter_list]) arch_list
+#     func_name[|alias_list][:syscall_name[:socketcall_id]]([parameter_list]) arch_list
 #
 # where:
 #     arch_list ::= "all" | arches
@@ -21,6 +21,10 @@
 # For example, the traditional _exit() function has a C99 alias _Exit().
 #
 # No return type is specified, because it's not needed.
+#
+# The socketcall_id parameter supports x86's
+# https://man7.org/linux/man-pages/man2/socketcall.2.html
+# and can be ignored for all other syscalls and architectures.
 #
 # The number of registers required for the arguments is computed by the script,
 # based on the parameter list given here. It handles the need for register
@@ -258,23 +262,41 @@ __rt_sigqueueinfo:rt_sigqueueinfo(pid_t, int, siginfo_t*)  all
 __signalfd4:signalfd4(int, const sigset64_t*, size_t, int)  all
 
 # sockets
-__socket:socket(int, int, int)  all
-__socketpair:socketpair(int, int, int, int*)  all
+__socket:socket(int, int, int)              arm,lp64
+__socketpair:socketpair(int, int, int, int*)    arm,lp64
 bind(int, struct sockaddr*, socklen_t)  all
-__connect:connect(int, struct sockaddr*, socklen_t)  all
-listen(int, int)  all
+__connect:connect(int, struct sockaddr*, socklen_t)   arm,lp64
+listen(int, int) all
 __accept4:accept4(int, struct sockaddr*, socklen_t*, int)  all
 getsockname(int, struct sockaddr*, socklen_t*)  all
 getpeername(int, struct sockaddr*, socklen_t*)  all
-__sendto:sendto(int, const void*, size_t, int, const struct sockaddr*, socklen_t)  all
-recvfrom(int, void*, size_t, unsigned int, struct sockaddr*, socklen_t*)  all
+__sendto:sendto(int, const void*, size_t, int, const struct sockaddr*, socklen_t)  arm,lp64
+recvfrom(int, void*, size_t, unsigned int, struct sockaddr*, socklen_t*)  arm,lp64
 shutdown(int, int)  all
-setsockopt(int, int, int, const void*, socklen_t)  all
-getsockopt(int, int, int, void*, socklen_t*)  all
-__recvmsg:recvmsg(int, struct msghdr*, unsigned int)  all
-__sendmsg:sendmsg(int, const struct msghdr*, unsigned int)  all
-__recvmmsg:recvmmsg(int, struct mmsghdr*, unsigned int, int, const struct timespec*)  all
-__sendmmsg:sendmmsg(int, struct mmsghdr*, unsigned int, int)  all
+setsockopt(int, int, int, const void*, socklen_t)  arm,lp64
+getsockopt(int, int, int, void*, socklen_t*)  arm,lp64
+__recvmsg:recvmsg(int, struct msghdr*, unsigned int)   arm,lp64
+__sendmsg:sendmsg(int, const struct msghdr*, unsigned int)  arm,lp64
+__recvmmsg:recvmmsg(int, struct mmsghdr*, unsigned int, int, const struct timespec*)   all
+__sendmmsg:sendmmsg(int, struct mmsghdr*, unsigned int, int)   all
+
+# sockets for x86. These are done as an "indexed" call to socketcall syscall.
+# This should be obsolete, but in practice there are a lot of seccomp filters
+# that would need to be updated for us to switch to the regular system calls,
+# especially in Chrome, and it probably makes more sense to just wait for x86
+# to be removed than put the effort in.
+# See http://b/423197304 for more background, and http://b/435724036 for advice
+# on how to test WebView changes if you do decide to try to remove these before
+# we just drop 32-bit entirely.
+__socket:socketcall:1(int, int, int) x86
+__connect:socketcall:3(int, struct sockaddr*, socklen_t)   x86
+__socketpair:socketcall:8(int, int, int, int*)    x86
+__sendto:socketcall:11(int, const void*, size_t, int, const struct sockaddr*, socklen_t)  x86
+recvfrom:socketcall:12(int, void*, size_t, unsigned int, struct sockaddr*, socklen_t*)  x86
+setsockopt:socketcall:14(int, int, int, const void*, socklen_t)  x86
+getsockopt:socketcall:15(int, int, int, void*, socklen_t*)    x86
+__sendmsg:socketcall:16(int, const struct msghdr*, unsigned int)  x86
+__recvmsg:socketcall:17(int, struct msghdr*, unsigned int)   x86
 
 # scheduler & real-time
 sched_get_priority_max(int policy) all

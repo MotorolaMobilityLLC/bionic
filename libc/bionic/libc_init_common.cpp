@@ -97,7 +97,7 @@ static void __check_max_thread_id() {
   if (gettid() > 65535) {
     async_safe_fatal("32-bit pthread_mutex_t only supports pids <= 65535; "
                      "current pid %d; "
-                     "`echo 65535 > /proc/sys/kernel/pid_max` as root",
+                     "`echo 65535 | sudo tee /proc/sys/kernel/pid_max`",
                      gettid());
   }
 }
