@@ -262,7 +262,7 @@ __rt_sigqueueinfo:rt_sigqueueinfo(pid_t, int, siginfo_t*)  all
 __signalfd4:signalfd4(int, const sigset64_t*, size_t, int)  all
 
 # sockets
-__socket:socket(int, int, int)  all
+__socket:socket(int, int, int)              arm,lp64
 __socketpair:socketpair(int, int, int, int*)    arm,lp64
 bind(int, struct sockaddr*, socklen_t)  all
 __connect:connect(int, struct sockaddr*, socklen_t)   arm,lp64
@@ -288,6 +288,7 @@ __sendmmsg:sendmmsg(int, struct mmsghdr*, unsigned int, int)   all
 # See http://b/423197304 for more background, and http://b/435724036 for advice
 # on how to test WebView changes if you do decide to try to remove these before
 # we just drop 32-bit entirely.
+__socket:socketcall:1(int, int, int) x86
 __connect:socketcall:3(int, struct sockaddr*, socklen_t)   x86
 __socketpair:socketcall:8(int, int, int, int*)    x86
 __sendto:socketcall:11(int, const void*, size_t, int, const struct sockaddr*, socklen_t)  x86
