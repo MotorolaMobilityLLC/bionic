@@ -26,7 +26,11 @@
 #include <sys/cdefs.h>
 
 #include <algorithm>
+#include <array>
 #include <limits>
+#include <numeric>
+#include <string>
+#include <string_view>
 #include <vector>
 
 #include "buffer_tests.h"
@@ -1811,6 +1815,110 @@ static void DoStrcspnTest(uint8_t* raw_buf, size_t len) {
 
 TEST(STRING_TEST, strcspn_overread) {
   RunSingleBufferOverreadTest(DoStrcspnTest);
+}
+
+// Haystack size classes for large needle test functions; see comments in those
+// for how these were determined.
+constexpr auto STRSPN_HAYSTACK_SIZE_CLASSES = {16, 64, 128, 192, 256};
+
+// Returns a string of 0x01, 0x02, 0x03, ... 0xFF
+static std::string StringOfAllChars() {
+  std::string chars(255, 'a');
+  std::iota(chars.begin(), chars.end(), 1);
+  return chars;
+}
+
+static std::string MustReplaceChar(std::string_view haystack, char replace_what,
+                                   char replace_with) {
+  std::string s{haystack};
+  auto i = s.find(replace_what);
+  if (i == std::string::npos) {
+    fprintf(stderr, "Fatal: no '%c' in given string.\n", replace_what);
+    abort();
+  }
+  s[i] = replace_with;
+  return s;
+}
+
+TEST(STRING_TEST, strspn_large_needle_many_haystack_sizes) {
+  // This test was built with psimd's strspn impl in mind, which is written:
+  // - with one path for keep/reject sets of <= 4 chars, falling back to
+  // - one path for haystacks <= 128B, falling back to
+  // - one general path for all other cases
+  //
+  // The 'general path for all other cases' also branches based on whether the
+  // keep/reject set has any chars >= 0x80.
+  //
+  // Most existing handwritten tests fall into the "<= 4 chars keep/reject set"
+  // path, so this ignores that.
+  const std::string all_chars = StringOfAllChars();
+  for (size_t size_class : STRSPN_HAYSTACK_SIZE_CLASSES) {
+    std::string haystack(size_class, 'a');
+    EXPECT_EQ(strspn(haystack.c_str(), all_chars.c_str()), size_class);
+
+    auto test_back_off_from_end = [&](char target, size_t set_size = 0) {
+      const char not_target = target + 1;
+      std::fill(haystack.begin(), haystack.end(), not_target);
+
+      std::string all_chars_except_target = MustReplaceChar(all_chars, target, not_target);
+      if (set_size) {
+        all_chars_except_target.resize(set_size);
+      }
+
+      for (size_t i = 1; i < 16; ++i) {
+        char& replace_char = haystack[haystack.size() - i];
+        char old_char = replace_char;
+        replace_char = target;
+        EXPECT_EQ(strspn(haystack.c_str(), all_chars_except_target.c_str()), size_class - i);
+        replace_char = old_char;
+      }
+    };
+
+    test_back_off_from_end('a');
+    test_back_off_from_end('a', /*set_size=*/127);
+    test_back_off_from_end(0xA0);
+  }
+}
+
+TEST(STRING_TEST, strcspn_large_needle_many_haystack_sizes) {
+  // This test was built with psimd's strcspn impl in mind, which is written:
+  // strspn, so the same special cases apply:
+  // - with one path for keep/reject sets of <= 4 chars, falling back to
+  // - one path for haystacks <= 128B, falling back to
+  // - one general path for all other cases
+  //
+  // The 'general path for all other cases' also branches based on whether the
+  // keep/reject set has any chars >= 0x80.
+  //
+  // Most existing handwritten tests fall into the "<= 4 chars keep/reject set"
+  // path, so this ignores that.
+  const std::string all_chars = StringOfAllChars();
+  for (size_t size_class : STRSPN_HAYSTACK_SIZE_CLASSES) {
+    std::string haystack(size_class, 'a');
+
+    auto test_back_off_from_end = [&](char target, size_t set_size = 0) {
+      const char not_target = target + 1;
+      std::fill(haystack.begin(), haystack.end(), target);
+
+      std::string all_chars_except_target = MustReplaceChar(all_chars, target, not_target);
+      if (set_size) {
+        all_chars_except_target.resize(set_size);
+      }
+
+      EXPECT_EQ(strcspn(haystack.c_str(), all_chars_except_target.c_str()), size_class);
+      for (size_t i = 1; i < 16; ++i) {
+        char& replace_char = haystack[haystack.size() - i];
+        char old_char = replace_char;
+        replace_char = not_target;
+        EXPECT_EQ(strcspn(haystack.c_str(), all_chars_except_target.c_str()), size_class - i);
+        replace_char = old_char;
+      }
+    };
+
+    test_back_off_from_end('a');
+    test_back_off_from_end('a', /*set_size=*/127);
+    test_back_off_from_end(0xA0);
+  }
 }
 
 TEST(STRING_TEST, strsep) {
