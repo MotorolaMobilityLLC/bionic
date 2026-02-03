@@ -29,6 +29,7 @@
 #include <sys/sysinfo.h>
 
 #include <dirent.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -37,17 +38,23 @@
 #include "private/ScopedReaddir.h"
 #include "private/get_cpu_count_from_string.h"
 
+// The __get_cpu_count function needs a 4096 byte buffer to match a page size
+// to avoid malloc/free when reading from a file.
+#pragma clang diagnostic ignored "-Wframe-larger-than="
+
 int __get_cpu_count(const char* sys_file) {
   int cpu_count = 1;
-  FILE* fp = fopen(sys_file, "re");
-  if (fp != nullptr) {
-    char* line = nullptr;
-    size_t allocated_size = 0;
-    if (getline(&line, &allocated_size, fp) != -1) {
-      cpu_count = GetCpuCountFromString(line);
+  int fd = open(sys_file, O_RDONLY | O_CLOEXEC);
+  if (fd >= 0) {
+    // DEVICE_ATTR sysfs attributes are limited to a single page in size.
+    // Setting this buffer at 4096 bytes handles systems with hundreds
+    // of cores and meets the page size.
+    char buf[4096] __attribute__((__uninitialized__));
+    ssize_t rc = read(fd, buf, sizeof(buf));
+    if (rc > 0) {
+      cpu_count = GetCpuCountFromString(buf);
     }
-    free(line);
-    fclose(fp);
+    close(fd);
   }
   return cpu_count;
 }

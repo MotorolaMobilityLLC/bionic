@@ -37,7 +37,7 @@
 static int GetCpuCountFromString(const char* s) {
   int cpu_count = 0;
   int last_cpu = -1;
-  while (*s != '\0') {
+  while (*s >= ' ') {
     if (isdigit(*s)) {
       int cpu = static_cast<int>(strtol(s, const_cast<char**>(&s), 10));
       if (last_cpu != -1) {
