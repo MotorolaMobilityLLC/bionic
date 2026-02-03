@@ -498,6 +498,60 @@ cc_library {
     },
 }
 
+// ========================================================
+// libm dependencies for LFI projects
+// ========================================================
+
+cc_library_static {
+    name: "libm_lfi",
+    header_libs: [
+        "libc_headers",
+    ],
+    include_dirs: [
+        "bionic/libc",
+    ],
+    local_include_dirs: [
+        "upstream-freebsd/android/include/",
+        "upstream-freebsd/lib/msun/src/",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
+    srcs: [
+        "upstream-freebsd/lib/msun/src/e_log10.c",
+        "upstream-freebsd/lib/msun/src/e_log10f.c",
+    ],
+    whole_static_libs: [
+        "libarm-optimized-routines-math",
+    ],
+    system_shared_libs: [],
+    stl: "none",
+    lfi_supported: true,
+    arch: {
+        arm: {
+            enabled: false,
+        },
+        arm64: {
+            enabled: true,
+        },
+        x86: {
+            enabled: false,
+        },
+        x86_64: {
+            enabled: false,
+        },
+    },
+    min_sdk_version: "apex_inherit",
+    apex_available: [
+        "com.android.media.swcodec",
+    ],
+    visibility: [
+        "//external/libopus:__subpackages__",
+        "//system/lfi:__subpackages__",
+    ],
+}
+
 ndk_library {
     name: "libm",
     symbol_file: "libm.map.txt",
