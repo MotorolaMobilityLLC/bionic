@@ -133,5 +133,5 @@ int __system_property_foreach(void (*propfn)(const prop_info* pi, void* cookie),
 __BIONIC_WEAK_FOR_NATIVE_BRIDGE
 int __system_properties_zygote_reload(void) {
   CHECK(getpid() == gettid());
-  return system_properties.Reload(false) ? 0 : -1;
+  return system_properties.EnableOverrides() ? 0 : -1;
 }
