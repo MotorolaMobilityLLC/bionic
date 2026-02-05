@@ -100,7 +100,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
-// Trasnlate a fixed size integer argument for the %w/%wf format to a
+// Translate a fixed size integer argument for the %w/%wf format to a
 // flag representation. Supported sizes are 8, 16, 32, and 64 so far.
 // See details in bionic/libc/include/stdint.h
 static int w_to_flag(int size, bool fast) {
@@ -111,5 +111,4 @@ static int w_to_flag(int size, bool fast) {
   if (size == 64) return LLONG;
   __fortify_fatal("%%w%s%d is unsupported", fast ? "f" : "", size);
 }
-
 #pragma clang diagnostic pop
