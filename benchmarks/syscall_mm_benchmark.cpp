@@ -273,8 +273,9 @@ void MadviseBenchmark(benchmark::State& state, const struct MmapParams& params, 
       MakeAllocationResident(addr, params.size, page_sz);
     }
     state.ResumeTiming();
-
-    madvise(addr, params.size, madvise_flags);
+    if (madvise(addr, params.size, madvise_flags) != 0) {
+      state.SkipWithError(android::base::StringPrintf("madvise failed: %s", strerror(errno)).c_str());
+    }
   }
 
   if (munmap(addr, params.size) != 0) {

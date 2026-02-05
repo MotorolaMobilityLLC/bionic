@@ -177,16 +177,26 @@ namespace {
 constexpr static size_t kPageSize = 4 * 1024;
 constexpr static size_t kMaxSizeT = size_t(-1);
 
-// std::is_trivial_v
+// std::is_default_constructible
 template <typename T>
-constexpr static bool is_trivial_v = __is_trivial(T);
+constexpr static bool is_default_constructible = __is_constructible(T);
 
-// Simple optional built to hold a trivial type. This is the minimal interface
+// std::is_trivially_copyable
+template <typename T>
+constexpr static bool is_trivially_copyable = __is_trivially_copyable(T);
+
+// std::is_trivially_destructible
+template <typename T>
+constexpr static bool is_trivially_destructible = __is_trivially_destructible(T);
+
+// Simple optional built to hold a types. This is the minimal interface
 // necessary to work around lack of libc++. It also assumes everything is
-// eventually inlined, so e.g., useless copies/constructions are optimized out.
+// eventually inlined, so e.g., useless copies/constructors are optimized out.
 template <typename T>
 struct optional {
-  static_assert(is_trivial_v<T>, "This `optional` only supports trivial values; see description");
+  static_assert(is_default_constructible<T> && is_trivially_copyable<T> &&
+                    is_trivially_destructible<T>,
+                "This `optional` only supports types that function as plain-old-data");
 
   using value_type = T;
 

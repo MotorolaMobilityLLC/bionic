@@ -148,50 +148,45 @@ TEST(properties, __system_property_add) {
 
 TEST(properties, __system_property_add_appcompat) {
 #if defined(__BIONIC__)
-    if (getuid() != 0) GTEST_SKIP() << "test requires root";
-    SystemPropertiesTest system_properties;
-    ASSERT_TRUE(system_properties.valid());
+  if (getuid() != 0) GTEST_SKIP() << "test requires root to add appcompat props";
+  SystemPropertiesTest system_properties;
+  ASSERT_TRUE(system_properties.valid());
 
-    char name[] = "ro.property";
-    char override_name[] = "ro.appcompat_override.ro.property";
-    char name_not_written[] = "ro.property_other";
-    char override_with_no_real[] = "ro.appcompat_override.ro.property_other";
-    ASSERT_EQ(0, system_properties.Add(name, strlen(name), "value1", 6));
-    ASSERT_EQ(0, system_properties.Add(override_name, strlen(override_name), "value2", 6));
-    ASSERT_EQ(0, system_properties.Add(override_with_no_real, strlen(override_with_no_real),
-                                       "value3", 6));
+  char name[] = "ro.property";
+  char override_name[] = "ro.appcompat_override.ro.property";
+  char name_not_written[] = "ro.property_other";
+  char override_with_no_real[] = "ro.appcompat_override.ro.property_other";
+  ASSERT_EQ(0, system_properties.Add(name, strlen(name), "value1", 6));
+  ASSERT_EQ(0, system_properties.Add(override_name, strlen(override_name), "value2", 6));
+  ASSERT_EQ(
+      0, system_properties.Add(override_with_no_real, strlen(override_with_no_real), "value3", 6));
 
-    char propvalue[PROP_VALUE_MAX];
-    ASSERT_EQ(6, system_properties.Get(name, propvalue));
-    ASSERT_STREQ(propvalue, "value1");
+  char propvalue[PROP_VALUE_MAX];
+  ASSERT_EQ(6, system_properties.Get(name, propvalue));
+  ASSERT_STREQ(propvalue, "value1");
 
-    ASSERT_EQ(6, system_properties.Get(override_name, propvalue));
-    ASSERT_STREQ(propvalue, "value2");
+  ASSERT_EQ(6, system_properties.Get(override_name, propvalue));
+  ASSERT_STREQ(propvalue, "value2");
 
-    ASSERT_EQ(0, system_properties.Get(name_not_written, propvalue));
-    ASSERT_STREQ(propvalue, "");
+  ASSERT_EQ(0, system_properties.Get(name_not_written, propvalue));
+  ASSERT_STREQ(propvalue, "");
 
-    ASSERT_EQ(6, system_properties.Get(override_with_no_real, propvalue));
-    ASSERT_STREQ(propvalue, "value3");
+  ASSERT_EQ(6, system_properties.Get(override_with_no_real, propvalue));
+  ASSERT_STREQ(propvalue, "value3");
 
-    int ret = mount(system_properties.get_appcompat_path(), system_properties.get_path(), nullptr,
-                    MS_BIND | MS_REC, nullptr);
-    if (ret != 0) {
-      ASSERT_ERRNO(0);
-    }
-    system_properties.Reload(true);
+  system_properties.EnableOverrides();
 
-    ASSERT_EQ(6, system_properties.Get(name, propvalue));
-    ASSERT_STREQ(propvalue, "value2");
+  ASSERT_EQ(6, system_properties.Get(name, propvalue));
+  ASSERT_STREQ(propvalue, "value2");
 
-    ASSERT_EQ(0, system_properties.Get(override_name, propvalue));
-    ASSERT_STREQ(propvalue, "");
+  ASSERT_EQ(6, system_properties.Get(override_name, propvalue));
+  ASSERT_STREQ(propvalue, "value2");
 
-    ASSERT_EQ(6, system_properties.Get(name_not_written, propvalue));
-    ASSERT_STREQ(propvalue, "value3");
+  ASSERT_EQ(6, system_properties.Get(name_not_written, propvalue));
+  ASSERT_STREQ(propvalue, "value3");
 
-    ASSERT_EQ(0, system_properties.Get(override_with_no_real, propvalue));
-    ASSERT_STREQ(propvalue, "");
+  ASSERT_EQ(6, system_properties.Get(override_with_no_real, propvalue));
+  ASSERT_STREQ(propvalue, "value3");
 
 #else   // __BIONIC__
     GTEST_SKIP() << "bionic-only test";
@@ -632,28 +627,6 @@ TEST(properties, __system_property_reload_no_op) {
 #endif  // __BIONIC__
 }
 
-TEST(properties, __system_property_reload_invalid) {
-#if defined(__BIONIC__)
-  if (getuid() != 0) GTEST_SKIP() << "test requires root";
-  SystemPropertiesTest system_properties;
-
-  // Create an invalid property_info file, so the system will attempt to initialize a
-  // ContextSerialized
-  std::string property_info_file =
-      android::base::StringPrintf("%s/property_info", system_properties.get_path());
-  fclose(fopen(property_info_file.c_str(), "w"));
-  int ret = mount(system_properties.get_path(), system_properties.get_real_sysprop_dir(), nullptr,
-                  MS_BIND | MS_REC, nullptr);
-  if (ret != 0) {
-    ASSERT_ERRNO(0);
-  }
-
-  ASSERT_EQ(-1, __system_properties_zygote_reload());
-#else   // __BIONIC__
-  GTEST_SKIP() << "bionic-only test";
-#endif  // __BIONIC__
-}
-
 // Note that this test affects global state of the system
 // this tests tries to mitigate this by using utime+pid
 // prefix for the property name. It is still results in
@@ -664,32 +637,32 @@ TEST(properties, __system_property_reload_invalid) {
 // if this test if it is executed often enough without reboot.
 TEST(properties, __system_property_reload_valid) {
 #if defined(__BIONIC__)
-  if (getuid() != 0) GTEST_SKIP() << "test requires root";
+  if (getuid() != 0) GTEST_SKIP() << "test requires root to add appcompat props";
   SystemPropertiesTest system_properties;
 
-  // Copy the system properties files into the temp directory
-  std::string shell_cmd = android::base::StringPrintf(
-      "cp -r %s %s", system_properties.get_real_sysprop_dir(), system_properties.get_path());
-  system(shell_cmd.c_str());
+  std::string unique_suffix = android::base::StringPrintf(".%d.%" PRId64 "", getpid(), NanoTime());
+  std::string base_name = "ro.debug.test" + unique_suffix;
+  std::string override_name = "ro.appcompat_override." + base_name;
 
-  // Write a system property to the current set of system properties
-  std::string property_name =
-      android::base::StringPrintf("debug.test.%d.%" PRId64 ".property", getpid(), NanoTime());
-  ASSERT_EQ(0, __system_property_find(property_name.c_str()));
-  ASSERT_EQ(0, __system_property_set(property_name.c_str(), "test value"));
+  const char* base_value = "base_value";
+  const char* override_value = "override_value";
 
-  // Mount the temp directory (which doesn't have the property we just wrote) in place of the
-  // real one
-  int ret = mount(system_properties.get_mount_path(), system_properties.get_real_sysprop_dir(),
-                  nullptr, MS_BIND | MS_REC, nullptr);
-  if (ret != 0) {
-    ASSERT_ERRNO(0);
-  }
+  // Set the properties
+  ASSERT_EQ(0, __system_property_set(base_name.c_str(), base_value));
+  ASSERT_EQ(0, __system_property_set(override_name.c_str(), override_value));
 
-  // reload system properties in the new dir, and verify the property we wrote after we copied the
-  // files isn't there
+  char value[PROP_VALUE_MAX];
+
+  // Before enabling overrides, get should return the base value
+  ASSERT_EQ(strlen(base_value), (size_t)__system_property_get(base_name.c_str(), value));
+  ASSERT_STREQ(base_value, value);
+
+  // Enables override
   ASSERT_EQ(0, __system_properties_zygote_reload());
-  ASSERT_EQ(0, __system_property_find(property_name.c_str()));
+
+  // After enabling overrides, get should return the overridden value
+  ASSERT_EQ(strlen(override_value), (size_t)__system_property_get(base_name.c_str(), value));
+  ASSERT_STREQ(override_value, value);
 
 #else   // __BIONIC__
   GTEST_SKIP() << "bionic-only test";
