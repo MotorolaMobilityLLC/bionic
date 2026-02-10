@@ -48,13 +48,13 @@ __BEGIN_DECLS
 #define _POSIX_ASYNCHRONOUS_IO __BIONIC_POSIX_FEATURE_MISSING
 #define _POSIX_BARRIERS __BIONIC_POSIX_FEATURE_SINCE(24)
 #define _POSIX_CHOWN_RESTRICTED 1 /* chown/fchown require appropriate privileges. */
-#define _POSIX_CLOCK_SELECTION __BIONIC_POSIX_FEATURE_SINCE(21) /* clock_nanosleep/pthread_condattr_getclock/pthread_condattr_setclock. */
+#define _POSIX_CLOCK_SELECTION _POSIX_VERSION /* clock_nanosleep/pthread_condattr_getclock/pthread_condattr_setclock. */
 #define _POSIX_CPUTIME _POSIX_VERSION /* CLOCK_PROCESS_CPUTIME_ID. */
 #define _POSIX_FSYNC _POSIX_VERSION /* fsync. */
 #define _POSIX_IPV6 _POSIX_VERSION
-#define _POSIX_JOB_CONTROL __BIONIC_POSIX_FEATURE_SINCE(21) /* setpgid/tcdrain/tcflush/tcgetpgrp/tcsendbreak/tcsetattr/tcsetpgrp. */
+#define _POSIX_JOB_CONTROL _POSIX_VERSION /* setpgid/tcdrain/tcflush/tcgetpgrp/tcsendbreak/tcsetattr/tcsetpgrp. */
 #define _POSIX_MAPPED_FILES _POSIX_VERSION /* mmap/msync/munmap. */
-#define _POSIX_MEMLOCK __BIONIC_POSIX_FEATURE_SINCE(17) /* mlockall/munlockall. */
+#define _POSIX_MEMLOCK _POSIX_VERSION /* mlockall/munlockall. */
 #define _POSIX_MEMLOCK_RANGE _POSIX_VERSION /* mlock/munlock. */
 #define _POSIX_MEMORY_PROTECTION _POSIX_VERSION /* mprotect. */
 #define _POSIX_MESSAGE_PASSING __BIONIC_POSIX_FEATURE_MISSING
@@ -86,7 +86,7 @@ __BEGIN_DECLS
 #define _POSIX_THREAD_SAFE_FUNCTIONS _POSIX_VERSION
 #define _POSIX_THREAD_SPORADIC_SERVER __BIONIC_POSIX_FEATURE_MISSING /* No SCHED_SPORADIC. */
 #define _POSIX_THREADS _POSIX_VERSION /* Strictly, pthread_cancel/pthread_testcancel are missing. */
-#define _POSIX_TIMEOUTS __BIONIC_POSIX_FEATURE_SINCE(21) /* pthread_mutex_timedlock arrived late. */
+#define _POSIX_TIMEOUTS _POSIX_VERSION /* pthread_mutex_timedlock. */
 #define _POSIX_TIMERS _POSIX_VERSION /* clock_getres/clock_gettime/clock_settime/nanosleep/timer_create/timer_delete/timer_gettime/timer_getoverrun/timer_settime. */
 #define _POSIX_TRACE __BIONIC_POSIX_FEATURE_MISSING
 #define _POSIX_TRACE_EVENT_FILTER __BIONIC_POSIX_FEATURE_MISSING
