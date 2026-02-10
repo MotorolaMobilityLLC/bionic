@@ -7,6 +7,7 @@
 #ifndef _UAPI_C3_ISP_CONFIG_H_
 #define _UAPI_C3_ISP_CONFIG_H_
 #include <linux/types.h>
+#include <linux/media/v4l2-isp.h>
 #define C3_ISP_AE_MAX_ZONES (17 * 15)
 #define C3_ISP_AF_MAX_ZONES (17 * 15)
 #define C3_ISP_AWB_MAX_ZONES (32 * 24)
@@ -50,7 +51,7 @@ struct c3_isp_stats_info {
   struct c3_isp_af_stats af;
 };
 enum c3_isp_params_buffer_version {
-  C3_ISP_PARAMS_BUFFER_V0,
+  C3_ISP_PARAMS_BUFFER_V0 = V4L2_ISP_PARAMS_VERSION_V0,
 };
 enum c3_isp_params_block_type {
   C3_ISP_PARAMS_BLOCK_AWB_GAINS,
@@ -63,13 +64,9 @@ enum c3_isp_params_block_type {
   C3_ISP_PARAMS_BLOCK_BLC,
   C3_ISP_PARAMS_BLOCK_SENTINEL
 };
-#define C3_ISP_PARAMS_BLOCK_FL_DISABLE (1U << 0)
-#define C3_ISP_PARAMS_BLOCK_FL_ENABLE (1U << 1)
-struct c3_isp_params_block_header {
-  __u16 type;
-  __u16 flags;
-  __u32 size;
-};
+#define C3_ISP_PARAMS_BLOCK_FL_DISABLE V4L2_ISP_PARAMS_FL_BLOCK_DISABLE
+#define C3_ISP_PARAMS_BLOCK_FL_ENABLE V4L2_ISP_PARAMS_FL_BLOCK_ENABLE
+#define c3_isp_params_block_header v4l2_isp_params_block_header
 struct c3_isp_params_awb_gains {
   struct c3_isp_params_block_header header;
   __u16 gr_gain;

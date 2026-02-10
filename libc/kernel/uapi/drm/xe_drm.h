@@ -309,6 +309,7 @@ struct drm_xe_sync {
 struct drm_xe_exec {
   __u64 extensions;
   __u32 exec_queue_id;
+#define DRM_XE_MAX_SYNCS 1024
   __u32 num_syncs;
   __u64 syncs;
   __u64 address;

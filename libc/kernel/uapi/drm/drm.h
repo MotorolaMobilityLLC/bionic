@@ -368,6 +368,7 @@ struct drm_get_cap {
 #define DRM_CLIENT_CAP_ASPECT_RATIO 4
 #define DRM_CLIENT_CAP_WRITEBACK_CONNECTORS 5
 #define DRM_CLIENT_CAP_CURSOR_PLANE_HOTSPOT 6
+#define DRM_CLIENT_CAP_PLANE_COLOR_PIPELINE 7
 struct drm_set_client_cap {
   __u64 capability;
   __u64 value;

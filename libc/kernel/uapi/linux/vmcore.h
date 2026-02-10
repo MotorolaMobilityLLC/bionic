@@ -16,4 +16,12 @@ struct vmcoredd_header {
   __u8 name[8];
   __u8 dump_name[VMCOREDD_MAX_NAME_BYTES];
 };
+enum hwerr_error_type {
+  HWERR_RECOV_CPU,
+  HWERR_RECOV_MEMORY,
+  HWERR_RECOV_PCI,
+  HWERR_RECOV_CXL,
+  HWERR_RECOV_OTHERS,
+  HWERR_RECOV_MAX,
+};
 #endif

@@ -6,7 +6,7 @@
  */
 #ifndef _UAPI_REGULATOR_H
 #define _UAPI_REGULATOR_H
-#include <stdint.h>
+#include <linux/types.h>
 #define REGULATOR_EVENT_UNDER_VOLTAGE 0x01
 #define REGULATOR_EVENT_OVER_CURRENT 0x02
 #define REGULATOR_EVENT_REGULATION_OUT 0x04
@@ -27,7 +27,7 @@
 #define REGULATOR_EVENT_WARN_MASK 0x1E000
 struct reg_genl_event {
   char reg_name[32];
-  uint64_t event;
+  __u64 event;
 };
 enum {
   REG_GENL_ATTR_UNSPEC,

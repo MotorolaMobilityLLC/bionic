@@ -19,7 +19,11 @@
 #define PIDFD_INFO_CGROUPID (1UL << 2)
 #define PIDFD_INFO_EXIT (1UL << 3)
 #define PIDFD_INFO_COREDUMP (1UL << 4)
+#define PIDFD_INFO_SUPPORTED_MASK (1UL << 5)
+#define PIDFD_INFO_COREDUMP_SIGNAL (1UL << 6)
 #define PIDFD_INFO_SIZE_VER0 64
+#define PIDFD_INFO_SIZE_VER1 72
+#define PIDFD_INFO_SIZE_VER2 80
 #define PIDFD_COREDUMPED (1U << 0)
 #define PIDFD_COREDUMP_SKIP (1U << 1)
 #define PIDFD_COREDUMP_USER (1U << 2)
@@ -41,8 +45,11 @@ struct pidfd_info {
   __u32 fsuid;
   __u32 fsgid;
   __s32 exit_code;
-  __u32 coredump_mask;
-  __u32 __spare1;
+  struct {
+    __u32 coredump_mask;
+    __u32 coredump_signal;
+  };
+  __u64 supported_mask;
 };
 #define PIDFS_IOCTL_MAGIC 0xFF
 #define PIDFD_GET_CGROUP_NAMESPACE _IO(PIDFS_IOCTL_MAGIC, 1)

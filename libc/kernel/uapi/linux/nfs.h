@@ -35,7 +35,6 @@ enum nfs_stat {
   NFSERR_NOENT = 2,
   NFSERR_IO = 5,
   NFSERR_NXIO = 6,
-  NFSERR_EAGAIN = 11,
   NFSERR_ACCES = 13,
   NFSERR_EXIST = 17,
   NFSERR_XDEV = 18,

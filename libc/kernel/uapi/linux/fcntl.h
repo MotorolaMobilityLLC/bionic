@@ -8,6 +8,7 @@
 #define _UAPI_LINUX_FCNTL_H
 #include <asm/fcntl.h>
 #include <linux/openat2.h>
+#include <linux/types.h>
 #define F_SETLEASE (F_LINUX_SPECIFIC_BASE + 0)
 #define F_GETLEASE (F_LINUX_SPECIFIC_BASE + 1)
 #define F_NOTIFY (F_LINUX_SPECIFIC_BASE + 2)
@@ -36,6 +37,13 @@
 #define RWH_WRITE_LIFE_LONG 4
 #define RWH_WRITE_LIFE_EXTREME 5
 #define RWF_WRITE_LIFE_NOT_SET RWH_WRITE_LIFE_NOT_SET
+#define F_GETDELEG (F_LINUX_SPECIFIC_BASE + 15)
+#define F_SETDELEG (F_LINUX_SPECIFIC_BASE + 16)
+struct delegation {
+  __u32 d_flags;
+  __u16 d_type;
+  __u16 __pad;
+};
 #define DN_ACCESS 0x00000001
 #define DN_MODIFY 0x00000002
 #define DN_CREATE 0x00000004

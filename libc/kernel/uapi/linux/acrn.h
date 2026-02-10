@@ -175,14 +175,15 @@ struct acrn_pcidev {
   __u8 intr_pin;
   __u32 bar[ACRN_PCI_NUM_BARS];
 };
+struct acrn_mmio_dev_res {
+  __u64 user_vm_pa;
+  __u64 service_vm_pa;
+  __u64 size;
+  __u64 mem_type;
+};
 struct acrn_mmiodev {
   __u8 name[8];
-  struct {
-    __u64 user_vm_pa;
-    __u64 service_vm_pa;
-    __u64 size;
-    __u64 mem_type;
-  } res[ACRN_MMIODEV_RES_NUM];
+  struct acrn_mmio_dev_res res[ACRN_MMIODEV_RES_NUM];
 };
 struct acrn_vdev {
   union {

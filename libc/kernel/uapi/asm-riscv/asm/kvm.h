@@ -15,6 +15,7 @@
 #define KVM_DIRTY_LOG_PAGE_OFFSET 64
 #define KVM_INTERRUPT_SET - 1U
 #define KVM_INTERRUPT_UNSET - 2U
+#define KVM_EXIT_FAIL_ENTRY_NO_VSFILE (1ULL << 0)
 struct kvm_regs {
 };
 struct kvm_fpu {
@@ -166,6 +167,7 @@ enum KVM_RISCV_SBI_EXT_ID {
   KVM_RISCV_SBI_EXT_STA,
   KVM_RISCV_SBI_EXT_SUSP,
   KVM_RISCV_SBI_EXT_FWFT,
+  KVM_RISCV_SBI_EXT_MPXY,
   KVM_RISCV_SBI_EXT_MAX,
 };
 struct kvm_riscv_sbi_sta {

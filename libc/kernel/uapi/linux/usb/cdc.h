@@ -72,14 +72,20 @@ struct usb_cdc_union_desc {
   __u8 bDescriptorType;
   __u8 bDescriptorSubType;
   __u8 bMasterInterface0;
-  __u8 bSlaveInterface0;
+  union {
+    __u8 bSlaveInterface0;
+    __DECLARE_FLEX_ARRAY(__u8, bSlaveInterfaces);
+  };
 } __attribute__((packed));
 struct usb_cdc_country_functional_desc {
   __u8 bLength;
   __u8 bDescriptorType;
   __u8 bDescriptorSubType;
   __u8 iCountryCodeRelDate;
-  __le16 wCountyCode0;
+  union {
+    __le16 wCountryCode0;
+    __DECLARE_FLEX_ARRAY(__le16, wCountryCodes);
+  };
 } __attribute__((packed));
 struct usb_cdc_network_terminal_desc {
   __u8 bLength;

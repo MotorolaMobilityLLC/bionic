@@ -25,10 +25,18 @@ enum blktrace_cat {
   BLK_TC_DISCARD = 1 << 13,
   BLK_TC_DRV_DATA = 1 << 14,
   BLK_TC_FUA = 1 << 15,
-  BLK_TC_END = 1 << 15,
+  BLK_TC_END_V1 = 1 << 15,
+  BLK_TC_ZONE_APPEND = 1ull << 16,
+  BLK_TC_ZONE_RESET = 1ull << 17,
+  BLK_TC_ZONE_RESET_ALL = 1ull << 18,
+  BLK_TC_ZONE_FINISH = 1ull << 19,
+  BLK_TC_ZONE_OPEN = 1ull << 20,
+  BLK_TC_ZONE_CLOSE = 1ull << 21,
+  BLK_TC_WRITE_ZEROES = 1ull << 22,
+  BLK_TC_END_V2 = 1ull << 22,
 };
 #define BLK_TC_SHIFT (16)
-#define BLK_TC_ACT(act) ((act) << BLK_TC_SHIFT)
+#define BLK_TC_ACT(act) ((u64) (act) << BLK_TC_SHIFT)
 enum blktrace_act {
   __BLK_TA_QUEUE = 1,
   __BLK_TA_BACKMERGE,
@@ -47,6 +55,8 @@ enum blktrace_act {
   __BLK_TA_REMAP,
   __BLK_TA_ABORT,
   __BLK_TA_DRV_DATA,
+  __BLK_TA_ZONE_PLUG,
+  __BLK_TA_ZONE_UNPLUG,
   __BLK_TA_CGROUP = 1 << 8,
 };
 enum blktrace_notify {
@@ -72,11 +82,15 @@ enum blktrace_notify {
 #define BLK_TA_REMAP (__BLK_TA_REMAP | BLK_TC_ACT(BLK_TC_QUEUE))
 #define BLK_TA_ABORT (__BLK_TA_ABORT | BLK_TC_ACT(BLK_TC_QUEUE))
 #define BLK_TA_DRV_DATA (__BLK_TA_DRV_DATA | BLK_TC_ACT(BLK_TC_DRV_DATA))
+#define BLK_TA_ZONE_APPEND (__BLK_TA_COMPLETE | BLK_TC_ACT(BLK_TC_ZONE_APPEND))
+#define BLK_TA_ZONE_PLUG (__BLK_TA_ZONE_PLUG | BLK_TC_ACT(BLK_TC_QUEUE))
+#define BLK_TA_ZONE_UNPLUG (__BLK_TA_ZONE_UNPLUG | BLK_TC_ACT(BLK_TC_QUEUE))
 #define BLK_TN_PROCESS (__BLK_TN_PROCESS | BLK_TC_ACT(BLK_TC_NOTIFY))
 #define BLK_TN_TIMESTAMP (__BLK_TN_TIMESTAMP | BLK_TC_ACT(BLK_TC_NOTIFY))
 #define BLK_TN_MESSAGE (__BLK_TN_MESSAGE | BLK_TC_ACT(BLK_TC_NOTIFY))
 #define BLK_IO_TRACE_MAGIC 0x65617400
 #define BLK_IO_TRACE_VERSION 0x07
+#define BLK_IO_TRACE2_VERSION 0x08
 struct blk_io_trace {
   __u32 magic;
   __u32 sequence;
@@ -90,6 +104,20 @@ struct blk_io_trace {
   __u16 error;
   __u16 pdu_len;
 };
+struct blk_io_trace2 {
+  __u32 magic;
+  __u32 sequence;
+  __u64 time;
+  __u64 sector;
+  __u32 bytes;
+  __u32 pid;
+  __u64 action;
+  __u32 device;
+  __u32 cpu;
+  __u16 error;
+  __u16 pdu_len;
+  __u8 pad[12];
+};
 struct blk_io_trace_remap {
   __be32 device_from;
   __be32 device_to;
@@ -101,6 +129,7 @@ enum {
   Blktrace_stopped,
 };
 #define BLKTRACE_BDEV_SIZE 32
+#define BLKTRACE_BDEV_SIZE2 64
 struct blk_user_trace_setup {
   char name[BLKTRACE_BDEV_SIZE];
   __u16 act_mask;
@@ -109,5 +138,16 @@ struct blk_user_trace_setup {
   __u64 start_lba;
   __u64 end_lba;
   __u32 pid;
+};
+struct blk_user_trace_setup2 {
+  char name[BLKTRACE_BDEV_SIZE2];
+  __u64 act_mask;
+  __u32 buf_size;
+  __u32 buf_nr;
+  __u64 start_lba;
+  __u64 end_lba;
+  __u32 pid;
+  __u32 flags;
+  __u64 reserved[11];
 };
 #endif
