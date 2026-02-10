@@ -549,6 +549,7 @@ cc_library_static {
     visibility: [
         "//external/libopus:__subpackages__",
         "//system/lfi:__subpackages__",
+        "//build/soong:__subpackages__",
     ],
 }
 
