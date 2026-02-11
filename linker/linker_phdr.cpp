@@ -948,13 +948,6 @@ void ElfReader::DropPaddingPages(const ElfW(Phdr)* phdr, uint64_t seg_file_end) 
     DL_WARN("\"%s\": madvise(0x%" PRIx64 ", 0x%" PRIx64 ", MADV_DONTNEED) failed: %m",
             name_.c_str(), pad_start, pad_len);
   }
-
-  // Enforce these padding regions are not accessed.
-  // This is only available for file-backed mappings on Linux >= 6.15, so ignore EINVAL.
-  if (madvise(reinterpret_cast<void*>(pad_start), pad_len, MADV_GUARD_INSTALL) && errno != EINVAL) {
-    DL_WARN("\"%s\": madvise(0x%" PRIx64 ", 0x%" PRIx64 ", MADV_GUARD_INSTALL) failed: %m",
-            name_.c_str(), pad_start, pad_len);
-  }
 }
 
 bool ElfReader::MapBssSection(const ElfW(Phdr)* phdr, ElfW(Addr) seg_page_end,
