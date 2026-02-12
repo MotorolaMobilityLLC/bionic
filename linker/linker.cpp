@@ -2361,20 +2361,23 @@ bool do_dlsym(void* handle,
     if ((bind == STB_GLOBAL || bind == STB_WEAK) && sym->st_shndx != 0) {
       // EPAN means that sections might be marked unreadable. check that
       // the symbol resides in a readable section.
-      bool section_readable = true;
-      for (size_t i = 0; i < found->phnum; ++i) {
-        if (found->phdr[i].p_type == PT_LOAD) {
-          uint64_t start_addr = found->phdr[i].p_vaddr + found->load_bias;
-          uint64_t end_addr = start_addr + found->phdr[i].p_memsz;
-          uint64_t sym_addr = found->resolve_symbol_address(sym);
-          if (sym_addr >= start_addr && sym_addr < end_addr) {
-            if (!(found->phdr[i].p_flags & PF_R)) {
-              section_readable = false;
+
+      auto section_readable = [sym, found]() {
+        for (size_t i = 0; i < found->phnum; ++i) {
+          if (found->phdr[i].p_type == PT_LOAD) {
+            uint64_t start_addr = found->phdr[i].p_vaddr + found->load_bias;
+            uint64_t end_addr = start_addr + found->phdr[i].p_memsz;
+            uint64_t sym_addr = found->resolve_symbol_address(sym);
+            if (sym_addr >= start_addr && sym_addr < end_addr) {
+              if (!(found->phdr[i].p_flags & PF_R)) {
+                return false;
+              }
+              break;
             }
-            break;
           }
         }
-      }
+        return true;
+      };
 
       if (type == STT_TLS) {
         // For a TLS symbol, dlsym returns the address of the current thread's
@@ -2387,7 +2390,7 @@ bool do_dlsym(void* handle,
         }
         void* tls_block = get_tls_block_for_this_thread(tls_module, /*should_alloc=*/true);
         *symbol = static_cast<char*>(tls_block) + sym->st_value;
-      } else if (section_readable && __libc_mte_enabled()) {
+      } else if (__libc_mte_enabled() && section_readable()) {
         *symbol = get_tagged_address(reinterpret_cast<void*>(found->resolve_symbol_address(sym)));
       } else {
         *symbol = reinterpret_cast<void*>(found->resolve_symbol_address(sym));
