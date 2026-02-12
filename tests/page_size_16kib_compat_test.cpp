@@ -31,10 +31,13 @@
 #endif
 
 #include "page_size_compat_helpers.h"
+#include "utils.h"
 
 #include <android-base/parsebool.h>
 #include <android-base/properties.h>
 #include <android-base/silent_death_test.h>
+
+#include <vector>
 
 using PageSize16KiBCompatTest_DeathTest = SilentDeathTest;
 using ::android::base::ParseBool;
@@ -151,4 +154,42 @@ TEST(PageSize16KiBCompatTest_DeathTest, AppDlopenErrIsFatal) {
 
   ASSERT_EXIT(FatalDlError(), testing::KilledBySignal(SIGABRT),
               ".*program alignment (.*) cannot be smaller than system page size.*");
+}
+
+TEST(PageSize16KiBCompatTest, RELRO_Protection) {
+  if (getpagesize() != 0x4000) {
+    GTEST_SKIP() << "This test is only applicable to 16kB page-size devices";
+  }
+
+  std::string compat_mode = CompatMode();
+  if (!CompatModeEnabled(compat_mode)) {
+    GTEST_SKIP() << "16kb appcompat mode is not enabled (bionic.linker.16kb.app_compat.enabled="
+                 << compat_mode << ")";
+  }
+
+  std::string lib = TestLibPath();
+  void* handle = dlopen(lib.c_str(), RTLD_NOW);
+  ASSERT_NE(handle, nullptr) << dlerror();
+
+  // Find the address of the RELRO table
+  void* relro_addr = dlsym(handle, "big_relro_table");
+  ASSERT_NE(relro_addr, nullptr) << dlerror();
+
+  std::vector<map_record> maps;
+  ASSERT_TRUE(Maps::parse_maps(&maps));
+
+  bool found_relro_map = false;
+  uintptr_t addr = reinterpret_cast<uintptr_t>(relro_addr);
+  for (const auto& map : maps) {
+    if (addr >= map.addr_start && addr < map.addr_end) {
+      found_relro_map = true;
+      EXPECT_FALSE(map.perms & PROT_WRITE)
+          << "RELRO area at " << relro_addr << " should not be writable";
+      break;
+    }
+  }
+
+  EXPECT_TRUE(found_relro_map) << "Could not find map for RELRO area";
+
+  dlclose(handle);
 }
