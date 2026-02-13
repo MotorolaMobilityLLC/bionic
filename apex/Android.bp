@@ -29,10 +29,16 @@ apex_key {
     private_key: "com.android.runtime.pem",
 }
 
-apex {
-    name: "com.android.runtime",
-    compile_multilib: "both",
-    manifest: "manifest.json",
+soong_config_module_type {
+    name: "runtime_apex",
+    module_type: "apex",
+    config_namespace: "ANDROID",
+    bool_variables: ["release_deprecate_runtime_apex"],
+    properties: ["defaults"],
+}
+
+apex_defaults {
+    name: "com.android.runtime.defaults",
     native_shared_libs: [
         "libc",
         "libm",
@@ -60,11 +66,27 @@ apex {
             ],
         },
     },
-    key: "com.android.runtime.key",
-    certificate: ":com.android.runtime.certificate",
     prebuilts: [
         "bionic-linker-config",
     ],
+}
+
+runtime_apex {
+    name: "com.android.runtime",
+    compile_multilib: "both",
+    manifest: "manifest.json",
+
+    soong_config_variables: {
+        release_deprecate_runtime_apex: {
+            defaults: [],
+            conditions_default: {
+                defaults: ["com.android.runtime.defaults"],
+            },
+        },
+    },
+
+    key: "com.android.runtime.key",
+    certificate: ":com.android.runtime.certificate",
     updatable: false,
 }
 

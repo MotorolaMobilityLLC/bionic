@@ -47,6 +47,7 @@ __BEGIN_DECLS
 #define _PATH_CONSOLE "/dev/console"
 
 /** Default shell search path. */
+// TODO(b/369944471) Remove com.android.runtime support
 #define _PATH_DEFPATH "/product/bin:/apex/com.android.runtime/bin:/apex/com.android.art/bin:/apex/com.android.virt/bin:/system_ext/bin:/system/bin:/system/xbin:/odm/bin:/vendor/bin:/vendor/xbin"
 
 /** Path to the directory containing device files. */
