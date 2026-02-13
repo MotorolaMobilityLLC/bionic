@@ -114,7 +114,7 @@ int je_mallopt(int param, int value) {
       }
     }
     return 1;
-  } else if (param == M_PURGE || param == M_PURGE_ALL) {
+  } else if (param == M_PURGE || param == M_PURGE_ALL || param == M_PURGE_FAST) {
     // Only clear the current thread cache since there is no easy way to
     // clear the caches of other threads.
     // This must be done first so that cleared allocations get purged
