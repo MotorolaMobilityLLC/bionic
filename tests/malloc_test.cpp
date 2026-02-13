@@ -468,6 +468,15 @@ TEST(malloc, mallopt_purge_all) {
 #endif
 }
 
+TEST(malloc, mallopt_purge_fast) {
+#if defined(__BIONIC__)
+  SKIP_WITH_HWASAN << "hwasan does not implement mallopt";
+  ASSERT_EQ(1, mallopt(M_PURGE_FAST, 0));
+#else
+  GTEST_SKIP() << "bionic-only test";
+#endif
+}
+
 TEST(malloc, mallopt_log_stats) {
 #if defined(__BIONIC__)
   SKIP_WITH_HWASAN << "hwasan does not implement mallopt";
