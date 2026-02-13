@@ -4,20 +4,21 @@
  * See https://android.googlesource.com/platform/bionic/+/master/libc/kernel/
  * for more information.
  */
-#ifndef _WG_UAPI_WIREGUARD_H
-#define _WG_UAPI_WIREGUARD_H
+#ifndef _UAPI_LINUX_WIREGUARD_H
+#define _UAPI_LINUX_WIREGUARD_H
 #define WG_GENL_NAME "wireguard"
 #define WG_GENL_VERSION 1
 #define WG_KEY_LEN 32
-enum wg_cmd {
-  WG_CMD_GET_DEVICE,
-  WG_CMD_SET_DEVICE,
-  __WG_CMD_MAX
-};
-#define WG_CMD_MAX (__WG_CMD_MAX - 1)
 enum wgdevice_flag {
-  WGDEVICE_F_REPLACE_PEERS = 1U << 0,
-  __WGDEVICE_F_ALL = WGDEVICE_F_REPLACE_PEERS
+  WGDEVICE_F_REPLACE_PEERS = 1,
+};
+enum wgpeer_flag {
+  WGPEER_F_REMOVE_ME = 1,
+  WGPEER_F_REPLACE_ALLOWEDIPS = 2,
+  WGPEER_F_UPDATE_ONLY = 4,
+};
+enum wgallowedip_flag {
+  WGALLOWEDIP_F_REMOVE_ME = 1,
 };
 enum wgdevice_attribute {
   WGDEVICE_A_UNSPEC,
@@ -32,12 +33,6 @@ enum wgdevice_attribute {
   __WGDEVICE_A_LAST
 };
 #define WGDEVICE_A_MAX (__WGDEVICE_A_LAST - 1)
-enum wgpeer_flag {
-  WGPEER_F_REMOVE_ME = 1U << 0,
-  WGPEER_F_REPLACE_ALLOWEDIPS = 1U << 1,
-  WGPEER_F_UPDATE_ONLY = 1U << 2,
-  __WGPEER_F_ALL = WGPEER_F_REMOVE_ME | WGPEER_F_REPLACE_ALLOWEDIPS | WGPEER_F_UPDATE_ONLY
-};
 enum wgpeer_attribute {
   WGPEER_A_UNSPEC,
   WGPEER_A_PUBLIC_KEY,
@@ -53,10 +48,6 @@ enum wgpeer_attribute {
   __WGPEER_A_LAST
 };
 #define WGPEER_A_MAX (__WGPEER_A_LAST - 1)
-enum wgallowedip_flag {
-  WGALLOWEDIP_F_REMOVE_ME = 1U << 0,
-  __WGALLOWEDIP_F_ALL = WGALLOWEDIP_F_REMOVE_ME
-};
 enum wgallowedip_attribute {
   WGALLOWEDIP_A_UNSPEC,
   WGALLOWEDIP_A_FAMILY,
@@ -66,4 +57,10 @@ enum wgallowedip_attribute {
   __WGALLOWEDIP_A_LAST
 };
 #define WGALLOWEDIP_A_MAX (__WGALLOWEDIP_A_LAST - 1)
+enum wg_cmd {
+  WG_CMD_GET_DEVICE,
+  WG_CMD_SET_DEVICE,
+  __WG_CMD_MAX
+};
+#define WG_CMD_MAX (__WG_CMD_MAX - 1)
 #endif

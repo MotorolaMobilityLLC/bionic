@@ -180,6 +180,7 @@ enum bpf_map_type {
   BPF_MAP_TYPE_USER_RINGBUF,
   BPF_MAP_TYPE_CGRP_STORAGE,
   BPF_MAP_TYPE_ARENA,
+  BPF_MAP_TYPE_INSN_ARRAY,
   __MAX_BPF_MAP_TYPE
 };
 enum bpf_prog_type {
@@ -368,6 +369,7 @@ enum {
   BPF_F_TOKEN_FD = (1U << 16),
   BPF_F_SEGV_ON_FAULT = (1U << 17),
   BPF_F_NO_USER_CONV = (1U << 18),
+  BPF_F_RB_OVERWRITE = (1U << 19),
 };
 #define BPF_F_QUERY_EFFECTIVE (1U << 0)
 #define BPF_F_TEST_RUN_ON_CPU (1U << 0)
@@ -768,6 +770,7 @@ enum {
   BPF_RB_RING_SIZE = 1,
   BPF_RB_CONS_POS = 2,
   BPF_RB_PROD_POS = 3,
+  BPF_RB_OVERWRITE_POS = 4,
 };
 enum {
   BPF_RINGBUF_BUSY_BIT = (1U << 31),
@@ -1328,6 +1331,7 @@ enum {
   TCP_BPF_SYN_MAC = 1007,
   TCP_BPF_SOCK_OPS_CB_FLAGS = 1008,
   SK_BPF_CB_FLAGS = 1009,
+  SK_BPF_BYPASS_PROT_MEM = 1010,
 };
 enum {
   BPF_LOAD_HDR_OPT_TCP_SYN = (1ULL << 0),
@@ -1586,5 +1590,11 @@ struct bpf_iter_num {
 } __attribute__((aligned(8)));
 enum bpf_kfunc_flags {
   BPF_F_PAD_ZEROS = (1ULL << 0),
+};
+struct bpf_insn_array_value {
+  __u32 orig_off;
+  __u32 xlated_off;
+  __u32 jitted_off;
+  __u32 : 32;
 };
 #endif

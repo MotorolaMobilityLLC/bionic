@@ -145,6 +145,7 @@ struct kvm_xen_exit {
 #define KVM_EXIT_LOONGARCH_IOCSR 38
 #define KVM_EXIT_MEMORY_FAULT 39
 #define KVM_EXIT_TDX 40
+#define KVM_EXIT_ARM_SEA 41
 #define KVM_INTERNAL_ERROR_EMULATION 1
 #define KVM_INTERNAL_ERROR_SIMUL_EX 2
 #define KVM_INTERNAL_ERROR_DELIVERY_EV 3
@@ -354,6 +355,13 @@ struct kvm_run {
         } setup_event_notify;
       };
     } tdx;
+    struct {
+#define KVM_EXIT_ARM_SEA_FLAG_GPA_VALID (1ULL << 0)
+      __u64 flags;
+      __u64 esr;
+      __u64 gva;
+      __u64 gpa;
+    } arm_sea;
     char padding[256];
   };
 #define SYNC_REGS_SIZE_BYTES 2048
@@ -755,6 +763,8 @@ struct kvm_enable_cap {
 #define KVM_CAP_RISCV_MP_STATE_RESET 242
 #define KVM_CAP_ARM_CACHEABLE_PFNMAP_SUPPORTED 243
 #define KVM_CAP_GUEST_MEMFD_FLAGS 244
+#define KVM_CAP_ARM_SEA_TO_USER 245
+#define KVM_CAP_S390_USER_OPEREXEC 246
 struct kvm_irq_routing_irqchip {
   __u32 irqchip;
   __u32 pin;

@@ -22,9 +22,13 @@ enum blk_zone_cond {
   BLK_ZONE_COND_READONLY = 0xD,
   BLK_ZONE_COND_FULL = 0xE,
   BLK_ZONE_COND_OFFLINE = 0xF,
+  BLK_ZONE_COND_ACTIVE = 0xFF,
+#define BLK_ZONE_COND_ACTIVE BLK_ZONE_COND_ACTIVE
 };
 enum blk_zone_report_flags {
-  BLK_ZONE_REP_CAPACITY = (1 << 0),
+  BLK_ZONE_REP_CAPACITY = (1U << 0),
+  BLK_ZONE_REP_CACHED = (1U << 31),
+#define BLK_ZONE_REP_CACHED BLK_ZONE_REP_CACHED
 };
 struct blk_zone {
   __u64 start;
@@ -55,4 +59,5 @@ struct blk_zone_range {
 #define BLKOPENZONE _IOW(0x12, 134, struct blk_zone_range)
 #define BLKCLOSEZONE _IOW(0x12, 135, struct blk_zone_range)
 #define BLKFINISHZONE _IOW(0x12, 136, struct blk_zone_range)
+#define BLKREPORTZONEV2 _IOWR(0x12, 142, struct blk_zone_report)
 #endif

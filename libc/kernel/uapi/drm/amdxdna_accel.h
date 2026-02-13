@@ -223,6 +223,28 @@ enum amdxdna_drm_get_param {
   DRM_AMDXDNA_QUERY_HW_CONTEXTS,
   DRM_AMDXDNA_QUERY_FIRMWARE_VERSION = 8,
   DRM_AMDXDNA_GET_POWER_MODE,
+  DRM_AMDXDNA_QUERY_TELEMETRY,
+  DRM_AMDXDNA_GET_FORCE_PREEMPT_STATE,
+  DRM_AMDXDNA_QUERY_RESOURCE_INFO,
+  DRM_AMDXDNA_GET_FRAME_BOUNDARY_PREEMPT_STATE,
+};
+struct amdxdna_drm_get_resource_info {
+  __u64 npu_clk_max;
+  __u64 npu_tops_max;
+  __u64 npu_task_max;
+  __u64 npu_tops_curr;
+  __u64 npu_task_curr;
+};
+struct amdxdna_drm_attribute_state {
+  __u8 state;
+  __u8 pad[7];
+};
+struct amdxdna_drm_query_telemetry_header {
+  __u32 major;
+  __u32 minor;
+  __u32 type;
+  __u32 map_num_elements;
+  __u32 map[];
 };
 struct amdxdna_drm_get_info {
   __u32 param;
@@ -260,7 +282,13 @@ struct amdxdna_drm_hwctx_entry {
   __u32 fatal_error_app_module;
   __u32 pad;
 };
+struct amdxdna_async_error {
+  __u64 err_code;
+  __u64 ts_us;
+  __u64 ex_err_code;
+};
 #define DRM_AMDXDNA_HW_CONTEXT_ALL 0
+#define DRM_AMDXDNA_HW_LAST_ASYNC_ERR 2
 struct amdxdna_drm_get_array {
   __u32 param;
   __u32 element_size;
@@ -272,6 +300,8 @@ enum amdxdna_drm_set_param {
   DRM_AMDXDNA_SET_POWER_MODE,
   DRM_AMDXDNA_WRITE_AIE_MEM,
   DRM_AMDXDNA_WRITE_AIE_REG,
+  DRM_AMDXDNA_SET_FORCE_PREEMPT,
+  DRM_AMDXDNA_SET_FRAME_BOUNDARY_PREEMPT,
 };
 struct amdxdna_drm_set_state {
   __u32 param;

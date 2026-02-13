@@ -155,7 +155,8 @@ struct mdp_superblock_1 {
   __le64 resync_offset;
   __le32 sb_csum;
   __le32 max_dev;
-  __u8 pad3[64 - 32];
+  __le32 logical_block_size;
+  __u8 pad3[64 - 36];
   __le16 dev_roles[];
 };
 #define MD_FEATURE_BITMAP_OFFSET 1
