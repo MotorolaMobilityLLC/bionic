@@ -8,6 +8,7 @@
 #define _UAPIVFIO_H
 #include <linux/types.h>
 #include <linux/ioctl.h>
+#include <linux/stddef.h>
 #define VFIO_API_VERSION 0
 #define VFIO_TYPE1_IOMMU 1
 #define VFIO_SPAPR_TCE_IOMMU 2
@@ -388,6 +389,18 @@ struct vfio_device_feature_bus_master {
 #define VFIO_DEVICE_FEATURE_SET_MASTER 1
 };
 #define VFIO_DEVICE_FEATURE_BUS_MASTER 10
+#define VFIO_DEVICE_FEATURE_DMA_BUF 11
+struct vfio_region_dma_range {
+  __u64 offset;
+  __u64 length;
+};
+struct vfio_device_feature_dma_buf {
+  __u32 region_index;
+  __u32 open_flags;
+  __u32 flags;
+  __u32 nr_ranges;
+  struct vfio_region_dma_range dma_ranges[] __counted_by(nr_ranges);
+};
 struct vfio_iommu_type1_info {
   __u32 argsz;
   __u32 flags;

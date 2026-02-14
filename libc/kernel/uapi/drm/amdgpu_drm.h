@@ -886,9 +886,6 @@ struct drm_amdgpu_info_uq_metadata {
 #define AMDGPU_FAMILY_GC_10_3_7 151
 #define AMDGPU_FAMILY_GC_11_5_0 150
 #define AMDGPU_FAMILY_GC_12_0_0 152
-struct drm_color_ctm_3x4 {
-  __u64 matrix[12];
-};
 #ifdef __cplusplus
 }
 #endif

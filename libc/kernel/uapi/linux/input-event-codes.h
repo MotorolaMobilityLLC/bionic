@@ -724,6 +724,7 @@
 #define ABS_TOOL_WIDTH 0x1c
 #define ABS_VOLUME 0x20
 #define ABS_PROFILE 0x21
+#define ABS_SND_PROFILE 0x22
 #define ABS_MISC 0x28
 #define ABS_RESERVED 0x2e
 #define ABS_MT_SLOT 0x2f
@@ -794,4 +795,7 @@
 #define SND_TONE 0x02
 #define SND_MAX 0x07
 #define SND_CNT (SND_MAX + 1)
+#define SND_PROFILE_SILENT 0x00
+#define SND_PROFILE_VIBRATE 0x01
+#define SND_PROFILE_RING 0x02
 #endif

@@ -45,4 +45,36 @@ struct nsfs_file_handle {
 };
 #define NSFS_FILE_HANDLE_SIZE_VER0 16
 #define NSFS_FILE_HANDLE_SIZE_LATEST sizeof(struct nsfs_file_handle)
+enum init_ns_id {
+  IPC_NS_INIT_ID = 1ULL,
+  UTS_NS_INIT_ID = 2ULL,
+  USER_NS_INIT_ID = 3ULL,
+  PID_NS_INIT_ID = 4ULL,
+  CGROUP_NS_INIT_ID = 5ULL,
+  TIME_NS_INIT_ID = 6ULL,
+  NET_NS_INIT_ID = 7ULL,
+  MNT_NS_INIT_ID = 8ULL,
+};
+enum ns_type {
+  TIME_NS = (1ULL << 7),
+  MNT_NS = (1ULL << 17),
+  CGROUP_NS = (1ULL << 25),
+  UTS_NS = (1ULL << 26),
+  IPC_NS = (1ULL << 27),
+  USER_NS = (1ULL << 28),
+  PID_NS = (1ULL << 29),
+  NET_NS = (1ULL << 30),
+};
+struct ns_id_req {
+  __u32 size;
+  __u32 spare;
+  __u64 ns_id;
+  struct {
+    __u32 ns_type;
+    __u32 spare2;
+    __u64 user_ns_id;
+  };
+};
+#define LISTNS_CURRENT_USER 0xffffffffffffffff
+#define NS_ID_REQ_SIZE_VER0 32
 #endif

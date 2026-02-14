@@ -20,6 +20,8 @@ extern "C" {
 #define DRM_PANFROST_PERFCNT_DUMP 0x07
 #define DRM_PANFROST_MADVISE 0x08
 #define DRM_PANFROST_SET_LABEL_BO 0x09
+#define DRM_PANFROST_JM_CTX_CREATE 0x0a
+#define DRM_PANFROST_JM_CTX_DESTROY 0x0b
 #define DRM_IOCTL_PANFROST_SUBMIT DRM_IOW(DRM_COMMAND_BASE + DRM_PANFROST_SUBMIT, struct drm_panfrost_submit)
 #define DRM_IOCTL_PANFROST_WAIT_BO DRM_IOW(DRM_COMMAND_BASE + DRM_PANFROST_WAIT_BO, struct drm_panfrost_wait_bo)
 #define DRM_IOCTL_PANFROST_CREATE_BO DRM_IOWR(DRM_COMMAND_BASE + DRM_PANFROST_CREATE_BO, struct drm_panfrost_create_bo)
@@ -28,6 +30,8 @@ extern "C" {
 #define DRM_IOCTL_PANFROST_GET_BO_OFFSET DRM_IOWR(DRM_COMMAND_BASE + DRM_PANFROST_GET_BO_OFFSET, struct drm_panfrost_get_bo_offset)
 #define DRM_IOCTL_PANFROST_MADVISE DRM_IOWR(DRM_COMMAND_BASE + DRM_PANFROST_MADVISE, struct drm_panfrost_madvise)
 #define DRM_IOCTL_PANFROST_SET_LABEL_BO DRM_IOWR(DRM_COMMAND_BASE + DRM_PANFROST_SET_LABEL_BO, struct drm_panfrost_set_label_bo)
+#define DRM_IOCTL_PANFROST_JM_CTX_CREATE DRM_IOWR(DRM_COMMAND_BASE + DRM_PANFROST_JM_CTX_CREATE, struct drm_panfrost_jm_ctx_create)
+#define DRM_IOCTL_PANFROST_JM_CTX_DESTROY DRM_IOWR(DRM_COMMAND_BASE + DRM_PANFROST_JM_CTX_DESTROY, struct drm_panfrost_jm_ctx_destroy)
 #define DRM_IOCTL_PANFROST_PERFCNT_ENABLE DRM_IOW(DRM_COMMAND_BASE + DRM_PANFROST_PERFCNT_ENABLE, struct drm_panfrost_perfcnt_enable)
 #define DRM_IOCTL_PANFROST_PERFCNT_DUMP DRM_IOW(DRM_COMMAND_BASE + DRM_PANFROST_PERFCNT_DUMP, struct drm_panfrost_perfcnt_dump)
 #define PANFROST_JD_REQ_FS (1 << 0)
@@ -40,6 +44,8 @@ struct drm_panfrost_submit {
   __u64 bo_handles;
   __u32 bo_handle_count;
   __u32 requirements;
+  __u32 jm_ctx_handle;
+  __u32 pad;
 };
 struct drm_panfrost_wait_bo {
   __u32 handle;
@@ -104,6 +110,7 @@ enum drm_panfrost_param {
   DRM_PANFROST_PARAM_AFBC_FEATURES,
   DRM_PANFROST_PARAM_SYSTEM_TIMESTAMP,
   DRM_PANFROST_PARAM_SYSTEM_TIMESTAMP_FREQUENCY,
+  DRM_PANFROST_PARAM_ALLOWED_JM_CTX_PRIORITIES,
 };
 struct drm_panfrost_get_param {
   __u32 param;
@@ -165,6 +172,19 @@ struct panfrost_dump_object_header {
 struct panfrost_dump_registers {
   __u32 reg;
   __u32 value;
+};
+enum drm_panfrost_jm_ctx_priority {
+  PANFROST_JM_CTX_PRIORITY_LOW = 0,
+  PANFROST_JM_CTX_PRIORITY_MEDIUM,
+  PANFROST_JM_CTX_PRIORITY_HIGH,
+};
+struct drm_panfrost_jm_ctx_create {
+  __u32 handle;
+  __u32 priority;
+};
+struct drm_panfrost_jm_ctx_destroy {
+  __u32 handle;
+  __u32 pad;
 };
 #ifdef __cplusplus
 }

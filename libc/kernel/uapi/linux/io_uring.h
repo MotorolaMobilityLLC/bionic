@@ -140,6 +140,7 @@ enum io_uring_sqe_flags_bit {
 #define IORING_SETUP_NO_SQARRAY (1U << 16)
 #define IORING_SETUP_HYBRID_IOPOLL (1U << 17)
 #define IORING_SETUP_CQE_MIXED (1U << 18)
+#define IORING_SETUP_SQE_MIXED (1U << 19)
 enum io_uring_op {
   IORING_OP_NOP,
   IORING_OP_READV,
@@ -204,6 +205,8 @@ enum io_uring_op {
   IORING_OP_READV_FIXED,
   IORING_OP_WRITEV_FIXED,
   IORING_OP_PIPE,
+  IORING_OP_NOP128,
+  IORING_OP_URING_CMD128,
   IORING_OP_LAST,
 };
 #define IORING_URING_CMD_FIXED (1U << 0)
@@ -374,6 +377,7 @@ enum io_uring_register_op {
   IORING_REGISTER_RESIZE_RINGS = 33,
   IORING_REGISTER_MEM_REGION = 34,
   IORING_REGISTER_QUERY = 35,
+  IORING_REGISTER_ZCRX_CTRL = 36,
   IORING_REGISTER_LAST,
   IORING_REGISTER_USE_REGISTERED_RING = 1U << 31
 };
@@ -569,6 +573,7 @@ enum io_uring_socket_op {
   SOCKET_URING_OP_GETSOCKOPT,
   SOCKET_URING_OP_SETSOCKOPT,
   SOCKET_URING_OP_TX_TIMESTAMP,
+  SOCKET_URING_OP_GETSOCKNAME,
 };
 #define IORING_TIMESTAMP_HW_SHIFT 16
 #define IORING_TIMESTAMP_TYPE_SHIFT (IORING_TIMESTAMP_HW_SHIFT + 1)
@@ -606,6 +611,9 @@ struct io_uring_zcrx_area_reg {
   __u32 dmabuf_fd;
   __u64 __resv2[2];
 };
+enum zcrx_reg_flags {
+  ZCRX_REG_IMPORT = 1,
+};
 struct io_uring_zcrx_ifq_reg {
   __u32 if_idx;
   __u32 if_rxq;
@@ -617,6 +625,27 @@ struct io_uring_zcrx_ifq_reg {
   __u32 zcrx_id;
   __u32 __resv2;
   __u64 __resv[3];
+};
+enum zcrx_ctrl_op {
+  ZCRX_CTRL_FLUSH_RQ,
+  ZCRX_CTRL_EXPORT,
+  __ZCRX_CTRL_LAST,
+};
+struct zcrx_ctrl_flush_rq {
+  __u64 __resv[6];
+};
+struct zcrx_ctrl_export {
+  __u32 zcrx_fd;
+  __u32 __resv1[11];
+};
+struct zcrx_ctrl {
+  __u32 zcrx_id;
+  __u32 op;
+  __u64 __resv[2];
+  union {
+    struct zcrx_ctrl_export zc_export;
+    struct zcrx_ctrl_flush_rq zc_flush;
+  };
 };
 #ifdef __cplusplus
 }

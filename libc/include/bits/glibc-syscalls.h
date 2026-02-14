@@ -561,6 +561,9 @@
 #if defined(__NR_listmount)
   #define SYS_listmount __NR_listmount
 #endif
+#if defined(__NR_listns)
+  #define SYS_listns __NR_listns
+#endif
 #if defined(__NR_listxattr)
   #define SYS_listxattr __NR_listxattr
 #endif

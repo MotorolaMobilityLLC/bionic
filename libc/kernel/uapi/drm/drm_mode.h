@@ -268,6 +268,7 @@ struct drm_mode_connector_set_property {
 #define DRM_MODE_OBJECT_FB 0xfbfbfbfb
 #define DRM_MODE_OBJECT_BLOB 0xbbbbbbbb
 #define DRM_MODE_OBJECT_PLANE 0xeeeeeeee
+#define DRM_MODE_OBJECT_COLOROP 0xfafafafa
 #define DRM_MODE_OBJECT_ANY 0
 struct drm_mode_obj_get_properties {
   __u64 props_ptr;
@@ -357,11 +358,33 @@ struct drm_mode_crtc_lut {
 struct drm_color_ctm {
   __u64 matrix[9];
 };
+struct drm_color_ctm_3x4 {
+  __u64 matrix[12];
+};
 struct drm_color_lut {
   __u16 red;
   __u16 green;
   __u16 blue;
   __u16 reserved;
+};
+struct drm_color_lut32 {
+  __u32 red;
+  __u32 green;
+  __u32 blue;
+  __u32 reserved;
+};
+enum drm_colorop_type {
+  DRM_COLOROP_1D_CURVE,
+  DRM_COLOROP_1D_LUT,
+  DRM_COLOROP_CTM_3X4,
+  DRM_COLOROP_MULTIPLIER,
+  DRM_COLOROP_3D_LUT,
+};
+enum drm_colorop_lut3d_interpolation_type {
+  DRM_COLOROP_LUT3D_INTERPOLATION_TETRAHEDRAL,
+};
+enum drm_colorop_lut1d_interpolation_type {
+  DRM_COLOROP_LUT1D_INTERPOLATION_LINEAR,
 };
 struct drm_plane_size_hint {
   __u16 width;

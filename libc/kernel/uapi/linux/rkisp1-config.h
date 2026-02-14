@@ -7,6 +7,7 @@
 #ifndef _UAPI_RKISP1_CONFIG_H
 #define _UAPI_RKISP1_CONFIG_H
 #include <linux/types.h>
+#include <linux/media/v4l2-isp.h>
 #define RKISP1_CIF_ISP_MODULE_DPCC (1U << 0)
 #define RKISP1_CIF_ISP_MODULE_BLS (1U << 1)
 #define RKISP1_CIF_ISP_MODULE_SDG (1U << 2)
@@ -447,14 +448,10 @@ enum rkisp1_ext_params_block_type {
   RKISP1_EXT_PARAMS_BLOCK_TYPE_COMPAND_COMPRESS,
   RKISP1_EXT_PARAMS_BLOCK_TYPE_WDR,
 };
-#define RKISP1_EXT_PARAMS_FL_BLOCK_DISABLE (1U << 0)
-#define RKISP1_EXT_PARAMS_FL_BLOCK_ENABLE (1U << 1)
+#define RKISP1_EXT_PARAMS_FL_BLOCK_DISABLE V4L2_ISP_PARAMS_FL_BLOCK_DISABLE
+#define RKISP1_EXT_PARAMS_FL_BLOCK_ENABLE V4L2_ISP_PARAMS_FL_BLOCK_ENABLE
 #define RKISP1_CID_SUPPORTED_PARAMS_BLOCKS (V4L2_CID_USER_RKISP1_BASE + 0x01)
-struct rkisp1_ext_params_block_header {
-  __u16 type;
-  __u16 flags;
-  __u32 size;
-};
+#define rkisp1_ext_params_block_header v4l2_isp_params_block_header
 struct rkisp1_ext_params_bls_config {
   struct rkisp1_ext_params_block_header header;
   struct rkisp1_cif_isp_bls_config config;
@@ -537,7 +534,7 @@ struct rkisp1_ext_params_wdr_config {
 } __attribute__((aligned(8)));
 #define RKISP1_EXT_PARAMS_MAX_SIZE (sizeof(struct rkisp1_ext_params_bls_config) + sizeof(struct rkisp1_ext_params_dpcc_config) + sizeof(struct rkisp1_ext_params_sdg_config) + sizeof(struct rkisp1_ext_params_lsc_config) + sizeof(struct rkisp1_ext_params_awb_gain_config) + sizeof(struct rkisp1_ext_params_flt_config) + sizeof(struct rkisp1_ext_params_bdm_config) + sizeof(struct rkisp1_ext_params_ctk_config) + sizeof(struct rkisp1_ext_params_goc_config) + sizeof(struct rkisp1_ext_params_dpf_config) + sizeof(struct rkisp1_ext_params_dpf_strength_config) + sizeof(struct rkisp1_ext_params_cproc_config) + sizeof(struct rkisp1_ext_params_ie_config) + sizeof(struct rkisp1_ext_params_awb_meas_config) + sizeof(struct rkisp1_ext_params_hst_config) + sizeof(struct rkisp1_ext_params_aec_config) + sizeof(struct rkisp1_ext_params_afc_config) + sizeof(struct rkisp1_ext_params_compand_bls_config) + sizeof(struct rkisp1_ext_params_compand_curve_config) + sizeof(struct rkisp1_ext_params_compand_curve_config) + sizeof(struct rkisp1_ext_params_wdr_config))
 enum rksip1_ext_param_buffer_version {
-  RKISP1_EXT_PARAM_BUFFER_V1 = 1,
+  RKISP1_EXT_PARAM_BUFFER_V1 = V4L2_ISP_PARAMS_VERSION_V1,
 };
 struct rkisp1_ext_params_cfg {
   __u32 version;

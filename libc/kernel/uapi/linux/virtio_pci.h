@@ -7,7 +7,7 @@
 #ifndef _LINUX_VIRTIO_PCI_H
 #define _LINUX_VIRTIO_PCI_H
 #include <linux/types.h>
-#include <linux/kernel.h>
+#include <linux/const.h>
 #ifndef VIRTIO_PCI_NO_LEGACY
 #define VIRTIO_PCI_HOST_FEATURES 0
 #define VIRTIO_PCI_GUEST_FEATURES 4

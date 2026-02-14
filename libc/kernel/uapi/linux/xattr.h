@@ -13,7 +13,7 @@
 #define XATTR_CREATE 0x1
 #define XATTR_REPLACE 0x2
 struct xattr_args {
-  __aligned_u64  value;
+  __aligned_u64 value;
   __u32 size;
   __u32 flags;
 };

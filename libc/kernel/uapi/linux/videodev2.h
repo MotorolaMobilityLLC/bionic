@@ -472,6 +472,8 @@ struct v4l2_pix_format {
 #define V4L2_META_FMT_RPI_BE_CFG v4l2_fourcc('R', 'P', 'B', 'C')
 #define V4L2_META_FMT_RPI_FE_CFG v4l2_fourcc('R', 'P', 'F', 'C')
 #define V4L2_META_FMT_RPI_FE_STATS v4l2_fourcc('R', 'P', 'F', 'S')
+#define V4L2_META_FMT_MALI_C55_PARAMS v4l2_fourcc('C', '5', '5', 'P')
+#define V4L2_META_FMT_MALI_C55_STATS v4l2_fourcc('C', '5', '5', 'S')
 #define V4L2_PIX_FMT_PRIV_MAGIC 0xfeedcafe
 #define V4L2_PIX_FMT_FLAG_PREMUL_ALPHA 0x00000001
 #define V4L2_PIX_FMT_FLAG_SET_CSC 0x00000002

@@ -23,6 +23,7 @@ extern "C" {
 #define DRM_IVPU_CMDQ_CREATE 0x0b
 #define DRM_IVPU_CMDQ_DESTROY 0x0c
 #define DRM_IVPU_CMDQ_SUBMIT 0x0d
+#define DRM_IVPU_BO_CREATE_FROM_USERPTR 0x0e
 #define DRM_IOCTL_IVPU_GET_PARAM DRM_IOWR(DRM_COMMAND_BASE + DRM_IVPU_GET_PARAM, struct drm_ivpu_param)
 #define DRM_IOCTL_IVPU_SET_PARAM DRM_IOW(DRM_COMMAND_BASE + DRM_IVPU_SET_PARAM, struct drm_ivpu_param)
 #define DRM_IOCTL_IVPU_BO_CREATE DRM_IOWR(DRM_COMMAND_BASE + DRM_IVPU_BO_CREATE, struct drm_ivpu_bo_create)
@@ -36,6 +37,7 @@ extern "C" {
 #define DRM_IOCTL_IVPU_CMDQ_CREATE DRM_IOWR(DRM_COMMAND_BASE + DRM_IVPU_CMDQ_CREATE, struct drm_ivpu_cmdq_create)
 #define DRM_IOCTL_IVPU_CMDQ_DESTROY DRM_IOW(DRM_COMMAND_BASE + DRM_IVPU_CMDQ_DESTROY, struct drm_ivpu_cmdq_destroy)
 #define DRM_IOCTL_IVPU_CMDQ_SUBMIT DRM_IOW(DRM_COMMAND_BASE + DRM_IVPU_CMDQ_SUBMIT, struct drm_ivpu_cmdq_submit)
+#define DRM_IOCTL_IVPU_BO_CREATE_FROM_USERPTR DRM_IOWR(DRM_COMMAND_BASE + DRM_IVPU_BO_CREATE_FROM_USERPTR, struct drm_ivpu_bo_create_from_userptr)
 #define DRM_IVPU_PARAM_DEVICE_ID 0
 #define DRM_IVPU_PARAM_DEVICE_REVISION 1
 #define DRM_IVPU_PARAM_PLATFORM_TYPE 2
@@ -50,6 +52,7 @@ extern "C" {
 #define DRM_IVPU_PARAM_TILE_CONFIG 11
 #define DRM_IVPU_PARAM_SKU 12
 #define DRM_IVPU_PARAM_CAPABILITIES 13
+#define DRM_IVPU_PARAM_PREEMPT_BUFFER_SIZE 14
 #define DRM_IVPU_PLATFORM_TYPE_SILICON 0
 #define DRM_IVPU_CONTEXT_PRIORITY_IDLE 0
 #define DRM_IVPU_CONTEXT_PRIORITY_NORMAL 1
@@ -63,6 +66,7 @@ extern "C" {
 #define DRM_IVPU_CAP_METRIC_STREAMER 1
 #define DRM_IVPU_CAP_DMA_MEMORY_RANGE 2
 #define DRM_IVPU_CAP_MANAGE_CMDQ 3
+#define DRM_IVPU_CAP_BO_CREATE_FROM_USERPTR 4
 struct drm_ivpu_param {
   __u32 param;
   __u32 index;
@@ -72,12 +76,20 @@ struct drm_ivpu_param {
 #define DRM_IVPU_BO_HIGH_MEM DRM_IVPU_BO_SHAVE_MEM
 #define DRM_IVPU_BO_MAPPABLE 0x00000002
 #define DRM_IVPU_BO_DMA_MEM 0x00000004
+#define DRM_IVPU_BO_READ_ONLY 0x00000008
 #define DRM_IVPU_BO_CACHED 0x00000000
 #define DRM_IVPU_BO_UNCACHED 0x00010000
 #define DRM_IVPU_BO_WC 0x00020000
 #define DRM_IVPU_BO_CACHE_MASK 0x00030000
-#define DRM_IVPU_BO_FLAGS (DRM_IVPU_BO_HIGH_MEM | DRM_IVPU_BO_MAPPABLE | DRM_IVPU_BO_DMA_MEM | DRM_IVPU_BO_CACHE_MASK)
+#define DRM_IVPU_BO_FLAGS (DRM_IVPU_BO_HIGH_MEM | DRM_IVPU_BO_MAPPABLE | DRM_IVPU_BO_DMA_MEM | DRM_IVPU_BO_READ_ONLY | DRM_IVPU_BO_CACHE_MASK)
 struct drm_ivpu_bo_create {
+  __u64 size;
+  __u32 flags;
+  __u32 handle;
+  __u64 vpu_addr;
+};
+struct drm_ivpu_bo_create_from_userptr {
+  __u64 user_ptr;
   __u64 size;
   __u32 flags;
   __u32 handle;
@@ -106,6 +118,8 @@ struct drm_ivpu_cmdq_submit {
   __u32 cmdq_id;
   __u32 flags;
   __u32 commands_offset;
+  __u32 preempt_buffer_index;
+  __u32 reserved;
 };
 #define DRM_IVPU_JOB_STATUS_SUCCESS 0
 #define DRM_IVPU_JOB_STATUS_ABORTED 256

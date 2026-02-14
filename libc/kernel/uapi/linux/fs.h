@@ -163,6 +163,7 @@ struct file_attr {
 #define BLKROTATIONAL _IO(0x12, 126)
 #define BLKZEROOUT _IO(0x12, 127)
 #define BLKGETDISKSEQ _IOR(0x12, 128, __u64)
+#define BLKTRACESETUP2 _IOWR(0x12, 142, struct blk_user_trace_setup2)
 #define BMAP_IOCTL 1
 #define FIBMAP _IO(0x00, 1)
 #define FIGETBSZ _IO(0x00, 2)

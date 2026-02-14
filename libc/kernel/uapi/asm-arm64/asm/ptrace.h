@@ -45,7 +45,7 @@
 #define PTRACE_SYSEMU_SINGLESTEP 32
 #define PTRACE_PEEKMTETAGS 33
 #define PTRACE_POKEMTETAGS 34
-#ifndef __ASSEMBLY__
+#ifndef __ASSEMBLER__
 struct user_pt_regs {
   __u64 regs[31];
   __u64 sp;
