@@ -13,6 +13,36 @@ license {
     ],
 }
 
+//
+// Ideally all code would support arm64's Branch Target Identification (BTI),
+// https://en.wikipedia.org/wiki/Indirect_branch_tracking
+// but we currently have legacy assembler that hasn't been updated.
+// Object files or libraries that support BTI carry an ELF note declaring their
+// support, and at link time lld rejects attempts to mix BTI and non-BTI code
+// because doing so disables BTI.
+//
+// Code that has yet to be updated can use the "no_bti" cc_defaults to tell the
+// linker to silently ignore such mismatches instead, to give the owners more
+// time to fix their code.
+//
+// See
+// https://developer.arm.com/community/arm-community-blogs/b/architectures-and-processors-blog/posts/enabling-pac-and-bti-on-aarch64
+// for a worked example of how to fix assembler.
+//
+// Note that if you apply this to a static library, you'll also need to apply
+// it to everything that links that library (because BTI applies on a
+// per-executable/per-shared object basis).
+//
+cc_defaults {
+    name: "no_bti",
+    arch: {
+        arm64: {
+            ldflags: ["-Wl,-z,bti-report=none"],
+        },
+    },
+}
+
+// Flags used by both the linker and linker_wrapper on the host.
 linker_common_flags = [
     "-fno-stack-protector",
     "-Wstrict-overflow=5",
