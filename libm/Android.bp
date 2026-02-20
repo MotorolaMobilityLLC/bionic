@@ -357,11 +357,20 @@ cc_library_headers {
     stl: "none",
     native_bridge_supported: true,
     apex_available: [
+        "//apex_available:platform",
         "com.android.runtime",
     ],
 }
 
-cc_defaults {
+soong_config_module_type {
+    name: "bionic_cc_defaults",
+    module_type: "cc_defaults",
+    config_namespace: "ANDROID",
+    bool_variables: ["release_deprecate_runtime_apex"],
+    properties: ["apex_available"],
+}
+
+bionic_cc_defaults {
     name: "libm_defaults",
     defaults: [
         "linux_bionic_supported",
@@ -465,9 +474,14 @@ cc_defaults {
     stl: "none",
     native_bridge_supported: true,
 
-    apex_available: [
-        "com.android.runtime",
-    ],
+    soong_config_variables: {
+        release_deprecate_runtime_apex: {
+            apex_available: ["//apex_available:platform"],
+            conditions_default: {
+                apex_available: ["com.android.runtime"],
+            },
+        },
+    },
 
     lto: {
         never: true,
