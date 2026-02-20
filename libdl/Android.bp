@@ -48,6 +48,7 @@ cc_library_static {
         never: true,
     },
     apex_available: [
+        "//apex_available:platform",
         "com.android.runtime",
     ],
 }
@@ -126,6 +127,7 @@ cc_library {
     },
 
     apex_available: [
+        "//apex_available:platform",
         "com.android.runtime",
     ],
 }
@@ -174,13 +176,25 @@ cc_library {
     },
 
     stubs: {
-        symbol_file: "libdl_android.map.txt",
+        symbol_file: ":stubs_libdl_android.map.txt",
         versions: ["current"],
     },
 
     apex_available: [
+        "//apex_available:platform",
         "com.android.runtime",
     ],
+}
+
+// RELEASE_DEPRECATE_RUNTIME_APEX: "# apex" should be converted to "# systemapi"
+genrule {
+    name: "stubs_libdl_android.map.txt",
+    out: ["stubs_libdl_android.map.txt"],
+    srcs: ["libdl_android.map.txt"],
+    cmd: select(release_flag("RELEASE_DEPRECATE_RUNTIME_APEX"), {
+        true: "sed 's/# apex/# systemapi/g' $(in) > $(out)",
+        default: "cp $(in) $(out)",
+    }),
 }
 
 ndk_library {

@@ -283,6 +283,7 @@ extern "C" struct android_namespace_t* android_get_exported_namespace(const char
 
 void* LoadSharedLibrary(const char* shared_lib, const char* prefix, MallocDispatch* dispatch_table) {
   void* impl_handle = nullptr;
+  // TODO(b/369944471) Remove com.android.runtime support
   // Try to load the libc_malloc_* libs from the "runtime" namespace and then
   // fall back to dlopen() to load them from the default namespace.
   //

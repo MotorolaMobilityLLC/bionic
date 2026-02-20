@@ -102,7 +102,10 @@ cc_defaults {
         never: true,
     },
 
-    apex_available: ["com.android.runtime"],
+    apex_available: [
+        "//apex_available:platform",
+        "com.android.runtime",
+    ],
 }
 
 // Workaround for b/24465209.
@@ -1666,6 +1669,7 @@ cc_defaults {
     },
 
     apex_available: [
+        "//apex_available:platform",
         "com.android.runtime",
     ],
 
@@ -1684,7 +1688,7 @@ cc_defaults {
         "libc_library_defaults",
     ],
     stubs: {
-        symbol_file: "libc.map.txt",
+        symbol_file: ":stubs_libc.map.txt",
         versions: [
             "29",
             "R",
@@ -1697,6 +1701,17 @@ cc_defaults {
         export_llndk_headers: ["libc_headers"],
     },
     afdo: true,
+}
+
+// RELEASE_DEPRECATE_RUNTIME_APEX: "# apex" should be converted to "# systemapi"
+genrule {
+    name: "stubs_libc.map.txt",
+    out: ["stubs_libc.map.txt"],
+    srcs: ["libc.map.txt"],
+    cmd: select(release_flag("RELEASE_DEPRECATE_RUNTIME_APEX"), {
+        true: "sed 's/# apex/# systemapi/g' $(in) > $(out)",
+        default: "cp $(in) $(out)",
+    }),
 }
 
 cc_library {
