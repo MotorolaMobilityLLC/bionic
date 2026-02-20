@@ -357,7 +357,6 @@ cc_library_headers {
     stl: "none",
     native_bridge_supported: true,
     apex_available: [
-        "//apex_available:platform",
         "com.android.runtime",
     ],
 }
@@ -467,7 +466,6 @@ cc_defaults {
     native_bridge_supported: true,
 
     apex_available: [
-        "//apex_available:platform",
         "com.android.runtime",
     ],
 
