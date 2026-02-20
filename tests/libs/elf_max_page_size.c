@@ -32,14 +32,29 @@ const int ro0 = RO0;
 const int ro1 = RO1;
 int rw0 = RW0;
 
-/* Force some padding alignment */
-int rw1 __attribute__((aligned(0x10000))) = RW1;
+/* Force some padding alignment. Use 4KiB to avoid conflict with Linker's
+ * 16KiB compat loading logic, which needs to apply 4KiB offsets.
+ */
+int rw1 __attribute__((aligned(4096))) = RW1;
 
 int bss0, bss1;
 
 int* const prw0 = &rw0;
 
+/* Ensure RELRO segment is large enough to have "middle pages" in 16KiB.
+ * 4096 * 8 bytes = 32KiB (on 64-bit).
+ */
+int *const big_relro_table[4096] = {
+    &rw0,  &bss0, &rw1, &bss1, &rw0,
+    &bss0, &rw1,  &bss1
+    /* ... The compiler will automatically fill the remaining part with NULL,
+       but the preceding relocations are enough to enlarge RELRO. */
+};
+
 int loader_test_func(void) {
+  // Must reference big_relro_table to ensure it is not removed by gc-sections.
+  if (big_relro_table[0] == 0) return 0;
+
   rw0 += RW0_INCREMENT;
   rw1 += RW1_INCREMENT;
 
