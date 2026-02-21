@@ -246,17 +246,11 @@ static inline void __set_tcb_dtv(bionic_tcb* tcb, TlsDtv* val) {
 
 __LIBC_HIDDEN__ void pthread_key_clean_all(void);
 
-#if defined(__LP64__)
-// Address space is "free" on LP64 (though media processes use RLIMIT_AS),
-// and larger guard areas can catch more bugs.
-// We go with 1MiB because that's the same as the default pthread usable stack size.
-// For platform code compiled with -fstack-clash-protection this shouldn't be necessary,
-// but it might catch issues in assembler or non-platform code.
-#define PTHREAD_GUARD_SIZE (1 * 1024 * 1024ul)
-#else
-// Address space is precious on ILP32, so use the minimum unit: one page.
+// Address space is precious on LP32, so use the minimum unit: one page.
+// On LP64, we could use more but there's no obvious advantage to doing
+// so, and the various media processes use RLIMIT_AS as a way to limit
+// the amount of allocation they'll do.
 #define PTHREAD_GUARD_SIZE max_android_page_size()
-#endif
 
 // SIGSTKSZ (8KiB) is not big enough.
 // An snprintf to a stack buffer of size PATH_MAX consumes ~7KiB of stack.
