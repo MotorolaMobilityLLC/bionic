@@ -2801,6 +2801,14 @@ TEST(STDIO_TEST, wprintf_m_does_not_clobber_strerror) {
   ASSERT_STREQ("Unknown error -1", m);
 }
 
+TEST(STDIO_TEST, snprintf_hash_o) {
+  EXPECT_SNPRINTF("07", "%#o", 7);
+}
+
+TEST(STDIO_TEST, swprintf_hash_o) {
+  EXPECT_SWPRINTF(L"07", L"%#o", 7);
+}
+
 TEST(STDIO_TEST, fopen_append_mode_and_ftell) {
   TemporaryFile tf;
   SetFileTo(tf.path, "0123456789");
