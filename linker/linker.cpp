@@ -2489,7 +2489,7 @@ std::vector<std::string> fix_lib_paths(std::vector<std::string> paths) {
   // For the bootstrap linker, insert /system/${LIB}/bootstrap in front of /system/${LIB} in any
   // namespace search path. The bootstrap linker should prefer to use the bootstrap bionic libraries
   // (e.g. libc.so).
-#if !defined(__ANDROID_APEX__)
+#if !defined(RELEASE_DEPRECATE_RUNTIME_APEX) && !defined(__ANDROID_APEX__)
   for (size_t i = 0; i < paths.size(); ++i) {
     if (paths[i] == kSystemLibDir) {
       paths.insert(paths.begin() + i, std::string(kSystemLibDir) + "/bootstrap");
