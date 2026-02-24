@@ -93,9 +93,10 @@ cc_defaults {
         "libz",
 
         "libasync_safe",
-
-        "liblog_for_runtime_apex",
-    ],
+    ] + select(release_flag("RELEASE_DEPRECATE_RUNTIME_APEX"), {
+        true: ["liblog"],
+        default: ["liblog_for_runtime_apex"],
+    }),
 
     // We need to access Bionic private headers in the linker.
     include_dirs: ["bionic/libc"],
@@ -132,6 +133,7 @@ cc_library_static {
     // Ensure that the compiler won't insert string function calls before ifuncs are resolved.
     cflags: ["-ffreestanding"],
     apex_available: [
+        "//apex_available:platform",
         "com.android.runtime",
     ],
 }
@@ -144,6 +146,7 @@ cc_library_static {
     ],
     srcs: ["linker_memory.cpp"],
     apex_available: [
+        "//apex_available:platform",
         "com.android.runtime",
     ],
 }
@@ -529,7 +532,7 @@ cc_test {
     static_libs: [
         "libasync_safe",
         "libbase",
-        "liblog_for_runtime_apex",
+        "liblog",
         "libprocinfo", // For procinfo::MappedFileSize()
     ],
 

@@ -48,11 +48,20 @@ cc_library_static {
         never: true,
     },
     apex_available: [
+        "//apex_available:platform",
         "com.android.runtime",
     ],
 }
 
-cc_library {
+soong_config_module_type {
+    name: "bionic_cc_library",
+    module_type: "cc_library",
+    config_namespace: "ANDROID",
+    bool_variables: ["release_deprecate_runtime_apex"],
+    properties: ["apex_available"],
+}
+
+bionic_cc_library {
     name: "libdl",
     ramdisk_available: true,
     vendor_ramdisk_available: true,
@@ -125,12 +134,17 @@ cc_library {
         symbol_file: "libdl.map.txt",
     },
 
-    apex_available: [
-        "com.android.runtime",
-    ],
+    soong_config_variables: {
+        release_deprecate_runtime_apex: {
+            apex_available: ["//apex_available:platform"],
+            conditions_default: {
+                apex_available: ["com.android.runtime"],
+            },
+        },
+    },
 }
 
-cc_library {
+bionic_cc_library {
     name: "libdl_android",
 
     defaults: ["linux_bionic_supported"],
@@ -174,13 +188,29 @@ cc_library {
     },
 
     stubs: {
-        symbol_file: "libdl_android.map.txt",
+        symbol_file: ":stubs_libdl_android.map.txt",
         versions: ["current"],
     },
 
-    apex_available: [
-        "com.android.runtime",
-    ],
+    soong_config_variables: {
+        release_deprecate_runtime_apex: {
+            apex_available: ["//apex_available:platform"],
+            conditions_default: {
+                apex_available: ["com.android.runtime"],
+            },
+        },
+    },
+}
+
+// RELEASE_DEPRECATE_RUNTIME_APEX: "# apex" should be converted to "# systemapi"
+genrule {
+    name: "stubs_libdl_android.map.txt",
+    out: ["stubs_libdl_android.map.txt"],
+    srcs: ["libdl_android.map.txt"],
+    cmd: select(release_flag("RELEASE_DEPRECATE_RUNTIME_APEX"), {
+        true: "sed 's/# apex/# systemapi/g' $(in) > $(out)",
+        default: "cp $(in) $(out)",
+    }),
 }
 
 ndk_library {
