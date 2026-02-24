@@ -2809,6 +2809,22 @@ TEST(STDIO_TEST, swprintf_hash_o) {
   EXPECT_SWPRINTF(L"07", L"%#o", 7);
 }
 
+TEST(STDIO_TEST, snprintf_hash_x) {
+  EXPECT_SNPRINTF("0x7", "%#x", 7);
+}
+
+TEST(STDIO_TEST, swprintf_hash_x) {
+  EXPECT_SWPRINTF(L"0x7", L"%#x", 7);
+}
+
+TEST(STDIO_TEST, snprintf_hash_X) {
+  EXPECT_SNPRINTF("0X7", "%#X", 7);
+}
+
+TEST(STDIO_TEST, swprintf_hash_X) {
+  EXPECT_SWPRINTF(L"0X7", L"%#X", 7);
+}
+
 TEST(STDIO_TEST, fopen_append_mode_and_ftell) {
   TemporaryFile tf;
   SetFileTo(tf.path, "0123456789");
