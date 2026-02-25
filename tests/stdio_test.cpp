@@ -820,6 +820,14 @@ TEST(STDIO_TEST, swprintf_1$ju_UINTMAX_MAX) {
   EXPECT_SWPRINTF(L"18446744073709551615", L"%1$ju", UINTMAX_MAX);
 }
 
+TEST(STDIO_TEST, snprintf_d_ZERO) {
+  EXPECT_SNPRINTF("0", "%d", 0);
+}
+
+TEST(STDIO_TEST, swprintf_d_ZERO) {
+  EXPECT_SWPRINTF(L"0", L"%d", 0);
+}
+
 TEST(STDIO_TEST, snprintf_d_INT_MAX) {
   EXPECT_SNPRINTF("2147483647", "%d", INT_MAX);
 }
@@ -884,6 +892,14 @@ TEST(STDIO_TEST, swprintf_lld_LLONG_MIN) {
   EXPECT_SWPRINTF(L"-9223372036854775808", L"%lld", LLONG_MIN);
 }
 
+TEST(STDIO_TEST, snprintf_o_ZERO) {
+  EXPECT_SNPRINTF("0", "%o", 0);
+}
+
+TEST(STDIO_TEST, swprintf_o_ZERO) {
+  EXPECT_SWPRINTF(L"0", L"%o", 0);
+}
+
 TEST(STDIO_TEST, snprintf_o_UINT_MAX) {
   EXPECT_SNPRINTF("37777777777", "%o", UINT_MAX);
 }
@@ -914,6 +930,14 @@ TEST(STDIO_TEST, snprintf_o_ULLONG_MAX) {
 
 TEST(STDIO_TEST, swprintf_o_ULLONG_MAX) {
   EXPECT_SWPRINTF(L"1777777777777777777777", L"%llo", ULLONG_MAX);
+}
+
+TEST(STDIO_TEST, snprintf_u_ZERO) {
+  EXPECT_SNPRINTF("0", "%u", 0);
+}
+
+TEST(STDIO_TEST, swprintf_u_ZERO) {
+  EXPECT_SWPRINTF(L"0", L"%u", 0);
 }
 
 TEST(STDIO_TEST, snprintf_u_UINT_MAX) {
@@ -948,6 +972,14 @@ TEST(STDIO_TEST, swprintf_u_ULLONG_MAX) {
   EXPECT_SWPRINTF(L"18446744073709551615", L"%llu", ULLONG_MAX);
 }
 
+TEST(STDIO_TEST, snprintf_x_ZERO) {
+  EXPECT_SNPRINTF("0", "%x", 0);
+}
+
+TEST(STDIO_TEST, swprintf_x_ZERO) {
+  EXPECT_SWPRINTF(L"0", L"%x", 0);
+}
+
 TEST(STDIO_TEST, snprintf_x_UINT_MAX) {
   EXPECT_SNPRINTF("ffffffff", "%x", UINT_MAX);
 }
@@ -978,6 +1010,14 @@ TEST(STDIO_TEST, snprintf_x_ULLONG_MAX) {
 
 TEST(STDIO_TEST, swprintf_x_ULLONG_MAX) {
   EXPECT_SWPRINTF(L"ffffffffffffffff", L"%llx", ULLONG_MAX);
+}
+
+TEST(STDIO_TEST, snprintf_X_ZERO) {
+  EXPECT_SNPRINTF("0", "%X", 0);
+}
+
+TEST(STDIO_TEST, swprintf_X_ZERO) {
+  EXPECT_SWPRINTF(L"0", L"%X", 0);
 }
 
 TEST(STDIO_TEST, snprintf_X_UINT_MAX) {
