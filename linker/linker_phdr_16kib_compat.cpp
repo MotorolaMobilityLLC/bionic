@@ -549,6 +549,70 @@ bool soinfo::protect_16kib_app_compat_code() {
     return false;
   }
 
+  if (should_16kib_app_compat_use_rwx_) {
+    return protect_16kib_app_compat_middle_pages();
+  }
+
+  return true;
+}
+
+static bool protect_segment_middle_pages(const soinfo* si,
+                                         const ElfW(Phdr)* phdr) {
+  int prot = PFLAGS_TO_PROT(phdr->p_flags);
+
+  // force the RELRO protection to be read-only.
+  if (phdr->p_type == PT_GNU_RELRO) prot = PROT_READ;
+
+  uintptr_t seg_start = si->load_bias + phdr->p_vaddr;
+  uintptr_t seg_end = seg_start + phdr->p_memsz;
+
+  // Use physical page size alignment for mprotect.
+  uintptr_t p_start = __builtin_align_up(seg_start, page_size());
+  uintptr_t p_end = __builtin_align_down(seg_end, page_size());
+
+  if (p_start < p_end) {
+    if (mprotect(reinterpret_cast<void*>(p_start),
+                 p_end - p_start, prot) == -1) {
+      DL_ERR("failed to set protection for compat loaded binary \"%s\": %m",
+             si->get_realpath());
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/*
+ * Apply fine-grained protection to the ELF being loaded in 16KB
+ * RWX compat mode. Restore middle page permission to original.
+ *
+ * Return:
+ *   true on success, false on failure (error code in errno).
+ */
+bool soinfo::protect_16kib_app_compat_middle_pages() {
+  const ElfW(Phdr)* phdr_table = this->phdr;
+  size_t phdr_count = this->phnum;
+
+  if (phdr_table == nullptr || phdr_count == 0) return true;
+
+  // We have to ensure that the RELRO protection is applied after
+  // the LOAD segment's because it could be overwritten by them.
+  // First pass: Handle all LOAD segments to restore original permissions.
+  for (size_t i = 0; i < phdr_count; ++i) {
+    const ElfW(Phdr)* phdr_ptr = &phdr_table[i];
+    if (phdr_ptr->p_type != PT_LOAD) continue;
+
+    if (!protect_segment_middle_pages(this, phdr_ptr)) return false;
+  }
+
+  // Second pass: Handle RELRO segments.
+  for (size_t i = 0; i < phdr_count; ++i) {
+    const ElfW(Phdr)* phdr_ptr = &phdr_table[i];
+    if (phdr_ptr->p_type == PT_GNU_RELRO) {
+      if (!protect_segment_middle_pages(this, phdr_ptr)) return false;
+    }
+  }
+
   return true;
 }
 
