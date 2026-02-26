@@ -33,7 +33,7 @@
 
 #include "linker_gdb_support.h"
 
-#if defined(__ANDROID_APEX__)
+#if defined(RELEASE_DEPRECATE_RUNTIME_APEX) || defined(__ANDROID_APEX__)
 static debugger_process_info get_process_info() {
   return {
       .abort_msg = __libc_shared_globals()->abort_msg,
@@ -65,11 +65,11 @@ void linker_debuggerd_init() {
   // There may be a version mismatch between the bootstrap linker and the crash_dump in the APEX,
   // so don't pass in any process info from the bootstrap linker.
   debuggerd_callbacks_t callbacks = {
-#if defined(__ANDROID_APEX__)
-    .get_process_info = get_process_info,
-    .get_gwp_asan_callbacks = get_gwp_asan_callbacks,
+#if defined(RELEASE_DEPRECATE_RUNTIME_APEX) || defined(__ANDROID_APEX__)
+      .get_process_info = get_process_info,
+      .get_gwp_asan_callbacks = get_gwp_asan_callbacks,
 #endif
-    .post_dump = notify_gdb_of_libraries,
+      .post_dump = notify_gdb_of_libraries,
   };
   debuggerd_init(&callbacks);
 }

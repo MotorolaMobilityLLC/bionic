@@ -40,6 +40,10 @@ cc_defaults {
         "-Werror",
         "-Wno-gcc-compat",
         "-Wunused",
+
+        // Disable stack variable initialization for just the benchmarking
+        // test harness code
+        "-ftrivial-auto-var-init=uninitialized",
     ],
     srcs: [
         "bionic_benchmarks.cpp",

@@ -106,7 +106,10 @@ cc_object {
 cc_defaults {
     name: "linker_defaults",
 
-    cflags: linker_common_flags,
+    cflags: linker_common_flags + select(release_flag("RELEASE_DEPRECATE_RUNTIME_APEX"), {
+        true: ["-DRELEASE_DEPRECATE_RUNTIME_APEX"],
+        default: [],
+    }),
     asflags: linker_common_flags,
 
     product_variables: {
