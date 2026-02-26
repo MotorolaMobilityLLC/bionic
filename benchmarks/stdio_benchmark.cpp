@@ -200,39 +200,39 @@ void BM_stdio_fopen_fgetc_fclose_no_locking(benchmark::State& state) {
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_stdio_fopen_fgetc_fclose_no_locking, "1024");
 
-static void BM_stdio_printf_literal(benchmark::State& state) {
+static void BM_stdio_snprintf_literal(benchmark::State& state) {
   while (state.KeepRunning()) {
     char buf[BUFSIZ];
     snprintf(buf, sizeof(buf), "this is just a literal string with no format specifiers");
   }
 }
-BIONIC_BENCHMARK(BM_stdio_printf_literal);
+BIONIC_BENCHMARK(BM_stdio_snprintf_literal);
 
-static void BM_stdio_printf_s(benchmark::State& state) {
+static void BM_stdio_snprintf_s(benchmark::State& state) {
   while (state.KeepRunning()) {
     char buf[BUFSIZ];
     snprintf(buf, sizeof(buf), "this is a more typical error message with detail: %s",
              "No such file or directory");
   }
 }
-BIONIC_BENCHMARK(BM_stdio_printf_s);
+BIONIC_BENCHMARK(BM_stdio_snprintf_s);
 
-static void BM_stdio_printf_d(benchmark::State& state) {
+static void BM_stdio_snprintf_d(benchmark::State& state) {
   while (state.KeepRunning()) {
     char buf[BUFSIZ];
     snprintf(buf, sizeof(buf), "this is a more typical error message with detail: %d", 123456);
   }
 }
-BIONIC_BENCHMARK(BM_stdio_printf_d);
+BIONIC_BENCHMARK(BM_stdio_snprintf_d);
 
-static void BM_stdio_printf_1$s(benchmark::State& state) {
+static void BM_stdio_snprintf_1$s(benchmark::State& state) {
   while (state.KeepRunning()) {
     char buf[BUFSIZ];
     snprintf(buf, sizeof(buf), "this is a more typical error message with detail: %1$s",
              "No such file or directory");
   }
 }
-BIONIC_BENCHMARK(BM_stdio_printf_1$s);
+BIONIC_BENCHMARK(BM_stdio_snprintf_1$s);
 
 static void BM_stdio_scanf_s(benchmark::State& state) {
   while (state.KeepRunning()) {
