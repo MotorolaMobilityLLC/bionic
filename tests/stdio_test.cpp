@@ -820,6 +820,14 @@ TEST(STDIO_TEST, swprintf_1$ju_UINTMAX_MAX) {
   EXPECT_SWPRINTF(L"18446744073709551615", L"%1$ju", UINTMAX_MAX);
 }
 
+TEST(STDIO_TEST, snprintf_d_ZERO) {
+  EXPECT_SNPRINTF("0", "%d", 0);
+}
+
+TEST(STDIO_TEST, swprintf_d_ZERO) {
+  EXPECT_SWPRINTF(L"0", L"%d", 0);
+}
+
 TEST(STDIO_TEST, snprintf_d_INT_MAX) {
   EXPECT_SNPRINTF("2147483647", "%d", INT_MAX);
 }
@@ -884,12 +892,52 @@ TEST(STDIO_TEST, swprintf_lld_LLONG_MIN) {
   EXPECT_SWPRINTF(L"-9223372036854775808", L"%lld", LLONG_MIN);
 }
 
+TEST(STDIO_TEST, snprintf_o_ZERO) {
+  EXPECT_SNPRINTF("0", "%o", 0);
+}
+
+TEST(STDIO_TEST, swprintf_o_ZERO) {
+  EXPECT_SWPRINTF(L"0", L"%o", 0);
+}
+
 TEST(STDIO_TEST, snprintf_o_UINT_MAX) {
   EXPECT_SNPRINTF("37777777777", "%o", UINT_MAX);
 }
 
 TEST(STDIO_TEST, swprintf_o_UINT_MAX) {
   EXPECT_SWPRINTF(L"37777777777", L"%o", UINT_MAX);
+}
+
+TEST(STDIO_TEST, snprintf_o_ULONG_MAX) {
+#if defined(__LP64__)
+  EXPECT_SNPRINTF("1777777777777777777777", "%lo", ULONG_MAX);
+#else
+  EXPECT_SNPRINTF("37777777777", "%lo", ULONG_MAX);
+#endif
+}
+
+TEST(STDIO_TEST, swprintf_o_ULONG_MAX) {
+#if defined(__LP64__)
+  EXPECT_SWPRINTF(L"1777777777777777777777", L"%lo", ULONG_MAX);
+#else
+  EXPECT_SWPRINTF(L"37777777777", L"%lo", ULONG_MAX);
+#endif
+}
+
+TEST(STDIO_TEST, snprintf_o_ULLONG_MAX) {
+  EXPECT_SNPRINTF("1777777777777777777777", "%llo", ULLONG_MAX);
+}
+
+TEST(STDIO_TEST, swprintf_o_ULLONG_MAX) {
+  EXPECT_SWPRINTF(L"1777777777777777777777", L"%llo", ULLONG_MAX);
+}
+
+TEST(STDIO_TEST, snprintf_u_ZERO) {
+  EXPECT_SNPRINTF("0", "%u", 0);
+}
+
+TEST(STDIO_TEST, swprintf_u_ZERO) {
+  EXPECT_SWPRINTF(L"0", L"%u", 0);
 }
 
 TEST(STDIO_TEST, snprintf_u_UINT_MAX) {
@@ -900,6 +948,38 @@ TEST(STDIO_TEST, swprintf_u_UINT_MAX) {
   EXPECT_SWPRINTF(L"4294967295", L"%u", UINT_MAX);
 }
 
+TEST(STDIO_TEST, snprintf_u_ULONG_MAX) {
+#if defined(__LP64__)
+  EXPECT_SNPRINTF("18446744073709551615", "%lu", ULONG_MAX);
+#else
+  EXPECT_SNPRINTF("4294967295", "%lu", ULONG_MAX);
+#endif
+}
+
+TEST(STDIO_TEST, swprintf_u_ULONG_MAX) {
+#if defined(__LP64__)
+  EXPECT_SWPRINTF(L"18446744073709551615", L"%lu", ULONG_MAX);
+#else
+  EXPECT_SWPRINTF(L"4294967295", L"%lu", ULONG_MAX);
+#endif
+}
+
+TEST(STDIO_TEST, snprintf_u_ULLONG_MAX) {
+  EXPECT_SNPRINTF("18446744073709551615", "%llu", ULLONG_MAX);
+}
+
+TEST(STDIO_TEST, swprintf_u_ULLONG_MAX) {
+  EXPECT_SWPRINTF(L"18446744073709551615", L"%llu", ULLONG_MAX);
+}
+
+TEST(STDIO_TEST, snprintf_x_ZERO) {
+  EXPECT_SNPRINTF("0", "%x", 0);
+}
+
+TEST(STDIO_TEST, swprintf_x_ZERO) {
+  EXPECT_SWPRINTF(L"0", L"%x", 0);
+}
+
 TEST(STDIO_TEST, snprintf_x_UINT_MAX) {
   EXPECT_SNPRINTF("ffffffff", "%x", UINT_MAX);
 }
@@ -908,12 +988,68 @@ TEST(STDIO_TEST, swprintf_x_UINT_MAX) {
   EXPECT_SWPRINTF(L"ffffffff", L"%x", UINT_MAX);
 }
 
+TEST(STDIO_TEST, snprintf_x_ULONG_MAX) {
+#if defined(__LP64__)
+  EXPECT_SNPRINTF("ffffffffffffffff", "%lx", ULONG_MAX);
+#else
+  EXPECT_SNPRINTF("ffffffff", "%lx", ULONG_MAX);
+#endif
+}
+
+TEST(STDIO_TEST, swprintf_x_ULONG_MAX) {
+#if defined(__LP64__)
+  EXPECT_SWPRINTF(L"ffffffffffffffff", L"%lx", ULONG_MAX);
+#else
+  EXPECT_SWPRINTF(L"ffffffff", L"%lx", ULONG_MAX);
+#endif
+}
+
+TEST(STDIO_TEST, snprintf_x_ULLONG_MAX) {
+  EXPECT_SNPRINTF("ffffffffffffffff", "%llx", ULLONG_MAX);
+}
+
+TEST(STDIO_TEST, swprintf_x_ULLONG_MAX) {
+  EXPECT_SWPRINTF(L"ffffffffffffffff", L"%llx", ULLONG_MAX);
+}
+
+TEST(STDIO_TEST, snprintf_X_ZERO) {
+  EXPECT_SNPRINTF("0", "%X", 0);
+}
+
+TEST(STDIO_TEST, swprintf_X_ZERO) {
+  EXPECT_SWPRINTF(L"0", L"%X", 0);
+}
+
 TEST(STDIO_TEST, snprintf_X_UINT_MAX) {
   EXPECT_SNPRINTF("FFFFFFFF", "%X", UINT_MAX);
 }
 
 TEST(STDIO_TEST, swprintf_X_UINT_MAX) {
   EXPECT_SWPRINTF(L"FFFFFFFF", L"%X", UINT_MAX);
+}
+
+TEST(STDIO_TEST, snprintf_X_ULONG_MAX) {
+#if defined(__LP64__)
+  EXPECT_SNPRINTF("FFFFFFFFFFFFFFFF", "%lX", ULONG_MAX);
+#else
+  EXPECT_SNPRINTF("FFFFFFFF", "%lX", ULONG_MAX);
+#endif
+}
+
+TEST(STDIO_TEST, swprintf_X_ULONG_MAX) {
+#if defined(__LP64__)
+  EXPECT_SWPRINTF(L"FFFFFFFFFFFFFFFF", L"%lX", ULONG_MAX);
+#else
+  EXPECT_SWPRINTF(L"FFFFFFFF", L"%lX", ULONG_MAX);
+#endif
+}
+
+TEST(STDIO_TEST, snprintf_X_ULLONG_MAX) {
+  EXPECT_SNPRINTF("FFFFFFFFFFFFFFFF", "%llX", ULLONG_MAX);
+}
+
+TEST(STDIO_TEST, swprintf_X_ULLONG_MAX) {
+  EXPECT_SWPRINTF(L"FFFFFFFFFFFFFFFF", L"%llX", ULLONG_MAX);
 }
 
 TEST(STDIO_TEST, snprintf_e) {
@@ -2663,6 +2799,30 @@ TEST(STDIO_TEST, wprintf_m_does_not_clobber_strerror) {
   errno = -2;
   EXPECT_SWPRINTF(L"<Unknown error -2>", L"<%m>");
   ASSERT_STREQ("Unknown error -1", m);
+}
+
+TEST(STDIO_TEST, snprintf_hash_o) {
+  EXPECT_SNPRINTF("07", "%#o", 7);
+}
+
+TEST(STDIO_TEST, swprintf_hash_o) {
+  EXPECT_SWPRINTF(L"07", L"%#o", 7);
+}
+
+TEST(STDIO_TEST, snprintf_hash_x) {
+  EXPECT_SNPRINTF("0x7", "%#x", 7);
+}
+
+TEST(STDIO_TEST, swprintf_hash_x) {
+  EXPECT_SWPRINTF(L"0x7", L"%#x", 7);
+}
+
+TEST(STDIO_TEST, snprintf_hash_X) {
+  EXPECT_SNPRINTF("0X7", "%#X", 7);
+}
+
+TEST(STDIO_TEST, swprintf_hash_X) {
+  EXPECT_SWPRINTF(L"0X7", L"%#X", 7);
 }
 
 TEST(STDIO_TEST, fopen_append_mode_and_ftell) {
