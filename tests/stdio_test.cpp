@@ -576,6 +576,24 @@ TEST(STDIO_TEST, swprintf_measure) {
   ASSERT_EQ(L'x', buf[0]);
 }
 
+// Check snprintf does not overrun buffer when output exceeds specified size
+TEST(STDIO_TEST, snprintf_no_overrun) {
+  char buf[10] = "123456789";
+  int w = snprintf(buf, 4, "a%ib", 12345678);
+  EXPECT_EQ(10, w);
+  EXPECT_STREQ("a12", buf);
+  EXPECT_STREQ("56789", &buf[4]);
+}
+
+// Check swprintf does not overrun buffer when output exceeds specified size
+TEST(STDIO_TEST, swprintf_no_overrun) {
+  wchar_t buf[10] = L"123456789";
+  int w = swprintf(buf, 4, L"a%ib", 12345678);
+  EXPECT_EQ(-1, w);
+  EXPECT_STREQ(L"a12", buf);
+  EXPECT_STREQ(L"56789", &buf[4]);
+}
+
 TEST(STDIO_TEST, snprintf_smoke) {
   EXPECT_SNPRINTF("a", "a");
   EXPECT_SNPRINTF("%", "%%");
