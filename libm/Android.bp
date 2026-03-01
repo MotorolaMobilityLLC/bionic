@@ -375,6 +375,7 @@ bionic_cc_defaults {
     defaults: [
         "linux_bionic_supported",
         "bug_24465209_workaround",
+        "x86_disable_fdo_profile_sample_accurate",
     ],
     ramdisk_available: true,
     vendor_ramdisk_available: true,
