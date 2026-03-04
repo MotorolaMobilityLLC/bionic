@@ -531,8 +531,6 @@ TEST(malloc, mallopt_scudo_only_options) {
 
 TEST(malloc, reallocarray_overflow) {
 #if HAVE_REALLOCARRAY
-  SKIP_WITH_HWASAN;
-
   // Values that cause overflow to a result small enough (8 on LP64) that malloc would "succeed".
   size_t a = static_cast<size_t>(INTPTR_MIN + 4);
   size_t b = 2;

@@ -46,7 +46,6 @@ size_t scudo_malloc_usable_size(const void*);
 int scudo_mallopt(int, int);
 void* scudo_memalign(size_t, size_t);
 void* scudo_realloc(void*, size_t);
-void* scudo_reallocarray(void*, size_t, size_t);
 int scudo_posix_memalign(void**, size_t, size_t);
 #if defined(HAVE_DEPRECATED_MALLOC_FUNCS)
 void* scudo_pvalloc(size_t);
