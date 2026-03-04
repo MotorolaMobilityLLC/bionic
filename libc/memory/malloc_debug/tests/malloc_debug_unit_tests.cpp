@@ -64,7 +64,6 @@ void* debug_malloc(size_t);
 void debug_free(void*);
 void* debug_calloc(size_t, size_t);
 void* debug_realloc(void*, size_t);
-void* debug_reallocarray(void*, size_t, size_t);
 int debug_posix_memalign(void**, size_t, size_t);
 void* debug_memalign(size_t, size_t);
 void* debug_aligned_alloc(size_t, size_t);
@@ -155,27 +154,26 @@ class MallocDebugTest : public ::testing::Test {
 };
 
 MallocDispatch MallocDebugTest::dispatch = {
-    calloc,
-    free,
-    mallinfo,
-    malloc,
-    malloc_usable_size,
-    memalign,
-    posix_memalign,
+  calloc,
+  free,
+  mallinfo,
+  malloc,
+  malloc_usable_size,
+  memalign,
+  posix_memalign,
 #if defined(HAVE_DEPRECATED_MALLOC_FUNCS)
-    nullptr,
+  nullptr,
 #endif
-    realloc,
-    reallocarray,
+  realloc,
 #if defined(HAVE_DEPRECATED_MALLOC_FUNCS)
-    nullptr,
+  nullptr,
 #endif
-    nullptr,
-    nullptr,
-    nullptr,
-    mallopt,
-    aligned_alloc,
-    malloc_info,
+  nullptr,
+  nullptr,
+  nullptr,
+  mallopt,
+  aligned_alloc,
+  malloc_info,
 };
 
 std::string ShowDiffs(uint8_t* a, uint8_t* b, size_t size) {
@@ -296,13 +294,6 @@ void VerifyAllocCalls(bool all_options) {
   // This should free the pointer.
   pointer = reinterpret_cast<uint8_t*>(debug_realloc(pointer, 0));
   ASSERT_TRUE(pointer == nullptr);
-
-  pointer = reinterpret_cast<uint8_t*>(debug_reallocarray(nullptr, 1, alloc_size));
-  ASSERT_TRUE(pointer != nullptr);
-  for (size_t i = 0; i < debug_malloc_usable_size(pointer); i++) {
-    ASSERT_EQ(0xeb, pointer[i]) << "Failed at byte " << i;
-  }
-  debug_free(pointer);
 
   ASSERT_STREQ("", getFakeLogBuf().c_str());
   std::string expected_log;
@@ -509,13 +500,6 @@ TEST_F(MallocDebugTest, expand_alloc) {
   ASSERT_LE(1124U, debug_malloc_usable_size(pointer));
   debug_free(pointer);
 
-  pointer = debug_reallocarray(nullptr, 2, 30);
-  ASSERT_TRUE(pointer != nullptr);
-  ASSERT_LE(1084U, debug_malloc_usable_size(pointer));
-  pointer = debug_reallocarray(pointer, 2, 100);
-  ASSERT_LE(1224U, debug_malloc_usable_size(pointer));
-  debug_free(pointer);
-
   ASSERT_STREQ("", getFakeLogBuf().c_str());
   ASSERT_STREQ("", getFakeLogPrint().c_str());
 }
@@ -566,17 +550,6 @@ TEST_F(MallocDebugTest, front_guard) {
   memset(pointer, 0xff, 200);
   pointer = reinterpret_cast<uint8_t*>(debug_realloc(pointer, 0));
   ASSERT_TRUE(pointer == nullptr);
-
-  pointer = reinterpret_cast<uint8_t*>(debug_reallocarray(nullptr, 2, 50));
-  ASSERT_TRUE(pointer != nullptr);
-  ASSERT_TRUE(memcmp(buffer.data(), &pointer[-buffer.size()], buffer.size()) == 0)
-      << ShowDiffs(buffer.data(), &pointer[-buffer.size()], buffer.size());
-  memset(pointer, 0xff, 100);
-  pointer = reinterpret_cast<uint8_t*>(debug_reallocarray(pointer, 2, 100));
-  ASSERT_TRUE(memcmp(buffer.data(), &pointer[-buffer.size()], buffer.size()) == 0)
-      << ShowDiffs(buffer.data(), &pointer[-buffer.size()], buffer.size());
-  memset(pointer, 0xff, 200);
-  debug_free(pointer);
 
   ASSERT_STREQ("", getFakeLogBuf().c_str());
   ASSERT_STREQ("", getFakeLogPrint().c_str());

@@ -51,7 +51,6 @@ static void* LimitMalloc(size_t bytes);
 static void* LimitMemalign(size_t alignment, size_t bytes);
 static int LimitPosixMemalign(void** memptr, size_t alignment, size_t size);
 static void* LimitRealloc(void* old_mem, size_t bytes);
-static void* LimitReallocArray(void* old_mem, size_t item_count, size_t item_size);
 static void* LimitAlignedAlloc(size_t alignment, size_t size);
 #if defined(HAVE_DEPRECATED_MALLOC_FUNCS)
 static void* LimitPvalloc(size_t bytes);
@@ -68,7 +67,8 @@ static int LimitMallocInfo(int options, FILE* fp);
 static int LimitMallopt(int param, int value);
 __END_DECLS
 
-static constexpr MallocDispatch __limit_dispatch __attribute__((unused)) = {
+static constexpr MallocDispatch __limit_dispatch
+  __attribute__((unused)) = {
     LimitCalloc,
     LimitFree,
     LimitMallinfo,
@@ -80,7 +80,6 @@ static constexpr MallocDispatch __limit_dispatch __attribute__((unused)) = {
     LimitPvalloc,
 #endif
     LimitRealloc,
-    LimitReallocArray,
 #if defined(HAVE_DEPRECATED_MALLOC_FUNCS)
     LimitValloc,
 #endif
@@ -90,7 +89,7 @@ static constexpr MallocDispatch __limit_dispatch __attribute__((unused)) = {
     LimitMallopt,
     LimitAlignedAlloc,
     LimitMallocInfo,
-};
+  };
 
 static _Atomic uint64_t gAllocated;
 static uint64_t gAllocLimit;
@@ -227,17 +226,6 @@ static void* LimitRealloc(void* old_mem, size_t bytes) {
     atomic_fetch_add(&gAllocated, new_usable_size - old_usable_size);
   }
   return new_ptr;
-}
-
-static void* LimitReallocArray(void* old_mem, size_t item_count, size_t item_size) {
-  size_t new_size;
-  if (__builtin_mul_overflow(item_count, item_size, &new_size)) {
-    warning_log("malloc_limit: reallocarray(%p, %zu, %zu) failed: returning null pointer", old_mem,
-                item_count, item_size);
-    errno = ENOMEM;
-    return nullptr;
-  }
-  return LimitRealloc(old_mem, new_size);
 }
 
 #if defined(HAVE_DEPRECATED_MALLOC_FUNCS)

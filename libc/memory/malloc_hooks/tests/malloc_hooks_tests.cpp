@@ -281,25 +281,6 @@ TEST_F(MallocHooksTest, DISABLED_realloc_hook) {
   EXPECT_TRUE(void_arg_ != nullptr) << "The realloc hook was called with a nullptr.";
 }
 
-TEST_F(MallocHooksTest, realloc_hook_for_reallocarray) {
-  RunTest("*.DISABLED_realloc_hook_for_reallocarray");
-}
-
-TEST_F(MallocHooksTest, DISABLED_realloc_hook_for_reallocarray) {
-  Init();
-  ASSERT_TRUE(__realloc_hook != nullptr);
-  __realloc_hook = test_realloc_hook;
-
-  void* ptr = malloc(1024);
-  ASSERT_TRUE(ptr != nullptr);
-  ptr = reallocarray(ptr, 2, 1048);
-  free(ptr);
-  write(0, ptr, 0);
-
-  EXPECT_TRUE(realloc_hook_called_) << "The realloc hook was not called.";
-  EXPECT_TRUE(void_arg_ != nullptr) << "The realloc hook was called with a nullptr.";
-}
-
 TEST_F(MallocHooksTest, memalign_hook) {
   RunTest("*.DISABLED_memalign_hook");
 }
