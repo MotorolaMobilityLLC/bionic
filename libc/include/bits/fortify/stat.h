@@ -36,7 +36,7 @@ mode_t __umask_real(mode_t mode) __RENAME(umask);
 /* Abuse enable_if to make this an overload of umask. */
 __BIONIC_FORTIFY_INLINE
 mode_t umask(mode_t mode)
-    __overloadable
+    __fortify_overload
     __enable_if(1, "")
     __clang_error_if(mode & ~0777, "'umask' called with invalid mode") {
 #if __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
