@@ -218,12 +218,14 @@ extern "C" __attribute__((__noinline__)) void* realloc(void* old_mem, size_t byt
 }
 
 extern "C" void* reallocarray(void* old_mem, size_t item_count, size_t item_size) {
-  auto dispatch_table = GetDispatchTable();
-  old_mem = MaybeUntagAndCheckPointer(old_mem);
-  if (__predict_false(dispatch_table != nullptr)) {
-    return MaybeTagPointer(dispatch_table->reallocarray(old_mem, item_count, item_size));
+  size_t new_size;
+  if (__builtin_mul_overflow(item_count, item_size, &new_size)) {
+    warning_log("reallocaray(%p, %zu, %zu) failed: returning null pointer",
+                old_mem, item_count, item_size);
+    errno = ENOMEM;
+    return nullptr;
   }
-  return MaybeTagPointer(Malloc(reallocarray)(old_mem, item_count, item_size));
+  return realloc(old_mem, new_size);
 }
 
 #if defined(HAVE_DEPRECATED_MALLOC_FUNCS)
@@ -340,27 +342,26 @@ extern "C" int __sanitizer_malloc_info(int, FILE*) {
 // =============================================================================
 
 static constexpr MallocDispatch __libc_malloc_default_dispatch __attribute__((unused)) = {
-    Malloc(calloc),
-    Malloc(free),
-    Malloc(mallinfo),
-    Malloc(malloc),
-    Malloc(malloc_usable_size),
-    Malloc(memalign),
-    Malloc(posix_memalign),
+  Malloc(calloc),
+  Malloc(free),
+  Malloc(mallinfo),
+  Malloc(malloc),
+  Malloc(malloc_usable_size),
+  Malloc(memalign),
+  Malloc(posix_memalign),
 #if defined(HAVE_DEPRECATED_MALLOC_FUNCS)
-    Malloc(pvalloc),
+  Malloc(pvalloc),
 #endif
-    Malloc(realloc),
-    Malloc(reallocarray),
+  Malloc(realloc),
 #if defined(HAVE_DEPRECATED_MALLOC_FUNCS)
-    Malloc(valloc),
+  Malloc(valloc),
 #endif
-    Malloc(malloc_iterate),
-    Malloc(malloc_disable),
-    Malloc(malloc_enable),
-    Malloc(mallopt),
-    Malloc(aligned_alloc),
-    Malloc(malloc_info),
+  Malloc(malloc_iterate),
+  Malloc(malloc_disable),
+  Malloc(malloc_enable),
+  Malloc(mallopt),
+  Malloc(aligned_alloc),
+  Malloc(malloc_info),
 };
 
 const MallocDispatch* NativeAllocatorDispatch() {

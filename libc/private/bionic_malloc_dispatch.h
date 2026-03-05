@@ -45,7 +45,6 @@ typedef size_t (*MallocMallocUsableSize)(const void*);
 typedef void* (*MallocMemalign)(size_t, size_t);
 typedef int (*MallocPosixMemalign)(void**, size_t, size_t);
 typedef void* (*MallocRealloc)(void*, size_t);
-typedef void* (*MallocReallocArray)(void*, size_t, size_t);
 typedef int (*MallocIterate)(uintptr_t, size_t, void (*)(uintptr_t, size_t, void*), void*);
 typedef void (*MallocMallocDisable)();
 typedef void (*MallocMallocEnable)();
@@ -69,7 +68,6 @@ struct MallocDispatch {
   MallocPvalloc pvalloc;
 #endif
   MallocRealloc realloc;
-  MallocReallocArray reallocarray;
 #if defined(HAVE_DEPRECATED_MALLOC_FUNCS)
   MallocValloc valloc;
 #endif

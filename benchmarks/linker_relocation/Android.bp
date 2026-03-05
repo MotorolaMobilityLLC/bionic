@@ -60,17 +60,22 @@ cc_benchmark {
 }
 
 cc_defaults {
-    name: "linker_reloc_bench_binary",
+    name: "linker_reloc_bench_defaults",
     defaults: [
         "bionic_spawn_benchmark_targets",
+
         // The generated .S files don't include the note,
-        // and the gen_bench.sh script doesn't work,
-        // so for now...
+        // and the gen_bench.sh script doesn't work.
         "no_bti",
     ],
     header_libs: ["linker_reloc_bench_headers"],
     stl: "none",
     gtest: false,
+}
+
+cc_defaults {
+    name: "linker_reloc_bench_binary",
+    defaults: ["linker_reloc_bench_defaults"],
 
     compile_multilib: "both",
     multilib: {
@@ -85,15 +90,9 @@ cc_defaults {
 
 cc_defaults {
     name: "linker_reloc_bench_library",
-    defaults: [
-        "bionic_spawn_benchmark_targets",
-        "no_bti",
-    ],
-    header_libs: ["linker_reloc_bench_headers"],
-    stl: "none",
-    gtest: false,
-    relative_install_path: "linker-reloc-bench",
+    defaults: ["linker_reloc_bench_defaults"],
 
+    relative_install_path: "linker-reloc-bench",
     static: {
         enabled: false,
     },
