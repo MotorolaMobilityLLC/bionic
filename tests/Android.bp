@@ -264,6 +264,20 @@ cc_prebuilt_library_shared {
     srcs: [":gen_invalid-rx_rw_rx_load_segments"],
 }
 
+cc_genrule {
+    name: "gen_invalid-rx_rw_rx_padded",
+    tools: ["gen_invalid_elf"],
+    srcs: [":libtest_elf_max_page_size_4kb_padded"],
+    out: ["libtest_invalid-load_segments_rx_rw_rx_padded.so"],
+    cmd: "$(location gen_invalid_elf) --ref-elf=$(location :libtest_elf_max_page_size_4kb_padded) --output=$(out) --invalid-type=load_segments_rx_rw_rx",
+}
+
+cc_prebuilt_library_shared {
+    name: "libtest_invalid-rx_rw_rx_padded",
+    defaults: ["invalid_lib_defaults"],
+    srcs: [":gen_invalid-rx_rw_rx_padded"],
+}
+
 cc_prebuilt_test_library_shared {
     name: "libtest_invalid-local-tls",
     strip: {
@@ -792,6 +806,7 @@ cc_test_library {
     ],
     static_libs: [
         "libbase",
+        "libelfutils",
         "libprocinfo",
     ],
     include_dirs: [
@@ -973,6 +988,7 @@ cc_defaults {
         "libtest_invalid-rw_load_segment",
         "libtest_invalid-rw_rx_rw_load_segments",
         "libtest_invalid-rx_rw_rx_load_segments",
+        "libtest_invalid-rx_rw_rx_padded",
         "libtest_invalid-textrels",
         "libtest_invalid-textrels2",
         "libtest_invalid-unaligned_shdr_offset",
@@ -1081,6 +1097,7 @@ cc_defaults {
                 "libziparchive",
                 "libz",
                 "libutils",
+                "libelfutils",
             ],
             ldflags: [
                 "-Wl,--rpath,${ORIGIN}/bionic-loader-test-libs",
