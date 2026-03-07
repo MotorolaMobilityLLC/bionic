@@ -63,6 +63,7 @@ void hooks_free(void* pointer);
 void* hooks_memalign(size_t alignment, size_t bytes);
 void* hooks_aligned_alloc(size_t alignment, size_t bytes);
 void* hooks_realloc(void* pointer, size_t bytes);
+void* hooks_reallocarray(void* pointer, size_t item_count, size_t item_size);
 void* hooks_calloc(size_t nmemb, size_t bytes);
 struct mallinfo hooks_mallinfo();
 int hooks_mallopt(int param, int value);
@@ -151,6 +152,15 @@ void* hooks_realloc(void* pointer, size_t bytes) {
     return __realloc_hook(pointer, bytes, __builtin_return_address(0));
   }
   return g_dispatch->realloc(pointer, bytes);
+}
+
+void* hooks_reallocarray(void* pointer, size_t item_count, size_t item_size) {
+  size_t new_size;
+  if (__builtin_mul_overflow(item_count, item_size, &new_size)) {
+    errno = ENOMEM;
+    return nullptr;
+  }
+  return hooks_realloc(pointer, new_size);
 }
 
 void* hooks_calloc(size_t nmemb, size_t bytes) {

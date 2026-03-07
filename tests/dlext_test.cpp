@@ -1961,14 +1961,6 @@ TEST(dlext, ns_allow_all_shared_libs) {
   dlclose(ns_a_handle3);
 }
 
-static inline int MapPflagsToProtFlags(uint32_t flags) {
-  int prot_flags = 0;
-  if (PF_X & flags) prot_flags |= PROT_EXEC;
-  if (PF_W & flags) prot_flags |= PROT_WRITE;
-  if (PF_R & flags) prot_flags |= PROT_READ;
-  return prot_flags;
-}
-
 TEST(dlext, ns_anonymous) {
   static const char* root_lib = "libnstest_root.so";
   std::string shared_libs = g_core_shared_libs + ":" + g_public_lib;

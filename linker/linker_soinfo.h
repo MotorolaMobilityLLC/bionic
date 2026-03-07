@@ -257,6 +257,7 @@ struct soinfo {
   bool protect_relro();
   bool protect_16kib_app_compat_code();
   bool unprotect_16kib_app_compat_code();
+  bool protect_16kib_app_compat_middle_pages();
 
   void tag_globals(bool deterministic_memtag_globals);
   ElfW(Addr) apply_memtag_if_mte_globals(ElfW(Addr) sym_addr) const;

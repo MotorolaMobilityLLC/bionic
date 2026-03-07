@@ -97,3 +97,11 @@ int64_t NanoTime() {
 bool operator==(const Errno& lhs, const Errno& rhs) {
   return lhs.errno_ == rhs.errno_;
 }
+
+int MapPflagsToProtFlags(uint32_t flags) {
+  int prot_flags = 0;
+  if (PF_X & flags) prot_flags |= PROT_EXEC;
+  if (PF_W & flags) prot_flags |= PROT_WRITE;
+  if (PF_R & flags) prot_flags |= PROT_READ;
+  return prot_flags;
+}

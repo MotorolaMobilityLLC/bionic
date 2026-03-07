@@ -18,6 +18,7 @@
 
 #include <dirent.h>
 #include <dlfcn.h>
+#include <elf.h>
 #include <fcntl.h>
 #include <gtest/gtest.h>
 #include <inttypes.h>
@@ -294,6 +295,8 @@ class FdLeakChecker {
 bool IsLowRamDevice();
 
 int64_t NanoTime();
+
+int MapPflagsToProtFlags(uint32_t flags);
 
 class Errno {
  public:
