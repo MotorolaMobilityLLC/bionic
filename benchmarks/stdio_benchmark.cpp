@@ -234,24 +234,24 @@ static void BM_stdio_snprintf_1$s(benchmark::State& state) {
 }
 BIONIC_BENCHMARK(BM_stdio_snprintf_1$s);
 
-static void BM_stdio_scanf_s(benchmark::State& state) {
+static void BM_stdio_sscanf_s(benchmark::State& state) {
   while (state.KeepRunning()) {
     char s[BUFSIZ];
     if (sscanf("file /etc/passwd", "file %s", s) != 1) abort();
   }
 }
-BIONIC_BENCHMARK(BM_stdio_scanf_s);
+BIONIC_BENCHMARK(BM_stdio_sscanf_s);
 
-static void BM_stdio_scanf_d(benchmark::State& state) {
+static void BM_stdio_sscanf_d(benchmark::State& state) {
   while (state.KeepRunning()) {
     int i;
     if (sscanf("size 12345", "size %d", &i) != 1) abort();
   }
 }
-BIONIC_BENCHMARK(BM_stdio_scanf_d);
+BIONIC_BENCHMARK(BM_stdio_sscanf_d);
 
 // Parsing maps is a common use of sscanf with a relatively complex format string.
-static void BM_stdio_scanf_maps(benchmark::State& state) {
+static void BM_stdio_sscanf_maps(benchmark::State& state) {
   while (state.KeepRunning()) {
     uintptr_t start;
     uintptr_t end;
@@ -263,7 +263,7 @@ static void BM_stdio_scanf_maps(benchmark::State& state) {
                &start, &end, permissions, &offset, &name_pos) != 4) abort();
   }
 }
-BIONIC_BENCHMARK(BM_stdio_scanf_maps);
+BIONIC_BENCHMARK(BM_stdio_sscanf_maps);
 
 // Hard-coded equivalent of the maps sscanf from libunwindstack/Maps.cpp for a baseline.
 static int ParseMap(const char* line, const char* /*fmt*/, uintptr_t* start, uintptr_t* end,
@@ -319,7 +319,7 @@ static int ParseMap(const char* line, const char* /*fmt*/, uintptr_t* start, uin
   return 4;
 }
 
-static void BM_stdio_scanf_maps_baseline(benchmark::State& state) {
+static void BM_stdio_sscanf_maps_baseline(benchmark::State& state) {
   while (state.KeepRunning()) {
     uintptr_t start;
     uintptr_t end;
@@ -331,4 +331,4 @@ static void BM_stdio_scanf_maps_baseline(benchmark::State& state) {
                &start, &end, permissions, &offset, &name_pos) != 4) abort();
   }
 }
-BIONIC_BENCHMARK(BM_stdio_scanf_maps_baseline);
+BIONIC_BENCHMARK(BM_stdio_sscanf_maps_baseline);
