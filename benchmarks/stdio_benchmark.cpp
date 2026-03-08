@@ -200,58 +200,58 @@ void BM_stdio_fopen_fgetc_fclose_no_locking(benchmark::State& state) {
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_stdio_fopen_fgetc_fclose_no_locking, "1024");
 
-static void BM_stdio_printf_literal(benchmark::State& state) {
+static void BM_stdio_snprintf_literal(benchmark::State& state) {
   while (state.KeepRunning()) {
     char buf[BUFSIZ];
     snprintf(buf, sizeof(buf), "this is just a literal string with no format specifiers");
   }
 }
-BIONIC_BENCHMARK(BM_stdio_printf_literal);
+BIONIC_BENCHMARK(BM_stdio_snprintf_literal);
 
-static void BM_stdio_printf_s(benchmark::State& state) {
+static void BM_stdio_snprintf_s(benchmark::State& state) {
   while (state.KeepRunning()) {
     char buf[BUFSIZ];
     snprintf(buf, sizeof(buf), "this is a more typical error message with detail: %s",
              "No such file or directory");
   }
 }
-BIONIC_BENCHMARK(BM_stdio_printf_s);
+BIONIC_BENCHMARK(BM_stdio_snprintf_s);
 
-static void BM_stdio_printf_d(benchmark::State& state) {
+static void BM_stdio_snprintf_d(benchmark::State& state) {
   while (state.KeepRunning()) {
     char buf[BUFSIZ];
     snprintf(buf, sizeof(buf), "this is a more typical error message with detail: %d", 123456);
   }
 }
-BIONIC_BENCHMARK(BM_stdio_printf_d);
+BIONIC_BENCHMARK(BM_stdio_snprintf_d);
 
-static void BM_stdio_printf_1$s(benchmark::State& state) {
+static void BM_stdio_snprintf_1$s(benchmark::State& state) {
   while (state.KeepRunning()) {
     char buf[BUFSIZ];
     snprintf(buf, sizeof(buf), "this is a more typical error message with detail: %1$s",
              "No such file or directory");
   }
 }
-BIONIC_BENCHMARK(BM_stdio_printf_1$s);
+BIONIC_BENCHMARK(BM_stdio_snprintf_1$s);
 
-static void BM_stdio_scanf_s(benchmark::State& state) {
+static void BM_stdio_sscanf_s(benchmark::State& state) {
   while (state.KeepRunning()) {
     char s[BUFSIZ];
     if (sscanf("file /etc/passwd", "file %s", s) != 1) abort();
   }
 }
-BIONIC_BENCHMARK(BM_stdio_scanf_s);
+BIONIC_BENCHMARK(BM_stdio_sscanf_s);
 
-static void BM_stdio_scanf_d(benchmark::State& state) {
+static void BM_stdio_sscanf_d(benchmark::State& state) {
   while (state.KeepRunning()) {
     int i;
     if (sscanf("size 12345", "size %d", &i) != 1) abort();
   }
 }
-BIONIC_BENCHMARK(BM_stdio_scanf_d);
+BIONIC_BENCHMARK(BM_stdio_sscanf_d);
 
 // Parsing maps is a common use of sscanf with a relatively complex format string.
-static void BM_stdio_scanf_maps(benchmark::State& state) {
+static void BM_stdio_sscanf_maps(benchmark::State& state) {
   while (state.KeepRunning()) {
     uintptr_t start;
     uintptr_t end;
@@ -263,7 +263,7 @@ static void BM_stdio_scanf_maps(benchmark::State& state) {
                &start, &end, permissions, &offset, &name_pos) != 4) abort();
   }
 }
-BIONIC_BENCHMARK(BM_stdio_scanf_maps);
+BIONIC_BENCHMARK(BM_stdio_sscanf_maps);
 
 // Hard-coded equivalent of the maps sscanf from libunwindstack/Maps.cpp for a baseline.
 static int ParseMap(const char* line, const char* /*fmt*/, uintptr_t* start, uintptr_t* end,
@@ -319,7 +319,7 @@ static int ParseMap(const char* line, const char* /*fmt*/, uintptr_t* start, uin
   return 4;
 }
 
-static void BM_stdio_scanf_maps_baseline(benchmark::State& state) {
+static void BM_stdio_sscanf_maps_baseline(benchmark::State& state) {
   while (state.KeepRunning()) {
     uintptr_t start;
     uintptr_t end;
@@ -331,4 +331,4 @@ static void BM_stdio_scanf_maps_baseline(benchmark::State& state) {
                &start, &end, permissions, &offset, &name_pos) != 4) abort();
   }
 }
-BIONIC_BENCHMARK(BM_stdio_scanf_maps_baseline);
+BIONIC_BENCHMARK(BM_stdio_sscanf_maps_baseline);
