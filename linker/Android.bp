@@ -35,8 +35,8 @@ license {
 //
 cc_defaults {
     name: "no_bti",
-    arch: {
-        arm64: {
+    target: {
+        android_arm64: {
             ldflags: ["-Wl,-z,bti-report=none"],
         },
     },
