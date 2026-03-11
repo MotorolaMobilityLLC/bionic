@@ -499,6 +499,12 @@ API level 30 added support for ELF files using the official `SHT_` and
 The RELR encoding is unrelated to the earlier "packed relocations"
 format available from API level 23.
 
+Clang will automatically use RELR relative relocations if your API level
+is high enough, but the old style of relocation packing needs to be manually
+enabled if you want that: see
+https://android.googlesource.com/platform/ndk/+/main/docs/BuildSystemMaintainers.md#relr-and-relocation-packing
+for details.
+
 There are no plans to remove support for ELF files using the older
 OS private use constants for RELR, nor for ELF files using packed
 relocations.
