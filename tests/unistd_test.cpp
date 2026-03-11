@@ -281,6 +281,23 @@ TEST(UNISTD_TEST, _exit) {
   AssertChildExited(pid, 99);
 }
 
+TEST(UNISTD_TEST, getenv_EINVAL) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnonnull"
+  errno = 0;
+  EXPECT_EQ(nullptr, getenv(nullptr));
+  EXPECT_ERRNO(EINVAL);
+#pragma clang diagnostic pop
+
+  errno = 0;
+  EXPECT_EQ(nullptr, getenv(""));
+  EXPECT_ERRNO(EINVAL);
+
+  errno = 0;
+  EXPECT_EQ(nullptr, getenv("a=b"));
+  EXPECT_ERRNO(EINVAL);
+}
+
 TEST(UNISTD_TEST, getenv_unsetenv) {
   ASSERT_EQ(0, setenv("test-variable", "hello", 1));
   ASSERT_STREQ("hello", getenv("test-variable"));
@@ -289,8 +306,18 @@ TEST(UNISTD_TEST, getenv_unsetenv) {
 }
 
 TEST(UNISTD_TEST, unsetenv_EINVAL) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnonnull"
+  errno = 0;
+  EXPECT_EQ(-1, unsetenv(nullptr));
+  EXPECT_ERRNO(EINVAL);
+#pragma clang diagnostic pop
+
+  errno = 0;
   EXPECT_EQ(-1, unsetenv(""));
   EXPECT_ERRNO(EINVAL);
+
+  errno = 0;
   EXPECT_EQ(-1, unsetenv("a=b"));
   EXPECT_ERRNO(EINVAL);
 }
@@ -298,17 +325,23 @@ TEST(UNISTD_TEST, unsetenv_EINVAL) {
 TEST(UNISTD_TEST, setenv_EINVAL) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
+  errno = 0;
   EXPECT_EQ(-1, setenv(nullptr, "value", 0));
   EXPECT_ERRNO(EINVAL);
+  errno = 0;
   EXPECT_EQ(-1, setenv(nullptr, "value", 1));
   EXPECT_ERRNO(EINVAL);
 #pragma clang diagnostic pop
+  errno = 0;
   EXPECT_EQ(-1, setenv("", "value", 0));
   EXPECT_ERRNO(EINVAL);
+  errno = 0;
   EXPECT_EQ(-1, setenv("", "value", 1));
   EXPECT_ERRNO(EINVAL);
+  errno = 0;
   EXPECT_EQ(-1, setenv("a=b", "value", 0));
   EXPECT_ERRNO(EINVAL);
+  errno = 0;
   EXPECT_EQ(-1, setenv("a=b", "value", 1));
   EXPECT_ERRNO(EINVAL);
 }
@@ -337,6 +370,23 @@ TEST(UNISTD_TEST, setenv) {
   EXPECT_EQ('c', c[0]);
 
   ASSERT_EQ(0, unsetenv("test-variable"));
+}
+
+TEST(UNISTD_TEST, putenv_EINVAL) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnonnull"
+  errno = 0;
+  EXPECT_EQ(-1, putenv(nullptr));
+  EXPECT_ERRNO(EINVAL);
+#pragma clang diagnostic pop
+
+  errno = 0;
+  EXPECT_EQ(-1, putenv(strdup("")));
+  EXPECT_ERRNO(EINVAL);
+
+  errno = 0;
+  EXPECT_EQ(-1, putenv(strdup("ab"))); // No '='.
+  EXPECT_ERRNO(EINVAL);
 }
 
 TEST(UNISTD_TEST, putenv) {
