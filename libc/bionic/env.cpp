@@ -38,7 +38,7 @@ static char** lastenv;        /* last value of environ */
 // or nullptr if not found.
 // Starts searching environ from *offset,
 // and sets *offset to the index at which the variable was found.
-char* __findenv(const char* name, size_t name_length, int* offset) {
+static char* __findenv(const char* name, size_t name_length, size_t* offset) {
   if (environ != nullptr) {
     for (char** p = environ + *offset; *p != nullptr; ++p) {
       if (!strncmp(name, *p, name_length) && (*p)[name_length] == '=') {
@@ -59,7 +59,7 @@ char* getenv(const char* name) {
     return nullptr;
   }
 
-  int offset = 0;
+  size_t offset = 0;
   return __findenv(name, name_length, &offset);
 }
 
@@ -83,7 +83,7 @@ int putenv(char* str) {
     return -1;
   }
 
-  int offset = 0;
+  size_t offset = 0;
   if (__findenv(str, name_length, &offset) != nullptr) {
     environ[offset++] = str;
     /* could be set multiple times */
@@ -119,11 +119,11 @@ int setenv(const char* name, const char* value, int rewrite) {
     return -1;
   }
 
-  int offset = 0;
+  size_t offset = 0;
   if (__findenv(name, name_length, &offset) != nullptr) {
-    int tmpoff = offset + 1;
     if (!rewrite) return 0;
     /* could be set multiple times */
+    size_t tmpoff = offset + 1;
     while (__findenv(name, name_length, &tmpoff)) {
       for (char** p = &environ[tmpoff];; ++p) {
         if (!(*p = *(p + 1))) break;
@@ -163,7 +163,7 @@ int unsetenv(const char* name) {
   }
 
   // Loop to remove all occurrences.
-  int offset = 0;
+  size_t offset = 0;
   while (__findenv(name, name_length, &offset)) {
     for (char** p = &environ[offset];; ++p) {
       if (!(*p = *(p + 1))) {

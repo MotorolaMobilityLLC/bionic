@@ -49,8 +49,6 @@ extern const char* __progname;
 #define __LIBC_HIDDEN__ __attribute__((visibility("hidden")))
 #endif
 
-__LIBC_HIDDEN__ extern char* __findenv(const char*, int, int*);
-
 // Only OpenBSD has this at the moment, and we're more likely to just say
 // "malloc is always calloc", so we don't expose this as libc API.
 __LIBC_HIDDEN__ void* recallocarray(void*, size_t, size_t, size_t);
