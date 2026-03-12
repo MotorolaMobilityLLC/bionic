@@ -86,12 +86,6 @@ int putenv(char* str) {
   size_t offset = 0;
   if (__findenv(str, name_length, &offset) != nullptr) {
     environ[offset++] = str;
-    /* could be set multiple times */
-    while (__findenv(str, name_length, &offset)) {
-      for (char** p = &environ[offset];; ++p) {
-        if (!(*p = *(p + 1))) break;
-      }
-    }
     return 0;
   }
 
@@ -122,13 +116,6 @@ int setenv(const char* name, const char* value, int rewrite) {
   size_t offset = 0;
   if (__findenv(name, name_length, &offset) != nullptr) {
     if (!rewrite) return 0;
-    /* could be set multiple times */
-    size_t tmpoff = offset + 1;
-    while (__findenv(name, name_length, &tmpoff)) {
-      for (char** p = &environ[tmpoff];; ++p) {
-        if (!(*p = *(p + 1))) break;
-      }
-    }
   } else {          /* create new slot */
     size_t cnt = __current_env_size();
     char** p = static_cast<char**>(reallocarray(lastenv, cnt + 2, sizeof(char*)));
@@ -162,7 +149,13 @@ int unsetenv(const char* name) {
     return -1;
   }
 
-  // Loop to remove all occurrences.
+  // While setenv()/putenv() will always ensure there's at most one assignment to any given name,
+  // callers could replace environ with a malformed array.
+  // getenv() wouldn't care because it will always stop at the first match,
+  // but unsetenv() needs to make sure that _all_ assignments are removed.
+  // POSIX says "If more than one string in an environment of a process has the same name,
+  // the consequences are undefined" so this isn't _required_ to be a loop,
+  // but it matches what other implementations do.
   size_t offset = 0;
   while (__findenv(name, name_length, &offset)) {
     for (char** p = &environ[offset];; ++p) {
