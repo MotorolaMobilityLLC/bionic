@@ -193,6 +193,40 @@ TEST(properties, __system_property_add_appcompat) {
 #endif  // __BIONIC__
 }
 
+TEST(properties, __system_property_getprop_appcompat) {
+#if defined(__BIONIC__)
+  if (getuid() != 0) GTEST_SKIP() << "test requires root to call __system_property_set";
+  SystemPropertiesTest system_properties;
+  ExecTestHelper eth;
+  ASSERT_TRUE(system_properties.valid());
+
+  std::string unique_suffix = android::base::StringPrintf(".%d.%" PRId64 "", getpid(), NanoTime());
+  std::string prop1 = "ro.property" + unique_suffix;
+  std::string override_prop1 = "ro.appcompat_override." + prop1;
+  std::string prop2 = "debug.ld.app.property" + unique_suffix;
+  std::string override_prop2 = "ro.appcompat_override." + prop2;
+  ASSERT_EQ(0, __system_property_set(prop1.c_str(), "value1"));
+  ASSERT_EQ(0, __system_property_set(override_prop1.c_str(), "override1"));
+  ASSERT_EQ(0, __system_property_set(prop2.c_str(), "value2"));
+  ASSERT_EQ(0, __system_property_set(override_prop2.c_str(), "override2"));
+
+  // assert values before override
+  eth.SetArgs({"getprop", prop1.c_str(), nullptr});
+  eth.Run([&]() { execv("/system/bin/getprop", eth.GetArgs()); }, 0, "^value1\n$");
+  eth.SetArgs({"getprop", prop2.c_str(), nullptr});
+  eth.Run([&]() { execv("/system/bin/getprop", eth.GetArgs()); }, 0, "^value2\n$");
+
+  system_properties.EnableOverrides();
+
+  eth.SetArgs({"getprop", prop1.c_str(), nullptr});
+  eth.Run([&]() { execv("/system/bin/getprop", eth.GetArgs()); }, 0, "^override1\n$");
+  eth.SetArgs({"getprop", prop2.c_str(), nullptr});
+  eth.Run([&]() { execv("/system/bin/getprop", eth.GetArgs()); }, 0, "^override2\n$");
+#else   // __BIONIC__
+  GTEST_SKIP() << "bionic-only test";
+#endif  // __BIONIC__
+}
+
 TEST(properties, __system_property_update) {
 #if defined(__BIONIC__)
     SystemPropertiesTest system_properties;
