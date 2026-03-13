@@ -59,8 +59,7 @@ TEST(sys_stat, futimens_EBADF) {
   times[0].tv_nsec = 0;
   times[1].tv_sec = 456;
   times[1].tv_nsec = 0;
-  ASSERT_EQ(-1, futimens(-1, times));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, futimens(-1, times));
 }
 
 TEST(sys_stat, utimensat) {
@@ -85,15 +84,11 @@ TEST(sys_stat, utimensat_null) {
 }
 
 TEST(sys_stat, mkfifo_failure) {
-  errno = 0;
-  ASSERT_EQ(-1, mkfifo("/", 0666));
-  ASSERT_ERRNO(EEXIST);
+  ASSERT_ERRNO_FAILURE(EEXIST, -1, mkfifo("/", 0666));
 }
 
 TEST(sys_stat, mkfifoat_failure) {
-  errno = 0;
-  ASSERT_EQ(-1, mkfifoat(-2, "x", 0666));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, mkfifoat(-2, "x", 0666));
 }
 
 TEST(sys_stat, mkfifo) {
@@ -141,13 +136,11 @@ TEST(sys_stat, statx) {
 }
 
 TEST(sys_stat, fchmod_EBADF) {
-  ASSERT_EQ(-1, fchmod(-1, 0751));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, fchmod(-1, 0751));
 }
 
 TEST(sys_stat, fchmodat_EFAULT_file) {
-  ASSERT_EQ(-1, fchmodat(AT_FDCWD, (char *) 0x1, 0751, 0));
-  ASSERT_ERRNO(EFAULT);
+  ASSERT_ERRNO_FAILURE(EFAULT, -1, fchmodat(AT_FDCWD, (char *) 0x1, 0751, 0));
 }
 
 TEST(sys_stat, fchmodat_AT_SYMLINK_NOFOLLOW_EFAULT_file) {
@@ -162,18 +155,15 @@ TEST(sys_stat, fchmodat_AT_SYMLINK_NOFOLLOW_EFAULT_file) {
 }
 
 TEST(sys_stat, fchmodat_bad_flags) {
-  ASSERT_EQ(-1, fchmodat(AT_FDCWD, "/blah", 0751, ~AT_SYMLINK_NOFOLLOW));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, fchmodat(AT_FDCWD, "/blah", 0751, ~AT_SYMLINK_NOFOLLOW));
 }
 
 TEST(sys_stat, fchmodat_bad_flags_ALL) {
-  ASSERT_EQ(-1, fchmodat(AT_FDCWD, "/blah", 0751, ~0));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, fchmodat(AT_FDCWD, "/blah", 0751, ~0));
 }
 
 TEST(sys_stat, fchmodat_nonexistent_file) {
-  ASSERT_EQ(-1, fchmodat(AT_FDCWD, "/blah", 0751, 0));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, fchmodat(AT_FDCWD, "/blah", 0751, 0));
 }
 
 TEST(sys_stat, fchmodat_AT_SYMLINK_NOFOLLOW_nonexistent_file) {
@@ -239,8 +229,7 @@ TEST(sys_stat, fchmodat_dangling_symlink) {
   snprintf(target, sizeof(target), "%s.doesnotexist", tf.path);
 
   ASSERT_EQ(0, symlink(target, linkname));
-  ASSERT_EQ(-1, fchmodat(AT_FDCWD, linkname, 0751, 0));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, fchmodat(AT_FDCWD, linkname, 0751, 0));
   unlink(linkname);
 }
 
@@ -296,23 +285,19 @@ TEST(sys_stat, fchmodat_AT_SYMLINK_NOFOLLOW_with_dangling_symlink) {
 }
 
 TEST(sys_stat, faccessat_EINVAL) {
-  ASSERT_EQ(-1, faccessat(AT_FDCWD, "/dev/null", F_OK, ~AT_SYMLINK_NOFOLLOW));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, faccessat(AT_FDCWD, "/dev/null", F_OK, ~AT_SYMLINK_NOFOLLOW));
 #if defined(__BIONIC__)
-  ASSERT_EQ(-1, faccessat(AT_FDCWD, "/dev/null", ~(R_OK | W_OK | X_OK), 0));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, faccessat(AT_FDCWD, "/dev/null", ~(R_OK | W_OK | X_OK), 0));
 #else
   ASSERT_EQ(0, faccessat(AT_FDCWD, "/dev/null", ~(R_OK | W_OK | X_OK), AT_SYMLINK_NOFOLLOW));
-  ASSERT_EQ(-1, faccessat(AT_FDCWD, "/dev/null", ~(R_OK | W_OK | X_OK), 0));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, faccessat(AT_FDCWD, "/dev/null", ~(R_OK | W_OK | X_OK), 0));
 #endif
 }
 
 TEST(sys_stat, faccessat_AT_SYMLINK_NOFOLLOW_EINVAL) {
 #if defined(__BIONIC__)
   // Android doesn't support AT_SYMLINK_NOFOLLOW
-  ASSERT_EQ(-1, faccessat(AT_FDCWD, "/dev/null", F_OK, AT_SYMLINK_NOFOLLOW));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, faccessat(AT_FDCWD, "/dev/null", F_OK, AT_SYMLINK_NOFOLLOW));
 #else
   ASSERT_EQ(0, faccessat(AT_FDCWD, "/dev/null", F_OK, AT_SYMLINK_NOFOLLOW));
 #endif

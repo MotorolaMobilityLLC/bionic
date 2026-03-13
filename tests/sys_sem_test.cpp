@@ -62,8 +62,7 @@ TEST(sys_sem, smoke) {
   timespec ts = { .tv_sec = 0, .tv_nsec = 100 };
   ops[0] = { .sem_num = 0, .sem_op = 0, .sem_flg = 0 };
   errno = 0;
-  ASSERT_EQ(-1, semtimedop(id, ops, 1, &ts));
-  ASSERT_ERRNO(EAGAIN);
+  ASSERT_ERRNO_FAILURE(EAGAIN, -1, semtimedop(id, ops, 1, &ts));
   ASSERT_EQ(1, semctl(id, 0, GETVAL));
 
   // Decrement.

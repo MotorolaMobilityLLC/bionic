@@ -150,22 +150,19 @@ TEST(time, mktime_10310929) {
 
 #if !defined(__LP64__)
   // 32-bit bionic has a signed 32-bit time_t.
-  ASSERT_EQ(-1, mktime(&tm));
-  ASSERT_ERRNO(EOVERFLOW);
+  ASSERT_ERRNO_FAILURE(EOVERFLOW, -1, mktime(&tm));
 #else
   // Everyone else should be using a signed 64-bit time_t.
   ASSERT_GE(sizeof(time_t) * 8, 64U);
 
   setenv("TZ", "America/Los_Angeles", 1);
   tzset();
-  errno = 0;
 
   // On the date/time specified by tm America/Los_Angeles
   // follows DST. But tm_isdst is set to 0, which forces
   // mktime to interpret that time as local standard, hence offset
   // is 8 hours, not 7.
-  ASSERT_EQ(static_cast<time_t>(4108348800U), mktime(&tm));
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_SUCCESS(0, static_cast<time_t>(4108348800U), mktime(&tm));
 #endif
 }
 
@@ -187,13 +184,10 @@ TEST(time, mktime_EOVERFLOW) {
   // This will overflow for LP32.
   t.tm_year = INT_MAX;
 
-  errno = 0;
 #if !defined(__LP64__)
-  ASSERT_EQ(static_cast<time_t>(-1), mktime(&t));
-  ASSERT_ERRNO(EOVERFLOW);
+  ASSERT_ERRNO_FAILURE(EOVERFLOW, static_cast<time_t>(-1), mktime(&t));
 #else
-  ASSERT_EQ(static_cast<time_t>(67768036166016000U), mktime(&t));
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_SUCCESS(0, static_cast<time_t>(67768036166016000U), mktime(&t));
 #endif
 
   // This will overflow for LP32 or LP64.
@@ -202,9 +196,7 @@ TEST(time, mktime_EOVERFLOW) {
   t.tm_mon = 11;
   t.tm_mday = 45;
 
-  errno = 0;
-  ASSERT_EQ(static_cast<time_t>(-1), mktime(&t));
-  ASSERT_ERRNO(EOVERFLOW);
+  ASSERT_ERRNO_FAILURE(EOVERFLOW, static_cast<time_t>(-1), mktime(&t));
 }
 
 TEST(time, mktime_invalid_tm_TZ_combination) {
@@ -219,9 +211,8 @@ TEST(time, mktime_invalid_tm_TZ_combination) {
 
   errno = 0;
 
-  EXPECT_EQ(static_cast<time_t>(-1), mktime(&t));
   // mktime sets errno to EOVERFLOW if result is unrepresentable.
-  EXPECT_ERRNO(EOVERFLOW);
+  EXPECT_ERRNO_FAILURE(EOVERFLOW, static_cast<time_t>(-1), mktime(&t));
 }
 
 // Transitions in the tzdata file are generated up to the year 2100. Testing
@@ -231,14 +222,11 @@ TEST(time, mktime_after_2100) {
 
 #if !defined(__LP64__)
   // 32-bit bionic has a signed 32-bit time_t.
-  ASSERT_EQ(-1, mktime(&tm));
-  ASSERT_ERRNO(EOVERFLOW);
+  ASSERT_ERRNO_FAILURE(EOVERFLOW, -1, mktime(&tm));
 #else
   setenv("TZ", "Europe/London", 1);
   tzset();
-  errno = 0;
-  ASSERT_EQ(static_cast<time_t>(5686156800U), mktime(&tm));
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_SUCCESS(0, static_cast<time_t>(5686156800U), mktime(&tm));
 #endif
 }
 
@@ -694,8 +682,7 @@ TEST(time, timer_create) {
 
   if (pid == 0) {
     // Timers are not inherited by the child.
-    ASSERT_EQ(-1, timer_delete(timer_id));
-    ASSERT_ERRNO(EINVAL);
+    ASSERT_ERRNO_FAILURE(EINVAL, -1, timer_delete(timer_id));
     _exit(0);
   }
 
@@ -858,16 +845,14 @@ TEST(time, timer_create_EINVAL) {
 
   // A SIGEV_SIGNAL timer failure is easy; that's the kernel's problem.
   timer_t timer_id;
-  ASSERT_EQ(-1, timer_create(kInvalidClock, nullptr, &timer_id));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, timer_create(kInvalidClock, nullptr, &timer_id));
 
   // A SIGEV_THREAD timer failure is more interesting because we have a thread
   // to clean up (https://issuetracker.google.com/340125671).
   sigevent se = {};
   se.sigev_notify = SIGEV_THREAD;
   se.sigev_notify_function = NoOpNotifyFunction;
-  ASSERT_EQ(-1, timer_create(kInvalidClock, &se, &timer_id));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, timer_create(kInvalidClock, &se, &timer_id));
 
   // timer_create() doesn't guarantee that the thread will be dead _before_
   // it returns because that would require extra synchronization that's
@@ -974,8 +959,7 @@ TEST(time, timer_delete_from_timer_thread) {
   // callback, verify that the thread actually completes.
   cur_time = time(NULL);
   while ((kill(tdd.tid, 0) != -1 || errno != ESRCH) && (time(NULL) - cur_time) < 5);
-  ASSERT_EQ(-1, kill(tdd.tid, 0));
-  ASSERT_ERRNO(ESRCH);
+  ASSERT_ERRNO_FAILURE(ESRCH, -1, kill(tdd.tid, 0));
 #endif
 }
 
@@ -1030,10 +1014,8 @@ TEST(time, clock_gettime_CLOCK_BOOTTIME) {
 }
 
 TEST(time, clock_gettime_unknown) {
-  errno = 0;
   timespec ts;
-  ASSERT_EQ(-1, clock_gettime(-1, &ts));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, clock_gettime(-1, &ts));
 }
 
 TEST(time, clock_getres_CLOCK_REALTIME) {
@@ -1068,10 +1050,8 @@ TEST(time, clock_getres_CLOCK_BOOTTIME) {
 }
 
 TEST(time, clock_getres_unknown) {
-  errno = 0;
   timespec ts = { -1, -1 };
-  ASSERT_EQ(-1, clock_getres(-1, &ts));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, clock_getres(-1, &ts));
   ASSERT_EQ(-1, ts.tv_nsec);
   ASSERT_EQ(-1, ts.tv_sec);
 }
@@ -1128,10 +1108,8 @@ TEST(time, clock_getcpuclockid_ESRCH) {
 }
 
 TEST(time, clock_settime) {
-  errno = 0;
   timespec ts;
-  ASSERT_EQ(-1, clock_settime(-1, &ts));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, clock_settime(-1, &ts));
 }
 
 TEST(time, clock_nanosleep_EINVAL) {
@@ -1165,9 +1143,7 @@ TEST(time, nanosleep) {
 
 TEST(time, nanosleep_EINVAL) {
   timespec ts = {.tv_sec = -1};
-  errno = 0;
-  ASSERT_EQ(-1, nanosleep(&ts, nullptr));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, nanosleep(&ts, nullptr));
 }
 
 TEST(time, bug_31938693) {
@@ -1305,9 +1281,7 @@ TEST(time, asctime_bad_year) {
   // This is undefined behavior, but our traditional behavior is to return NULL/EOVERFLOW.
   tm tm = { .tm_year = 99999 };
   char buf[256];
-  errno = 0;
-  ASSERT_EQ(nullptr, asctime_r(&tm, buf));
-  ASSERT_ERRNO(EOVERFLOW);
+  ASSERT_ERRNO_FAILURE(EOVERFLOW, nullptr, asctime_r(&tm, buf));
 }
 
 TEST(time, ctime) {

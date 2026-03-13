@@ -276,9 +276,8 @@ TEST(search, hcreate_r_hsearch_r_hdestroy_r) {
   AssertEntry(e, "a", "B");
 
   // Check missing.
-  errno = 0;
-  ASSERT_EQ(0, hsearch_r(ENTRY{.key = const_cast<char*>("b"), .data = nullptr}, FIND, &e, &h1));
-  ASSERT_ERRNO(ESRCH);
+  ASSERT_ERRNO_FAILURE(ESRCH, 0,
+                       hsearch_r(ENTRY{.key = const_cast<char*>("b"), .data = nullptr}, FIND, &e, &h1));
 
   // Check present.
   ASSERT_EQ(1, hsearch_r(ENTRY{.key = const_cast<char*>("a"), .data = nullptr}, FIND, &e, &h1));

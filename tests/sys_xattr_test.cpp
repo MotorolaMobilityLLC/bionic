@@ -53,18 +53,13 @@ TEST(sys_xattr, fsetxattr_toosmallbuf) {
   TemporaryFile tf;
   char buf[10];
   ASSERT_EQ(0, fsetxattr(tf.fd, "user.foo", "01234567890123456789", 21, 0));
-  ASSERT_EQ(-1, fgetxattr(tf.fd, "user.foo", buf, sizeof(buf)));
-  ASSERT_ERRNO(ERANGE);
+  ASSERT_ERRNO_FAILURE(ERANGE, -1, fgetxattr(tf.fd, "user.foo", buf, sizeof(buf)));
 }
 
 TEST(sys_xattr, fsetxattr_invalid_fd) {
   char buf[10];
-  errno = 0;
-  ASSERT_EQ(-1, fsetxattr(-1, "user.foo", "0123", 5, 0));
-  ASSERT_ERRNO(EBADF);
-  errno = 0;
-  ASSERT_EQ(-1, fgetxattr(-1, "user.foo", buf, sizeof(buf)));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, fsetxattr(-1, "user.foo", "0123", 5, 0));
+  ASSERT_ERRNO_FAILURE(EBADF, -1, fgetxattr(-1, "user.foo", buf, sizeof(buf)));
 }
 
 TEST(sys_xattr, fsetxattr_with_opath) {
@@ -94,8 +89,7 @@ TEST(sys_xattr, fsetxattr_with_opath_toosmall) {
 #if defined(__BIONIC__)
   char buf[10];
   ASSERT_EQ(0, res);
-  ASSERT_EQ(-1, fgetxattr(fd, "user.foo", buf, sizeof(buf)));
-  ASSERT_ERRNO(ERANGE);
+  ASSERT_ERRNO_FAILURE(ERANGE, -1, fgetxattr(fd, "user.foo", buf, sizeof(buf)));
 #else
   ASSERT_EQ(-1, res);
   ASSERT_ERRNO(EBADF);
@@ -132,7 +126,5 @@ TEST(sys_xattr, flistattr_opath) {
 
 TEST(sys_xattr, flistattr_invalid_fd) {
   char buf[65536];  // 64kB is max possible xattr list size. See "man 7 xattr".
-  errno = 0;
-  ASSERT_EQ(-1, flistxattr(-1, buf, sizeof(buf)));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, flistxattr(-1, buf, sizeof(buf)));
 }

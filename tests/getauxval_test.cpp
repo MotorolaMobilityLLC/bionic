@@ -38,9 +38,7 @@ TEST(getauxval, expected_values) {
 }
 
 TEST(getauxval, unexpected_values) {
-  errno = 0;
-  ASSERT_EQ(0UL, getauxval(0xdeadbeef));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, 0UL, getauxval(0xdeadbeef));
 }
 
 TEST(getauxval, arm_has_AT_HWCAP2) {

@@ -46,45 +46,31 @@ TEST(getcwd, auto_reasonable) {
 
 TEST(getcwd, auto_too_small) {
   // If we ask the library to allocate a too-small buffer, ERANGE.
-  errno = 0;
-  char* cwd = getcwd(nullptr, 1);
-  ASSERT_TRUE(cwd == nullptr);
-  ASSERT_ERRNO(ERANGE);
+  ASSERT_ERRNO_FAILURE(ERANGE, nullptr, getcwd(nullptr, 1));
 }
 
 TEST(getcwd, auto_too_large) {
   SKIP_WITH_HWASAN << "allocation size too large";
   // If we ask the library to allocate an unreasonably large buffer, ERANGE.
-  errno = 0;
-  char* cwd = getcwd(nullptr, static_cast<size_t>(-1));
-  ASSERT_TRUE(cwd == nullptr);
-  ASSERT_ERRNO(ENOMEM);
+  ASSERT_ERRNO_FAILURE(ENOMEM, nullptr, getcwd(nullptr, static_cast<size_t>(-1)));
 }
 
 TEST(getcwd, manual_too_small) {
   // If we allocate a too-small buffer, ERANGE.
   char tiny_buf[1];
-  errno = 0;
-  char* cwd = getcwd(tiny_buf, sizeof(tiny_buf));
-  ASSERT_TRUE(cwd == nullptr);
-  ASSERT_ERRNO(ERANGE);
+  ASSERT_ERRNO_FAILURE(ERANGE, nullptr, getcwd(tiny_buf, sizeof(tiny_buf)));
 }
 
 TEST(getcwd, manual_zero) {
   // If we allocate a zero-length buffer, EINVAL.
   char tiny_buf[1];
-  errno = 0;
-  char* cwd = getcwd(tiny_buf, 0);
-  ASSERT_TRUE(cwd == nullptr);
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, nullptr, getcwd(tiny_buf, 0));
 }
 
 TEST(getcwd, manual_path_max) {
   char* buf = new char[PATH_MAX];
-  errno = 0;
-  char* cwd = getcwd(buf, PATH_MAX);
-  ASSERT_TRUE(cwd == buf);
-  ASSERT_ERRNO(0);
+  char* cwd;
+  ASSERT_ERRNO_SUCCESS(0, buf, cwd = getcwd(buf, PATH_MAX));
   ASSERT_GE(strlen(cwd), 1U);
   delete[] cwd;
 }

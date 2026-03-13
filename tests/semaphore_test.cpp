@@ -41,9 +41,7 @@ TEST(semaphore, sem_init) {
   ASSERT_EQ(0, sem_init(&s, 0, 123));
 
   // Too small an initial value.
-  errno = 0;
-  ASSERT_EQ(-1, sem_init(&s, 0, -1));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, sem_init(&s, 0, -1));
 
   ASSERT_EQ(SEM_VALUE_MAX, sysconf(_SC_SEM_VALUE_MAX));
 
@@ -51,9 +49,7 @@ TEST(semaphore, sem_init) {
   ASSERT_EQ(0, sem_init(&s, 0, SEM_VALUE_MAX));
 
   // Too large an initial value.
-  errno = 0;
-  ASSERT_EQ(-1, sem_init(&s, 0, static_cast<unsigned>(SEM_VALUE_MAX) + 1));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, sem_init(&s, 0, static_cast<unsigned>(SEM_VALUE_MAX) + 1));
 
   ASSERT_EQ(0, sem_destroy(&s));
 }
@@ -64,9 +60,7 @@ TEST(semaphore, sem_trywait) {
   ASSERT_EQ(0, sem_trywait(&s));
   ASSERT_EQ(0, sem_trywait(&s));
   ASSERT_EQ(0, sem_trywait(&s));
-  errno = 0;
-  ASSERT_EQ(-1, sem_trywait(&s));
-  ASSERT_ERRNO(EAGAIN);
+  ASSERT_ERRNO_FAILURE(EAGAIN, -1, sem_trywait(&s));
   ASSERT_EQ(0, sem_destroy(&s));
 }
 
@@ -116,25 +110,17 @@ static void sem_timedwait_helper(clockid_t clock,
   ASSERT_EQ(0, clock_gettime(clock, &ts));
   timespec_add_ms(ts, 100);
 
-  errno = 0;
-  ASSERT_EQ(-1, wait_function(&s, &ts));
-  ASSERT_ERRNO(ETIMEDOUT);
+  ASSERT_ERRNO_FAILURE(ETIMEDOUT, -1, wait_function(&s, &ts));
 
   // A negative timeout is an error.
-  errno = 0;
   ts.tv_nsec = -1;
-  ASSERT_EQ(-1, wait_function(&s, &ts));
-  ASSERT_ERRNO(EINVAL);
-  errno = 0;
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, wait_function(&s, &ts));
   ts.tv_nsec = NS_PER_S;
-  ASSERT_EQ(-1, wait_function(&s, &ts));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, wait_function(&s, &ts));
 
-  errno = 0;
   ts.tv_nsec = NS_PER_S - 1;
   ts.tv_sec = -1;
-  ASSERT_EQ(-1, wait_function(&s, &ts));
-  ASSERT_ERRNO(ETIMEDOUT);
+  ASSERT_ERRNO_FAILURE(ETIMEDOUT, -1, wait_function(&s, &ts));
 
   ASSERT_EQ(0, sem_destroy(&s));
 }

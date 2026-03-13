@@ -53,12 +53,8 @@ TEST(locale, setlocale) {
   EXPECT_STREQ("C.UTF-8", setlocale(LC_ALL, nullptr));
   EXPECT_STREQ("C.UTF-8", setlocale(LC_CTYPE, nullptr));
 
-  errno = 0;
-  EXPECT_EQ(nullptr, setlocale(-1, nullptr));
-  EXPECT_ERRNO(EINVAL);
-  errno = 0;
-  EXPECT_EQ(nullptr, setlocale(13, nullptr));
-  EXPECT_ERRNO(EINVAL);
+  EXPECT_ERRNO_FAILURE(EINVAL, nullptr, setlocale(-1, nullptr));
+  EXPECT_ERRNO_FAILURE(EINVAL, nullptr, setlocale(13, nullptr));
 
 #if defined(__BIONIC__)
   // The "" locale is implementation-defined. For bionic, it's the C.UTF-8 locale, which is
@@ -69,30 +65,24 @@ TEST(locale, setlocale) {
   EXPECT_STREQ("C", setlocale(LC_ALL, "C"));
   EXPECT_STREQ("C", setlocale(LC_ALL, "POSIX"));
 
-  errno = 0;
-  EXPECT_EQ(nullptr, setlocale(LC_ALL, "this-is-not-a-locale"));
-  EXPECT_ERRNO(ENOENT);  // POSIX specified, not an implementation detail!
+  // ENOENT is specified by POSIX, not an implementation detail!
+  EXPECT_ERRNO_FAILURE(ENOENT, nullptr, setlocale(LC_ALL, "this-is-not-a-locale"));
 }
 
 TEST(locale, newlocale_invalid_category_mask) {
-  errno = 0;
-  EXPECT_EQ(nullptr, newlocale(1 << 20, "C", nullptr));
-  EXPECT_ERRNO(EINVAL);
+  EXPECT_ERRNO_FAILURE(EINVAL, nullptr, newlocale(1 << 20, "C", nullptr));
 }
 
 TEST(locale, newlocale_NULL_locale_name) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
-  errno = 0;
-  EXPECT_EQ(nullptr, newlocale(LC_ALL, nullptr, nullptr));
-  EXPECT_ERRNO(EINVAL);
+  EXPECT_ERRNO_FAILURE(EINVAL, nullptr, newlocale(LC_ALL, nullptr, nullptr));
 #pragma clang diagnostic pop
 }
 
 TEST(locale, newlocale_bad_locale_name) {
-  errno = 0;
-  EXPECT_EQ(nullptr, newlocale(LC_ALL, "this-is-not-a-locale", nullptr));
-  EXPECT_ERRNO(ENOENT);  // POSIX specified, not an implementation detail!
+  // ENOENT is specified by POSIX, not an implementation detail!
+  EXPECT_ERRNO_FAILURE(ENOENT, nullptr, newlocale(LC_ALL, "this-is-not-a-locale", nullptr));
 }
 
 TEST(locale, newlocale) {

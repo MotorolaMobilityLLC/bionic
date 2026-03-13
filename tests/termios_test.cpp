@@ -53,9 +53,7 @@ TEST(termios, cfgetispeed_cfsetispeed) {
 
 TEST(termios, cfsetispeed_EINVAL) {
   termios t = {};
-  errno = 0;
-  ASSERT_EQ(-1, cfsetispeed(&t, 1200));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, cfsetispeed(&t, 1200));
 }
 
 TEST(termios, cfgetospeed_cfsetospeed) {
@@ -66,9 +64,7 @@ TEST(termios, cfgetospeed_cfsetospeed) {
 
 TEST(termios, cfsetospeed_EINVAL) {
   termios t = {};
-  errno = 0;
-  ASSERT_EQ(-1, cfsetospeed(&t, 1200));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, cfsetospeed(&t, 1200));
 }
 
 TEST(termios, cfsetspeed) {
@@ -80,11 +76,9 @@ TEST(termios, cfsetspeed) {
 
 TEST(termios, cfsetspeed_EINVAL) {
   termios t = {};
-  errno = 0;
   // glibc seems to allow 1200 as well as B1200 here, presumably for
   // BSD compatibility (where Bxxx == xxx, unlike Linux).
-  ASSERT_EQ(-1, cfsetspeed(&t, 123));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, cfsetspeed(&t, 123));
 }
 
 TEST(termios, cfmakeraw) {
@@ -104,14 +98,8 @@ TEST(termios, cfmakeraw) {
 TEST(termios, tcgetwinsize_tcsetwinsize_invalid) {
 #if !defined(__GLIBC__)
   winsize ws = {};
-
-  errno = 0;
-  ASSERT_EQ(-1, tcgetwinsize(-1, &ws));
-  ASSERT_ERRNO(EBADF);
-
-  errno = 0;
-  ASSERT_EQ(-1, tcsetwinsize(-1, &ws));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, tcgetwinsize(-1, &ws));
+  ASSERT_ERRNO_FAILURE(EBADF, -1, tcsetwinsize(-1, &ws));
 #else
   GTEST_SKIP() << "glibc too old";
 #endif

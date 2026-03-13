@@ -3185,9 +3185,7 @@ TEST(pthread, pthread_getaffinity_np_failure) {
   // Trivial test of the errno-preserving/returning behavior.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
-  errno = 0;
-  ASSERT_EQ(EINVAL, pthread_getaffinity_np(pthread_self(), 0, nullptr));
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_FAILURE(0, EINVAL, pthread_getaffinity_np(pthread_self(), 0, nullptr));
 #pragma clang diagnostic pop
 }
 
@@ -3202,9 +3200,7 @@ TEST(pthread, pthread_setaffinity_np_failure) {
   // Trivial test of the errno-preserving/returning behavior.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
-  errno = 0;
-  ASSERT_EQ(EINVAL, pthread_setaffinity_np(pthread_self(), 0, nullptr));
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_FAILURE(0, EINVAL, pthread_setaffinity_np(pthread_self(), 0, nullptr));
 #pragma clang diagnostic pop
 }
 
