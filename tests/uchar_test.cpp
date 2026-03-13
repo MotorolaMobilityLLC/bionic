@@ -76,9 +76,7 @@ TEST(uchar, start_state) {
   mbstate_t ps = {};
 
   EXPECT_EQ(static_cast<size_t>(-2), mbrtoc32(nullptr, "\xc2", 1, &ps));
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), c32rtomb(out, 0x00a2, &ps));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), c32rtomb(out, 0x00a2, &ps));
 
   // Similarly (but not in compliance with the standard afaict), musl seems to
   // ignore the state entirely for the UTF-32 functions rather than reset it.
@@ -231,11 +229,9 @@ TEST(uchar, mbrtoc16_reserved_range) {
   ASSERT_STREQ("C.UTF-8", setlocale(LC_CTYPE, "C.UTF-8"));
   uselocale(LC_GLOBAL_LOCALE);
 
-  errno = 0;
   char16_t out = u'\0';
-  EXPECT_EQ(static_cast<size_t>(-1), mbrtoc16(&out, "\xf0\x80\xbf\xbf", 6, nullptr));
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), mbrtoc16(&out, "\xf0\x80\xbf\xbf", 6, nullptr));
   EXPECT_EQ(u'\0', out);
-  EXPECT_ERRNO(EILSEQ);
 }
 
 TEST(uchar, mbrtoc16_beyond_range) {
@@ -345,9 +341,7 @@ TEST(uchar, c32rtomb) {
   EXPECT_EQ('\xad', bytes[2]);
   EXPECT_EQ('\xa2', bytes[3]);
   // Invalid code point.
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), c32rtomb(bytes, 0xffffffff, nullptr));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), c32rtomb(bytes, 0xffffffff, nullptr));
 }
 
 TEST(uchar, mbrtoc32_valid_non_characters) {
@@ -423,20 +417,18 @@ TEST(uchar, mbrtoc32) {
   EXPECT_EQ(static_cast<char32_t>(0x24b62), out[0]);
 #if defined(__BIONIC__) // glibc allows this.
   // Illegal 5-byte UTF-8.
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), mbrtoc32(out,
-                                              "\xf8\xa1\xa2\xa3\xa4"
-                                              "f",
-                                              6, nullptr));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ,
+                       static_cast<size_t>(-1), mbrtoc32(out,
+                       "\xf8\xa1\xa2\xa3\xa4"
+                       "f",
+                       6, nullptr));
 #endif
   // Illegal over-long sequence.
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), mbrtoc32(out,
-                                              "\xf0\x82\x82\xac"
-                                              "ef",
-                                              6, nullptr));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ,
+                       static_cast<size_t>(-1), mbrtoc32(out,
+                       "\xf0\x82\x82\xac"
+                       "ef",
+                       6, nullptr));
 }
 
 void test_mbrtoc32_incomplete(mbstate_t* ps) {

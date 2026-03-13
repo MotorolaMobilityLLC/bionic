@@ -315,8 +315,7 @@ TEST(ifaddrs, errno_EMFILE) {
   }
 
   ifaddrs* addrs;
-  EXPECT_EQ(-1, getifaddrs(&addrs));
-  EXPECT_ERRNO(EMFILE);
+  EXPECT_ERRNO_FAILURE(EMFILE, -1, getifaddrs(&addrs));
 
   for (int fd : fds) close(fd);
 }

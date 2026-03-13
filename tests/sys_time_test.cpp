@@ -38,20 +38,16 @@ TEST(sys_time, utimes_EINVAL) {
   timeval tv[2] = {};
 
   tv[0].tv_usec = -123;
-  ASSERT_EQ(-1, utimes(tf.path, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, utimes(tf.path, tv));
   tv[0].tv_usec = 1234567;
-  ASSERT_EQ(-1, utimes(tf.path, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, utimes(tf.path, tv));
 
   tv[0].tv_usec = 0;
 
   tv[1].tv_usec = -123;
-  ASSERT_EQ(-1, utimes(tf.path, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, utimes(tf.path, tv));
   tv[1].tv_usec = 1234567;
-  ASSERT_EQ(-1, utimes(tf.path, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, utimes(tf.path, tv));
 }
 
 TEST(sys_time, futimes_nullptr) {
@@ -65,20 +61,16 @@ TEST(sys_time, futimes_EINVAL) {
   timeval tv[2] = {};
 
   tv[0].tv_usec = -123;
-  ASSERT_EQ(-1, futimes(tf.fd, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, futimes(tf.fd, tv));
   tv[0].tv_usec = 1234567;
-  ASSERT_EQ(-1, futimes(tf.fd, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, futimes(tf.fd, tv));
 
   tv[0].tv_usec = 0;
 
   tv[1].tv_usec = -123;
-  ASSERT_EQ(-1, futimes(tf.fd, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, futimes(tf.fd, tv));
   tv[1].tv_usec = 1234567;
-  ASSERT_EQ(-1, futimes(tf.fd, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, futimes(tf.fd, tv));
 }
 
 TEST(sys_time, futimesat_nullptr) {
@@ -92,20 +84,16 @@ TEST(sys_time, futimesat_EINVAL) {
   timeval tv[2] = {};
 
   tv[0].tv_usec = -123;
-  ASSERT_EQ(-1, futimesat(AT_FDCWD, tf.path, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, futimesat(AT_FDCWD, tf.path, tv));
   tv[0].tv_usec = 1234567;
-  ASSERT_EQ(-1, futimesat(AT_FDCWD, tf.path, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, futimesat(AT_FDCWD, tf.path, tv));
 
   tv[0].tv_usec = 0;
 
   tv[1].tv_usec = -123;
-  ASSERT_EQ(-1, futimesat(AT_FDCWD, tf.path, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, futimesat(AT_FDCWD, tf.path, tv));
   tv[1].tv_usec = 1234567;
-  ASSERT_EQ(-1, futimesat(AT_FDCWD, tf.path, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, futimesat(AT_FDCWD, tf.path, tv));
 }
 
 TEST(sys_time, lutimes_nullptr) {
@@ -119,20 +107,16 @@ TEST(sys_time, lutimes_EINVAL) {
   timeval tv[2] = {};
 
   tv[0].tv_usec = -123;
-  ASSERT_EQ(-1, lutimes(tf.path, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, lutimes(tf.path, tv));
   tv[0].tv_usec = 1234567;
-  ASSERT_EQ(-1, lutimes(tf.path, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, lutimes(tf.path, tv));
 
   tv[0].tv_usec = 0;
 
   tv[1].tv_usec = -123;
-  ASSERT_EQ(-1, lutimes(tf.path, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, lutimes(tf.path, tv));
   tv[1].tv_usec = 1234567;
-  ASSERT_EQ(-1, lutimes(tf.path, tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, lutimes(tf.path, tv));
 }
 
 // Musl doesn't define __NR_gettimeofday on 32-bit architectures.

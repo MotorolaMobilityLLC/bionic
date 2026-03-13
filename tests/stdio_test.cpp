@@ -242,9 +242,7 @@ TEST(STDIO_TEST, getdelim) {
 
   // getdelim returns -1 but doesn't set errno if we're already at EOF.
   // It should set the end-of-file indicator for the stream, though.
-  errno = 0;
-  ASSERT_EQ(getdelim(&word_read, &allocated_length, ' ', fp), -1);
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_FAILURE(0, -1, getdelim(&word_read, &allocated_length, ' ', fp));
   ASSERT_TRUE(feof(fp));
 
   free(word_read);
@@ -261,14 +259,11 @@ TEST(STDIO_TEST, getdelim_invalid) {
   size_t buffer_length = 0;
 
   // The first argument can't be NULL.
-  errno = 0;
-  ASSERT_EQ(getdelim(nullptr, &buffer_length, ' ', fp), -1);
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, getdelim(nullptr, &buffer_length, ' ', fp));
 
   // The second argument can't be NULL.
-  errno = 0;
-  ASSERT_EQ(getdelim(&buffer, nullptr, ' ', fp), -1);
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, getdelim(&buffer, nullptr, ' ', fp));
+
   fclose(fp);
 #pragma clang diagnostic pop
 }
@@ -330,9 +325,7 @@ TEST(STDIO_TEST, fgetln) {
 
   // fgetln() returns nullptr but doesn't set errno if we're already at EOF.
   // It should set the end-of-file indicator for the stream, though.
-  errno = 0;
-  ASSERT_EQ(fgetln(fp, &line_length), nullptr);
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_FAILURE(0, nullptr, fgetln(fp, &line_length));
   ASSERT_TRUE(feof(fp));
 
   fclose(fp);
@@ -376,9 +369,7 @@ TEST(STDIO_TEST, getline) {
 
   // getline returns -1 but doesn't set errno if we're already at EOF.
   // It should set the end-of-file indicator for the stream, though.
-  errno = 0;
-  ASSERT_EQ(getline(&line_read, &allocated_length, fp), -1);
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_FAILURE(0, -1, getline(&line_read, &allocated_length, fp));
   ASSERT_TRUE(feof(fp));
 
   free(line_read);
@@ -395,14 +386,11 @@ TEST(STDIO_TEST, getline_invalid) {
   size_t buffer_length = 0;
 
   // The first argument can't be NULL.
-  errno = 0;
-  ASSERT_EQ(getline(nullptr, &buffer_length, fp), -1);
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, getline(nullptr, &buffer_length, fp));
 
   // The second argument can't be NULL.
-  errno = 0;
-  ASSERT_EQ(getline(&buffer, nullptr, fp), -1);
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, getline(&buffer, nullptr, fp));
+
   fclose(fp);
 #pragma clang diagnostic pop
 }
@@ -1156,8 +1144,7 @@ TEST(STDIO_TEST, snprintf_asterisk_overflow) {
   // INT_MAX-1, INT_MAX, INT_MAX+1.
   ASSERT_EQ(12, snprintf(buf, sizeof(buf), "%.2147483646s%c", "hello world", '!'));
   ASSERT_EQ(12, snprintf(buf, sizeof(buf), "%.2147483647s%c", "hello world", '!'));
-  ASSERT_EQ(-1, snprintf(buf, sizeof(buf), "%.2147483648s%c", "hello world", '!'));
-  ASSERT_ERRNO(ENOMEM);
+  ASSERT_ERRNO_FAILURE(ENOMEM, -1, snprintf(buf, sizeof(buf), "%.2147483648s%c", "hello world", '!'));
 }
 
 TEST(STDIO_TEST, swprintf_asterisk_overflow) {
@@ -1171,8 +1158,7 @@ TEST(STDIO_TEST, swprintf_asterisk_overflow) {
   // INT_MAX-1, INT_MAX, INT_MAX+1.
   ASSERT_EQ(12, swprintf(buf, sizeof(buf), L"%.2147483646s%c", "hello world", '!'));
   ASSERT_EQ(12, swprintf(buf, sizeof(buf), L"%.2147483647s%c", "hello world", '!'));
-  ASSERT_EQ(-1, swprintf(buf, sizeof(buf), L"%.2147483648s%c", "hello world", '!'));
-  ASSERT_ERRNO(ENOMEM);
+  ASSERT_ERRNO_FAILURE(ENOMEM, -1, swprintf(buf, sizeof(buf), L"%.2147483648s%c", "hello world", '!'));
 }
 
 // Inspired by https://github.com/landley/toybox/issues/163.
@@ -1639,29 +1625,20 @@ TEST(STDIO_TEST, cantwrite_EBADF) {
   // ...all attempts to write to that file should return failure.
 
   // They should also set errno to EBADF. This isn't POSIX, but it's traditional.
+
+  EXPECT_ERRNO_FAILURE(EBADF, EOF, putc('x', fp));
+  EXPECT_ERRNO_FAILURE(EBADF, EOF, fprintf(fp, "hello"));
+
+  EXPECT_ERRNO_FAILURE(EBADF, 0U, fwrite("hello", 1, 2, fp));
+  EXPECT_ERRNO_FAILURE(EBADF, EOF, fputs("hello", fp));
+
   // glibc gets the wide-character functions wrong.
-
-  errno = 0;
-  EXPECT_EQ(EOF, putc('x', fp));
-  EXPECT_ERRNO(EBADF);
-
-  errno = 0;
-  EXPECT_EQ(EOF, fprintf(fp, "hello"));
-  EXPECT_ERRNO(EBADF);
 
   errno = 0;
   EXPECT_EQ(EOF, fwprintf(fp, L"hello"));
 #if defined(__BIONIC__)
   EXPECT_ERRNO(EBADF);
 #endif
-
-  errno = 0;
-  EXPECT_EQ(0U, fwrite("hello", 1, 2, fp));
-  EXPECT_ERRNO(EBADF);
-
-  errno = 0;
-  EXPECT_EQ(EOF, fputs("hello", fp));
-  EXPECT_ERRNO(EBADF);
 
   errno = 0;
   EXPECT_EQ(WEOF, fputwc(L'x', fp));
@@ -1780,8 +1757,7 @@ TEST(STDIO_TEST, fpos_t_and_seek) {
 #endif
 
   // Reading from within a byte should produce an error.
-  ASSERT_EQ(WEOF, fgetwc(fp));
-  ASSERT_ERRNO(EILSEQ);
+  ASSERT_ERRNO_FAILURE(EILSEQ, WEOF, fgetwc(fp));
 
   // Reverting to a valid position should work.
   ASSERT_EQ(0, fsetpos(fp, &mb_two_bytes_pos));
@@ -1790,8 +1766,7 @@ TEST(STDIO_TEST, fpos_t_and_seek) {
   // Moving withing a multi byte with fsetpos should work but reading should
   // produce an error.
   ASSERT_EQ(0, fsetpos(fp, &pos_inside_mb));
-  ASSERT_EQ(WEOF, fgetwc(fp));
-  ASSERT_ERRNO(EILSEQ);
+  ASSERT_ERRNO_FAILURE(EILSEQ, WEOF, fgetwc(fp));
 
   ASSERT_EQ(0, fclose(fp));
 }
@@ -2190,9 +2165,7 @@ TEST(STDIO_TEST, fmemopen_fileno) {
   // There's no fd backing an fmemopen FILE*.
   FILE* fp = fmemopen(nullptr, 16, "r");
   ASSERT_TRUE(fp != nullptr);
-  errno = 0;
-  ASSERT_EQ(-1, fileno(fp));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, fileno(fp));
   ASSERT_EQ(0, fclose(fp));
 }
 
@@ -2238,14 +2211,10 @@ TEST(STDIO_TEST, open_memstream_EINVAL) {
   size_t size;
 
   // Invalid buffer.
-  errno = 0;
-  ASSERT_EQ(nullptr, open_memstream(nullptr, &size));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, nullptr, open_memstream(nullptr, &size));
 
   // Invalid size.
-  errno = 0;
-  ASSERT_EQ(nullptr, open_memstream(&p, nullptr));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, nullptr, open_memstream(&p, nullptr));
 #pragma clang diagnostic pop
 #else
   GTEST_SKIP() << "glibc is broken";
@@ -2378,9 +2347,7 @@ TEST(STDIO_TEST, fread_EOF) {
 static void test_fread_from_write_only_stream(size_t n) {
   FILE* fp = fopen("/dev/null", "w");
   std::vector<char> buf(n, 0);
-  errno = 0;
-  ASSERT_EQ(0U, fread(&buf[0], n, 1, fp));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, 0U, fread(&buf[0], n, 1, fp));
   ASSERT_TRUE(ferror(fp));
   ASSERT_FALSE(feof(fp));
   fclose(fp);
@@ -2531,9 +2498,7 @@ TEST(STDIO_TEST, fclose_invalidates_fd) {
   // Even though using a FILE* after close is undefined behavior, I've closed
   // this bug as "WAI" too many times. We shouldn't hand out stale fds,
   // especially because they might actually correspond to a real stream.
-  errno = 0;
-  ASSERT_EQ(-1, fileno(stdin));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, fileno(stdin));
 }
 
 TEST(STDIO_TEST, fseek_ftell_unseekable) {
@@ -2543,19 +2508,13 @@ TEST(STDIO_TEST, fseek_ftell_unseekable) {
   ASSERT_TRUE(fp != nullptr);
 
   // Check that ftell balks on an unseekable FILE*.
-  errno = 0;
-  ASSERT_EQ(-1, ftell(fp));
-  ASSERT_ERRNO(ESPIPE);
+  ASSERT_ERRNO_FAILURE(ESPIPE, -1, ftell(fp));
 
   // SEEK_CUR is rewritten as SEEK_SET internally...
-  errno = 0;
-  ASSERT_EQ(-1, fseek(fp, 0, SEEK_CUR));
-  ASSERT_ERRNO(ESPIPE);
+  ASSERT_ERRNO_FAILURE(ESPIPE, -1, fseek(fp, 0, SEEK_CUR));
 
   // ...so it's worth testing the direct seek path too.
-  errno = 0;
-  ASSERT_EQ(-1, fseek(fp, 0, SEEK_SET));
-  ASSERT_ERRNO(ESPIPE);
+  ASSERT_ERRNO_FAILURE(ESPIPE, -1, fseek(fp, 0, SEEK_SET));
 
   fclose(fp);
 #else
@@ -2565,9 +2524,7 @@ TEST(STDIO_TEST, fseek_ftell_unseekable) {
 
 TEST(STDIO_TEST, funopen_EINVAL) {
 #if defined(__BIONIC__)
-  errno = 0;
-  ASSERT_EQ(nullptr, funopen(nullptr, nullptr, nullptr, nullptr, nullptr));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, nullptr, funopen(nullptr, nullptr, nullptr, nullptr, nullptr));
 #else
   GTEST_SKIP() << "glibc uses fopencookie instead";
 #endif
@@ -2587,8 +2544,7 @@ TEST(STDIO_TEST, funopen_seek) {
   EXPECT_EQ(0, fgetpos(fp, &pos)) << strerror(errno);
   EXPECT_EQ(0xfedcba12LL, pos);
 #else
-  EXPECT_EQ(-1, fgetpos(fp, &pos)) << strerror(errno);
-  EXPECT_ERRNO(EOVERFLOW);
+  EXPECT_ERRNO_FAILURE(EOVERFLOW, -1, fgetpos(fp, &pos));
 #endif
 
   FILE* fp64 = funopen64(nullptr, read_fn, nullptr, seek64_fn, nullptr);
@@ -2688,26 +2644,14 @@ TEST(STDIO_TEST, fseek_fseeko_EINVAL) {
   FILE* fp = fdopen(tf.fd, "w+");
 
   // Bad whence.
-  errno = 0;
-  ASSERT_EQ(-1, fseek(fp, 0, 123));
-  ASSERT_ERRNO(EINVAL);
-  errno = 0;
-  ASSERT_EQ(-1, fseeko(fp, 0, 123));
-  ASSERT_ERRNO(EINVAL);
-  errno = 0;
-  ASSERT_EQ(-1, fseeko64(fp, 0, 123));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, fseek(fp, 0, 123));
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, fseeko(fp, 0, 123));
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, fseeko64(fp, 0, 123));
 
   // Bad offset.
-  errno = 0;
-  ASSERT_EQ(-1, fseek(fp, -1, SEEK_SET));
-  ASSERT_ERRNO(EINVAL);
-  errno = 0;
-  ASSERT_EQ(-1, fseeko(fp, -1, SEEK_SET));
-  ASSERT_ERRNO(EINVAL);
-  errno = 0;
-  ASSERT_EQ(-1, fseeko64(fp, -1, SEEK_SET));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, fseek(fp, -1, SEEK_SET));
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, fseeko(fp, -1, SEEK_SET));
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, fseeko64(fp, -1, SEEK_SET));
 
   fclose(fp);
 }
@@ -2725,21 +2669,15 @@ TEST(STDIO_TEST, remove) {
 
   TemporaryFile tf;
   ASSERT_EQ(0, remove(tf.path));
-  ASSERT_EQ(-1, lstat(tf.path, &sb));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, lstat(tf.path, &sb));
 
   TemporaryDir td;
   ASSERT_EQ(0, remove(td.path));
-  ASSERT_EQ(-1, lstat(td.path, &sb));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, lstat(td.path, &sb));
 
-  errno = 0;
-  ASSERT_EQ(-1, remove(tf.path));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, remove(tf.path));
 
-  errno = 0;
-  ASSERT_EQ(-1, remove(td.path));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, remove(td.path));
 }
 
 TEST_F(STDIO_DEATHTEST, snprintf_30445072_known_buffer_size) {
@@ -3011,8 +2949,7 @@ TEST(STDIO_TEST, fseek_overflow_32bit) {
   // Bionic implements overflow checking for SEEK_CUR, but glibc doesn't.
 #if defined(__BIONIC__) && !defined(__LP64__)
   ASSERT_EQ(0, fseek(fp, 0x7fff'ffff, SEEK_SET));
-  ASSERT_EQ(-1, fseek(fp, 1, SEEK_CUR));
-  ASSERT_ERRNO(EOVERFLOW);
+  ASSERT_ERRNO_FAILURE(EOVERFLOW, -1, fseek(fp, 1, SEEK_CUR));
 #endif
 
   // Neither Bionic nor glibc implement the overflow checking for SEEK_END.
@@ -3130,8 +3067,7 @@ TEST(STDIO_TEST, renameat2) {
   ASSERT_EQ(0, close(creat(old_path.c_str(), 0666)));
 
   // Rename and check it moved.
-  ASSERT_EQ(-1, renameat2(dirfd, "old", dirfd, "new", RENAME_NOREPLACE));
-  ASSERT_ERRNO(EEXIST);
+  ASSERT_ERRNO_FAILURE(EEXIST, -1, renameat2(dirfd, "old", dirfd, "new", RENAME_NOREPLACE));
 #endif
 }
 
@@ -3146,59 +3082,37 @@ TEST(STDIO_TEST, renameat2_flags) {
 }
 
 TEST(STDIO_TEST, fdopen_failures) {
-  FILE* fp;
   int fd = open("/proc/version", O_RDONLY);
   ASSERT_TRUE(fd != -1);
 
   // Nonsense mode.
-  errno = 0;
-  fp = fdopen(fd, "nonsense");
-  ASSERT_TRUE(fp == nullptr);
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, nullptr, fdopen(fd, "nonsense"));
 
   // Mode that isn't a subset of the fd's actual mode.
-  errno = 0;
-  fp = fdopen(fd, "w");
-  ASSERT_TRUE(fp == nullptr);
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, nullptr, fdopen(fd, "w"));
 
   // Can't set append on the underlying fd.
-  errno = 0;
-  fp = fdopen(fd, "a");
-  ASSERT_TRUE(fp == nullptr);
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, nullptr, fdopen(fd, "a"));
 
   // Bad fd.
-  errno = 0;
-  fp = fdopen(-1, "re");
-  ASSERT_TRUE(fp == nullptr);
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, nullptr, fdopen(-1, "re"));
 
   close(fd);
 }
 
 TEST(STDIO_TEST, fmemopen_invalid_mode) {
-  errno = 0;
-  FILE* fp = fmemopen(nullptr, 16, "nonsense");
-  ASSERT_TRUE(fp == nullptr);
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, nullptr, fmemopen(nullptr, 16, "nonsense"));
 }
 
 TEST(STDIO_TEST, fopen_invalid_mode) {
-  errno = 0;
-  FILE* fp = fopen("/proc/version", "nonsense");
-  ASSERT_TRUE(fp == nullptr);
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, nullptr, fopen("/proc/version", "nonsense"));
 }
 
 TEST(STDIO_TEST, freopen_invalid_mode) {
   FILE* fp = fopen("/proc/version", "re");
   ASSERT_TRUE(fp != nullptr);
 
-  errno = 0;
-  fp = freopen("/proc/version", "nonsense", fp);
-  ASSERT_TRUE(fp == nullptr);
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, nullptr, freopen("/proc/version", "nonsense", fp));
 }
 
 TEST(STDIO_TEST, asprintf_smoke) {
@@ -3209,10 +3123,7 @@ TEST(STDIO_TEST, asprintf_smoke) {
 }
 
 TEST(STDIO_TEST, fopen_ENOENT) {
-  errno = 0;
-  FILE* fp = fopen("/proc/does-not-exist", "re");
-  ASSERT_TRUE(fp == nullptr);
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, nullptr, fopen("/proc/does-not-exist", "re"));
 }
 
 static void tempnam_test(bool has_TMPDIR, const char* dir, const char* prefix, const char* re) {
@@ -3317,9 +3228,7 @@ TEST(STDIO_TEST, fread_EOVERFLOW) {
 
   volatile size_t big = SIZE_MAX;
   char buf[BUFSIZ];
-  errno = 0;
-  ASSERT_EQ(0u, fread(buf, big, big, fp));
-  ASSERT_ERRNO(EOVERFLOW);
+  ASSERT_ERRNO_FAILURE(EOVERFLOW, 0u, fread(buf, big, big, fp));
   ASSERT_TRUE(ferror(fp));
   fclose(fp);
 }
@@ -3331,9 +3240,7 @@ TEST(STDIO_TEST, fwrite_EOVERFLOW) {
 
   volatile size_t big = SIZE_MAX;
   char buf[BUFSIZ];
-  errno = 0;
-  ASSERT_EQ(0u, fwrite(buf, big, big, fp));
-  ASSERT_ERRNO(EOVERFLOW);
+  ASSERT_ERRNO_FAILURE(EOVERFLOW, 0u, fwrite(buf, big, big, fp));
   ASSERT_TRUE(ferror(fp));
   fclose(fp);
 }

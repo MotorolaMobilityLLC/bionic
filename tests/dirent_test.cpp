@@ -133,16 +133,12 @@ TEST(dirent, scandir_filter) {
 
 TEST(dirent, scandir_ENOENT) {
   dirent** entries;
-  errno = 0;
-  ASSERT_EQ(-1, scandir("/does-not-exist", &entries, nullptr, nullptr));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, scandir("/does-not-exist", &entries, nullptr, nullptr));
 }
 
 TEST(dirent, scandir64_ENOENT) {
   dirent64** entries;
-  errno = 0;
-  ASSERT_EQ(-1, scandir64("/does-not-exist", &entries, nullptr, nullptr));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, scandir64("/does-not-exist", &entries, nullptr, nullptr));
 }
 
 TEST(dirent, scandirat_ENOENT) {
@@ -150,9 +146,7 @@ TEST(dirent, scandirat_ENOENT) {
   int root_fd = open("/", O_DIRECTORY | O_RDONLY);
   ASSERT_NE(-1, root_fd);
   dirent** entries;
-  errno = 0;
-  ASSERT_EQ(-1, scandirat(root_fd, "does-not-exist", &entries, nullptr, nullptr));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, scandirat(root_fd, "does-not-exist", &entries, nullptr, nullptr));
   close(root_fd);
 #else
   GTEST_SKIP() << "musl doesn't have scandirat or scandirat64";
@@ -164,9 +158,7 @@ TEST(dirent, scandirat64_ENOENT) {
   int root_fd = open("/", O_DIRECTORY | O_RDONLY);
   ASSERT_NE(-1, root_fd);
   dirent64** entries;
-  errno = 0;
-  ASSERT_EQ(-1, scandirat64(root_fd, "does-not-exist", &entries, nullptr, nullptr));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, scandirat64(root_fd, "does-not-exist", &entries, nullptr, nullptr));
   close(root_fd);
 #else
   GTEST_SKIP() << "musl doesn't have scandirat or scandirat64";
@@ -174,13 +166,11 @@ TEST(dirent, scandirat64_ENOENT) {
 }
 
 TEST(dirent, fdopendir_invalid) {
-  ASSERT_TRUE(fdopendir(-1) == nullptr);
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, nullptr, fdopendir(-1));
 
   int fd = open("/dev/null", O_RDONLY);
   ASSERT_NE(fd, -1);
-  ASSERT_TRUE(fdopendir(fd) == nullptr);
-  ASSERT_ERRNO(ENOTDIR);
+  ASSERT_ERRNO_FAILURE(ENOTDIR, nullptr, fdopendir(fd));
   close(fd);
 }
 
@@ -193,18 +183,12 @@ TEST(dirent, fdopendir) {
   ASSERT_EQ(closedir(d), 0);
 
   // fdopendir(3) took ownership, so closedir(3) closed our fd.
-  ASSERT_EQ(close(fd), -1);
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, close(fd));
 }
 
 TEST(dirent, opendir_invalid) {
-  errno = 0;
-  ASSERT_TRUE(opendir("/does/not/exist") == nullptr);
-  ASSERT_ERRNO(ENOENT);
-
-  errno = 0;
-  ASSERT_TRUE(opendir("/dev/null") == nullptr);
-  ASSERT_ERRNO(ENOTDIR);
+  ASSERT_ERRNO_FAILURE(ENOENT, nullptr, opendir("/does/not/exist"));
+  ASSERT_ERRNO_FAILURE(ENOTDIR, nullptr, opendir("/dev/null"));
 }
 
 TEST(dirent, opendir) {
@@ -217,8 +201,7 @@ TEST(dirent, opendir) {
 
 TEST(dirent, closedir_invalid) {
   DIR* d = nullptr;
-  ASSERT_EQ(closedir(d), -1);
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, closedir(d));
 }
 
 TEST(dirent, closedir) {
@@ -366,9 +349,7 @@ TEST(dirent, seekdir_telldir) {
   // Seek to the end, read NULL.
   seekdir(d, end_offset);
   ASSERT_EQ(end_offset, telldir(d));
-  errno = 0;
-  ASSERT_EQ(nullptr, readdir(d));
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_FAILURE(0, nullptr, readdir(d));
 
   ASSERT_EQ(0, closedir(d));
 }

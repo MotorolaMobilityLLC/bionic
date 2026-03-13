@@ -23,15 +23,9 @@
 #define INVALID_ICONV_T reinterpret_cast<iconv_t>(-1)
 
 TEST(iconv, iconv_open_EINVAL) {
-  errno = 0;
-  ASSERT_EQ(INVALID_ICONV_T, iconv_open("silly", "silly"));
-  ASSERT_ERRNO(EINVAL);
-  errno = 0;
-  ASSERT_EQ(INVALID_ICONV_T, iconv_open("silly", "UTF-8"));
-  ASSERT_ERRNO(EINVAL);
-  errno = 0;
-  ASSERT_EQ(INVALID_ICONV_T, iconv_open("UTF-8", "silly"));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, INVALID_ICONV_T, iconv_open("silly", "silly"));
+  ASSERT_ERRNO_FAILURE(EINVAL, INVALID_ICONV_T, iconv_open("silly", "UTF-8"));
+  ASSERT_ERRNO_FAILURE(EINVAL, INVALID_ICONV_T, iconv_open("UTF-8", "silly"));
 }
 
 TEST(iconv, iconv_open_comparator) {
@@ -44,12 +38,8 @@ TEST(iconv, iconv_open_comparator) {
   ASSERT_EQ(0, iconv_close(c));
 
   // "...but not "utf-80" or "ut8"."
-  errno = 0;
-  ASSERT_EQ(INVALID_ICONV_T, iconv_open("UTF-8", "utf-80"));
-  ASSERT_ERRNO(EINVAL);
-  errno = 0;
-  ASSERT_EQ(INVALID_ICONV_T, iconv_open("UTF-8", "ut80"));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, INVALID_ICONV_T, iconv_open("UTF-8", "utf-80"));
+  ASSERT_ERRNO_FAILURE(EINVAL, INVALID_ICONV_T, iconv_open("UTF-8", "ut80"));
 }
 
 TEST(iconv, iconv_smoke) {
@@ -122,9 +112,7 @@ TEST(iconv, iconv_lossy_IGNORE) {
 
   // Two of the input characters (5 input bytes) aren't representable as ASCII.
   // With "//IGNORE", we just skip them (but return failure).
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
 
   EXPECT_EQ('a', buf[0]);
   EXPECT_EQ('z', buf[1]);
@@ -149,9 +137,7 @@ TEST(iconv, iconv_lossy) {
   size_t out_bytes = sizeof(buf);
 
   // The second input character isn't representable as ASCII, so we stop there.
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
 
   EXPECT_EQ('a', buf[0]);
   EXPECT_EQ(0, buf[1]);
@@ -175,15 +161,11 @@ TEST(iconv, iconv_malformed_sequence_EILSEQ) {
   size_t out_bytes = sizeof(buf);
 
   // The second input byte is a malformed character, so we stop there.
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
   EXPECT_EQ('\xd9', *in); // *in is left pointing to the start of the invalid sequence.
   ++in;
   --in_bytes;
-  errno = 0;
-  EXPECT_EQ(0U, iconv(c, &in, &in_bytes, &out, &out_bytes));
-  EXPECT_ERRNO(0);
+  EXPECT_ERRNO_SUCCESS(0, 0U, iconv(c, &in, &in_bytes, &out, &out_bytes));
 
   EXPECT_EQ('a', buf[0]);
   EXPECT_EQ('z', buf[1]);
@@ -208,9 +190,7 @@ TEST(iconv, iconv_incomplete_sequence_EINVAL) {
   size_t out_bytes = sizeof(buf);
 
   // The second input byte is just the start of a character, and we don't have any more bytes.
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
-  EXPECT_ERRNO(EINVAL);
+  EXPECT_ERRNO_FAILURE(EINVAL, static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
   EXPECT_EQ('\xd9', *in); // *in is left pointing to the start of the incomplete sequence.
 
   EXPECT_EQ('a', buf[0]);
@@ -236,33 +216,25 @@ TEST(iconv, iconv_E2BIG) {
 
   // We need three bytes, so one isn't enough (but we will make progress).
   out_bytes = 1;
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
-  EXPECT_ERRNO(E2BIG);
+  EXPECT_ERRNO_FAILURE(E2BIG, static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
   EXPECT_EQ(2U, in_bytes);
   EXPECT_EQ(0U, out_bytes);
 
   // Two bytes left, so zero isn't enough (and we can't even make progress).
   out_bytes = 0;
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
-  EXPECT_ERRNO(E2BIG);
+  EXPECT_ERRNO_FAILURE(E2BIG, static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
   EXPECT_EQ(2U, in_bytes);
   EXPECT_EQ(0U, out_bytes);
 
   // Two bytes left, so one isn't enough (but we will make progress).
   out_bytes = 1;
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
-  EXPECT_ERRNO(E2BIG);
+  EXPECT_ERRNO_FAILURE(E2BIG, static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
   EXPECT_EQ(1U, in_bytes);
   EXPECT_EQ(0U, out_bytes);
 
   // One byte left, so one byte is now enough.
   out_bytes = 1;
-  errno = 0;
-  EXPECT_EQ(0U, iconv(c, &in, &in_bytes, &out, &out_bytes));
-  EXPECT_ERRNO(0);
+  EXPECT_ERRNO_SUCCESS(0, 0U, iconv(c, &in, &in_bytes, &out, &out_bytes));
   EXPECT_EQ(0U, in_bytes);
   EXPECT_EQ(0U, out_bytes);
 
@@ -279,15 +251,11 @@ TEST(iconv, iconv_invalid_converter_EBADF) {
   char* out = nullptr;
   size_t in_bytes = 0;
   size_t out_bytes = 0;
-  errno = 0;
-  ASSERT_EQ(static_cast<size_t>(-1), iconv(INVALID_ICONV_T, &in, &in_bytes, &out, &out_bytes));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, static_cast<size_t>(-1), iconv(INVALID_ICONV_T, &in, &in_bytes, &out, &out_bytes));
 }
 
 TEST(iconv, iconv_close_invalid_converter_EBADF) {
-  errno = 0;
-  ASSERT_EQ(-1, iconv_close(INVALID_ICONV_T));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, iconv_close(INVALID_ICONV_T));
 }
 
 static void RoundTrip(const char* dst_enc, const char* expected_bytes, size_t n) {
@@ -368,9 +336,7 @@ static void Check(int expected_errno, const char* src_enc, const char* src, size
   wchar_t out_buf[16];
   size_t out_bytes = sizeof(out_buf);
   char* out = reinterpret_cast<char*>(out_buf);
-  errno = 0;
-  ASSERT_EQ(static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
-  EXPECT_ERRNO(expected_errno);
+  ASSERT_ERRNO_FAILURE(expected_errno, static_cast<size_t>(-1), iconv(c, &in, &in_bytes, &out, &out_bytes));
   EXPECT_EQ(0, iconv_close(c));
 }
 
@@ -442,23 +408,17 @@ TEST(iconv, iconv_initial_shift_state) {
   char* out = reinterpret_cast<char*>(out_buf);
 
   // Points to a null pointer...
-  errno = 0;
-  ASSERT_EQ(static_cast<size_t>(0), iconv(c, &in, &in_bytes, &out, &out_bytes));
-  EXPECT_ERRNO(0);
+  ASSERT_ERRNO_SUCCESS(0, static_cast<size_t>(0), iconv(c, &in, &in_bytes, &out, &out_bytes));
   EXPECT_EQ(sizeof(out_buf), out_bytes);
 
   // Is a null pointer...
-  errno = 0;
-  ASSERT_EQ(static_cast<size_t>(0), iconv(c, nullptr, &in_bytes, &out, &out_bytes));
-  EXPECT_ERRNO(0);
+  ASSERT_ERRNO_SUCCESS(0, static_cast<size_t>(0), iconv(c, nullptr, &in_bytes, &out, &out_bytes));
   EXPECT_EQ(sizeof(out_buf), out_bytes);
 
   // Is a null pointer and so is in_bytes. This isn't specified by POSIX, but
   // glibc and macOS both allow that, where Android historically didn't.
   // https://issuetracker.google.com/180598400
-  errno = 0;
-  ASSERT_EQ(static_cast<size_t>(0), iconv(c, nullptr, nullptr, &out, &out_bytes));
-  EXPECT_ERRNO(0);
+  ASSERT_ERRNO_SUCCESS(0, static_cast<size_t>(0), iconv(c, nullptr, nullptr, &out, &out_bytes));
   EXPECT_EQ(sizeof(out_buf), out_bytes);
 
   EXPECT_EQ(0, iconv_close(c));

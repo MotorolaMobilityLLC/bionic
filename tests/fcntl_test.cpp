@@ -77,10 +77,8 @@ TEST(fcntl, openat_openat64) {
 }
 
 TEST(fcntl, creat_creat64) {
-  ASSERT_EQ(-1, creat("", 0666));
-  ASSERT_ERRNO(ENOENT);
-  ASSERT_EQ(-1, creat64("", 0666));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, creat("", 0666));
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, creat64("", 0666));
 }
 
 TEST(fcntl, posix_fadvise) {
@@ -109,13 +107,9 @@ TEST(fcntl, fallocate_EINVAL) {
   // fallocate/fallocate64 set errno.
   // posix_fallocate/posix_fallocate64 return an errno value.
 
-  errno = 0;
-  ASSERT_EQ(-1, fallocate(tf.fd, 0, 0, -1));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, fallocate(tf.fd, 0, 0, -1));
 
-  errno = 0;
-  ASSERT_EQ(-1, fallocate64(tf.fd, 0, 0, -1));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, fallocate64(tf.fd, 0, 0, -1));
 
   errno = 0;
   ASSERT_EQ(EINVAL, posix_fallocate(tf.fd, 0, -1));
@@ -265,25 +259,19 @@ TEST(fcntl, tee) {
 
 TEST(fcntl, readahead) {
   // Just check that the function is available.
-  errno = 0;
-  ASSERT_EQ(-1, readahead(-1, 0, 123));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, readahead(-1, 0, 123));
 }
 
 TEST(fcntl, sync_file_range) {
   // Just check that the function is available.
-  errno = 0;
-  ASSERT_EQ(-1, sync_file_range(-1, 0, 0, 0));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, sync_file_range(-1, 0, 0, 0));
 
   TemporaryFile tf;
   ASSERT_EQ(0, sync_file_range(tf.fd, 0, 0, 0));
 
   // The arguments to the underlying system call are in a different order on 32-bit ARM.
   // Check that the `flags` argument gets passed to the kernel correctly.
-  errno = 0;
-  ASSERT_EQ(-1, sync_file_range(tf.fd, 0, 0, ~0));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, sync_file_range(tf.fd, 0, 0, ~0));
 }
 
 static bool parse_kernel_release(long* const major, long* const minor) {
@@ -309,8 +297,7 @@ TEST(fcntl, falloc_punch) {
     struct statfs sfs;
     ASSERT_EQ(0, fstatfs(tf.fd, &sfs));
     if (sfs.f_type == EXT4_SUPER_MAGIC) {
-      ASSERT_EQ(-1, fallocate(tf.fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE, 0, 1));
-      ASSERT_ERRNO(EOPNOTSUPP);
+      ASSERT_ERRNO_FAILURE(EOPNOTSUPP, -1, fallocate(tf.fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE, 0, 1));
     }
   }
 }
@@ -348,11 +335,10 @@ TEST(fcntl, open_O_TMPFILE_mode) {
   // With O_EXCL, you're not allowed to add a name later.
   fd = open(dir.path, O_TMPFILE | O_RDWR | O_EXCL, S_IRUSR | S_IWUSR);
   ASSERT_TRUE(fd != -1) << strerror(errno);
-  errno = 0;
-  ASSERT_EQ(-1, linkat(AT_FDCWD, android::base::StringPrintf("/proc/self/fd/%d", fd).c_str(),
-                       AT_FDCWD, android::base::StringPrintf("%s/no_chance", dir.path).c_str(),
-                       AT_SYMLINK_FOLLOW));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1,
+                       linkat(AT_FDCWD, android::base::StringPrintf("/proc/self/fd/%d", fd).c_str(),
+                              AT_FDCWD, android::base::StringPrintf("%s/no_chance", dir.path).c_str(),
+                              AT_SYMLINK_FOLLOW));
   ASSERT_EQ(0, close(fd));
 }
 

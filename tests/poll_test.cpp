@@ -35,25 +35,19 @@
 
 TEST(poll, poll_null_fds) {
   // Because nanosleep(2) is relatively new to POSIX, code sometimes abuses poll.
-  errno = 0;
-  ASSERT_EQ(0, poll(nullptr, 0, 1));
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_SUCCESS(0, 0, poll(nullptr, 0, 1));
 }
 
 TEST(poll, ppoll_null_fds) {
   // Because nanosleep(2) is relatively new to POSIX, code sometimes abuses poll.
-  errno = 0;
   timespec ts = { .tv_nsec = 100 };
-  ASSERT_EQ(0, ppoll(nullptr, 0, &ts, nullptr));
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_SUCCESS(0, 0, ppoll(nullptr, 0, &ts, nullptr));
 }
 
 TEST(poll, ppoll64_null_fds) {
 #if defined(__BIONIC__)
   // Because nanosleep(2) is relatively new to POSIX, code sometimes abuses poll.
-  errno = 0;
   timespec ts = { .tv_nsec = 100 };
-  ASSERT_EQ(0, ppoll64(nullptr, 0, &ts, nullptr));
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_SUCCESS(0, 0, ppoll64(nullptr, 0, &ts, nullptr));
 #endif
 }

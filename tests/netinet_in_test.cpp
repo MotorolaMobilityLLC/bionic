@@ -41,9 +41,7 @@ TEST(netinet_in, bindresvport) {
 
   // Only AF_INET is supported.
   sockaddr_in sin = {.sin_family = AF_INET6};
-  errno = 0;
-  ASSERT_EQ(-1, bindresvport(-1, &sin));
-  ASSERT_ERRNO(EPFNOSUPPORT);
+  ASSERT_ERRNO_FAILURE(EPFNOSUPPORT, -1, bindresvport(-1, &sin));
 #else
   GTEST_SKIP() << "musl doesn't support bindresvport";
 #endif

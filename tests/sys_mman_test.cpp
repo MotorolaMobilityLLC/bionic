@@ -333,13 +333,10 @@ TEST(sys_mseal, mseal) {
     ASSERT_ERRNO(ENOSYS);
     GTEST_SKIP() << "needs kernel with mseal(2)";
   }
-  ASSERT_EQ(-1, mprotect(map, kPageSize, PROT_READ));
-  ASSERT_ERRNO(EPERM);
+  ASSERT_ERRNO_FAILURE(EPERM, -1, mprotect(map, kPageSize, PROT_READ));
 #else
   // No mseal() for ILP32.
-  errno = 0;
-  ASSERT_EQ(-1, mseal(map, kPageSize, 0));
-  ASSERT_ERRNO(ENOSYS);
+  ASSERT_ERRNO_FAILURE(ENOSYS, -1, mseal(map, kPageSize, 0));
   GTEST_SKIP() << "mseal(2) is LP64-only";
 #endif
 
