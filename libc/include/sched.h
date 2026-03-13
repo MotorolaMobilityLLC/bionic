@@ -34,6 +34,7 @@
  */
 
 #include <sys/cdefs.h>
+#include <stddef.h>
 
 #include <bits/timespec.h>
 #include <linux/sched.h>
@@ -174,6 +175,19 @@ int sched_rr_get_interval(pid_t __pid, struct timespec* _Nonnull __quantum);
  * returns -1 and sets `errno` on failure.
  */
 int clone(int (* __BIONIC_COMPLICATED_NULLNESS __fn)(void* __BIONIC_COMPLICATED_NULLNESS ), void* __BIONIC_COMPLICATED_NULLNESS __child_stack, int __flags, void* _Nullable __arg, ...);
+#endif
+
+#if defined(__USE_GNU)
+/**
+ * [clone3(2)](https://man7.org/linux/man-pages/man2/clone3.2.html )
+ * creates a new child process.
+ *
+ * Returns the pid of the child to the caller on success and
+ * returns -1 and sets `errno` on failure.
+ *
+ * Available since API level 38.
+ */
+int clone3(struct clone_args* __cl_args, size_t __size, int (* __BIONIC_COMPLICATED_NULLNESS __fn)(void* __BIONIC_COMPLICATED_NULLNESS), void* _Nullable __arg) __INTRODUCED_IN(38);
 #endif
 
 #if defined(__USE_GNU)

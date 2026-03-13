@@ -18,22 +18,49 @@
 
 #include <errno.h>
 #include <sched.h>
+#include <stdint.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #include "utils.h"
 
-static int child_fn(void* i_ptr) {
+// Used to test clone/clone3 when setting CLONE_VM
+static int child_fn_CLONE_VM(void* i_ptr) {
   *reinterpret_cast<int*>(i_ptr) = 42;
   return 123;
 }
+
+#if defined(__BIONIC__)
+static void align_clone3_stack(clone_args& cl_args) {
+  // Ensure that both the top and bottom of the child stack are 16-byte
+  // aligned.  The `clone3` system call expects that the provided pointer
+  // refers to the lowest byte in the stack area.
+  uint64_t stack_ptr_misalignment = cl_args.stack & 0xf;
+  if (stack_ptr_misalignment != 0) {
+    uint64_t alignment_offset = 16 - stack_ptr_misalignment;
+    cl_args.stack += alignment_offset;
+    cl_args.stack_size -= alignment_offset;
+    cl_args.stack_size &= ~0xf;
+  }
+}
+
+// Used to test clone/clone3 when not setting CLONE_VM.  Useful for testing the
+// argument juggling code independent of virtual memory shenanigans.
+static int child_fn_no_CLONE_VM(void* arg) {
+  if (reinterpret_cast<uintptr_t>(arg) == 42) {
+    return 130;
+  } else {
+    return 140;
+  }
+}
+#endif
 
 TEST(sched, clone) {
 #if defined(__BIONIC__)
   void* child_stack[1024];
 
   int i = 0;
-  pid_t tid = clone(child_fn, &child_stack[1024], CLONE_VM, &i);
+  pid_t tid = clone(child_fn_CLONE_VM, &child_stack[1024], CLONE_VM, &i);
 
   int status;
   ASSERT_EQ(tid, TEMP_FAILURE_RETRY(waitpid(tid, &status, __WCLONE)));
@@ -54,12 +81,114 @@ TEST(sched, clone_errno) {
   // Check that our hand-written clone assembler sets errno correctly on failure.
   uintptr_t fake_child_stack[16];
   // If CLONE_THREAD is set, CLONE_SIGHAND must be set too.
-  ASSERT_ERRNO_FAILURE(EINVAL, -1, clone(child_fn, &fake_child_stack[16], CLONE_THREAD, nullptr));
+  ASSERT_ERRNO_FAILURE(EINVAL, -1,
+                       clone(child_fn_CLONE_VM, &fake_child_stack[16], CLONE_THREAD, nullptr));
 }
 
 TEST(sched, clone_null_child_stack) {
   int i = 0;
-  ASSERT_ERRNO_FAILURE(EINVAL, -1, clone(child_fn, nullptr, CLONE_VM, &i));
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, clone(child_fn_CLONE_VM, nullptr, CLONE_VM, &i));
+}
+
+TEST(sched, clone3) {
+#if defined(__BIONIC__)
+  void* child_stack[1024];
+
+  clone_args cl_args = {};
+  cl_args.stack = reinterpret_cast<uint64_t>(&child_stack);
+  cl_args.stack_size = sizeof(child_stack);
+  cl_args.flags = CLONE_VM;
+  cl_args.exit_signal = SIGCHLD;
+  align_clone3_stack(cl_args);
+
+  int i = 0;
+  pid_t tid = clone3(&cl_args, sizeof(struct clone_args), child_fn_CLONE_VM, &i);
+
+  ASSERT_NE(-1, tid);
+
+  int status;
+  ASSERT_EQ(tid, TEMP_FAILURE_RETRY(waitpid(tid, &status, __WALL)));
+
+  ASSERT_TRUE(WIFEXITED(status));
+  ASSERT_EQ(123, WEXITSTATUS(status));
+
+  ASSERT_EQ(42, i);
+#else
+  GTEST_SKIP() << "glibc does not export a clone3 wrapper";
+#endif
+}
+
+TEST(sched, clone3_without_fn) {
+#if defined(__BIONIC__)
+  clone_args cl_args = {.exit_signal = SIGCHLD};
+
+  pid_t tid = clone3(&cl_args, sizeof(struct clone_args), nullptr, nullptr);
+  ASSERT_NE(-1, tid);
+
+  if (tid == 0) {
+    exit(42);
+
+  } else {
+    AssertChildExited(tid, 42);
+  }
+#else
+  GTEST_SKIP() << "glibc does not export a clone3 wrapper";
+#endif
+}
+
+TEST(sched, clone3_with_stack) {
+#if defined(__BIONIC__)
+  void* child_stack[1024];
+
+  clone_args cl_args = {};
+  cl_args.exit_signal = SIGCHLD;
+  cl_args.stack = reinterpret_cast<uint64_t>(&child_stack);
+  cl_args.stack_size = sizeof(child_stack);
+  align_clone3_stack(cl_args);
+
+  pid_t tid = clone3(&cl_args, sizeof(struct clone_args), child_fn_no_CLONE_VM,
+                     reinterpret_cast<void*>(42));
+
+  ASSERT_NE(-1, tid);
+  AssertChildExited(tid, 130);
+#else
+  GTEST_SKIP() << "glibc does not export a clone3 wrapper";
+#endif
+}
+
+TEST(sched, clone3_errno) {
+#if defined(__BIONIC__)
+  clone_args cl_args = {};
+  cl_args.flags = CLONE_THREAD;
+
+  errno = 0;
+  // If CLONE_THREAD is set, CLONE_SIGHAND must be set too.
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, clone3(&cl_args, sizeof(struct clone_args), nullptr, nullptr));
+#else
+  GTEST_SKIP() << "glibc does not export a clone3 wrapper";
+#endif
+}
+
+TEST(sched, clone3_null_child_stack) {
+#if defined(__BIONIC__)
+  clone_args cl_args = {};
+  errno = 0;
+  ASSERT_ERRNO_FAILURE(EINVAL, -1,
+                       clone3(&cl_args, sizeof(struct clone_args), child_fn_no_CLONE_VM, nullptr));
+#else
+  GTEST_SKIP() << "glibc does not export a clone3 wrapper";
+#endif
+}
+
+TEST(sched, clone3_vm_without_fn) {
+#if defined(__BIONIC__)
+  clone_args cl_args = {};
+  cl_args.flags = CLONE_VM;
+  errno = 0;
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, clone3(&cl_args, sizeof(struct clone_args), nullptr, nullptr));
+#else
+  GTEST_SKIP() << "glibc does not export a clone3 wrapper";
+#endif
 }
 
 TEST(sched, cpu_set) {
