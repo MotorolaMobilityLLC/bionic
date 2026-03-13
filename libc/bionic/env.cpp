@@ -129,14 +129,14 @@ int setenv(const char* name, const char* value, int rewrite) {
     offset = cnt;
     environ[cnt + 1] = nullptr;
   }
-  if (!(environ[offset] = static_cast<char*>(malloc(name_length + 1 + strlen(value) + 1)))) {
-    return -1;
-  }
-  char* c = environ[offset];
-  for (; (*c = *name++) && *c != '='; ++c) {
-  }
-  for (*c++ = '='; (*c++ = *value++); ) {
-  }
+
+  // Turn "name" and "value" into "name=value" for insertion into environ.
+  size_t value_length = strlen(value);
+  char* str = static_cast<char*>(malloc(name_length + 1 + value_length + 1));
+  if (str == nullptr) return -1;
+  mempcpy(mempcpy(mempcpy(str, name, name_length), "=", 1), value, value_length + 1);
+
+  environ[offset] = str;
   return 0;
 }
 
