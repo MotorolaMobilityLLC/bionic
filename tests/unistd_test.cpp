@@ -281,6 +281,28 @@ TEST(UNISTD_TEST, _exit) {
   AssertChildExited(pid, 99);
 }
 
+TEST(UNISTD_TEST, getenv_null_environ) {
+  environ = nullptr;
+  EXPECT_EQ(nullptr, getenv("foo"));
+}
+
+TEST(UNISTD_TEST, putenv_null_environ) {
+  environ = nullptr;
+  EXPECT_EQ(0, putenv(const_cast<char*>("foo=bar")));
+  EXPECT_STREQ("bar", getenv("foo"));
+}
+
+TEST(UNISTD_TEST, setenv_null_environ) {
+  environ = nullptr;
+  EXPECT_EQ(0, setenv("foo", "bar", 0));
+  EXPECT_STREQ("bar", getenv("foo"));
+}
+
+TEST(UNISTD_TEST, unsetenv_null_environ) {
+  environ = nullptr;
+  EXPECT_EQ(0, unsetenv("foo"));
+}
+
 TEST(UNISTD_TEST, getenv_EINVAL) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
