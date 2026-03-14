@@ -38,7 +38,7 @@ static char** lastenv;        /* last value of environ */
 // or nullptr if not found.
 // Starts searching environ from *offset,
 // and sets *offset to the index at which the variable was found.
-char* __findenv(const char* name, size_t name_length, int* offset) {
+static char* __findenv(const char* name, size_t name_length, size_t* offset) {
   if (environ != nullptr) {
     for (char** p = environ + *offset; *p != nullptr; ++p) {
       if (!strncmp(name, *p, name_length) && (*p)[name_length] == '=') {
@@ -59,7 +59,7 @@ char* getenv(const char* name) {
     return nullptr;
   }
 
-  int offset = 0;
+  size_t offset = 0;
   return __findenv(name, name_length, &offset);
 }
 
@@ -83,15 +83,9 @@ int putenv(char* str) {
     return -1;
   }
 
-  int offset = 0;
+  size_t offset = 0;
   if (__findenv(str, name_length, &offset) != nullptr) {
     environ[offset++] = str;
-    /* could be set multiple times */
-    while (__findenv(str, name_length, &offset)) {
-      for (char** p = &environ[offset];; ++p) {
-        if (!(*p = *(p + 1))) break;
-      }
-    }
     return 0;
   }
 
@@ -119,16 +113,9 @@ int setenv(const char* name, const char* value, int rewrite) {
     return -1;
   }
 
-  int offset = 0;
+  size_t offset = 0;
   if (__findenv(name, name_length, &offset) != nullptr) {
-    int tmpoff = offset + 1;
     if (!rewrite) return 0;
-    /* could be set multiple times */
-    while (__findenv(name, name_length, &tmpoff)) {
-      for (char** p = &environ[tmpoff];; ++p) {
-        if (!(*p = *(p + 1))) break;
-      }
-    }
   } else {          /* create new slot */
     size_t cnt = __current_env_size();
     char** p = static_cast<char**>(reallocarray(lastenv, cnt + 2, sizeof(char*)));
@@ -162,8 +149,14 @@ int unsetenv(const char* name) {
     return -1;
   }
 
-  // Loop to remove all occurrences.
-  int offset = 0;
+  // While setenv()/putenv() will always ensure there's at most one assignment to any given name,
+  // callers could replace environ with a malformed array.
+  // getenv() wouldn't care because it will always stop at the first match,
+  // but unsetenv() needs to make sure that _all_ assignments are removed.
+  // POSIX says "If more than one string in an environment of a process has the same name,
+  // the consequences are undefined" so this isn't _required_ to be a loop,
+  // but it matches what other implementations do.
+  size_t offset = 0;
   while (__findenv(name, name_length, &offset)) {
     for (char** p = &environ[offset];; ++p) {
       if (!(*p = *(p + 1))) {
