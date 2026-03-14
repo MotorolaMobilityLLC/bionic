@@ -53,17 +53,13 @@ TEST(sched, clone) {
 TEST(sched, clone_errno) {
   // Check that our hand-written clone assembler sets errno correctly on failure.
   uintptr_t fake_child_stack[16];
-  errno = 0;
   // If CLONE_THREAD is set, CLONE_SIGHAND must be set too.
-  ASSERT_EQ(-1, clone(child_fn, &fake_child_stack[16], CLONE_THREAD, nullptr));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, clone(child_fn, &fake_child_stack[16], CLONE_THREAD, nullptr));
 }
 
 TEST(sched, clone_null_child_stack) {
   int i = 0;
-  errno = 0;
-  ASSERT_EQ(-1, clone(child_fn, nullptr, CLONE_VM, &i));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, clone(child_fn, nullptr, CLONE_VM, &i));
 }
 
 TEST(sched, cpu_set) {
@@ -285,9 +281,7 @@ TEST(sched, sched_getscheduler_sched_setscheduler) {
   const int original_policy = sched_getscheduler(getpid());
   sched_param p = {};
   p.sched_priority = sched_get_priority_min(original_policy);
-  errno = 0;
-  ASSERT_EQ(-1, sched_setscheduler(getpid(), INT_MAX, &p));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, sched_setscheduler(getpid(), INT_MAX, &p));
 
   ASSERT_EQ(0, sched_getparam(getpid(), &p));
   ASSERT_EQ(original_policy, sched_setscheduler(getpid(), SCHED_BATCH, &p));
@@ -304,8 +298,7 @@ TEST(sched, sched_getaffinity_failure) {
   // Trivial test of the errno-preserving/returning behavior.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
-  ASSERT_EQ(-1, sched_getaffinity(getpid(), 0, nullptr));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, sched_getaffinity(getpid(), 0, nullptr));
 #pragma clang diagnostic pop
 }
 
@@ -320,8 +313,7 @@ TEST(sched, sched_setaffinity_failure) {
   // Trivial test of the errno-preserving/returning behavior.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
-  ASSERT_EQ(-1, sched_setaffinity(getpid(), 0, nullptr));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, sched_setaffinity(getpid(), 0, nullptr));
 #pragma clang diagnostic pop
 }
 
@@ -348,8 +340,7 @@ TEST(sched, sched_setattr_failure) {
   // Trivial test of the errno-preserving/returning behavior.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
-  ASSERT_EQ(-1, sched_setattr(getpid(), nullptr, 0));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, sched_setattr(getpid(), nullptr, 0));
 #pragma clang diagnostic pop
 #else
   GTEST_SKIP() << "our glibc is too old";

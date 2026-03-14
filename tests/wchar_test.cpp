@@ -146,8 +146,7 @@ TEST(wchar, wctomb_wcrtomb) {
   EXPECT_EQ('\xad', bytes[2]);
   EXPECT_EQ('\xa2', bytes[3]);
   // Invalid code point.
-  EXPECT_EQ(static_cast<size_t>(-1), wcrtomb(bytes, 0xffffffff, nullptr));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), wcrtomb(bytes, 0xffffffff, nullptr));
 }
 
 TEST(wchar, wcrtomb_start_state) {
@@ -159,8 +158,7 @@ TEST(wchar, wcrtomb_start_state) {
 
   // Any non-initial state is invalid when calling wcrtomb.
   EXPECT_EQ(static_cast<size_t>(-2), mbrtowc(nullptr, "\xc2", 1, &ps));
-  EXPECT_EQ(static_cast<size_t>(-1), wcrtomb(out, 0x00a2, &ps));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), wcrtomb(out, 0x00a2, &ps));
 
   // If the first argument to wcrtomb is NULL or the second is L'\0' the shift
   // state should be reset.
@@ -199,25 +197,17 @@ TEST(wchar, wcstombs_wcrtombs) {
   EXPECT_EQ(&chars[0], src);
 
   // An unrepresentable char just returns an error from wcstombs...
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), wcstombs(nullptr, bad_chars, 0));
-  EXPECT_ERRNO(EILSEQ);
-  errno = 0;
-  EXPECT_EQ(static_cast<size_t>(-1), wcstombs(nullptr, bad_chars, 256));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), wcstombs(nullptr, bad_chars, 0));
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), wcstombs(nullptr, bad_chars, 256));
 
   // And wcsrtombs doesn't tell us where it got stuck because we didn't ask it
   // to actually convert anything...
-  errno = 0;
   src = bad_chars;
-  EXPECT_EQ(static_cast<size_t>(-1), wcsrtombs(nullptr, &src, 0, nullptr));
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), wcsrtombs(nullptr, &src, 0, nullptr));
   EXPECT_EQ(&bad_chars[0], src);
-  EXPECT_ERRNO(EILSEQ);
-  errno = 0;
   src = bad_chars;
-  EXPECT_EQ(static_cast<size_t>(-1), wcsrtombs(nullptr, &src, 256, nullptr));
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), wcsrtombs(nullptr, &src, 256, nullptr));
   EXPECT_EQ(&bad_chars[0], src);
-  EXPECT_ERRNO(EILSEQ);
 
   // Okay, now let's test actually converting something...
   memset(bytes, 'x', sizeof(bytes));
@@ -232,10 +222,8 @@ TEST(wchar, wcstombs_wcrtombs) {
   memset(bytes, 'x', sizeof(bytes));
   EXPECT_EQ(5U, wcstombs(bytes, chars, 6));
   EXPECT_STREQ("hello", bytes);
-  errno = 0;
   memset(bytes, 'x', sizeof(bytes));
-  EXPECT_EQ(static_cast<size_t>(-1), wcstombs(bytes, bad_chars, 256));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), wcstombs(bytes, bad_chars, 256));
   bytes[3] = 0;
   EXPECT_STREQ("hix", bytes);
 
@@ -244,13 +232,11 @@ TEST(wchar, wcstombs_wcrtombs) {
   src = chars;
   EXPECT_EQ(0U, wcsrtombs(bytes, &src, 0, nullptr));
   EXPECT_EQ(&chars[0], src); // No input consumed.
-  EXPECT_ERRNO(EILSEQ);
 
   memset(bytes, 'x', sizeof(bytes));
   src = chars;
   EXPECT_EQ(4U, wcsrtombs(bytes, &src, 4, nullptr));
   EXPECT_EQ(&chars[4], src); // Some input consumed.
-  EXPECT_ERRNO(EILSEQ);
   bytes[5] = 0;
   EXPECT_STREQ("hellx", bytes);
 
@@ -258,21 +244,18 @@ TEST(wchar, wcstombs_wcrtombs) {
   src = chars;
   EXPECT_EQ(5U, wcsrtombs(bytes, &src, 256, nullptr));
   EXPECT_EQ(nullptr, src); // All input consumed!
-  EXPECT_ERRNO(EILSEQ);
   EXPECT_STREQ("hello", bytes);
 
   memset(bytes, 'x', sizeof(bytes));
   src = chars;
   EXPECT_EQ(5U, wcsrtombs(bytes, &src, 6, nullptr));
   EXPECT_EQ(nullptr, src); // All input consumed.
-  EXPECT_ERRNO(EILSEQ);
   EXPECT_STREQ("hello", bytes);
 
   memset(bytes, 'x', sizeof(bytes));
   src = bad_chars;
-  EXPECT_EQ(static_cast<size_t>(-1), wcsrtombs(bytes, &src, 256, nullptr));
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), wcsrtombs(bytes, &src, 256, nullptr));
   EXPECT_EQ(&bad_chars[2], src);
-  EXPECT_ERRNO(EILSEQ);
   bytes[3] = 0;
   EXPECT_STREQ("hix", bytes);
 
@@ -280,8 +263,7 @@ TEST(wchar, wcstombs_wcrtombs) {
   mbstate_t ps = {};
   src = chars;
   ASSERT_EQ(static_cast<size_t>(-2), mbrtowc(nullptr, "\xc2", 1, &ps));
-  EXPECT_EQ(static_cast<size_t>(-1), wcsrtombs(nullptr, &src, 0, &ps));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), wcsrtombs(nullptr, &src, 0, &ps));
 }
 
 TEST(wchar, limits) {
@@ -400,18 +382,18 @@ TEST(wchar, mbrtowc) {
   EXPECT_EQ(static_cast<wchar_t>(0x24b62), out[0]);
 #if defined(__BIONIC__) // glibc allows this.
   // Illegal 5-byte UTF-8.
-  EXPECT_EQ(static_cast<size_t>(-1), mbrtowc(out,
-                                             "\xf8\xa1\xa2\xa3\xa4"
-                                             "f",
-                                             6, nullptr));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ,
+                       static_cast<size_t>(-1), mbrtowc(out,
+                       "\xf8\xa1\xa2\xa3\xa4"
+                       "f",
+                       6, nullptr));
 #endif
   // Illegal over-long sequence.
-  EXPECT_EQ(static_cast<size_t>(-1), mbrtowc(out,
-                                             "\xf0\x82\x82\xac"
-                                             "ef",
-                                             6, nullptr));
-  EXPECT_ERRNO(EILSEQ);
+  EXPECT_ERRNO_FAILURE(EILSEQ,
+                       static_cast<size_t>(-1), mbrtowc(out,
+                       "\xf0\x82\x82\xac"
+                       "ef",
+                       6, nullptr));
 }
 
 TEST(wchar, mbrtowc_valid_non_characters) {
@@ -467,8 +449,7 @@ static void test_mbrtowc_incomplete(mbstate_t* ps) {
 
   // Invalid 2-byte
   ASSERT_EQ(static_cast<size_t>(-2), mbrtowc(&out, "\xc2", 1, ps));
-  ASSERT_EQ(static_cast<size_t>(-1), mbrtowc(&out, "\x20" "cdef", 5, ps));
-  ASSERT_ERRNO(EILSEQ);
+  ASSERT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), mbrtowc(&out, "\x20" "cdef", 5, ps));
 }
 
 TEST(wchar, mbrtowc_incomplete) {
@@ -504,13 +485,11 @@ static void test_mbsrtowcs(mbstate_t* ps) {
   ASSERT_EQ(nullptr, valid);
 
   const char* invalid = INVALID;
-  ASSERT_EQ(static_cast<size_t>(-1), mbsrtowcs(out, &invalid, 4, ps));
-  EXPECT_ERRNO(EILSEQ);
+  ASSERT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), mbsrtowcs(out, &invalid, 4, ps));
   ASSERT_EQ('\xc2', *invalid);
 
   const char* incomplete = INCOMPLETE;
-  ASSERT_EQ(static_cast<size_t>(-1), mbsrtowcs(out, &incomplete, 2, ps));
-  EXPECT_ERRNO(EILSEQ);
+  ASSERT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), mbsrtowcs(out, &incomplete, 2, ps));
   ASSERT_EQ('\xc2', *incomplete);
 
   // If dst is null, *src shouldn't be updated.
@@ -538,8 +517,7 @@ TEST(wchar, mbsrtowcs) {
   const char* invalid = "\x20";
   wchar_t out;
   ASSERT_EQ(static_cast<size_t>(-2), mbrtowc(&out, "\xc2", 1, &ps));
-  ASSERT_EQ(static_cast<size_t>(-1), mbsrtowcs(&out, &invalid, 1, &ps));
-  EXPECT_ERRNO(EILSEQ);
+  ASSERT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), mbsrtowcs(&out, &invalid, 1, &ps));
   ASSERT_EQ('\x20', *invalid);
 }
 
@@ -667,14 +645,10 @@ TEST(wchar, mbsnrtowcs) {
   memset(dst, 0, sizeof(dst));
   const char* incomplete = "\xc2"; // Incomplete UTF-8 sequence.
   src = incomplete;
-  errno = 0;
-  ASSERT_EQ(static_cast<size_t>(-1), mbsnrtowcs(dst, &src, SIZE_MAX, 3, nullptr));
-  ASSERT_ERRNO(EILSEQ);
+  ASSERT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), mbsnrtowcs(dst, &src, SIZE_MAX, 3, nullptr));
 
   src = incomplete;
-  errno = 0;
-  ASSERT_EQ(static_cast<size_t>(-1), mbsnrtowcs(nullptr, &src, SIZE_MAX, 3, nullptr));
-  ASSERT_ERRNO(EILSEQ);
+  ASSERT_ERRNO_FAILURE(EILSEQ, static_cast<size_t>(-1), mbsnrtowcs(nullptr, &src, SIZE_MAX, 3, nullptr));
 }
 
 TEST(wchar, wcsftime__wcsftime_l) {
@@ -818,14 +792,10 @@ TEST(wchar, open_wmemstream_EINVAL) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
   // Invalid buffer.
-  errno = 0;
-  ASSERT_EQ(nullptr, open_wmemstream(nullptr, &size));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, nullptr, open_wmemstream(nullptr, &size));
 
   // Invalid size.
-  errno = 0;
-  ASSERT_EQ(nullptr, open_wmemstream(&p, nullptr));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, nullptr, open_wmemstream(&p, nullptr));
 #pragma clang diagnostic pop
 #else
   GTEST_SKIP() << "This test is bionic-specific";

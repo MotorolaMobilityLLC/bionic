@@ -34,9 +34,7 @@
 
 TEST(sys_io, iopl) {
 #if defined(__i386__) || defined(__x86_64__)
-  errno = 0;
-  ASSERT_EQ(-1, iopl(4));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, iopl(4));
 #else
   GTEST_SKIP() << "iopl requires x86/x86-64";
 #endif
@@ -44,9 +42,7 @@ TEST(sys_io, iopl) {
 
 TEST(sys_io, ioperm) {
 #if defined(__i386__) || defined(__x86_64__)
-  errno = 0;
-  ASSERT_EQ(-1, ioperm(65535, 4, 0));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, ioperm(65535, 4, 0));
 #else
   GTEST_SKIP() << "ioperm requires x86/x86-64";
 #endif

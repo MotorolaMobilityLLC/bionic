@@ -67,9 +67,7 @@ TEST(sys_vfs, statfs) {
 
 TEST(sys_vfs, statfs_failure) {
   struct statfs sb;
-  errno = 0;
-  ASSERT_EQ(-1, statfs("/does-not-exist", &sb));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, statfs("/does-not-exist", &sb));
 }
 
 TEST(sys_vfs, statfs64_smoke) {
@@ -80,9 +78,7 @@ TEST(sys_vfs, statfs64_smoke) {
 
 TEST(sys_vfs, statfs64_failure) {
   struct statfs64 sb;
-  errno = 0;
-  ASSERT_EQ(-1, statfs64("/does-not-exist", &sb));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, statfs64("/does-not-exist", &sb));
 }
 
 TEST(sys_vfs, fstatfs) {
@@ -95,9 +91,7 @@ TEST(sys_vfs, fstatfs) {
 
 TEST(sys_vfs, fstatfs_failure) {
   struct statfs sb;
-  errno = 0;
-  ASSERT_EQ(-1, fstatfs(-1, &sb));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, fstatfs(-1, &sb));
 }
 
 TEST(sys_vfs, fstatfs64_smoke) {
@@ -110,7 +104,5 @@ TEST(sys_vfs, fstatfs64_smoke) {
 
 TEST(sys_vfs, fstatfs64_failure) {
   struct statfs sb;
-  errno = 0;
-  ASSERT_EQ(-1, fstatfs(-1, &sb));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, fstatfs(-1, &sb));
 }

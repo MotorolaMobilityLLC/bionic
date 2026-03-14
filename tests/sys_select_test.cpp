@@ -89,8 +89,7 @@ TEST(sys_select, select_smoke) {
   int max = STDERR_FILENO + 1;
 
   // Invalid max fd.
-  ASSERT_EQ(-1, select(-1, &r, &w, &e, nullptr));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, select(-1, &r, &w, &e, nullptr));
 
   int num_fds = select(max, &r, &w, &e, nullptr);
   // If there is data to be read on STDIN, then the number of
@@ -107,8 +106,7 @@ TEST(sys_select, select_smoke) {
   timeval tv;
   tv.tv_sec = -1;
   tv.tv_usec = 0;
-  ASSERT_EQ(-1, select(max, &r, &w, &e, &tv));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, select(max, &r, &w, &e, &tv));
 
   // Valid timeout...
   tv.tv_sec = 1;
@@ -144,8 +142,7 @@ TEST(sys_select, pselect_smoke) {
   int max = STDERR_FILENO + 1;
 
   // Invalid max fd.
-  ASSERT_EQ(-1, pselect(-1, &r, &w, &e, nullptr, &ss));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, pselect(-1, &r, &w, &e, nullptr, &ss));
 
   // If there is data to be read on STDIN, then the number of
   // fds ready will be 3 instead of 2. Allow this case, but verify
@@ -162,8 +159,7 @@ TEST(sys_select, pselect_smoke) {
   timespec tv;
   tv.tv_sec = -1;
   tv.tv_nsec = 0;
-  ASSERT_EQ(-1, pselect(max, &r, &w, &e, &tv, &ss));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, pselect(max, &r, &w, &e, &tv, &ss));
 
   // Valid timeout...
   tv.tv_sec = 1;

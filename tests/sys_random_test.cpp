@@ -53,9 +53,7 @@ TEST(sys_random, getentropy_EFAULT) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
 #if defined(HAVE_SYS_RANDOM)
-  errno = 0;
-  ASSERT_EQ(-1, getentropy(nullptr, 1));
-  ASSERT_ERRNO(EFAULT);
+  ASSERT_ERRNO_FAILURE(EFAULT, -1, getentropy(nullptr, 1));
 #else
   GTEST_SKIP() << "<sys/random.h> not available";
 #endif
@@ -67,9 +65,7 @@ TEST(sys_random, getentropy_EINVAL) {
   char buf[BUFSIZ];
   static_assert(BUFSIZ > 256, "BUFSIZ <= 256!");
 
-  errno = 0;
-  ASSERT_EQ(-1, getentropy(buf, sizeof(buf)));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, getentropy(buf, sizeof(buf)));
 #else
   GTEST_SKIP() << "<sys/random.h> not available";
 #endif
@@ -92,9 +88,7 @@ TEST(sys_random, getrandom_EFAULT) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
 #if defined(HAVE_SYS_RANDOM)
-  errno = 0;
-  ASSERT_EQ(-1, getrandom(nullptr, 256, 0));
-  ASSERT_ERRNO(EFAULT);
+  ASSERT_ERRNO_FAILURE(EFAULT, -1, getrandom(nullptr, 256, 0));
 #else
   GTEST_SKIP() << "<sys/random.h> not available";
 #endif
@@ -103,10 +97,8 @@ TEST(sys_random, getrandom_EFAULT) {
 
 TEST(sys_random, getrandom_EINVAL) {
 #if defined(HAVE_SYS_RANDOM)
-  errno = 0;
   char buf[64];
-  ASSERT_EQ(-1, getrandom(buf, sizeof(buf), ~0));
-  ASSERT_ERRNO(EINVAL);
+  ASSERT_ERRNO_FAILURE(EINVAL, -1, getrandom(buf, sizeof(buf), ~0));
 #else
   GTEST_SKIP() << "<sys/random.h> not available";
 #endif

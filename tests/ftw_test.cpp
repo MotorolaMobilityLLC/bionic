@@ -167,37 +167,21 @@ static int null_nftw_callback(const char*, const StatT*, int, FTW*) {
 }
 
 TEST(ftw, ftw_non_existent_ENOENT) {
-  errno = 0;
-  ASSERT_EQ(-1, ftw("/does/not/exist", null_ftw_callback<struct stat>, 128));
-  ASSERT_ERRNO(ENOENT);
-  errno = 0;
-  ASSERT_EQ(-1, ftw64("/does/not/exist", null_ftw_callback<struct stat64>, 128));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, ftw("/does/not/exist", null_ftw_callback<struct stat>, 128));
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, ftw64("/does/not/exist", null_ftw_callback<struct stat64>, 128));
 }
 
 TEST(ftw, nftw_non_existent_ENOENT) {
-  errno = 0;
-  ASSERT_EQ(-1, nftw("/does/not/exist", null_nftw_callback<struct stat>, 128, FTW_PHYS));
-  ASSERT_ERRNO(ENOENT);
-  errno = 0;
-  ASSERT_EQ(-1, nftw64("/does/not/exist", null_nftw_callback<struct stat64>, 128, FTW_PHYS));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, nftw("/does/not/exist", null_nftw_callback<struct stat>, 128, FTW_PHYS));
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, nftw64("/does/not/exist", null_nftw_callback<struct stat64>, 128, FTW_PHYS));
 }
 
 TEST(ftw, ftw_empty_ENOENT) {
-  errno = 0;
-  ASSERT_EQ(-1, ftw("", null_ftw_callback<struct stat>, 128));
-  ASSERT_ERRNO(ENOENT);
-  errno = 0;
-  ASSERT_EQ(-1, ftw64("", null_ftw_callback<struct stat64>, 128));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, ftw("", null_ftw_callback<struct stat>, 128));
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, ftw64("", null_ftw_callback<struct stat64>, 128));
 }
 
 TEST(ftw, nftw_empty_ENOENT) {
-  errno = 0;
-  ASSERT_EQ(-1, nftw("", null_nftw_callback<struct stat>, 128, FTW_PHYS));
-  ASSERT_ERRNO(ENOENT);
-  errno = 0;
-  ASSERT_EQ(-1, nftw64("", null_nftw_callback<struct stat64>, 128, FTW_PHYS));
-  ASSERT_ERRNO(ENOENT);
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, nftw("", null_nftw_callback<struct stat>, 128, FTW_PHYS));
+  ASSERT_ERRNO_FAILURE(ENOENT, -1, nftw64("", null_nftw_callback<struct stat64>, 128, FTW_PHYS));
 }

@@ -90,9 +90,7 @@ static void TestRegisterAndBarrierCommands(int membarrier_cmd_register,
     ASSERT_EQ(0, syscall(__NR_membarrier, membarrier_cmd_barrier, 0));
   } else {
     // Private barrier should fail.
-    ASSERT_EQ(-1, syscall(__NR_membarrier, membarrier_cmd_barrier, 0));
-    ASSERT_ERRNO(EPERM);
-    errno = 0;
+    ASSERT_ERRNO_FAILURE(EPERM, -1, syscall(__NR_membarrier, membarrier_cmd_barrier, 0));
   }
 
   // Check registration for barrier succeeds.

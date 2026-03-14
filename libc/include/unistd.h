@@ -76,6 +76,20 @@ __BEGIN_DECLS
 #define _PC_PRIO_IO 18
 #define _PC_SYNC_IO 19
 
+/**
+ * The current backing array for environment variables,
+ * unsorted and terminated with a null pointer.
+ *
+ * This is only safe for use in single-threaded code.
+ *
+ * Calls to putenv()/setenv()/unsetenv() may implicitly free this array,
+ * so even in single-threaded code it's unsafe to store a copy of this pointer.
+ *
+ * Pointers in this array are valid for the lifetime of the process.
+ *
+ * All environment variables can be unset at once by setting `environ` to null,
+ * but new code should call clearenv() instead.
+ */
 extern char* _Nullable * _Nullable environ;
 
 __noreturn void _exit(int __status);

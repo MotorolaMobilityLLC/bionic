@@ -73,9 +73,7 @@
 
 TEST(malloc, malloc_overflow) {
   SKIP_WITH_HWASAN;
-  errno = 0;
-  ASSERT_EQ(nullptr, malloc(SIZE_MAX));
-  ASSERT_ERRNO(ENOMEM);
+  ASSERT_ERRNO_FAILURE(ENOMEM, nullptr, malloc(SIZE_MAX));
 }
 
 TEST(malloc, calloc_mem_init_disabled) {
@@ -98,25 +96,15 @@ TEST(malloc, calloc_mem_init_disabled) {
 
 TEST(malloc, calloc_illegal) {
   SKIP_WITH_HWASAN;
-  errno = 0;
-  ASSERT_EQ(nullptr, calloc(-1, 100));
-  ASSERT_ERRNO(ENOMEM);
+  ASSERT_ERRNO_FAILURE(ENOMEM, nullptr, calloc(-1, 100));
 }
 
 TEST(malloc, calloc_overflow) {
   SKIP_WITH_HWASAN;
-  errno = 0;
-  ASSERT_EQ(nullptr, calloc(1, SIZE_MAX));
-  ASSERT_ERRNO(ENOMEM);
-  errno = 0;
-  ASSERT_EQ(nullptr, calloc(SIZE_MAX, SIZE_MAX));
-  ASSERT_ERRNO(ENOMEM);
-  errno = 0;
-  ASSERT_EQ(nullptr, calloc(2, SIZE_MAX));
-  ASSERT_ERRNO(ENOMEM);
-  errno = 0;
-  ASSERT_EQ(nullptr, calloc(SIZE_MAX, 2));
-  ASSERT_ERRNO(ENOMEM);
+  ASSERT_ERRNO_FAILURE(ENOMEM, nullptr, calloc(1, SIZE_MAX));
+  ASSERT_ERRNO_FAILURE(ENOMEM, nullptr, calloc(SIZE_MAX, SIZE_MAX));
+  ASSERT_ERRNO_FAILURE(ENOMEM, nullptr, calloc(2, SIZE_MAX));
+  ASSERT_ERRNO_FAILURE(ENOMEM, nullptr, calloc(SIZE_MAX, 2));
 }
 
 TEST(malloc, memalign_overflow) {
@@ -136,14 +124,10 @@ TEST(malloc, memalign_non_power2) {
 
 TEST(malloc, realloc_overflow) {
   SKIP_WITH_HWASAN;
-  errno = 0;
-  ASSERT_EQ(nullptr, realloc(nullptr, SIZE_MAX));
-  ASSERT_ERRNO(ENOMEM);
+  ASSERT_ERRNO_FAILURE(ENOMEM, nullptr, realloc(nullptr, SIZE_MAX));
   void* ptr = malloc(100);
   ASSERT_TRUE(ptr != nullptr);
-  errno = 0;
-  ASSERT_EQ(nullptr, realloc(ptr, SIZE_MAX));
-  ASSERT_ERRNO(ENOMEM);
+  ASSERT_ERRNO_FAILURE(ENOMEM, nullptr, realloc(ptr, SIZE_MAX));
   free(ptr);
 }
 
@@ -427,10 +411,8 @@ TEST(malloc, verify_alignment) {
 
 TEST(malloc, mallopt_smoke) {
 #if defined(__BIONIC__)
-  errno = 0;
-  ASSERT_EQ(0, mallopt(-1000, 1));
   // mallopt doesn't set errno.
-  ASSERT_ERRNO(0);
+  ASSERT_ERRNO_FAILURE(0, 0, mallopt(-1000, 1));
 #else
   GTEST_SKIP() << "bionic-only test";
 #endif
@@ -537,13 +519,9 @@ TEST(malloc, reallocarray_overflow) {
   size_t a = static_cast<size_t>(INTPTR_MIN + 4);
   size_t b = 2;
 
-  errno = 0;
-  ASSERT_TRUE(reallocarray(nullptr, a, b) == nullptr);
-  ASSERT_ERRNO(ENOMEM);
+  ASSERT_ERRNO_FAILURE(ENOMEM, nullptr, reallocarray(nullptr, a, b));
 
-  errno = 0;
-  ASSERT_TRUE(reallocarray(nullptr, b, a) == nullptr);
-  ASSERT_ERRNO(ENOMEM);
+  ASSERT_ERRNO_FAILURE(ENOMEM, nullptr, reallocarray(nullptr, b, a));
 #else
   GTEST_SKIP() << "reallocarray not available";
 #endif
@@ -702,14 +680,11 @@ bool IsDynamic() {
 TEST(android_mallopt, init_zygote_child_profiling) {
 #if defined(__BIONIC__)
   // Successful call.
-  errno = 0;
   if (IsDynamic()) {
-    EXPECT_EQ(true, android_mallopt(M_INIT_ZYGOTE_CHILD_PROFILING, nullptr, 0));
-    EXPECT_ERRNO(0);
+    EXPECT_ERRNO_SUCCESS(0, true, android_mallopt(M_INIT_ZYGOTE_CHILD_PROFILING, nullptr, 0));
   } else {
     // Not supported in static executables.
-    EXPECT_EQ(false, android_mallopt(M_INIT_ZYGOTE_CHILD_PROFILING, nullptr, 0));
-    EXPECT_ERRNO(ENOTSUP);
+    EXPECT_ERRNO_FAILURE(ENOTSUP, false, android_mallopt(M_INIT_ZYGOTE_CHILD_PROFILING, nullptr, 0));
   }
 
   // Unexpected arguments rejected.
@@ -1129,14 +1104,10 @@ TEST(malloc, realloc_mte_crash_b206701345) {
 
 TEST(android_mallopt, get_decay_time_enabled_errors) {
 #if defined(__BIONIC__)
-  errno = 0;
-  EXPECT_FALSE(android_mallopt(M_GET_DECAY_TIME_ENABLED, nullptr, sizeof(bool)));
-  EXPECT_ERRNO(EINVAL);
+  EXPECT_ERRNO_FAILURE(EINVAL, false, android_mallopt(M_GET_DECAY_TIME_ENABLED, nullptr, sizeof(bool)));
 
-  errno = 0;
   int value;
-  EXPECT_FALSE(android_mallopt(M_GET_DECAY_TIME_ENABLED, &value, sizeof(value)));
-  EXPECT_ERRNO(EINVAL);
+  EXPECT_ERRNO_FAILURE(EINVAL, false, android_mallopt(M_GET_DECAY_TIME_ENABLED, &value, sizeof(value)));
 #else
   GTEST_SKIP() << "bionic-only test";
 #endif

@@ -27,7 +27,5 @@ TEST(nl_types, smoke) {
 
   ASSERT_STREQ("hello, world!", catgets(cat, NL_SETD, 0, "hello, world!"));
 
-  errno = 0;
-  ASSERT_EQ(-1, catclose(cat));
-  ASSERT_ERRNO(EBADF);
+  ASSERT_ERRNO_FAILURE(EBADF, -1, catclose(cat));
 }
