@@ -389,6 +389,35 @@ TEST(UNISTD_TEST, putenv) {
   free(s2);
 }
 
+TEST(UNISTD_TEST, putenv_mutation) {
+  char* s = strdup("foo=1");
+  ASSERT_EQ(0, putenv(s));
+  ASSERT_STREQ("1", getenv("foo"));
+
+  // putenv() stores the pointer directly in environ,
+  // so later changes to the passed-in string change the environment variable.
+  // This is a terrible idea, but we have to support it.
+  s[4] = '2';
+  ASSERT_STREQ("2", getenv("foo"));
+}
+
+TEST(UNISTD_TEST, setenv_no_mutation) {
+  char* name = strdup("foo");
+  char* value = strdup("1");
+  ASSERT_EQ(0, setenv(name, value, 1));
+
+  ASSERT_STREQ(nullptr, getenv("boo"));
+  ASSERT_STREQ("1", getenv("foo"));
+
+  // setenv() copies both strings,
+  // so later changes to the passed-in strings have no effect.
+  name[0] = 'b';
+  value[0] = '2';
+
+  ASSERT_STREQ(nullptr, getenv("boo"));
+  ASSERT_STREQ("1", getenv("foo"));
+}
+
 TEST(UNISTD_TEST, clearenv) {
   extern char** environ;
 
