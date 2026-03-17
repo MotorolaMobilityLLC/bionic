@@ -57,7 +57,7 @@ int open(const char* _Nonnull pathname, int flags, mode_t modes, ...) __overload
  */
 __BIONIC_FORTIFY_INLINE
 int open(const char* _Nonnull const __pass_object_size pathname, int flags)
-        __overloadable
+        __fortify_overload
         __clang_error_if(__open_modes_useful(flags), "'open' " __open_too_few_args_error) {
 #if __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
     return __open_2(pathname, flags);
@@ -68,7 +68,7 @@ int open(const char* _Nonnull const __pass_object_size pathname, int flags)
 
 __BIONIC_FORTIFY_INLINE
 int open(const char* _Nonnull const __pass_object_size pathname, int flags, mode_t modes)
-        __overloadable
+        __fortify_overload
         __clang_warning_if(!__open_modes_useful(flags) && modes,
                            "'open' " __open_useless_modes_warning) {
     return __open_real(pathname, flags, modes);
@@ -81,7 +81,7 @@ int openat(int dirfd, const char* _Nonnull pathname, int flags, mode_t modes, ..
 
 __BIONIC_FORTIFY_INLINE
 int openat(int dirfd, const char* _Nonnull const __pass_object_size pathname, int flags)
-        __overloadable
+        __fortify_overload
         __clang_error_if(__open_modes_useful(flags), "'openat' " __open_too_few_args_error) {
 #if __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
     return __openat_2(dirfd, pathname, flags);
@@ -92,7 +92,7 @@ int openat(int dirfd, const char* _Nonnull const __pass_object_size pathname, in
 
 __BIONIC_FORTIFY_INLINE
 int openat(int dirfd, const char* _Nonnull const __pass_object_size pathname, int flags, mode_t modes)
-        __overloadable
+        __fortify_overload
         __clang_warning_if(!__open_modes_useful(flags) && modes,
                            "'openat' " __open_useless_modes_warning) {
     return __openat_real(dirfd, pathname, flags, modes);
@@ -106,14 +106,14 @@ int open64(const char* _Nonnull pathname, int flags, mode_t modes, ...) __overlo
 
 __BIONIC_FORTIFY_INLINE
 int open64(const char* _Nonnull const __pass_object_size pathname, int flags)
-        __overloadable
+        __fortify_overload
         __clang_error_if(__open_modes_useful(flags), "'open64' " __open_too_few_args_error) {
     return open(pathname, flags);
 }
 
 __BIONIC_FORTIFY_INLINE
 int open64(const char* _Nonnull const __pass_object_size pathname, int flags, mode_t modes)
-        __overloadable
+        __fortify_overload
         __clang_warning_if(!__open_modes_useful(flags) && modes,
                            "'open64' " __open_useless_modes_warning) {
     return open(pathname, flags, modes);
@@ -126,14 +126,14 @@ int openat64(int dirfd, const char* _Nonnull pathname, int flags, mode_t modes, 
 
 __BIONIC_FORTIFY_INLINE
 int openat64(int dirfd, const char* _Nonnull const __pass_object_size pathname, int flags)
-        __overloadable
+        __fortify_overload
         __clang_error_if(__open_modes_useful(flags), "'openat64' " __open_too_few_args_error) {
     return openat(dirfd, pathname, flags);
 }
 
 __BIONIC_FORTIFY_INLINE
 int openat64(int dirfd, const char* _Nonnull const __pass_object_size pathname, int flags, mode_t modes)
-        __overloadable
+        __fortify_overload
         __clang_warning_if(!__open_modes_useful(flags) && modes,
                            "'openat64' " __open_useless_modes_warning) {
     return openat(dirfd, pathname, flags, modes);

@@ -94,7 +94,7 @@ ssize_t __readlinkat_chk(int dirfd, const char* _Nonnull, char* _Nonnull, size_t
 
 __BIONIC_FORTIFY_INLINE
 char* _Nullable getcwd(char* const _Nullable __pass_object_size buf, size_t size)
-        __overloadable
+        __fortify_overload
         __error_if_overflows_objectsize(size, __bos(buf), getcwd) {
 #if __ANDROID_API__ >= 24 && __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
     size_t bos = __bos(buf);
@@ -109,7 +109,7 @@ char* _Nullable getcwd(char* const _Nullable __pass_object_size buf, size_t size
 #if !defined(__USE_FILE_OFFSET64)
 __BIONIC_FORTIFY_INLINE
 ssize_t pread(int fd, void* const _Nonnull __pass_object_size0 buf, size_t count, off_t offset)
-        __overloadable
+        __fortify_overload
         __error_if_overflows_ssizet(count, pread)
         __error_if_overflows_objectsize(count, __bos0(buf), pread) {
 #if __ANDROID_API__ >= 23 && __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
@@ -125,7 +125,7 @@ ssize_t pread(int fd, void* const _Nonnull __pass_object_size0 buf, size_t count
 
 __BIONIC_FORTIFY_INLINE
 ssize_t pread64(int fd, void* const _Nonnull __pass_object_size0 buf, size_t count, off64_t offset)
-        __overloadable
+        __fortify_overload
         __error_if_overflows_ssizet(count, pread64)
         __error_if_overflows_objectsize(count, __bos0(buf), pread64) {
 #if __ANDROID_API__ >= 23 && __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
@@ -141,7 +141,7 @@ ssize_t pread64(int fd, void* const _Nonnull __pass_object_size0 buf, size_t cou
 #if !defined(__USE_FILE_OFFSET64)
 __BIONIC_FORTIFY_INLINE
 ssize_t pwrite(int fd, const void* const _Nonnull __pass_object_size0 buf, size_t count, off_t offset)
-        __overloadable
+        __fortify_overload
         __error_if_overflows_ssizet(count, pwrite)
         __error_if_overflows_objectsize(count, __bos0(buf), pwrite) {
 #if __ANDROID_API__ >= 24 && __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
@@ -157,7 +157,7 @@ ssize_t pwrite(int fd, const void* const _Nonnull __pass_object_size0 buf, size_
 
 __BIONIC_FORTIFY_INLINE
 ssize_t pwrite64(int fd, const void* const _Nonnull __pass_object_size0 buf, size_t count, off64_t offset)
-        __overloadable
+        __fortify_overload
         __error_if_overflows_ssizet(count, pwrite64)
         __error_if_overflows_objectsize(count, __bos0(buf), pwrite64) {
 #if __ANDROID_API__ >= 24 && __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
@@ -172,7 +172,7 @@ ssize_t pwrite64(int fd, const void* const _Nonnull __pass_object_size0 buf, siz
 
 __BIONIC_FORTIFY_INLINE
 ssize_t read(int fd, void* const __BIONIC_COMPLICATED_NULLNESS __pass_object_size0 buf, size_t count)
-        __overloadable
+        __fortify_overload
         __error_if_overflows_ssizet(count, read)
         __error_if_overflows_objectsize(count, __bos0(buf), read) {
 #if __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
@@ -187,7 +187,7 @@ ssize_t read(int fd, void* const __BIONIC_COMPLICATED_NULLNESS __pass_object_siz
 
 __BIONIC_FORTIFY_INLINE
 ssize_t write(int fd, const void* const __BIONIC_COMPLICATED_NULLNESS __pass_object_size0 buf, size_t count)
-        __overloadable
+        __fortify_overload
         __error_if_overflows_ssizet(count, write)
         __error_if_overflows_objectsize(count, __bos0(buf), write) {
 #if __ANDROID_API__ >= 24 && __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
@@ -202,7 +202,7 @@ ssize_t write(int fd, const void* const __BIONIC_COMPLICATED_NULLNESS __pass_obj
 
 __BIONIC_FORTIFY_INLINE
 ssize_t readlink(const char* _Nonnull path, char* _Nonnull const __pass_object_size buf, size_t size)
-        __overloadable
+        __fortify_overload
         __error_if_overflows_ssizet(size, readlink)
         __error_if_overflows_objectsize(size, __bos(buf), readlink) {
 #if __ANDROID_API__ >= 23 && __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
@@ -217,7 +217,7 @@ ssize_t readlink(const char* _Nonnull path, char* _Nonnull const __pass_object_s
 
 __BIONIC_FORTIFY_INLINE
 ssize_t readlinkat(int dirfd, const char* _Nonnull path, char* const _Nonnull __pass_object_size buf, size_t size)
-        __overloadable
+        __fortify_overload
         __error_if_overflows_ssizet(size, readlinkat)
         __error_if_overflows_objectsize(size, __bos(buf), readlinkat) {
 #if __ANDROID_API__ >= 23 && __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
