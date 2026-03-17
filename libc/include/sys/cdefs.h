@@ -146,22 +146,6 @@
 #define __clang_error_if(cond, msg) __attribute__((__diagnose_if__(cond, msg, "error")))
 #define __clang_warning_if(cond, msg) __attribute__((__diagnose_if__(cond, msg, "warning")))
 
-#if defined(__aarch64__)
-/*
- * Use __arm_streaming_compatible attribute for functions that are marked as
- * __always_inline. The reason is that inlining functions with different streaming modes
- * is not safe, it may change runtime behaviour (-Waarch64-sme-attributes).
- * This way compiler will inline the fortified wrapper even if called from a streaming
- * enabled function, but change streaming mode before calling the non-streaming builtin
- * or fortify-ckecked functions.
- */
-#define __streaming_compatible __arm_streaming_compatible
-#else
-#define __streaming_compatible
-#endif
-
-#define __fortify_overload __streaming_compatible __overloadable
-
 #if defined(ANDROID_STRICT)
 /*
  * For things that are sketchy, but not necessarily an error.
@@ -286,16 +270,6 @@
  */
 #  define __BIONIC_FORTIFY_INLINE static __inline __attribute__((__no_stack_protector__)) \
       __always_inline
-
-/*
- * Support code built with c++98.
- */
-#if defined(__cplusplus) && __cplusplus >= 201103L
-#  define __BIONIC_FORTIFY_CONSTEXPR constexpr
-#else
-#  define __BIONIC_FORTIFY_CONSTEXPR
-#endif
-
 /*
  * We should use __BIONIC_FORTIFY_VARIADIC instead of __BIONIC_FORTIFY_INLINE
  * for variadic functions because compilers cannot inline them.
