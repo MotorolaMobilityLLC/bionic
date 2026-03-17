@@ -93,8 +93,13 @@ char* _Nullable getenv(const char* _Nonnull __name);
  * To ensure that any value returned by getenv() is safe for use indefinitely,
  * the implementation never frees assignment strings.
  * This means that it is safe to pass a string literal.
+ * Despite the need to cast away `const`,
+ * passing a string literal to putenv() is probably the safest way to use it,
+ * because it ensures you can neither free nor modify the assignment;
+ * it's also cheap because it doesn't require any heap allocation.
  * That said, this behavior is not guaranteed by POSIX,
- * so portable code may prefer to always use heap-allocated assignment strings.
+ * so portable code may prefer to always use heap-allocated assignment strings,
+ * or to let setenv() create them behind the scenes.
  */
 int putenv(char* _Nonnull __assignment);
 
@@ -116,7 +121,8 @@ int putenv(char* _Nonnull __assignment);
  * but this does mean that the caller's pointers only need be valid and
  * immutable for the duration of the call to setenv().
  * It also means that putenv() is more efficient if both name and value
- * are constants.
+ * are constants: you can pass putenv() a string literal
+ * of the form "name=value" to avoid heap allocation.
  */
 int setenv(const char* _Nonnull __name, const char* _Nonnull __value, int __overwrite);
 
