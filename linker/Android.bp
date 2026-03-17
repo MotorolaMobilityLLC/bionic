@@ -105,7 +105,6 @@ cc_object {
 // Configuration for the linker binary and any of its static libraries.
 cc_defaults {
     name: "linker_defaults",
-    defaults: ["x86_disable_fdo_profile_sample_accurate"],
     cflags: linker_common_flags + select(release_flag("RELEASE_DEPRECATE_RUNTIME_APEX"), {
         true: ["-DRELEASE_DEPRECATE_RUNTIME_APEX"],
         default: [],

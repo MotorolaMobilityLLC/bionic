@@ -61,7 +61,6 @@ bionic_cc_defaults {
     name: "libc_defaults",
     defaults: [
         "linux_bionic_supported",
-        "x86_disable_fdo_profile_sample_accurate",
     ],
     cflags: libc_common_flags + [
         "-DUSE_SCUDO",
@@ -119,25 +118,6 @@ bionic_cc_defaults {
             conditions_default: {
                 apex_available: ["com.android.runtime"],
             },
-        },
-    },
-}
-
-// Disable -fprofile-sample-accurate for x86 and x86_64.
-// By default, all fdo_profile blocks imply
-// -fprofile-sample-accurate. Using this default overrides
-// this. Overriding is useful for when we are applying
-// non-x86* fdo profiles (e.g. arm64 profiles) to x86*
-// devices.
-// ========================================================
-cc_defaults {
-    name: "x86_disable_fdo_profile_sample_accurate",
-    arch: {
-        x86: {
-            cflags: ["-fno-profile-sample-accurate"],
-        },
-        x86_64: {
-            cflags: ["-fno-profile-sample-accurate"],
         },
     },
 }
