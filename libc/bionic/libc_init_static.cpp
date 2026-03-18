@@ -158,8 +158,8 @@ void __libc_init_profiling_handlers() {
 }
 
 __attribute__((no_sanitize("memtag"))) __noreturn static void __real_libc_init(
-    KernelArgumentBlock& args, void* raw_args __unused, void (*onexit)(void) __unused,
-    int (*slingshot)(int, char**, char**), structors_array_t const* const structors,
+    KernelArgumentBlock& args, void* raw_args [[maybe_unused]],
+    int (*main)(int, char**, char**), structors_array_t const* const structors,
     bionic_tcb* temp_tcb) {
   BIONIC_STOP_UNWIND;
 
@@ -185,9 +185,6 @@ __attribute__((no_sanitize("memtag"))) __noreturn static void __real_libc_init(
   call_ifunc_resolvers();
   apply_gnu_relro();
 
-  // Several Linux ABIs don't pass the onexit pointer, and the ones that
-  // do never use it.  Therefore, we ignore it.
-
   call_array(structors->preinit_array, structors->preinit_array_count, args.argc, args.argv,
              args.envp);
   call_array(structors->init_array, structors->init_array_count, args.argc, args.argv, args.envp);
@@ -205,7 +202,7 @@ __attribute__((no_sanitize("memtag"))) __noreturn static void __real_libc_init(
   // Wait until everything is initialized before enabled systracing.
   __get_bionic_tls().bionic_systrace_enabled = true;
 
-  exit(slingshot(args.argc, args.argv, args.envp));
+  exit(main(args.argc, args.argv, args.envp));
 }
 
 extern "C" void __hwasan_init_static();
@@ -215,7 +212,7 @@ extern "C" void __hwasan_init_static();
 // The 'structors' parameter contains pointers to various initializer
 // arrays that must be run before the program's 'main' routine is launched.
 __attribute__((no_sanitize("hwaddress", "memtag"))) __noreturn void __libc_init(
-    void* raw_args, void (*onexit)(void) __unused, int (*slingshot)(int, char**, char**),
+    void* raw_args, void*, int (*main)(int, char**, char**),
     structors_array_t const* const structors) {
   // We _really_ don't want the compiler to call memset() here,
   // but it's done so before for riscv64 (http://b/365618934),
@@ -235,7 +232,7 @@ __attribute__((no_sanitize("hwaddress", "memtag"))) __noreturn void __libc_init(
   // We are ready to run HWASan-instrumented code, proceed with libc initialization...
 #endif
 
-  __real_libc_init(args, raw_args, onexit, slingshot, structors, &temp_tcb);
+  __real_libc_init(args, raw_args, main, structors, &temp_tcb);
 }
 
 static int g_target_sdk_version{__ANDROID_API__};

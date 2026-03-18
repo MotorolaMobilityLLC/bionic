@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <stddef.h>
 #include <sys/cdefs.h>
 
 typedef void init_func_t(int, char*[], char*[]);
@@ -50,9 +50,10 @@ extern int main(int argc, char** argv, char** env);
 
 __BEGIN_DECLS
 
+// The unused argument is ABI because this function is called by crtbegin.
 __noreturn void __libc_init(void* raw_args,
-                            void (*onexit)(void),
-                            int (*slingshot)(int, char**, char**),
+                            void* unused,
+                            int (*main)(int, char**, char**),
                             structors_array_t const* const structors);
 __LIBC_HIDDEN__ void __libc_fini(void* finit_array);
 
