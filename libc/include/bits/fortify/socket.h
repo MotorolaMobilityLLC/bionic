@@ -40,7 +40,7 @@ ssize_t __recvfrom_chk(int, void* _Nullable, size_t, size_t, int, struct sockadd
 
 __BIONIC_FORTIFY_INLINE
 ssize_t recvfrom(int fd, void* _Nullable const buf __pass_object_size0, size_t len, int flags, struct sockaddr* _Nullable src_addr, socklen_t* _Nullable addr_len)
-    __fortify_overload
+    __overloadable
     __clang_error_if(__bos_unevaluated_lt(__bos0(buf), len),
                      "'recvfrom' called with size bigger than buffer") {
 #if __ANDROID_API__ >= 24 && __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
@@ -55,7 +55,7 @@ ssize_t recvfrom(int fd, void* _Nullable const buf __pass_object_size0, size_t l
 
 __BIONIC_FORTIFY_INLINE
 ssize_t sendto(int fd, const void* _Nonnull const buf __pass_object_size0, size_t len, int flags, const struct sockaddr* _Nullable dest_addr, socklen_t addr_len)
-    __fortify_overload
+    __overloadable
     __clang_error_if(__bos_unevaluated_lt(__bos0(buf), len),
                      "'sendto' called with size bigger than buffer") {
 #if __ANDROID_API__ >= 26 && __BIONIC_FORTIFY_RUNTIME_CHECKS_ENABLED
@@ -70,7 +70,7 @@ ssize_t sendto(int fd, const void* _Nonnull const buf __pass_object_size0, size_
 
 __BIONIC_FORTIFY_INLINE
 ssize_t recv(int socket, void* _Nullable const buf __pass_object_size0, size_t len, int flags)
-    __fortify_overload
+    __overloadable
     __clang_error_if(__bos_unevaluated_lt(__bos0(buf), len),
                      "'recv' called with size bigger than buffer") {
   return recvfrom(socket, buf, len, flags, NULL, 0);
@@ -78,7 +78,7 @@ ssize_t recv(int socket, void* _Nullable const buf __pass_object_size0, size_t l
 
 __BIONIC_FORTIFY_INLINE
 ssize_t send(int socket, const void* _Nonnull const buf __pass_object_size0, size_t len, int flags)
-    __fortify_overload
+    __overloadable
     __clang_error_if(__bos_unevaluated_lt(__bos0(buf), len),
                      "'send' called with size bigger than buffer") {
   return sendto(socket, buf, len, flags, NULL, 0);

@@ -286,124 +286,95 @@ char* _Nonnull basename(const char* _Nonnull __path) __RENAME(__gnu_basename) __
 #define __prefer_this_overload __enable_if(true, "")
 extern "C++" {
 inline __always_inline
-void* _Nullable __bionic_memchr(const void* _Nonnull const s __pass_object_size, int c, size_t n)
-        __streaming_compatible {
+void* _Nullable __bionic_memchr(const void* _Nonnull const s __pass_object_size, int c, size_t n) {
     return memchr(s, c, n);
 }
 
 inline __always_inline
 const void* _Nullable memchr(const void* _Nonnull const s __pass_object_size, int c, size_t n)
-        __streaming_compatible
         __prefer_this_overload {
     return __bionic_memchr(s, c, n);
 }
 
 inline __always_inline
-void* _Nullable memchr(void* _Nonnull const s __pass_object_size, int c, size_t n)
-        __streaming_compatible
-        __prefer_this_overload {
+void* _Nullable memchr(void* _Nonnull const s __pass_object_size, int c, size_t n) __prefer_this_overload {
     return __bionic_memchr(s, c, n);
 }
 
 inline __always_inline
-char* _Nullable __bionic_strchr(const char* _Nonnull const s __pass_object_size, int c)
-        __streaming_compatible {
+char* _Nullable __bionic_strchr(const char* _Nonnull const s __pass_object_size, int c) {
     return strchr(s, c);
 }
 
 inline __always_inline
 const char* _Nullable strchr(const char* _Nonnull const s __pass_object_size, int c)
-        __streaming_compatible
         __prefer_this_overload {
     return __bionic_strchr(s, c);
 }
 
 inline __always_inline
 char* _Nullable strchr(char* _Nonnull const s __pass_object_size, int c)
-        __streaming_compatible
         __prefer_this_overload {
     return __bionic_strchr(s, c);
 }
 
 inline __always_inline
-char* _Nullable __bionic_strrchr(const char* _Nonnull const s __pass_object_size, int c)
-        __streaming_compatible {
+char* _Nullable __bionic_strrchr(const char* _Nonnull const s __pass_object_size, int c) {
     return strrchr(s, c);
 }
 
 inline __always_inline
-const char* _Nullable strrchr(const char* _Nonnull const s __pass_object_size, int c)
-        __streaming_compatible
-        __prefer_this_overload {
+const char* _Nullable strrchr(const char* _Nonnull const s __pass_object_size, int c) __prefer_this_overload {
     return __bionic_strrchr(s, c);
 }
 
 inline __always_inline
-char* _Nullable strrchr(char* _Nonnull const s __pass_object_size, int c)
-        __streaming_compatible
-        __prefer_this_overload {
+char* _Nullable strrchr(char* _Nonnull const s __pass_object_size, int c) __prefer_this_overload {
     return __bionic_strrchr(s, c);
 }
 
 /* Functions with no FORTIFY counterpart. */
 
 inline __always_inline
-char* _Nullable __bionic_strcasestr(const char* _Nonnull h, const char* _Nonnull n)
-      __streaming_compatible {
+char* _Nullable __bionic_strcasestr(const char* _Nonnull h, const char* _Nonnull n) {
     return strcasestr(h, n);
 }
 
 inline __always_inline
-const char* _Nullable strcasestr(const char* _Nonnull h, const char* _Nonnull n)
-        __streaming_compatible
-        __prefer_this_overload {
+const char* _Nullable strcasestr(const char* _Nonnull h, const char* _Nonnull n) __prefer_this_overload {
     return __bionic_strcasestr(h, n);
 }
 
 inline __always_inline
-char* _Nullable strcasestr(char* _Nonnull h, const char* _Nonnull n)
-        __streaming_compatible
-        __prefer_this_overload {
+char* _Nullable strcasestr(char* _Nonnull h, const char* _Nonnull n) __prefer_this_overload {
     return __bionic_strcasestr(h, n);
 }
 
 inline __always_inline
-char* _Nullable __bionic_strstr(const char* _Nonnull h, const char* _Nonnull n)
-        __streaming_compatible {
+char* _Nullable __bionic_strstr(const char* _Nonnull h, const char* _Nonnull n) {
     return strstr(h, n);
 }
 
 inline __always_inline
-const char* _Nullable strstr(const char* _Nonnull h, const char* _Nonnull n)
-        __streaming_compatible
-        __prefer_this_overload {
+const char* _Nullable strstr(const char* _Nonnull h, const char* _Nonnull n) __prefer_this_overload {
     return __bionic_strstr(h, n);
 }
 
 inline __always_inline
-char* _Nullable strstr(char* _Nonnull h, const char* _Nonnull n)
-        __streaming_compatible
-        __prefer_this_overload {
+char* _Nullable strstr(char* _Nonnull h, const char* _Nonnull n) __prefer_this_overload {
     return __bionic_strstr(h, n);
 }
 
 inline __always_inline
-char* _Nullable __bionic_strpbrk(const char* _Nonnull h, const char* _Nonnull n)
-        __streaming_compatible {
-    return strpbrk(h, n);
-}
+char* _Nullable __bionic_strpbrk(const char* _Nonnull h, const char* _Nonnull n) { return strpbrk(h, n); }
 
 inline __always_inline
-char* _Nullable strpbrk(char* _Nonnull h, const char* _Nonnull n)
-        __streaming_compatible
-        __prefer_this_overload {
+char* _Nullable strpbrk(char* _Nonnull h, const char* _Nonnull n) __prefer_this_overload {
     return __bionic_strpbrk(h, n);
 }
 
 inline __always_inline
-const char* _Nullable strpbrk(const char* _Nonnull h, const char* _Nonnull n)
-        __streaming_compatible
-        __prefer_this_overload {
+const char* _Nullable strpbrk(const char* _Nonnull h, const char* _Nonnull n) __prefer_this_overload {
     return __bionic_strpbrk(h, n);
 }
 }

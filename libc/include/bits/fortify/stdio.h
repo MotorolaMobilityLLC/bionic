@@ -46,14 +46,13 @@ size_t __fwrite_chk(const void* _Nonnull, size_t, size_t, FILE* _Nonnull, size_t
 /* No diag -- clang diagnoses misuses of this on its own.  */
 __BIONIC_FORTIFY_INLINE __printflike(3, 0)
 int vsnprintf(char* const __BIONIC_COMPLICATED_NULLNESS __pass_object_size dest, size_t size, const char* _Nonnull format, va_list ap)
-        __fortify_overload
-        __diagnose_as_builtin(__builtin_vsnprintf, 1, 2, 3, 4) {
+        __diagnose_as_builtin(__builtin_vsnprintf, 1, 2, 3, 4)
+        __overloadable {
     return __builtin___vsnprintf_chk(dest, size, 0, __bos(dest), format, ap);
 }
 
 __BIONIC_FORTIFY_INLINE __printflike(2, 0)
-int vsprintf(char* const __BIONIC_COMPLICATED_NULLNESS __pass_object_size dest, const char* _Nonnull format, va_list ap)
-        __fortify_overload {
+int vsprintf(char* const __BIONIC_COMPLICATED_NULLNESS __pass_object_size dest, const char* _Nonnull format, va_list ap) __overloadable {
     return __builtin___vsprintf_chk(dest, 0, __bos(dest), format, ap);
 }
 #endif
@@ -97,7 +96,7 @@ int snprintf(char* const __BIONIC_COMPLICATED_NULLNESS __pass_object_size dest, 
 
 __BIONIC_FORTIFY_INLINE
 size_t fread(void* const _Nonnull __pass_object_size0 buf, size_t size, size_t count, FILE* _Nonnull stream)
-        __fortify_overload
+        __overloadable
         __clang_error_if(__would_mul_overflow(size, count),
                          "in call to 'fread', size * count overflows")
         __clang_error_if(__bos_unevaluated_lt(__bos0(buf), size * count),
@@ -114,7 +113,7 @@ size_t fread(void* const _Nonnull __pass_object_size0 buf, size_t size, size_t c
 
 __BIONIC_FORTIFY_INLINE
 size_t fwrite(const void* const _Nonnull __pass_object_size0 buf, size_t size, size_t count, FILE* _Nonnull stream)
-        __fortify_overload
+        __overloadable
         __clang_error_if(__would_mul_overflow(size, count),
                          "in call to 'fwrite', size * count overflows")
         __clang_error_if(__bos_unevaluated_lt(__bos0(buf), size * count),
@@ -134,7 +133,7 @@ size_t fwrite(const void* const _Nonnull __pass_object_size0 buf, size_t size, s
 
 __BIONIC_FORTIFY_INLINE
 char* _Nullable fgets(char* const _Nonnull __pass_object_size dest, int size, FILE* _Nonnull stream)
-        __fortify_overload
+        __overloadable
         __clang_error_if(size < 0, "in call to 'fgets', size should not be negative")
         __clang_error_if(__bos_unevaluated_lt(__bos(dest), size),
                          "in call to 'fgets', size is larger than the destination buffer") {
