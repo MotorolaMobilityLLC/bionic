@@ -42,12 +42,10 @@
 #include <elf.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include "bionic/pthread_internal.h"
 #include "libc_init_common.h"
 
-#include "private/bionic_defs.h"
 #include "private/bionic_elf_tls.h"
 #include "private/bionic_globals.h"
 #include "platform/bionic/macros.h"
@@ -147,15 +145,12 @@ __attribute__((constructor(1))) static void __libc_preinit() {
 // Note that the dynamic linker has also run all constructors in the
 // executable at this point.
 __noreturn void __libc_init(void* raw_args,
-                            void (*onexit)(void) __unused,
-                            int (*slingshot)(int, char**, char**),
+                            void*,
+                            int (*main)(int, char**, char**),
                             structors_array_t const * const structors) {
   BIONIC_STOP_UNWIND;
 
   KernelArgumentBlock args(raw_args);
-
-  // Several Linux ABIs don't pass the onexit pointer, and the ones that
-  // do never use it.  Therefore, we ignore it.
 
   // The executable may have its own destructors listed in its .fini_array
   // so we need to ensure that these are called when the program exits
@@ -170,9 +165,9 @@ __noreturn void __libc_init(void* raw_args,
   // will not affect the process.
   __libc_shared_globals()->memtag_stack_dlopen_callback = memtag_stack_dlopen_callback;
 
-  exit(slingshot(args.argc - __libc_shared_globals()->initial_linker_arg_count,
-                 args.argv + __libc_shared_globals()->initial_linker_arg_count,
-                 args.envp));
+  exit(main(args.argc - __libc_shared_globals()->initial_linker_arg_count,
+            args.argv + __libc_shared_globals()->initial_linker_arg_count,
+            args.envp));
 }
 
 extern "C" libc_shared_globals* __loader_shared_globals();
