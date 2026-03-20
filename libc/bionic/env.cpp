@@ -87,10 +87,10 @@ static bool __add_new_environ_slot(size_t* offset) {
 }
 
 template <typename F>
-static int __update_environ(const char* name, size_t name_length, bool rewrite, F string_maker) {
+static int __update_environ(const char* name, size_t name_length, bool overwrite, F string_maker) {
   size_t offset = 0;
   if (__findenv(name, name_length, &offset) != nullptr) {
-    if (!rewrite) return 0;
+    if (!overwrite) return 0;
   } else {
     if (!__add_new_environ_slot(&offset)) return -1;
   }
@@ -114,7 +114,7 @@ int putenv(char* str) {
   return __update_environ(str, name_length, true, [str]() { return str; });
 }
 
-int setenv(const char* name, const char* value, int rewrite) {
+int setenv(const char* name, const char* value, int overwrite) {
   size_t name_length;
   if (name == nullptr ||
       (name_length = strchrnul(name, '=') - name) == 0 ||
@@ -132,7 +132,7 @@ int setenv(const char* name, const char* value, int rewrite) {
     }
     return str;
   };
-  return __update_environ(name, name_length, rewrite, string_maker);
+  return __update_environ(name, name_length, overwrite, string_maker);
 }
 
 int unsetenv(const char* name) {
