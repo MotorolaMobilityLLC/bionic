@@ -32,6 +32,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "private/ScopedRWLock.h"
+
+static pthread_rwlock_t g_environ_lock = PTHREAD_RWLOCK_INITIALIZER;
+
 // Returns a pointer to the value associated with name,
 // or nullptr if not found.
 // Starts searching environ from *offset,
@@ -57,6 +61,7 @@ char* getenv(const char* name) {
     return nullptr;
   }
 
+  ScopedReadLock locker(&g_environ_lock);
   size_t offset = 0;
   return __findenv(name, name_length, &offset);
 }
@@ -111,6 +116,7 @@ int putenv(char* str) {
     return -1;
   }
 
+  ScopedWriteLock locker(&g_environ_lock);
   return __update_environ(str, name_length, true, [str]() { return str; });
 }
 
@@ -123,6 +129,7 @@ int setenv(const char* name, const char* value, int overwrite) {
     return -1;
   }
 
+  ScopedWriteLock locker(&g_environ_lock);
   auto string_maker = [name, name_length, value]() {
     // Turn "name" and "value" into "name=value" for insertion into environ.
     size_t value_length = strlen(value);
@@ -151,6 +158,7 @@ int unsetenv(const char* name) {
   // POSIX says "If more than one string in an environment of a process has the same name,
   // the consequences are undefined" so this isn't _required_ to be a loop,
   // but it matches what other implementations do.
+  ScopedWriteLock locker(&g_environ_lock);
   size_t offset = 0;
   while (__findenv(name, name_length, &offset)) {
     for (char** p = &environ[offset];; ++p) {
@@ -165,6 +173,7 @@ int unsetenv(const char* name) {
 int clearenv() {
   // TODO: this should also set environ itself to null
   // TODO: add missing test
+  ScopedWriteLock locker(&g_environ_lock);
   char** e = environ;
   if (e != nullptr) {
     for (; *e; ++e) {

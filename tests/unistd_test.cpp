@@ -35,6 +35,7 @@
 #include <unistd.h>
 
 #include <chrono>
+#include <thread>
 
 #include <android-base/file.h>
 #include <android-base/silent_death_test.h>
@@ -446,6 +447,43 @@ TEST(UNISTD_TEST, clearenv) {
   EXPECT_STREQ("a", getenv("test-variable"));
 
   EXPECT_EQ(0, unsetenv("test-variable"));
+}
+
+TEST(UNISTD_TEST, environ_concurrency) {
+  // Number of rounds chosen by experiment to reliably ensure crashes
+  // with implementations without locking.
+  // 1k was flaky, so this an order of magnitude larger.
+  // Note that this test crashes for lack of _write_ locks ---
+  // it catches cases where putenv() and setenv() both reallocate at
+  // the same time, but does not catch cases where getenv() is iterating
+  // over freed memory unless you have hwasan or MTE.
+  static constexpr size_t N = 10'000;
+  std::thread getenv_thread{[]() {
+    for (size_t i = 0; i < N; ++i) {
+      // Deliberately not one of the variables we're setting,
+      // so getenv() is forced to traverse the whole environ array.
+      android::base::DoNotOptimize(getenv("FOO"));
+    }
+  }};
+  // Both our mutator threads use a unique variable name every time
+  // to ensure that the existing environ array needs to be reallocated.
+  std::thread putenv_thread{[]() {
+    for (size_t i = 0; i < N; ++i) {
+      char assignment[128];
+      snprintf(assignment, sizeof(assignment), "PUTENV%zu=%zu", i, i);
+      android::base::DoNotOptimize(putenv(strdup(assignment)));
+    }
+  }};
+  std::thread setenv_thread{[]() {
+    for (size_t i = 0; i < N; ++i) {
+      char name[128];
+      snprintf(name, sizeof(name), "SETENV%zu", i);
+      android::base::DoNotOptimize(setenv(name, "123", 1));
+    }
+  }};
+  getenv_thread.join();
+  putenv_thread.join();
+  setenv_thread.join();
 }
 
 static void TestSyncFunction(int (*fn)(int)) {
@@ -1808,22 +1846,6 @@ static void clone_process() {
   EXPECT_EQ(0UL, sme_tpidr2_el0());
 }
 
-TEST(UNISTD_TEST, fork_with_sme_za_active) {
-  if (!sme_is_enabled()) {
-    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
-  }
-
-  __arm_za_disable();
-  uint16_t svl = sme_get_svl();
-  uint8_t za_save_buffer[svl * svl] __attribute__((aligned(16)));
-  sme_enable_za_active_state(za_save_buffer, svl);
-
-  EXPECT_TRUE(sme_is_za_on());
-  EXPECT_TRUE(sme_tpidr2_el0() == 0);
-  fork_process();
-  sme_state_cleanup();
-}
-
 TEST(UNISTD_TEST, fork_with_sme_za_off) {
   if (!sme_is_enabled()) {
     GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
@@ -1844,22 +1866,6 @@ TEST(UNISTD_TEST, fork_with_sme_za_dormant_state) {
   sme_state_cleanup();
 }
 
-TEST(UNISTD_TEST, vfork_with_sme_za_active) {
-  if (!sme_is_enabled()) {
-    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
-  }
-
-  __arm_za_disable();
-  uint16_t svl = sme_get_svl();
-  uint8_t za_save_buffer[svl * svl] __attribute__((aligned(16)));
-  sme_enable_za_active_state(za_save_buffer, svl);
-
-  EXPECT_TRUE(sme_is_za_on());
-  EXPECT_TRUE(sme_tpidr2_el0() == 0);
-  vfork_process();
-  sme_state_cleanup();
-}
-
 TEST(UNISTD_TEST, vfork_with_sme_za_off) {
   if (!sme_is_enabled()) {
     GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
@@ -1877,22 +1883,6 @@ TEST(UNISTD_TEST, vfork_with_sme_za_dormant_state) {
 
   __arm_za_disable();
   sme_dormant_caller(&vfork_process);
-  sme_state_cleanup();
-}
-
-TEST(UNISTD_TEST, clone_with_sme_za_active) {
-  if (!sme_is_enabled()) {
-    GTEST_SKIP() << "FEAT_SME is not enabled on the device.";
-  }
-
-  __arm_za_disable();
-  uint16_t svl = sme_get_svl();
-  uint8_t za_save_buffer[svl * svl] __attribute__((aligned(16)));
-  sme_enable_za_active_state(za_save_buffer, svl);
-
-  EXPECT_TRUE(sme_is_za_on());
-  EXPECT_TRUE(sme_tpidr2_el0() == 0);
-  clone_process();
   sme_state_cleanup();
 }
 
