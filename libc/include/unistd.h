@@ -88,7 +88,7 @@ __BEGIN_DECLS
  * Pointers in this array are valid for the lifetime of the process.
  *
  * All environment variables can be unset at once by setting `environ` to null,
- * but new code should call clearenv() instead.
+ * but new code should call clearenv() instead, for thread safety.
  */
 extern char* _Nullable * _Nullable environ;
 
