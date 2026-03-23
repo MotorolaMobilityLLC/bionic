@@ -516,7 +516,6 @@ cc_library_static {
         "upstream-openbsd/lib/libc/stdio/open_wmemstream.c",
         "upstream-openbsd/lib/libc/stdio/ungetc.c",
         "upstream-openbsd/lib/libc/stdio/ungetwc.c",
-        "upstream-openbsd/lib/libc/stdio/vasprintf.c",
         "upstream-openbsd/lib/libc/stdio/vswprintf.c",
         "upstream-openbsd/lib/libc/stdio/wbuf.c",
         "upstream-openbsd/lib/libc/stdio/wsetup.c",
