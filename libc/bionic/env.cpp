@@ -171,13 +171,12 @@ int unsetenv(const char* name) {
 }
 
 int clearenv() {
-  // TODO: this should also set environ itself to null
-  // TODO: add missing test
   ScopedWriteLock locker(&g_environ_lock);
-  char** e = environ;
-  if (e != nullptr) {
-    for (; *e; ++e) {
-      *e = nullptr;
+  char** old_environ = environ;
+  environ = nullptr;
+  if (old_environ != nullptr) {
+    for (; *old_environ; ++old_environ) {
+      *old_environ = nullptr;
     }
   }
   return 0;
