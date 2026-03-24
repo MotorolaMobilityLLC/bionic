@@ -3122,6 +3122,16 @@ TEST(STDIO_TEST, asprintf_smoke) {
   free(p);
 }
 
+TEST(STDIO_TEST, asprintf_huge) {
+  std::string huge(2048u, 'x');
+  std::string expected = huge + " hello " + huge;
+  char* p;
+  int n = asprintf(&p, "%s hello %s", huge.c_str(), huge.c_str());
+  ASSERT_EQ(2048 + 7 + 2048, n);
+  ASSERT_STREQ(expected.c_str(), p);
+  free(p);
+}
+
 TEST(STDIO_TEST, fopen_ENOENT) {
   ASSERT_ERRNO_FAILURE(ENOENT, nullptr, fopen("/proc/does-not-exist", "re"));
 }

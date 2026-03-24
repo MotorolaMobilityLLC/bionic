@@ -873,6 +873,37 @@ int asprintf(char** s, const char* fmt, ...) {
   PRINTF_IMPL(vasprintf(s, fmt, ap));
 }
 
+// Traditional implementations required support for dynamically growing the
+// buffer pointed to by a FILE*, and would then trim over-large cases.
+// FreeBSD (and thus iOS) used linear 128 byte growth, NetBSD doubled, and
+// OpenBSD (and thus Android) had a page-based compromise that reduced the
+// number of realloc() calls for long strings, but made it more likely that
+// you'd need one final pass to shrink back to size.
+// Rather than get involved in all that, we solve the 99% case with a stack
+// buffer and a single exact-size allocation+memcpy(), and handle the 1% case
+// by using the required size returned by the first vsnprintf() to do a single
+// exact-size allocation followed by another call to vsnprintf().
+int vasprintf(char** s, const char* fmt, va_list ap) {
+  va_list ap2;
+  va_copy(ap2, ap);
+
+  char buf[BUFSIZ] __attribute__((__uninitialized__));
+  int n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  if (n == -1) return -1;
+
+  char* result = static_cast<char*>(malloc(n + 1));
+  if (result == nullptr) return -1;
+
+  if (n < static_cast<int>(sizeof(buf))) {
+    memcpy(result, buf, n + 1);
+  } else {
+    vsnprintf(result, n + 1, fmt, ap2);
+  }
+
+  *s = result;
+  return n;
+}
+
 char* ctermid(char* s) {
   return s ? strcpy(s, _PATH_TTY) : const_cast<char*>(_PATH_TTY);
 }
