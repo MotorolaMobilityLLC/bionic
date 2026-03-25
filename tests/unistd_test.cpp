@@ -422,31 +422,29 @@ TEST(UNISTD_TEST, setenv_no_mutation) {
 TEST(UNISTD_TEST, clearenv) {
   extern char** environ;
 
-  // Guarantee that environ is not initially empty...
-  ASSERT_EQ(0, setenv("test-variable", "a", 1));
+  environ = nullptr;
+  ASSERT_EQ(0, setenv("clearenv-test", "foo", 1));
+  ASSERT_NE(nullptr, environ);
+  ASSERT_STREQ("foo", getenv("clearenv-test"));
 
-  // Stash a copy.
-  std::vector<char*> old_environ;
-  for (size_t i = 0; environ[i] != nullptr; ++i) {
-    old_environ.push_back(strdup(environ[i]));
-  }
+  char** old_environ = environ;
+  ASSERT_STREQ("clearenv-test=foo", old_environ[0]);
+  ASSERT_EQ(nullptr, old_environ[1]);
 
   ASSERT_EQ(0, clearenv());
 
-  EXPECT_TRUE(environ == nullptr || environ[0] == nullptr);
-  EXPECT_EQ(nullptr, getenv("test-variable"));
-  EXPECT_EQ(0, setenv("test-variable", "post-clear", 1));
-  EXPECT_STREQ("post-clear", getenv("test-variable"));
+  // After clearenv(), environ is null...
+  ASSERT_EQ(nullptr, environ);
+  // ...and pointers _in_ the old environ have been nulled too.
+  ASSERT_EQ(nullptr, old_environ[0]);
+  ASSERT_EQ(nullptr, old_environ[1]);
+}
 
-  // Put the old environment back.
-  for (size_t i = 0; i < old_environ.size(); ++i) {
-    EXPECT_EQ(0, putenv(old_environ[i]));
-  }
-
-  // Check it wasn't overwritten.
-  EXPECT_STREQ("a", getenv("test-variable"));
-
-  EXPECT_EQ(0, unsetenv("test-variable"));
+// It's safe to call clearenv() if environ is already null.
+TEST(UNISTD_TEST, clearenv_null_environ) {
+  extern char** environ;
+  environ = nullptr;
+  ASSERT_EQ(0, clearenv());
 }
 
 TEST(UNISTD_TEST, environ_concurrency) {
