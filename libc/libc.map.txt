@@ -275,6 +275,7 @@ LIBC {
     clock_nanosleep;
     clock_settime;
     clone;
+    clone3; # introduced=38
     close;
     closedir;
     closelog;
@@ -1626,6 +1627,9 @@ LIBC_37 { # introduced=37
     sched_getattr;
     sched_setattr;
 } LIBC_36;
+
+# Per API-level lists are no longer used.  Add new symbols to the `LIBC` list
+# and add the appropriate `# introduced=<LEVEL>` annotation.
 
 LIBC_PRIVATE {
   global:

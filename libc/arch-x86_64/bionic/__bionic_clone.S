@@ -67,3 +67,32 @@ L(bc_child):
         call    __start_thread
         hlt
 END(__bionic_clone)
+
+// pid_t __bionic_clone3(struct clone_args* cl_args, size_t size, int (*fn)(void*), void* arg);
+ENTRY_PRIVATE(__bionic_clone3)
+        # Save the arg pointer to %r8, because %rcx is clobbered by the system
+        # call.
+        movq    %rcx, %r8
+
+        # Make the system call.
+        movl    $__NR_clone3, %eax
+        syscall
+
+        # Check result.
+        testq   %rax, %rax
+        jz      L(bc3_child)
+
+        # We're either the parent or the syscall failed.
+        DO_SYSCALL_RETURN
+
+L(bc3_child):
+        # We don't want anyone to unwind past this point.
+        .cfi_undefined %rip
+        .cfi_undefined %rbp
+        xorl    %ebp, %ebp
+
+        movq    %rdx, %rdi
+        movq    %r8, %rsi
+        call    __start_thread
+        hlt
+END(__bionic_clone3)

@@ -37,10 +37,12 @@
 
 #include "pthread_internal.h"
 
-#include "private/bionic_defs.h"
 #include "platform/bionic/macros.h"
+#include "private/bionic_defs.h"
 
 extern "C" pid_t __bionic_clone(uint32_t flags, void* child_stack, int* parent_tid, void* tls, int* child_tid, int (*fn)(void*), void* arg);
+extern "C" pid_t __bionic_clone3(clone_args* cl_args, size_t cl_args_size, int (*fn)(void*),
+                                 void* arg);
 extern "C" __noreturn void __exit(int status);
 
 // Called from the __bionic_clone assembler to call the thread function then exit.
@@ -55,6 +57,57 @@ extern "C" __LIBC_HIDDEN__ void __start_thread(int (*fn)(void*), void* arg) {
 
   int status = (*fn)(arg);
   __exit(status);
+}
+
+struct clone_id_info {
+  pthread_internal_t* self;
+  pid_t parent_pid;
+  pid_t caller_tid;
+};
+
+static inline clone_id_info clone_prologue(int flags) {
+  // Remember the parent pid and invalidate the cached value while we clone.
+  pthread_internal_t* self = __get_thread();
+  pid_t parent_pid = self->invalidate_cached_pid();
+
+  // Remmber the caller's tid so that it can be restored in the parent after clone.
+  pid_t caller_tid = self->tid;
+  // Invalidate the tid before the syscall. The value is lazily cached in gettid(),
+  // and it will be updated by fork() and pthread_create(). We don't do this if
+  // we are sharing address space with the child.
+  if (!(flags & (CLONE_VM | CLONE_VFORK))) {
+    self->tid = -1;
+  }
+
+#if defined(__aarch64__)
+  // AAPCS64 defines SME ZA interface as private for clone(), which means that ZA state on entry
+  // can be "dormant" or "off", while on return it can be unchanged or "off".
+  // https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst#za-interfaces
+  // Handling the dormant state would make the code unnecessary complex, so for simplicity turn
+  // ZA state off on entry which ensures that the state on return will be "off" as well.
+  __arm_za_disable();
+#endif
+
+  return {self, parent_pid, caller_tid};
+}
+
+static inline int clone_epilogue(clone_id_info& ciinfo, int clone_result) {
+  if (clone_result != 0) {
+    // We're the parent, so put our known pid and tid back in place.
+    // We leave the child without a cached pid and tid, but:
+    // 1. pthread_create gives its children their own pthread_internal_t with the correct pid and
+    // tid.
+    // 2. fork uses CLONE_CHILD_SETTID to get the new pid/tid.
+    // 3. The tid is lazily fetched in gettid().
+    // If any other cases become important, we could use a double trampoline like __pthread_start.
+    ciinfo.self->tid = ciinfo.caller_tid;
+    ciinfo.self->set_cached_pid(ciinfo.parent_pid);
+  } else if (ciinfo.self->tid == -1) {
+    ciinfo.self->tid = syscall(__NR_gettid);
+    ciinfo.self->set_cached_pid(ciinfo.self->tid);
+  }
+
+  return clone_result;
 }
 
 __BIONIC_WEAK_FOR_NATIVE_BRIDGE
@@ -87,27 +140,7 @@ int clone(int (*fn)(void*), void* child_stack, int flags, void* arg, ...) {
   child_stack_addr &= ~0xf;
   child_stack = reinterpret_cast<void*>(child_stack_addr);
 
-  // Remember the parent pid and invalidate the cached value while we clone.
-  pthread_internal_t* self = __get_thread();
-  pid_t parent_pid = self->invalidate_cached_pid();
-
-  // Remmber the caller's tid so that it can be restored in the parent after clone.
-  pid_t caller_tid = self->tid;
-  // Invalidate the tid before the syscall. The value is lazily cached in gettid(),
-  // and it will be updated by fork() and pthread_create(). We don't do this if
-  // we are sharing address space with the child.
-  if (!(flags & (CLONE_VM|CLONE_VFORK))) {
-    self->tid = -1;
-  }
-
-#if defined(__aarch64__)
-  // AAPCS64 defines SME ZA interface as private for clone(), which means that ZA state on entry
-  // can be "dormant" or "off", while on return it can be unchanged or "off".
-  // https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst#za-interfaces
-  // Handling the dormant state would make the code unnecessary complex, so for simplicity turn
-  // ZA state off on entry which ensures that the state on return will be "off" as well.
-  __arm_za_disable();
-#endif
+  clone_id_info ciinfo = clone_prologue(flags);
 
   // Actually do the clone.
   int clone_result;
@@ -121,19 +154,29 @@ int clone(int (*fn)(void*), void* child_stack, int flags, void* arg, ...) {
 #endif
   }
 
-  if (clone_result != 0) {
-    // We're the parent, so put our known pid and tid back in place.
-    // We leave the child without a cached pid and tid, but:
-    // 1. pthread_create gives its children their own pthread_internal_t with the correct pid and tid.
-    // 2. fork uses CLONE_CHILD_SETTID to get the new pid/tid.
-    // 3. The tid is lazily fetched in gettid().
-    // If any other cases become important, we could use a double trampoline like __pthread_start.
-    self->set_cached_pid(parent_pid);
-    self->tid = caller_tid;
-  } else if (self->tid == -1) {
-    self->tid = syscall(__NR_gettid);
-    self->set_cached_pid(self->tid);
+  return clone_epilogue(ciinfo, clone_result);
+}
+
+__BIONIC_WEAK_FOR_NATIVE_BRIDGE
+int clone3(struct clone_args* cl_args, size_t size, int (*fn)(void*), void* arg) {
+  bool invalid_args = (cl_args == nullptr) || ((cl_args->flags & CLONE_VM) && fn == nullptr) ||
+                      (fn == nullptr && cl_args->stack != 0) ||
+                      (fn != nullptr && cl_args->stack == 0);
+
+  if (invalid_args) {
+    errno = EINVAL;
+    return -1;
   }
 
-  return clone_result;
+  clone_id_info ciinfo = clone_prologue(cl_args->flags);
+
+  int clone_result;
+  if (fn != nullptr) {
+    // This call does not return in the child process.
+    clone_result = __bionic_clone3(cl_args, size, fn, arg);
+  } else {
+    clone_result = syscall(SYS_clone3, cl_args, size);
+  }
+
+  return clone_epilogue(ciinfo, clone_result);
 }
