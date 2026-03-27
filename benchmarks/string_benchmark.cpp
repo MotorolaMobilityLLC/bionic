@@ -18,6 +18,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <concepts>
+
 #include <benchmark/benchmark.h>
 #include <util.h>
 
@@ -359,8 +361,9 @@ static void BM_string_strstr(benchmark::State& state) {
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strstr, "AT_ALIGNED_TWOBUF");
 
-template <char* fn(const char*, int)>
-void BenchStrChr(benchmark::State& state) {
+template <typename Fn>
+  requires std::invocable<Fn, char*, int>
+void BenchStrChr(benchmark::State& state, Fn strchr_fn) {
   const size_t nbytes = state.range(0);
   const size_t haystack_alignment = state.range(1);
 
@@ -369,7 +372,7 @@ void BenchStrChr(benchmark::State& state) {
   haystack_aligned[nbytes-1] = '\0';
 
   while (state.KeepRunning()) {
-    if (fn(haystack_aligned, 'y') != nullptr) {
+    if (strchr_fn(haystack_aligned, 'y') != nullptr) {
       errx(1, "ERROR: found a char that wasn't there.");
     }
   }
@@ -378,14 +381,28 @@ void BenchStrChr(benchmark::State& state) {
 }
 
 static void BM_string_strchr(benchmark::State& state) {
-  BenchStrChr<strchr>(state);
+  BenchStrChr(state, [](const char* s, int c) { return strchr(s, c); });
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strchr, "AT_ALIGNED_ONEBUF");
 
 static void BM_string_strrchr(benchmark::State& state) {
-  BenchStrChr<strrchr>(state);
+  BenchStrChr(state, [](const char* s, int c) { return strrchr(s, c); });
 }
 BIONIC_BENCHMARK_WITH_ARG(BM_string_strrchr, "AT_ALIGNED_ONEBUF");
+
+#if defined(__BIONIC__)
+static void BM_string_strchr_chk(benchmark::State& state) {
+  const size_t nbytes = state.range(0);
+  BenchStrChr(state, [nbytes](const char* s, int c) { return __strchr_chk(s, c, nbytes); });
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strchr_chk, "AT_ALIGNED_ONEBUF");
+
+static void BM_string_strrchr_chk(benchmark::State& state) {
+  const size_t nbytes = state.range(0);
+  BenchStrChr(state, [nbytes](const char* s, int c) { return __strrchr_chk(s, c, nbytes); });
+}
+BIONIC_BENCHMARK_WITH_ARG(BM_string_strrchr_chk, "AT_ALIGNED_ONEBUF");
+#endif  // __BIONIC__
 
 template <typename T, T fn(const char*, const char*)>
 void BenchStrSpn(benchmark::State& state, const char* delims) {
