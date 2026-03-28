@@ -509,6 +509,43 @@ static void expect_ids(T ids, bool is_group) {
     }
   }
 
+  // AID_SDV* (1099-1102) was added in API level 37, but "trunk stable" means
+  // that the 2025Q* builds are tested with the _previous_ release's CTS.
+  if (android::base::GetIntProperty("ro.build.version.sdk", 0) == 36) {
+#if !defined(AID_SDV_SD_AGENT)
+#define AID_SDV_SD_AGENT 1099
+#endif
+#if !defined(AID_SDV_DT_AGENT)
+#define AID_SDV_DT_AGENT 1100
+#endif
+#if !defined(AID_SDV_RPC_AGENT)
+#define AID_SDV_RPC_AGENT 1101
+#endif
+#if !defined(AID_SDV_INIT_OPEN_DICE)
+#define AID_SDV_INIT_OPEN_DICE 1102
+#endif
+    ids.erase(AID_SDV_SD_AGENT);
+    expected_ids.erase(AID_SDV_SD_AGENT);
+    if (getpwuid(AID_SDV_SD_AGENT)) {
+      EXPECT_STREQ(getpwuid(AID_SDV_SD_AGENT)->pw_name, "sdv_sd_agent");
+    }
+    ids.erase(AID_SDV_DT_AGENT);
+    expected_ids.erase(AID_SDV_DT_AGENT);
+    if (getpwuid(AID_SDV_DT_AGENT)) {
+      EXPECT_STREQ(getpwuid(AID_SDV_DT_AGENT)->pw_name, "sdv_dt_agent");
+    }
+    ids.erase(AID_SDV_RPC_AGENT);
+    expected_ids.erase(AID_SDV_RPC_AGENT);
+    if (getpwuid(AID_SDV_RPC_AGENT)) {
+      EXPECT_STREQ(getpwuid(AID_SDV_RPC_AGENT)->pw_name, "sdv_rpc_agent");
+    }
+    ids.erase(AID_SDV_INIT_OPEN_DICE);
+    expected_ids.erase(AID_SDV_INIT_OPEN_DICE);
+    if (getpwuid(AID_SDV_INIT_OPEN_DICE)) {
+      EXPECT_STREQ(getpwuid(AID_SDV_INIT_OPEN_DICE)->pw_name, "sdv_init_open_dice");
+    }
+  }
+
   EXPECT_EQ(expected_ids, ids) << return_differences();
 }
 #endif
