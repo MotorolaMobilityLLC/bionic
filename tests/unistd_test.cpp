@@ -297,6 +297,36 @@ TEST(UNISTD_TEST, unsetenv_null_environ) {
   EXPECT_EQ(0, unsetenv("foo"));
 }
 
+TEST(UNISTD_TEST, getenv_non_stack_environ) {
+  char* e[] = { const_cast<char*>("foo=xxx"), nullptr };
+  environ = e;
+  EXPECT_STREQ("xxx", getenv("foo"));
+  EXPECT_STREQ(nullptr, getenv("bar"));
+}
+
+TEST(UNISTD_TEST, putenv_non_stack_environ) {
+  char* e[] = { const_cast<char*>("foo=xxx"), nullptr };
+  environ = e;
+  EXPECT_EQ(0, putenv(const_cast<char*>("bar=yyy")));
+  EXPECT_STREQ("xxx", getenv("foo"));
+  EXPECT_STREQ("yyy", getenv("bar"));
+}
+
+TEST(UNISTD_TEST, setenv_non_stack_environ) {
+  char* e[] = { const_cast<char*>("foo=xxx"), nullptr };
+  environ = e;
+  EXPECT_EQ(0, setenv("bar", "yyy", 1));
+  EXPECT_STREQ("xxx", getenv("foo"));
+  EXPECT_STREQ("yyy", getenv("bar"));
+}
+
+TEST(UNISTD_TEST, unsetenv_non_stack_environ) {
+  char* e[] = { const_cast<char*>("foo=xxx"), nullptr };
+  environ = e;
+  EXPECT_EQ(0, unsetenv("foo"));
+  EXPECT_EQ(nullptr, getenv("foo"));
+}
+
 TEST(UNISTD_TEST, getenv_EINVAL) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
